@@ -28,7 +28,8 @@ namespace mhh
     /// <summary>
     /// Defines how the output data is drawn. This list comprises all of the
     /// supported standard OpenGL PritimiveType flags (although when plugin
-    /// support is available, they are free to use others).
+    /// support is available, they are free to use others). A visualizer
+    /// implementation is free to ignore this and use a specific mode.
     /// </summary>
     public enum ArrayDrawingMode
     {

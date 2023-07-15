@@ -2,6 +2,27 @@
 using CommandLineSwitchPipe;
 using eyecandy;
 
+/*
+Main does three things:
+-- processes command-line switches / args
+-- sets up and runs the VisualizerHostWindow
+-- processes switches / args recieved at runtime
+
+The last part is accomplished by my CommandLineSwitchPipe library. At startup it
+tries to connect to an existing named pipe. If none is found, this instance becomes
+the named pipe listener and the program starts, processing args and loading the window.
+
+After that it's just waiting for the window to exit (or to receive a quit command over
+the named pipe).
+
+However, if a named pipe is found, any args are passed to the already-running program.
+If a response is received, it is written to the console and the secondary instance ends.
+For example, the frame rate of the running instance can be queried.
+
+On Linux, spotifyd can run an arbitrary command on track change, so this feature could
+be used to tell the program to load the next shader in the playlist with each new song.
+*/
+
 namespace mhh
 {
     internal class Program
@@ -35,7 +56,7 @@ namespace mhh
                 ProcessStartupSwitches(args);
 
                 Console.Clear();
-                Console.WriteLine($"\nmonkey-hi-hat - PID {Environment.ProcessId}");
+                Console.WriteLine($"\nmonkey-hi-hat (PID {Environment.ProcessId})");
 
                 // TODO - read config
                 var audioConfig = new EyeCandyCaptureConfig();

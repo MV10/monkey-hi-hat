@@ -4,6 +4,12 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace mhh
 {
+    /// <summary>
+    /// This implementation is similar to VertexShaderArt. It's assumed the
+    /// vertex shader is the primary workload, and other than the default time
+    /// and resolution inputs, and any optional audio textures, the only input
+    /// is a single array of sequential integers of arbitrary length.
+    /// </summary>
     public class VisualizerVertexIntegerArray : IVisualizer
     {
         private float[] VertexIds;

@@ -25,7 +25,7 @@ namespace mhh
         /// <summary>
         /// Initializes a VisualizerDefinition field.
         /// </summary>
-        public static readonly VizMode VisualizationMode = VizMode.VertexIntegerArray;
+        public static readonly VizMode VisualizationMode = VizMode.FragmentQuad;
 
         /// <summary>
         /// Initializes a VisualizerDefinition field.

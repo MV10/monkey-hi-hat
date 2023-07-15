@@ -8,6 +8,11 @@ using System.Reflection;
 
 namespace mhh
 {
+    /// <summary>
+    /// The window owns the visualizer definition and instance, the eyecandy
+    /// audio texture and capture processing, and supplies the "resolution"
+    /// and "time" uniforms. The visualizers do most of the other work.
+    /// </summary>
     public class VisualizerHostWindow : BaseWindow
     {
         /// <summary>
