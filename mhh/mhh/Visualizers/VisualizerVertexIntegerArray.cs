@@ -12,6 +12,7 @@ namespace mhh
     /// </summary>
     public class VisualizerVertexIntegerArray : IVisualizer
     {
+        private int VertexIntegerCount;
         private float[] VertexIds;
         private int VertexBufferObject;
         private int VertexArrayObject;
@@ -28,24 +29,27 @@ namespace mhh
             PrimitiveType.TriangleFan,
         };
 
-        public void Start(VisualizerHostWindow hostWindow)
+        public void Start(HostWindow hostWindow)
         {
-            var glDrawingMode = hostWindow.Definition.GLDrawingMode();
-            DrawingMode = Array.FindIndex(Modes, m => m.Equals(glDrawingMode));
+            if (!Enum.TryParse<ArrayDrawingMode>(hostWindow.ActiveVisualizer.Config.Content["VisualizerVertexIntegerArray"]["ArrayDrawingMode"], out var mhhMode))
+                mhhMode = ArrayDrawingMode.Points;
 
-            VertexIds = new float[hostWindow.Definition.VertexIntegerCount];
-            for (var i = 0; i < hostWindow.Definition.VertexIntegerCount; i++)
+            DrawingMode = Array.FindIndex(Modes, m => m.Equals(mhhMode.GetGLDrawingMode()));
+
+            VertexIntegerCount = hostWindow.ActiveVisualizer.Config.Content["VisualizerVertexIntegerArray"]["VertexIntegerCount"].ToInt32(1000);
+            VertexIds = new float[VertexIntegerCount];
+            for (var i = 0; i < VertexIntegerCount; i++)
             {
                 VertexIds[i] = i;
             }
         }
 
-        public void Stop(VisualizerHostWindow hostWindow)
+        public void Stop(HostWindow hostWindow)
         {
             // do nothing
         }
 
-        public void OnLoad(VisualizerHostWindow hostWindow)
+        public void OnLoad(HostWindow hostWindow)
         {
             VertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferObject);
@@ -57,15 +61,15 @@ namespace mhh
             GL.EnableVertexAttribArray(0); // 0 = location of vertexId attribute
         }
 
-        public void OnRenderFrame(VisualizerHostWindow hostWindow, FrameEventArgs e)
+        public void OnRenderFrame(HostWindow hostWindow, FrameEventArgs e)
         {
-            hostWindow.Shader.SetUniform("vertexCount", (float)hostWindow.Definition.VertexIntegerCount);
+            hostWindow.Shader.SetUniform("vertexCount", (float)VertexIntegerCount);
 
             GL.BindVertexArray(VertexArrayObject);
-            GL.DrawArrays(Modes[DrawingMode], 0, hostWindow.Definition.VertexIntegerCount);
+            GL.DrawArrays(Modes[DrawingMode], 0, VertexIntegerCount);
         }
 
-        public void OnUpdateFrame(VisualizerHostWindow hostWindow, FrameEventArgs e)
+        public void OnUpdateFrame(HostWindow hostWindow, FrameEventArgs e)
         {
             var input = hostWindow.KeyboardState;
 

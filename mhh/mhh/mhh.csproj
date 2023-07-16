@@ -17,6 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="InternalShaders\idle.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="InternalShaders\idle.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

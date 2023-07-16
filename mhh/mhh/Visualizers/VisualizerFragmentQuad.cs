@@ -35,17 +35,17 @@ namespace mhh
         private int VertexBufferObject;
         private int VertexArrayObject;
 
-        public void Start(VisualizerHostWindow hostWindow)
+        public void Start(HostWindow hostWindow)
         {
             // do nothing
         }
 
-        public void Stop(VisualizerHostWindow hostWindow)
+        public void Stop(HostWindow hostWindow)
         {
             // do nothing
         }
 
-        public void OnLoad(VisualizerHostWindow hostWindow)
+        public void OnLoad(HostWindow hostWindow)
         {
             VertexArrayObject = GL.GenVertexArray();
             GL.BindVertexArray(VertexArrayObject);
@@ -71,13 +71,13 @@ namespace mhh
             //                                        ^ tex coords is 2 floats                 ^ 5 per row        ^ 4th and 5th float in each row
         }
 
-        public void OnRenderFrame(VisualizerHostWindow hostWindow, FrameEventArgs e)
+        public void OnRenderFrame(HostWindow hostWindow, FrameEventArgs e)
         {
             GL.BindVertexArray(VertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
         }
 
-        public void OnUpdateFrame(VisualizerHostWindow hostWindow, FrameEventArgs e)
+        public void OnUpdateFrame(HostWindow hostWindow, FrameEventArgs e)
         {
             // do nothing
         }

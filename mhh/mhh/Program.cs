@@ -25,8 +25,14 @@ be used to tell the program to load the next shader in the playlist with each ne
 
 namespace mhh
 {
-    internal class Program
+    public class Program
     {
+        /// <summary>
+        /// Content parsed from the mhh.conf configuration file and the
+        /// default idle shader conf file.
+        /// </summary>
+        public static ApplicationConfiguration AppConfig;
+
         // Cancel this to terminate the switch server's named pipe.
         private static CancellationTokenSource ctsSwitchPipe;
 
@@ -34,7 +40,7 @@ namespace mhh
         private static CancellationTokenSource ctsRunningInstance;
 
         // Where the magic happens
-        private static VisualizerHostWindow win;
+        private static HostWindow win;
 
         static async Task Main(string[] args)
         {
@@ -48,29 +54,32 @@ namespace mhh
                     Console.WriteLine(CommandLineSwitchServer.QueryResponse);
                     return;
                 }
-
-                // We're the first instance, listen for args and get the show started...
-                ctsSwitchPipe = new();
-                _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessExecutionSwitches, ctsSwitchPipe.Token));
-
-                ProcessStartupSwitches(args);
+                // ...or continue running since we're the first instance
 
                 Console.Clear();
                 Console.WriteLine($"\nmonkey-hi-hat (PID {Environment.ProcessId})");
 
-                // TODO - read config
-                var audioConfig = new EyeCandyCaptureConfig();
+                AppConfig = new ApplicationConfiguration("mhh.conf", "InternalShaders/idle.conf");
+                ProcessStartupSwitches(args);
 
-                // TODO - read config
+                var audioConfig = new EyeCandyCaptureConfig();
+                audioConfig.DriverName = AppConfig.CaptureDriverName;
+                audioConfig.CaptureDeviceName = AppConfig.CaptureDeviceName;
+
                 var windowConfig = new EyeCandyWindowConfig();
                 windowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
-                windowConfig.OpenTKNativeWindowSettings.Size = (960, 540);
-                //windowConfig.StartFullScreen = xxxx;
+                windowConfig.OpenTKNativeWindowSettings.Size = (AppConfig.SizeX, AppConfig.SizeY);
+                windowConfig.StartFullScreen = AppConfig.StartFullScreen;
 
                 // The window class will create a VizDefinition whose defaults match these:
-                windowConfig.VertexShaderPathname = Defaults.IdleVertexShaderPathname;
-                windowConfig.FragmentShaderPathname = Defaults.IdleFragmentShaderPathname;
+                windowConfig.VertexShaderPathname = AppConfig.IdleVisualizer.VertexShaderPathname;
+                windowConfig.FragmentShaderPathname = AppConfig.IdleVisualizer.FragmentShaderPathname;
 
+                // Start listening for commands
+                ctsSwitchPipe = new();
+                _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessExecutionSwitches, ctsSwitchPipe.Token));
+
+                // Spin up the window and get the show started
                 ctsRunningInstance = new();
                 win = new(windowConfig, audioConfig, ctsRunningInstance.Token);
                 win.Focus();
