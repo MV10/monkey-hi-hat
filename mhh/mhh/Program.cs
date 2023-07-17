@@ -3,14 +3,15 @@ using CommandLineSwitchPipe;
 using eyecandy;
 
 /*
-Main does three things:
--- processes command-line switches / args
+Main does two things:
 -- sets up and runs the VisualizerHostWindow
 -- processes switches / args recieved at runtime
 
+There are no startup switches.
+
 The last part is accomplished by my CommandLineSwitchPipe library. At startup it
 tries to connect to an existing named pipe. If none is found, this instance becomes
-the named pipe listener and the program starts, processing args and loading the window.
+the named pipe listener and the program starts, loading the window and the idle viz.
 
 After that it's just waiting for the window to exit (or to receive a quit command over
 the named pipe).
@@ -33,13 +34,10 @@ namespace mhh
         /// </summary>
         public static ApplicationConfiguration AppConfig;
 
-        // Cancel this to terminate the switch server's named pipe.
+        // cancel this to terminate the switch server's named pipe.
         private static CancellationTokenSource ctsSwitchPipe;
 
-        // Cancel this to terminate the running instance.
-        private static CancellationTokenSource ctsRunningInstance;
-
-        // Where the magic happens
+        // where the magic happens
         private static HostWindow win;
 
         static async Task Main(string[] args)
@@ -60,28 +58,24 @@ namespace mhh
                 Console.WriteLine($"\nmonkey-hi-hat (PID {Environment.ProcessId})");
 
                 AppConfig = new ApplicationConfiguration("mhh.conf", "InternalShaders/idle.conf");
-                ProcessStartupSwitches(args);
 
-                var audioConfig = new EyeCandyCaptureConfig();
-                audioConfig.DriverName = AppConfig.CaptureDriverName;
-                audioConfig.CaptureDeviceName = AppConfig.CaptureDeviceName;
+                var AudioConfig = new EyeCandyCaptureConfig();
+                AudioConfig.DriverName = AppConfig.CaptureDriverName;
+                AudioConfig.CaptureDeviceName = AppConfig.CaptureDeviceName;
 
-                var windowConfig = new EyeCandyWindowConfig();
-                windowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
-                windowConfig.OpenTKNativeWindowSettings.Size = (AppConfig.SizeX, AppConfig.SizeY);
-                windowConfig.StartFullScreen = AppConfig.StartFullScreen;
-
-                // The window class will create a VizDefinition whose defaults match these:
-                windowConfig.VertexShaderPathname = AppConfig.IdleVisualizer.VertexShaderPathname;
-                windowConfig.FragmentShaderPathname = AppConfig.IdleVisualizer.FragmentShaderPathname;
+                var WindowConfig = new EyeCandyWindowConfig();
+                WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
+                WindowConfig.OpenTKNativeWindowSettings.Size = (AppConfig.SizeX, AppConfig.SizeY);
+                WindowConfig.StartFullScreen = AppConfig.StartFullScreen;
+                WindowConfig.VertexShaderPathname = AppConfig.IdleVisualizer.VertexShaderPathname;
+                WindowConfig.FragmentShaderPathname = AppConfig.IdleVisualizer.FragmentShaderPathname;
 
                 // Start listening for commands
                 ctsSwitchPipe = new();
                 _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessExecutionSwitches, ctsSwitchPipe.Token));
 
                 // Spin up the window and get the show started
-                ctsRunningInstance = new();
-                win = new(windowConfig, audioConfig, ctsRunningInstance.Token);
+                win = new(WindowConfig, AudioConfig);
                 win.Focus();
                 win.Run(); // blocks
             }
@@ -99,22 +93,83 @@ namespace mhh
             }
             finally
             {
-                // Stephen Cleary says disposal is unnecessary as long as the token is cancelled
+                // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
                 ctsSwitchPipe?.Cancel();
-                ctsRunningInstance?.Cancel(); // in case of exception...
                 win?.Dispose();
             }
         }
 
         private static string ProcessExecutionSwitches(string[] args)
         {
-            // TODO - figure out execution switches ... -next -quit etc.
-            return string.Empty;
+            // TODO - add --slideshow and --next switches
+
+            if (args.Length == 0 || args[0].LowercaseEquals("--help")) return ShowHelp();
+
+            if (args[0].LowercaseEquals("--load"))
+            {
+                if (args.Length != 2) return ShowHelp();
+                
+                // if a path separator exists, just send the argument as-is...
+                if (args[1].Contains('/')) return win.Command_Load(args[1]);
+
+                //...otherwise prefix with the shader path
+                return win.Command_Load(Path.Combine(AppConfig.ShaderPath, args[1]));
+            }
+
+            if (args.Length > 1) return ShowHelp();
+
+            switch(args[0].ToLowerInvariant())
+            {
+                case "--quit":
+                    return win.Command_Quit();
+
+                case "--info":
+                    return win.Command_Info();
+
+                case "--fps":
+                    return win.FramesPerSecond.ToString();
+
+                case "--idle":
+                    return win.Command_Idle();
+
+                case "--pause":
+                    return win.Command_Pause();
+
+                case "--run":
+                    return win.Command_Run();
+
+                case "--reload":
+                    return win.Command_Reload();
+
+                case "--pid":
+                    return Environment.ProcessId.ToString();
+
+                default:
+                    return ShowHelp();
+            }
         }
 
-        private static void ProcessStartupSwitches(string[] args)
-        {
-            // TODO - figure out startup switches?
-        }
+        private static string ShowHelp()
+            =>
+@"
+
+mhh: monkey-hi-hat
+
+There are no startup switches, the application always loads with the default ""idle"" shader.
+All switches are passed to the already-running instance:
+
+--help                      shows help (surprise!)
+--load [shader]             loads [shader].conf from ShaderPath defined in mhh.conf
+--load [path/shader]        must use forward slash; if present, loads [shader].conf from requested location
+--quit                      ends the program
+--info                      writes shader and execution details to the console
+--fps                       writes FPS information to the console
+--idle                      load the default/idle shader
+--pause                     stops the current shader
+--run                       executes the current shader
+--reload                    unloads and reloads the current shader
+--pid                       shows the current Process ID
+
+";
     }
 }

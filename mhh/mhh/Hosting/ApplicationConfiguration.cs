@@ -21,16 +21,17 @@ namespace mhh
         public ApplicationConfiguration(string appConfigPathname, string idleVisualizerConfigPathname)
         {
             var conf = new ConfigFile(appConfigPathname);
-            
-            PlaylistPath = conf.ReadValue("setup", "playlistpath");
-            ShaderPath = conf.ReadValue("setup", "shaderpath");
-            PluginPath = conf.ReadValue("setup", "pluginpath");
 
             StartFullScreen = conf.ReadValue("setup", "startfullscreen").ToBool(false);
             SizeX = conf.ReadValue("setup", "sizex").ToInt32(960);
             SizeY = conf.ReadValue("setup", "sizey").ToInt32(540);
 
             var osSection = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux";
+
+            PlaylistPath = conf.ReadValue(osSection, "playlistpath");
+            ShaderPath = conf.ReadValue(osSection, "shaderpath");
+            PluginPath = conf.ReadValue(osSection, "pluginpath");
+
             CaptureDriverName = conf.ReadValue(osSection, "capturedrivername");
             CaptureDeviceName = conf.ReadValue(osSection, "capturedevicename");
 

@@ -23,13 +23,13 @@ namespace mhh
         /// </summary>
         public readonly Dictionary<string, Dictionary<string, string>> Content = new();
 
-        public ConfigFile(string pathname)
+        public ConfigFile(string confPathname)
         {
-            Pathname = Path.GetFullPath(pathname);
-            if (!File.Exists(pathname)) return;
+            Pathname = Path.GetFullPath(confPathname);
+            if (!File.Exists(Pathname)) return;
 
             var section = string.Empty;
-            foreach (var line in File.ReadAllLines(pathname))
+            foreach (var line in File.ReadAllLines(Pathname))
             {
                 if (!string.IsNullOrWhiteSpace(line) && !line.Trim().StartsWith("#"))
                 {

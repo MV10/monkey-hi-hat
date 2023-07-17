@@ -5,6 +5,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 
 namespace mhh
 {
@@ -31,15 +32,19 @@ namespace mhh
 
         private MethodInfo EngineCreateTexture;
         private MethodInfo EngineDestroyTexture;
-        private MethodInfo EngineSetMultiplier;
 
-        public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig, CancellationToken cancellationToken)
+        private bool CommandFlag_Paused = false;
+        private bool CommandFlag_QuitRequested = false;
+
+        private object NewVisualizerLock = new();
+        private VisualizerConfig NewVisualizer = null;
+
+        public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
             : base(windowConfig)
         {
             Engine = new(audioConfig);
             EngineCreateTexture = Engine.GetType().GetMethod("Create");
             EngineDestroyTexture = Engine.GetType().GetMethod("Destroy");
-            EngineSetMultiplier = Engine.GetType().GetMethod("SetMultiplier");
 
             ActiveVisualizer = Program.AppConfig.IdleVisualizer;
             StartNewVisualizer();
@@ -65,6 +70,8 @@ namespace mhh
         /// </summary>
         protected override void OnRenderFrame(FrameEventArgs e)
         {
+            if (CommandFlag_Paused) return;
+
             base.OnRenderFrame(e);
 
             Engine.UpdateTextures();
@@ -87,12 +94,37 @@ namespace mhh
         {
             base.OnUpdateFrame(e);
 
-            var input = KeyboardState;
-
-            if (input.IsKeyDown(Keys.Escape))
+            // if the CommandLineSwitchPipe thread processed a request
+            // to use a different shader, process that here where we know
+            // the GLFW thread won't be trying to use the Shader object
+            lock(NewVisualizerLock)
             {
-                Engine.EndAudioProcessing_SynchronousHack();
-                Visualizer.Stop(this);
+                if(NewVisualizer is not null)
+                {
+                    Visualizer?.Stop(this);
+                    Visualizer?.Dispose();
+                    Visualizer = null;
+                    Shader?.Dispose();
+                    Engine.EndAudioProcessing_SynchronousHack();
+                    DestroyAudioTextures();
+
+                    Interlocked.Exchange(ref ActiveVisualizer, NewVisualizer);
+                    NewVisualizer = null;
+
+                    StartNewVisualizer();
+                    Clock.Restart();
+                    Engine.BeginAudioProcessing();
+
+                    return;
+                }
+            }
+
+            // ESC to quit is the only keyboard input supported
+            var input = KeyboardState;
+            if (CommandFlag_QuitRequested || input.IsKeyDown(Keys.Escape))
+            {
+                Engine?.EndAudioProcessing_SynchronousHack();
+                Visualizer?.Stop(this);
                 Close();
                 return;
             }
@@ -102,9 +134,9 @@ namespace mhh
 
         public new void Dispose()
         {
-            base.Dispose();
             Visualizer?.Dispose();
             Engine?.Dispose();
+            base.Dispose(); // disposes the Shader
         }
 
         /// <summary>
@@ -112,38 +144,117 @@ namespace mhh
         /// </summary>
         public void ChangeVisualizer(VisualizerConfig newVisualizerConfig)
         {
-            if (Visualizer is not null)
+            lock(NewVisualizerLock)
             {
-                Visualizer.Stop(this);
-                Visualizer.Dispose();
-                Visualizer = null;
+                // CommandLineSwitchPipe invokes this from another thread;
+                // actual update occurs in OnUpdateFrame which is "safe"
+                // because it won't be busy doing things like using the
+                // current Shader object in an OnRenderFrame call.
+                NewVisualizer = newVisualizerConfig;
             }
+        }
 
-            // TODO - any reason to stop / restart the audio texture engine?
-            DestroyAudioTextures();
+        /// <summary>
+        /// Handler for the --load command-line switch.
+        /// </summary>
+        public string Command_Load(string visualizerConfPathname)
+        {
+            var newViz = new VisualizerConfig(visualizerConfPathname);
+            ChangeVisualizer(newViz);
+            return $"loading {newViz.Config.Pathname}";
+        }
 
-            ActiveVisualizer = newVisualizerConfig;
-            StartNewVisualizer();
+        /// <summary>
+        /// Handler for the --quit command-line switch.
+        /// </summary>
+        public string Command_Quit()
+        {
+            CommandFlag_QuitRequested = true;
+            return "ACK";
+        }
+
+        /// <summary>
+        /// Handler for the --info command-line switch.
+        /// </summary>
+        public string Command_Info()
+            =>
+$@"
+elapsed sec: {Clock.Elapsed.TotalSeconds:0.####}
+frame rate : {FramesPerSecond}
+description: {ActiveVisualizer.Description}
+config file: {ActiveVisualizer.Config.Pathname}
+vert shader: {ActiveVisualizer.VertexShaderPathname}
+frag shader: {ActiveVisualizer.FragmentShaderPathname}
+vizualizer : {ActiveVisualizer.VisualizerTypeName}
+";
+
+        /// <summary>
+        /// Handler for the --idle command-line switch.
+        /// </summary>
+        public string Command_Idle()
+        {
+            ChangeVisualizer(Program.AppConfig.IdleVisualizer);
+            return "ACK";
+        }
+
+        /// <summary>
+        /// Handler for the --pause command-line switch.
+        /// </summary>
+        public string Command_Pause()
+        {
+            if (CommandFlag_Paused) return "already paused; use --run to resume";
+            Visualizer?.Stop(this);
+            Clock.Stop();
+            CommandFlag_Paused = true;
+            return "ACK";
+        }
+
+        /// <summary>
+        /// Handler for the --run command-line switch.
+        /// </summary>
+        public string Command_Run()
+        {
+            if (!CommandFlag_Paused) return "already running; use --pause to suspend";
+            Visualizer?.Start(this);
+            Clock.Start();
+            CommandFlag_Paused = false;
+            return "ACK";
+        }
+
+        /// <summary>
+        /// Handler for the --reload command-line switch.
+        /// </summary>
+        public string Command_Reload()
+        {
+            ChangeVisualizer(new(ActiveVisualizer.Config.Pathname));
+            return "ACK";
         }
 
         /// <summary>
         /// Starts up the visualizer defined by the ActiveVisualizer field. Any cleanup of the
         /// previous visualizer (such as DestroyAudioTextures) is assumed to have been done prior
-        /// to calling this.
+        /// to calling this (see OnUpdateFrame where this is addressed).
         /// </summary>
         private void StartNewVisualizer()
         {
             // if the type name isn't recognized, default to the idle viz
-            if (!KnownTypes.Visualizers.Any(t => t.ToString().Equals(ActiveVisualizer.VisualizerTypeName)))
+            var VizType = KnownTypes.Visualizers.FindType(ActiveVisualizer.VisualizerTypeName);
+            if (VizType is null)
             {
                 ActiveVisualizer = Program.AppConfig.IdleVisualizer;
             }
+            Visualizer = Activator.CreateInstance(VizType) as IVisualizer;
 
             CreateAudioTextures();
 
-            var VizType = KnownTypes.Visualizers.FindType(ActiveVisualizer.VisualizerTypeName);
-            Visualizer = Activator.CreateInstance(VizType) as IVisualizer;
             Shader = new(ActiveVisualizer.VertexShaderPathname, ActiveVisualizer.FragmentShaderPathname);
+            if(!Shader.IsValid)
+            {
+                var sb = new StringBuilder().AppendLine("Shader load/compile failed");
+                foreach (var s in ErrorLogging.ShaderErrors) sb.AppendLine(s);
+                throw new InvalidOperationException(sb.ToString());
+            }
+
             Visualizer.Start(this);
 
             if (OnLoadCompleted)
@@ -162,6 +273,8 @@ namespace mhh
             // Enum Texture0 is some big weird number, but they increment serially from there
             int unit0 = (int)TextureUnit.Texture0;
 
+            var defaultEnabled = (object)true;
+
             // Each entry in the AudioTextures list is "uniform AudioTextureType"
             foreach (var tex in ActiveVisualizer.AudioTextureTypeNames)
             {
@@ -171,23 +284,22 @@ namespace mhh
                 // call the engine to create the object
                 if (TextureType is not null)
                 {
+                    var uniformName = (object)tex.Value;
+                    var textureUnit = (object)(TextureUnit)(tex.Key + unit0);
+                    var multiplier = (object)(ActiveVisualizer.AudioTextureMultipliers.ContainsKey(tex.Key)
+                        ? ActiveVisualizer.AudioTextureMultipliers[tex.Key]
+                        : 1.0f);
+
                     // AudioTextureEngine.Create<TextureType>(uniform, assignedTextureUnit)
                     var method = EngineCreateTexture.MakeGenericMethod(TextureType);
                     method.Invoke(Engine, new object[]
                     {
-                        (object)tex.Value,           // uniform name
-                        (object)(tex.Key + unit0),   // unit# + TextureUnit.Texture0
+                        uniformName,
+                        textureUnit,
+                        multiplier,
+                        defaultEnabled,
                     });
 
-                    // AudioTextureEngine.SetMultiplier<TextureType>(multiplier)
-                    if(ActiveVisualizer.AudioTextureMultipliers.ContainsKey(tex.Key))
-                    {
-                        method = EngineSetMultiplier.MakeGenericMethod(TextureType);
-                        method.Invoke(Engine, new object[]
-                        {
-                            (object)ActiveVisualizer.AudioTextureMultipliers[tex.Key]    // multiplier
-                        });
-                    }
                 }
             }
 

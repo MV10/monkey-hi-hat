@@ -65,5 +65,11 @@ namespace mhh
         /// </summary>
         public static Type FindType(this IReadOnlyList<Type> list, string typeName)
             => list.FirstOrDefault(t => t.Name.ToLowerInvariant().Equals(typeName.ToLowerInvariant()));
+
+        /// <summary>
+        /// Used in command-line switch parsing. Yes, I'm that lazy.
+        /// </summary>
+        public static bool LowercaseEquals(this string lhv, string comparison)
+            => (lhv.ToLowerInvariant().Equals(comparison.ToLowerInvariant()));
     }
 }
