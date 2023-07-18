@@ -1,6 +1,7 @@
 ﻿
 using CommandLineSwitchPipe;
 using eyecandy;
+using System.Text;
 
 /*
 Main does two things:
@@ -103,50 +104,76 @@ namespace mhh
         {
             // TODO - add --slideshow and --next switches
 
-            if (args.Length == 0 || args[0].LowercaseEquals("--help")) return ShowHelp();
+            if (args.Length == 0) return ShowHelp();
 
-            if (args[0].LowercaseEquals("--load"))
+            switch (args[0].ToLowerInvariant())
             {
-                if (args.Length != 2) return ShowHelp();
-                
-                // if a path separator exists, just send the argument as-is...
-                if (args[1].Contains('/')) return win.Command_Load(args[1]);
+                case "--load":
+                    if (args.Length != 2) return ShowHelp();
 
-                //...otherwise prefix with the shader path
-                return win.Command_Load(Path.Combine(AppConfig.ShaderPath, args[1]));
-            }
+                    // if a path separator exists, just send the argument as-is...
+                    if (args[1].Contains('/')) return win.Command_Load(args[1]);
 
-            if (args.Length > 1) return ShowHelp();
+                    //...otherwise prefix with the shader path
+                    return win.Command_Load(Path.Combine(AppConfig.ShaderPath, args[1]));
 
-            switch(args[0].ToLowerInvariant())
-            {
+                case "--help":
+                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("viz")) return ShowVizHelp();
+                    return ShowHelp();
+
                 case "--quit":
+                    if (args.Length > 1) return ShowHelp();
                     return win.Command_Quit();
 
                 case "--info":
+                    if (args.Length > 1) return ShowHelp();
                     return win.Command_Info();
 
                 case "--fps":
+                    if (args.Length > 1) return ShowHelp();
                     return win.FramesPerSecond.ToString();
 
                 case "--idle":
+                    if (args.Length > 1) return ShowHelp();
                     return win.Command_Idle();
 
                 case "--pause":
+                    if (args.Length > 1) return ShowHelp();
                     return win.Command_Pause();
 
                 case "--run":
+                    if (args.Length > 1) return ShowHelp();
                     return win.Command_Run();
 
                 case "--reload":
+                    if (args.Length > 1) return ShowHelp();
                     return win.Command_Reload();
 
                 case "--pid":
+                    if (args.Length > 1) return ShowHelp();
                     return Environment.ProcessId.ToString();
+
+                case "--viz":
+                    if (args.Length != 3) return ShowHelp();
+                    return win.Command_VizCommand(args[1], args[2]);
 
                 default:
                     return ShowHelp();
             }
+        }
+
+        private static string ShowVizHelp()
+        {
+            var help = win.Command_VizHelp();
+            if(help.Count == 0) return $"{win.ActiveVisualizer.VisualizerTypeName} does not accept runtime commands.";
+
+            var sb = new StringBuilder();
+            sb.AppendLine($"Runtime commands for {win.ActiveVisualizer.VisualizerTypeName}:");
+            foreach(var cv in help)
+            {
+                sb.AppendLine($"--viz [{cv.command}] [{cv.value}]");
+            }
+            return sb.ToString();
         }
 
         private static string ShowHelp()
@@ -169,6 +196,8 @@ All switches are passed to the already-running instance:
 --run                       executes the current shader
 --reload                    unloads and reloads the current shader
 --pid                       shows the current Process ID
+--viz [command] [value]     send commands to the current visualizer (if supported; see below)
+--help viz                  list --viz command/value options for the current visalizer, if any
 
 ";
     }

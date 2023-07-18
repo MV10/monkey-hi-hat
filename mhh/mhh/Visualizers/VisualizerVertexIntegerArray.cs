@@ -31,12 +31,12 @@ namespace mhh
 
         public void Start(HostWindow hostWindow)
         {
-            if (!Enum.TryParse<ArrayDrawingMode>(hostWindow.ActiveVisualizer.Config.Content["VisualizerVertexIntegerArray"]["ArrayDrawingMode"], out var mhhMode))
+            if (!Enum.TryParse<ArrayDrawingMode>(hostWindow.ActiveVisualizer.Config.ReadValue("VisualizerVertexIntegerArray","ArrayDrawingMode"), out var mhhMode))
                 mhhMode = ArrayDrawingMode.Points;
 
             DrawingMode = Array.FindIndex(Modes, m => m.Equals(mhhMode.GetGLDrawingMode()));
 
-            VertexIntegerCount = hostWindow.ActiveVisualizer.Config.Content["VisualizerVertexIntegerArray"]["VertexIntegerCount"].ToInt32(1000);
+            VertexIntegerCount = hostWindow.ActiveVisualizer.Config.ReadValue("VisualizerVertexIntegerArray", "VertexIntegerCount").ToInt32(1000);
             VertexIds = new float[VertexIntegerCount];
             for (var i = 0; i < VertexIntegerCount; i++)
             {
@@ -84,6 +84,25 @@ namespace mhh
         public void Dispose()
         {
             // do nothing
+        }
+
+        public string CommandLineArgument(HostWindow hostWindow, string command, string value)
+        {
+            var cmdMode = ArrayDrawingMode.Points;
+            if (!command.ToLowerInvariant().Equals("mode") || !Enum.TryParse(value, out cmdMode))
+                return "invalid command or value, try --help viz";
+            
+            DrawingMode = Array.FindIndex(Modes, m => m.Equals(cmdMode.GetGLDrawingMode()));
+
+            return $"setting drawing mode {Modes[DrawingMode]}";
+        }
+
+        public List<(string command, string value)> CommandLineArgumentHelp()
+        { 
+            return new() 
+            { 
+                ("mode", "Points|Lines|LineStrip|LineLoop|Triangles|TriangleStrip|TriangleFan")
+            };
         }
     }
 }

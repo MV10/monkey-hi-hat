@@ -35,5 +35,18 @@ namespace mhh
         /// Indicates this visualizer is being replaced. Dispose is called after this.
         /// </summary>
         public void Stop(HostWindow hostWindow);
+
+        /// <summary>
+        /// Called when the user issues the --viz switch to a running instance. The visualizer
+        /// defines the acceptable "command" and "value" arguments, if any. If the command
+        /// doesn't imply any specific output, return "ACK".
+        /// </summary>
+        public string CommandLineArgument(HostWindow hostWindow, string command, string value);
+
+        /// <summary>
+        /// Output should list all command/value pairs supported by CommandLineArgument, if
+        /// any. Formatting is controlled by the Program help functions which call this method.
+        /// </summary>
+        public List<(string command, string value)> CommandLineArgumentHelp();
     }
 }

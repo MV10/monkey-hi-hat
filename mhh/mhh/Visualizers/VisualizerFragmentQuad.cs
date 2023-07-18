@@ -86,5 +86,15 @@ namespace mhh
         {
             // do nothing
         }
+
+        public string CommandLineArgument(HostWindow hostWindow, string command, string value)
+        {
+            return "(does not support --viz commands)";
+        }
+
+        public List<(string command, string value)> CommandLineArgumentHelp()
+        {
+            return new();
+        }
     }
 }

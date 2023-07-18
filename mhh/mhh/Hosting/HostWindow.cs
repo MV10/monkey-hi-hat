@@ -231,6 +231,18 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
         }
 
         /// <summary>
+        /// Pass-through for IVisualizer.CommandLineArgument
+        /// </summary>
+        public string Command_VizCommand(string command, string value)
+            => Visualizer.CommandLineArgument(this, command, value);
+
+        /// <summary>
+        /// Pass-through for IVisualizer.CommandLineArgumentHelp
+        /// </summary>
+        public List<(string command, string value)> Command_VizHelp()
+            => Visualizer.CommandLineArgumentHelp();
+
+        /// <summary>
         /// Starts up the visualizer defined by the ActiveVisualizer field. Any cleanup of the
         /// previous visualizer (such as DestroyAudioTextures) is assumed to have been done prior
         /// to calling this (see OnUpdateFrame where this is addressed).
