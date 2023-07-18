@@ -26,6 +26,7 @@ namespace mhh
         public ConfigFile(string confPathname)
         {
             Pathname = Path.GetFullPath(confPathname);
+            if (!Pathname.EndsWith(".conf", StringComparison.InvariantCultureIgnoreCase)) Pathname += ".conf";
             if (!File.Exists(Pathname)) return;
 
             var section = string.Empty;

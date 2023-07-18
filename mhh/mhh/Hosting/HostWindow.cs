@@ -46,6 +46,9 @@ namespace mhh
             EngineCreateTexture = Engine.GetType().GetMethod("Create");
             EngineDestroyTexture = Engine.GetType().GetMethod("Destroy");
 
+            // StartNewVisualizer creates a shader, kill the one created by the base class
+            Shader?.Dispose();
+
             ActiveVisualizer = Program.AppConfig.IdleVisualizer;
             StartNewVisualizer();
 
@@ -70,7 +73,7 @@ namespace mhh
         /// </summary>
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            if (CommandFlag_Paused) return;
+            if (CommandFlag_Paused || CommandFlag_QuitRequested) return;
 
             base.OnRenderFrame(e);
 
@@ -94,39 +97,31 @@ namespace mhh
         {
             base.OnUpdateFrame(e);
 
+            // ESC to quit is the only keyboard input supported
+            var input = KeyboardState;
+            if (CommandFlag_QuitRequested || input.IsKeyDown(Keys.Escape))
+            {
+                EndVisualization();
+                Close();
+                return;
+            }
+
             // if the CommandLineSwitchPipe thread processed a request
             // to use a different shader, process that here where we know
             // the GLFW thread won't be trying to use the Shader object
-            lock(NewVisualizerLock)
+            lock (NewVisualizerLock)
             {
                 if(NewVisualizer is not null)
                 {
-                    Visualizer?.Stop(this);
-                    Visualizer?.Dispose();
-                    Visualizer = null;
-                    Shader?.Dispose();
-                    Engine.EndAudioProcessing_SynchronousHack();
-                    DestroyAudioTextures();
+                    EndVisualization();
 
-                    Interlocked.Exchange(ref ActiveVisualizer, NewVisualizer);
+                    ActiveVisualizer = NewVisualizer;
                     NewVisualizer = null;
 
                     StartNewVisualizer();
                     Clock.Restart();
                     Engine.BeginAudioProcessing();
-
-                    return;
                 }
-            }
-
-            // ESC to quit is the only keyboard input supported
-            var input = KeyboardState;
-            if (CommandFlag_QuitRequested || input.IsKeyDown(Keys.Escape))
-            {
-                Engine?.EndAudioProcessing_SynchronousHack();
-                Visualizer?.Stop(this);
-                Close();
-                return;
             }
 
             Visualizer.OnUpdateFrame(this, e);
@@ -160,6 +155,7 @@ namespace mhh
         public string Command_Load(string visualizerConfPathname)
         {
             var newViz = new VisualizerConfig(visualizerConfPathname);
+            if (newViz.Config.Content.Count == 0) return $"error loading {newViz.Config.Pathname}";
             ChangeVisualizer(newViz);
             return $"loading {newViz.Config.Pathname}";
         }
@@ -243,6 +239,19 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
             => Visualizer.CommandLineArgumentHelp();
 
         /// <summary>
+        /// Prepartion for starting a new viz, or for exiting the program.
+        /// </summary>
+        private void EndVisualization()
+        {
+            Visualizer?.Stop(this);
+            Visualizer?.Dispose();
+            Visualizer = null;
+            Shader?.Dispose();
+            Engine.EndAudioProcessing_SynchronousHack();
+            DestroyAudioTextures();
+        }
+
+        /// <summary>
         /// Starts up the visualizer defined by the ActiveVisualizer field. Any cleanup of the
         /// previous visualizer (such as DestroyAudioTextures) is assumed to have been done prior
         /// to calling this (see OnUpdateFrame where this is addressed).
@@ -254,6 +263,7 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
             if (VizType is null)
             {
                 ActiveVisualizer = Program.AppConfig.IdleVisualizer;
+                VizType = KnownTypes.Visualizers.FindType(ActiveVisualizer.VisualizerTypeName);
             }
             Visualizer = Activator.CreateInstance(VizType) as IVisualizer;
 
