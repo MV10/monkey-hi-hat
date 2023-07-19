@@ -73,7 +73,7 @@ namespace mhh
         /// </summary>
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            if (CommandFlag_Paused || CommandFlag_QuitRequested) return;
+            if (CommandFlag_Paused || CommandFlag_QuitRequested || Visualizer is null || Shader is null) return;
 
             base.OnRenderFrame(e);
 
@@ -97,12 +97,22 @@ namespace mhh
         {
             base.OnUpdateFrame(e);
 
-            // ESC to quit is the only keyboard input supported
-            var input = KeyboardState;
-            if (CommandFlag_QuitRequested || input.IsKeyDown(Keys.Escape))
+            // either requested from the command line or the ESC
+            // key on a previous pass in the next block of code
+            if (CommandFlag_QuitRequested)
             {
                 EndVisualization();
                 Close();
+                return;
+            }
+
+            // ESC to quit is the only keyboard input supported
+            var input = KeyboardState;
+            if (input.IsKeyDown(Keys.Escape))
+            {
+                // set the flag to ensure the render callback starts
+                // short-circuiting before we start releasing stuff
+                CommandFlag_QuitRequested = true;
                 return;
             }
 
@@ -129,7 +139,6 @@ namespace mhh
 
         public new void Dispose()
         {
-            Visualizer?.Dispose();
             Engine?.Dispose();
             base.Dispose(); // disposes the Shader
         }
@@ -247,6 +256,7 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
             Visualizer?.Dispose();
             Visualizer = null;
             Shader?.Dispose();
+            //Shader = null; // crashes base window Dispose until next release...
             Engine.EndAudioProcessing_SynchronousHack();
             DestroyAudioTextures();
         }
@@ -297,7 +307,6 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
 
             var defaultEnabled = (object)true;
 
-            // Each entry in the AudioTextures list is "uniform AudioTextureType"
             foreach (var tex in ActiveVisualizer.AudioTextureTypeNames)
             {
                 // match the string value to one of the known Eyecandy types
@@ -306,22 +315,25 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
                 // call the engine to create the object
                 if (TextureType is not null)
                 {
-                    var uniformName = (object)tex.Value;
                     var textureUnit = (object)(TextureUnit)(tex.Key + unit0);
+
+                    var uniformName = (object)(ActiveVisualizer.AudioTextureUniformNames.ContainsKey(tex.Key)
+                        ? ActiveVisualizer.AudioTextureUniformNames[tex.Key]
+                        : tex.Value.ToString());
+
                     var multiplier = (object)(ActiveVisualizer.AudioTextureMultipliers.ContainsKey(tex.Key)
                         ? ActiveVisualizer.AudioTextureMultipliers[tex.Key]
                         : 1.0f);
 
-                    // AudioTextureEngine.Create<TextureType>(uniform, assignedTextureUnit)
+                    // AudioTextureEngine.Create<TextureType>(uniform, assignedTextureUnit, multiplier, enabled)
                     var method = EngineCreateTexture.MakeGenericMethod(TextureType);
                     method.Invoke(Engine, new object[]
                     {
-                        uniformName,
-                        textureUnit,
-                        multiplier,
-                        defaultEnabled,
+                    uniformName,
+                    textureUnit,
+                    multiplier,
+                    defaultEnabled,
                     });
-
                 }
             }
 

@@ -43,6 +43,12 @@ namespace mhh
 
         static async Task Main(string[] args)
         {
+            if(args.Length == 1 && args[0].ToLowerInvariant().Equals("--help"))
+            {
+                Console.WriteLine(ShowHelp());
+                Environment.Exit(0);
+            }
+
             try
             {
                 CommandLineSwitchServer.Options.PipeName = "monkey-hi-hat";
@@ -165,10 +171,10 @@ namespace mhh
         private static string ShowVizHelp()
         {
             var help = win.Command_VizHelp();
-            if(help.Count == 0) return $"{win.ActiveVisualizer.VisualizerTypeName} does not accept runtime commands.";
+            if(help.Count == 0) return $"\n{win.ActiveVisualizer.VisualizerTypeName} does not accept runtime commands.";
 
             var sb = new StringBuilder();
-            sb.AppendLine($"Runtime commands for {win.ActiveVisualizer.VisualizerTypeName}:");
+            sb.AppendLine($"\nRuntime commands for {win.ActiveVisualizer.VisualizerTypeName}:\n");
             foreach(var cv in help)
             {
                 sb.AppendLine($"--viz [{cv.command}] [{cv.value}]");

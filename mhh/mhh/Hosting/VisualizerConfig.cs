@@ -21,6 +21,7 @@ namespace mhh
 
         public readonly string VisualizerTypeName;
 
+        public readonly Dictionary<int, string> AudioTextureUniformNames = new();
         public readonly Dictionary<int, string> AudioTextureTypeNames = new();
         public readonly Dictionary<int, float> AudioTextureMultipliers = new();
 
@@ -48,12 +49,15 @@ namespace mhh
 
             if(Config.Content.ContainsKey("audiotextures"))
             {
+                // Each entry is "unit#=uniform TypeName"
                 foreach(var tex in Config.Content["audiotextures"])
                 {
                     var unit = tex.Key.ToInt32(-1);
-                    if(unit >-1 && unit <32 && !string.IsNullOrWhiteSpace(tex.Value) && !AudioTextureTypeNames.ContainsKey(unit))
+                    var definition = tex.Value.Split(' ');
+                    if(unit >-1 && unit <32 && definition.Length == 2 && !AudioTextureTypeNames.ContainsKey(unit))
                     {
-                        AudioTextureTypeNames.Add(unit, tex.Value);
+                        AudioTextureUniformNames.Add(unit, definition[0]);
+                        AudioTextureTypeNames.Add(unit, definition[1]);
                         AudioTextureMultipliers.Add(unit, 1.0f);
                     }
                 }

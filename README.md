@@ -45,7 +45,7 @@ Generally it contains things like paths and audio device information. Some infor
 
 # Visualization Configuration
 
-A visualization consists of three files: the configuration, a vertex shader source file, and a fragment shader source file. I will add a folder to this repository containing samples, but here is a simple example that reproduces the FFT Frequency Magnitude display from the eyecandy repository's History demo.
+A visualization consists of three files: the configuration, a vertex shader source file, and a fragment shader source file. There are many examples in the repo's [samples](https://github.com/MV10/monkey-hi-hat/tree/master/samples) directory, but here is a one that reproduces the FFT Frequency Magnitude display from the eyecandy repository's History demo.
 
 This illustrates a few important points. This particular visualization needs an audio texture. The type of visualizer is similar to Shadertoy.com, which means most of the work is done in the frag shader. Thus, a default vert shader is used (although that isn't required by any means). The frag shader is re-used among multiple visualizations based on the eyecandy History demo (namely, the other audio texture styles).
 
@@ -60,7 +60,7 @@ VertexShaderFilename=VisualizerFragmentQuad.vert
 FragmentShaderFilename=eyecandy_demo_history.frag
 
 [audiotextures]
-0=AudioTextureFrequencyMagnitudeHistory
+0=sound AudioTextureFrequencyMagnitudeHistory
 
 [audiotexturemultipliers]
 0=5.0
@@ -89,14 +89,14 @@ void main(void)
 
 ```glsl
 #version 320 es
-precision mediump float;
+precision highp float;
 
 in vec2 fragCoord;
-uniform sampler2D wave;
+uniform sampler2D sound;
 out vec4 fragColor;
 
 void main()
 {
-    fragColor = texture(wave, fragCoord);
+    fragColor = texture(sound, fragCoord);
 }
 ```
