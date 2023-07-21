@@ -1,4 +1,6 @@
 ﻿
+using Microsoft.Extensions.Logging;
+
 namespace mhh
 {
     /// <summary>
@@ -27,7 +29,19 @@ namespace mhh
         {
             Pathname = Path.GetFullPath(confPathname);
             if (!Pathname.EndsWith(".conf", StringComparison.InvariantCultureIgnoreCase)) Pathname += ".conf";
-            if (!File.Exists(Pathname)) return;
+            if (!File.Exists(Pathname))
+            {
+                var err = $"Configuration file not found: {Pathname}";
+                if (LogHelper.Logger is null)
+                {
+                    Console.WriteLine(err);
+                }
+                else
+                {
+                    LogHelper.Logger.LogError(err);
+                }
+                return;
+            }
 
             var section = string.Empty;
             foreach (var line in File.ReadAllLines(Pathname))

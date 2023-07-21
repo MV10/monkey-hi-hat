@@ -1,4 +1,5 @@
 ﻿using eyecandy;
+using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -40,17 +41,13 @@ namespace mhh
         private VisualizerConfig NewVisualizer = null;
 
         public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
-            : base(windowConfig)
+            : base(windowConfig, createShaderFromConfig: false)
         {
             Engine = new(audioConfig);
             EngineCreateTexture = Engine.GetType().GetMethod("Create");
             EngineDestroyTexture = Engine.GetType().GetMethod("Destroy");
 
-            // StartNewVisualizer creates a shader, kill the one created by the base class
-            Shader?.Dispose();
-
-            ActiveVisualizer = Program.AppConfig.IdleVisualizer;
-            StartNewVisualizer();
+            ForceIdleVisualization(true);
 
             Clock.Start();
         }
@@ -164,9 +161,14 @@ namespace mhh
         public string Command_Load(string visualizerConfPathname)
         {
             var newViz = new VisualizerConfig(visualizerConfPathname);
-            if (newViz.Config.Content.Count == 0) return $"error loading {newViz.Config.Pathname}";
+            if (newViz.Config.Content.Count == 0)
+            {
+                var msg = $"Unable to load visualizer configuration {newViz.Config.Pathname}";
+                LogHelper.Logger?.LogError(msg);
+                return msg;
+            }
             ChangeVisualizer(newViz);
-            return $"loading {newViz.Config.Pathname}";
+            return $"Loading {newViz.Config.Pathname}";
         }
 
         /// <summary>
@@ -186,6 +188,8 @@ namespace mhh
 $@"
 elapsed sec: {Clock.Elapsed.TotalSeconds:0.####}
 frame rate : {FramesPerSecond}
+average fps: {AverageFramesPerSecond}
+avg fps sec: {AverageFPSTimeframeSeconds}
 description: {ActiveVisualizer.Description}
 config file: {ActiveVisualizer.Config.Pathname}
 vert shader: {ActiveVisualizer.VertexShaderPathname}
@@ -248,6 +252,20 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
             => Visualizer.CommandLineArgumentHelp();
 
         /// <summary>
+        /// Mostly an emergency bail-out for StartNewVisualizer.
+        /// </summary>
+        private void ForceIdleVisualization(bool initializingWindow)
+        {
+            if(!initializingWindow && ActiveVisualizer == Program.AppConfig.IdleVisualizer)
+            {
+                throw new Exception("Built-in idle visualizer has failed.");
+            }
+            if(!initializingWindow) EndVisualization();
+            ActiveVisualizer = Program.AppConfig.IdleVisualizer;
+            StartNewVisualizer();
+        }
+
+        /// <summary>
         /// Prepartion for starting a new viz, or for exiting the program.
         /// </summary>
         private void EndVisualization()
@@ -256,8 +274,8 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
             Visualizer?.Dispose();
             Visualizer = null;
             Shader?.Dispose();
-            //Shader = null; // crashes base window Dispose until next release...
-            Engine.EndAudioProcessing_SynchronousHack();
+            Shader = null; // eyecandy 1.0.1 should be able to handle this now
+            Engine?.EndAudioProcessing_SynchronousHack();
             DestroyAudioTextures();
         }
 
@@ -272,8 +290,9 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
             var VizType = KnownTypes.Visualizers.FindType(ActiveVisualizer.VisualizerTypeName);
             if (VizType is null)
             {
-                ActiveVisualizer = Program.AppConfig.IdleVisualizer;
-                VizType = KnownTypes.Visualizers.FindType(ActiveVisualizer.VisualizerTypeName);
+                LogHelper.Logger.LogError($"Visualizer type not recognized: {ActiveVisualizer.VisualizerTypeName}; using default idle-viz.");
+                ForceIdleVisualization(false);
+                return;
             }
             Visualizer = Activator.CreateInstance(VizType) as IVisualizer;
 
@@ -282,9 +301,9 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
             Shader = new(ActiveVisualizer.VertexShaderPathname, ActiveVisualizer.FragmentShaderPathname);
             if(!Shader.IsValid)
             {
-                var sb = new StringBuilder().AppendLine("Shader load/compile failed");
-                foreach (var s in ErrorLogging.ShaderErrors) sb.AppendLine(s);
-                throw new InvalidOperationException(sb.ToString());
+                LogHelper.Logger.LogError($"Shader not valid for {ActiveVisualizer.Config.Pathname}; using default idle-viz.");
+                ForceIdleVisualization(false);
+                return;
             }
 
             Visualizer.Start(this);
@@ -302,6 +321,8 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
         /// </summary>
         private void CreateAudioTextures()
         {
+            if (Engine is null || ActiveVisualizer is null) return;
+
             // Enum Texture0 is some big weird number, but they increment serially from there
             int unit0 = (int)TextureUnit.Texture0;
 
@@ -346,6 +367,8 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
         /// </summary>
         private void DestroyAudioTextures()
         {
+            if (Engine is null || ActiveVisualizer is null) return;
+
             foreach(var tex in ActiveVisualizer.AudioTextureTypeNames)
             {
                 // AudioTextureEngine.Destroy<TextureType>()

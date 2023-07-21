@@ -31,8 +31,9 @@ namespace mhh
 
         public void Start(HostWindow hostWindow)
         {
-            if (!Enum.TryParse<ArrayDrawingMode>(hostWindow.ActiveVisualizer.Config.ReadValue("VisualizerVertexIntegerArray","ArrayDrawingMode"), out var mhhMode))
-                mhhMode = ArrayDrawingMode.Points;
+            var mhhMode = hostWindow.ActiveVisualizer.Config
+                .ReadValue("VisualizerVertexIntegerArray", "ArrayDrawingMode")
+                .ToEnum(ArrayDrawingMode.Points);
 
             DrawingMode = Array.FindIndex(Modes, m => m.Equals(mhhMode.GetGLDrawingMode()));
 
@@ -88,13 +89,12 @@ namespace mhh
 
         public string CommandLineArgument(HostWindow hostWindow, string command, string value)
         {
-            var cmdMode = ArrayDrawingMode.Points;
-            if (!command.ToLowerInvariant().Equals("mode") || !Enum.TryParse(value, out cmdMode))
-                return "invalid command or value, try --help viz";
-            
-            DrawingMode = Array.FindIndex(Modes, m => m.Equals(cmdMode.GetGLDrawingMode()));
+            if (!command.ToLowerInvariant().Equals("mode"))
+                return "Invalid command, try: --help viz";
 
-            return $"setting drawing mode {Modes[DrawingMode]}";
+            var cmdMode = command.ToEnum(ArrayDrawingMode.Points);
+            DrawingMode = Array.FindIndex(Modes, m => m.Equals(cmdMode.GetGLDrawingMode()));
+            return $"Setting drawing mode: {Modes[DrawingMode]}";
         }
 
         public List<(string command, string value)> CommandLineArgumentHelp()

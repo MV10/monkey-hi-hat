@@ -25,9 +25,12 @@ Executing "mhh" with no switches launches the program. After that, you run it ag
 --run                       executes the current shader
 --reload                    unloads and reloads the current shader
 --pid                       shows the current Process ID
+--log [level]               shows or sets log-level (None, Trace, Debug, Information, Warning, Error, Critical)
 --viz [command] [value]     send commands to the current visualizer (if supported; see below)
 --help viz                  list --viz command/value options for the current visalizer, if any
 ```
+
+By default, warnings and errors are written to `mhh.log` in the application directory. The log level can be changed although currently the application and its libraries only write events with Warning or Error levels. Microsoft libraries are not wired into the logger at this time.
 
 As the last two lines note, visualizers may support additional commands. At this time only visualizer supports commands. When it's loaded and running, `--help viz` shows:
 

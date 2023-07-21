@@ -89,7 +89,7 @@ namespace mhh
 
         public string CommandLineArgument(HostWindow hostWindow, string command, string value)
         {
-            return "(does not support --viz commands)";
+            return $"{GetType()} does not support --viz commands.";
         }
 
         public List<(string command, string value)> CommandLineArgumentHelp()

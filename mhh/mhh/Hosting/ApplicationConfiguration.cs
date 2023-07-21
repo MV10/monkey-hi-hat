@@ -5,8 +5,10 @@ namespace mhh
 {
     public class ApplicationConfiguration
     {
-        public readonly string PlaylistPath = string.Empty;
+        public static readonly string SectionOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux";
+
         public readonly string ShaderPath = string.Empty;
+        public readonly string PlaylistPath = string.Empty;
         public readonly string PluginPath = string.Empty;
 
         public readonly bool StartFullScreen;
@@ -18,22 +20,22 @@ namespace mhh
 
         public readonly VisualizerConfig IdleVisualizer;
 
-        public ApplicationConfiguration(string appConfigPathname, string idleVisualizerConfigPathname)
+        public readonly ConfigFile Config;
+
+        public ApplicationConfiguration(ConfigFile appConfigFile, string idleVisualizerConfigPathname)
         {
-            var conf = new ConfigFile(appConfigPathname);
+            Config = appConfigFile;
 
-            StartFullScreen = conf.ReadValue("setup", "startfullscreen").ToBool(false);
-            SizeX = conf.ReadValue("setup", "sizex").ToInt32(960);
-            SizeY = conf.ReadValue("setup", "sizey").ToInt32(540);
+            StartFullScreen = Config.ReadValue("setup", "startfullscreen").ToBool(false);
+            SizeX = Config.ReadValue("setup", "sizex").ToInt32(960);
+            SizeY = Config.ReadValue("setup", "sizey").ToInt32(540);
 
-            var osSection = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux";
+            ShaderPath = Config.ReadValue(SectionOS, "shaderpath");
+            PlaylistPath = Config.ReadValue(SectionOS, "playlistpath");
+            PluginPath = Config.ReadValue(SectionOS, "pluginpath");
 
-            PlaylistPath = conf.ReadValue(osSection, "playlistpath");
-            ShaderPath = conf.ReadValue(osSection, "shaderpath");
-            PluginPath = conf.ReadValue(osSection, "pluginpath");
-
-            CaptureDriverName = conf.ReadValue(osSection, "capturedrivername");
-            CaptureDeviceName = conf.ReadValue(osSection, "capturedevicename");
+            CaptureDriverName = Config.ReadValue(SectionOS, "capturedrivername");
+            CaptureDeviceName = Config.ReadValue(SectionOS, "capturedevicename");
 
             IdleVisualizer = new(idleVisualizerConfigPathname);
         }

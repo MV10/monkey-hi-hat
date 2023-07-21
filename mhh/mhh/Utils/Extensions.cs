@@ -46,19 +46,34 @@ namespace mhh
         /// String-conversion helper
         /// </summary>
         public static bool ToBool(this string textValue, bool defaultValue)
-            => (bool.TryParse(textValue, out var parsed)) ? parsed : defaultValue;
+            => bool.TryParse(textValue, out var parsed) ? parsed : defaultValue;
 
         /// <summary>
         /// String-conversion helper
         /// </summary>
         public static int ToInt32(this string textValue, int defaultValue)
-            => (int.TryParse(textValue, out var parsed)) ? parsed : defaultValue;
+            => int.TryParse(textValue, out var parsed) ? parsed : defaultValue;
 
         /// <summary>
         /// String-conversion helper
         /// </summary>
         public static float ToFloat(this string textValue, float defaultValue)
-            => (float.TryParse(textValue, out var parsed)) ? parsed : defaultValue;
+            => float.TryParse(textValue, out var parsed) ? parsed : defaultValue;
+
+        /// <summary>
+        /// Enum-conversion helper
+        /// </summary>
+        public static T ToEnum<T>(this string textValue, T defaultValue)
+            where T : Enum
+            => Enum.IsDefined(typeof(T), textValue)
+            ? Enum.TryParse(typeof(T), textValue, true, out var parsed) ? (T)parsed : defaultValue
+            : defaultValue;
+
+        /// <summary>
+        /// Returns a default value for a null or whitespace string.
+        /// </summary>
+        public static string DefaultString(this string textValue, string defaultValue)
+            => string.IsNullOrWhiteSpace(textValue) ? defaultValue : textValue;
 
         /// <summary>
         /// Finds a concrete Type by name from an IReadOnlyList<Type> collection

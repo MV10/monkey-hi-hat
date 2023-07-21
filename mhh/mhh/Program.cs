@@ -1,10 +1,13 @@
 ﻿
 using CommandLineSwitchPipe;
 using eyecandy;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Extensions.Logging;
 using System.Text;
 
 /*
-Main does two things:
+Program.Main primarily does two things:
 -- sets up and runs the VisualizerHostWindow
 -- processes switches / args recieved at runtime
 
@@ -43,7 +46,18 @@ namespace mhh
 
         static async Task Main(string[] args)
         {
-            if(args.Length == 1 && args[0].ToLowerInvariant().Equals("--help"))
+            // Load the application configuration file (parsed later)
+            var appConfigFile = new ConfigFile("mhh.conf");
+
+            // Prepare logging and the switch server
+            CommandLineSwitchServer.Options.PipeName = "monkey-hi-hat";
+            var alreadyRunning = await CommandLineSwitchServer.TryConnect();
+            LogHelper.Initialize(appConfigFile, alreadyRunning);
+            CommandLineSwitchServer.Options.Logger = LogHelper.Logger;
+
+            // Show help if requested, or if it's already running but no args were provided
+            if((args.Length == 1 && args[0].ToLowerInvariant().Equals("--help"))
+                || (args.Length == 0 && alreadyRunning))
             {
                 Console.WriteLine(ShowHelp());
                 Environment.Exit(0);
@@ -51,7 +65,8 @@ namespace mhh
 
             try
             {
-                CommandLineSwitchServer.Options.PipeName = "monkey-hi-hat";
+                // Parse the application configuration file
+                AppConfig = new ApplicationConfiguration(appConfigFile, "InternalShaders/idle.conf");
 
                 // Send args to an already-running instance?
                 if (await CommandLineSwitchServer.TrySendArgs())
@@ -64,7 +79,12 @@ namespace mhh
                 Console.Clear();
                 Console.WriteLine($"\nmonkey-hi-hat (PID {Environment.ProcessId})");
 
-                AppConfig = new ApplicationConfiguration("mhh.conf", "InternalShaders/idle.conf");
+                // Start listening for commands
+                ctsSwitchPipe = new();
+                _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessExecutionSwitches, ctsSwitchPipe.Token));
+
+                // Prepare the window configurations
+                ErrorLogging.Logger = LogHelper.Logger;
 
                 var AudioConfig = new EyeCandyCaptureConfig();
                 AudioConfig.DriverName = AppConfig.CaptureDriverName;
@@ -76,10 +96,6 @@ namespace mhh
                 WindowConfig.StartFullScreen = AppConfig.StartFullScreen;
                 WindowConfig.VertexShaderPathname = AppConfig.IdleVisualizer.VertexShaderPathname;
                 WindowConfig.FragmentShaderPathname = AppConfig.IdleVisualizer.FragmentShaderPathname;
-
-                // Start listening for commands
-                ctsSwitchPipe = new();
-                _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessExecutionSwitches, ctsSwitchPipe.Token));
 
                 // Spin up the window and get the show started
                 win = new(WindowConfig, AudioConfig);
@@ -93,16 +109,17 @@ namespace mhh
                 var e = ex;
                 while(e != null)
                 {
-                    Console.WriteLine($"\n{e.GetType().Name}: {e.Message}");
+                    LogHelper.Logger.LogError($"{e.GetType().Name}: {e.Message}");
                     e = e.InnerException;
                 }
-                Console.WriteLine($"\n{ex.StackTrace}");
+                LogHelper.Logger.LogError(ex.StackTrace);
             }
             finally
             {
                 // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
                 ctsSwitchPipe?.Cancel();
                 win?.Dispose();
+                Log.CloseAndFlush();
             }
         }
 
@@ -137,7 +154,7 @@ namespace mhh
 
                 case "--fps":
                     if (args.Length > 1) return ShowHelp();
-                    return win.FramesPerSecond.ToString();
+                    return $"{win.FramesPerSecond} FPS\n{win.AverageFramesPerSecond} average FPS over {win.AverageFPSTimeframeSeconds} seconds";
 
                 case "--idle":
                     if (args.Length > 1) return ShowHelp();
@@ -158,6 +175,10 @@ namespace mhh
                 case "--pid":
                     if (args.Length > 1) return ShowHelp();
                     return Environment.ProcessId.ToString();
+
+                case "--log":
+                    if (args.Length == 1) return $"current log level {LevelConvert.ToExtensionsLevel(LogHelper.LevelSwitch.MinimumLevel).ToString()}";
+                    return $"setting log level {LogHelper.SetLogLevel(args[1])}";
 
                 case "--viz":
                     if (args.Length != 3) return ShowHelp();
@@ -202,6 +223,7 @@ All switches are passed to the already-running instance:
 --run                       executes the current shader
 --reload                    unloads and reloads the current shader
 --pid                       shows the current Process ID
+--log [level]               shows or sets log-level (None, Trace, Debug, Information, Warning, Error, Critical)
 --viz [command] [value]     send commands to the current visualizer (if supported; see below)
 --help viz                  list --viz command/value options for the current visalizer, if any
 
