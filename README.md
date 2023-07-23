@@ -7,7 +7,7 @@ Although my goal is to run this on a Raspberry Pi 4B, for what it's worth, every
 
 As the Pi will be stashed away behind the AV equipment, control will be via SSH terminal connections, sending commands (like "refresh the playlist" or "switch to shader XYZ") via named-pipe using my [CommandLineSwitchPipe](https://github.com/MV10/CommandLineSwitchPipe) library. And maybe if I'm feeling frisky, I'll write a simple Android app, too.
 
-Why "monkey-hi-hat"? My wife's D&D character's familiar is some monkey-based, and at some point we're going to try to animate a model of this thing in time with music. Ya gotta have goals, right? Plus, I had to call it _something_...
+Why "monkey-hi-hat"? My wife's D&D character's familiar is something monkey-based, and at some point we're going to try to animate a model of this thing in time with music. Ya gotta have goals, right? Plus, I had to call it _something_...
 
 # Commands
 
@@ -32,7 +32,7 @@ Executing "mhh" with no switches launches the program. After that, you run it ag
 
 By default, warnings and errors are written to `mhh.log` in the application directory. The log level can be changed although currently the application and its libraries only write events with Warning or Error levels. Microsoft libraries are not wired into the logger at this time.
 
-As the last two lines note, visualizers may support additional commands. At this time only visualizer supports commands. When it's loaded and running, `--help viz` shows:
+As the last two lines note, visualizers may support additional commands. At this time only one visualizer supports commands. When it's loaded and running, `--help viz` shows:
 
 ```
 Runtime commands for VisualizerVertexIntegerArray:
