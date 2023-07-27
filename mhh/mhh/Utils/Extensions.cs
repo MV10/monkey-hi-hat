@@ -61,6 +61,12 @@ namespace mhh
             => float.TryParse(textValue, out var parsed) ? parsed : defaultValue;
 
         /// <summary>
+        /// String-conversion helper
+        /// </summary>
+        public static double ToDouble(this string textValue, double defaultValue)
+            => double.TryParse(textValue, out var parsed) ? parsed : defaultValue;
+
+        /// <summary>
         /// Enum-conversion helper
         /// </summary>
         public static T ToEnum<T>(this string textValue, T defaultValue)

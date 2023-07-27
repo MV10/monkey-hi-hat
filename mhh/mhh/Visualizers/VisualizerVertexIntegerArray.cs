@@ -92,7 +92,7 @@ namespace mhh
             if (!command.ToLowerInvariant().Equals("mode"))
                 return "Invalid command, try: --help viz";
 
-            var cmdMode = command.ToEnum(ArrayDrawingMode.Points);
+            var cmdMode = value.ToEnum(ArrayDrawingMode.Points);
             DrawingMode = Array.FindIndex(Modes, m => m.Equals(cmdMode.GetGLDrawingMode()));
             return $"Setting drawing mode: {Modes[DrawingMode]}";
         }

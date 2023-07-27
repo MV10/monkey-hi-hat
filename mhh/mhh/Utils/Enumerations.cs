@@ -18,4 +18,14 @@ namespace mhh
         TriangleStrip = PrimitiveType.TriangleStrip,
         TriangleFan = PrimitiveType.TriangleFan,
     }
+
+    /// <summary>
+    /// When silence-detection is active, action to take upon detection.
+    /// </summary>
+    public enum SilenceAction
+    {
+        None = 0,
+        Idle = 1,
+        Blank = 2,
+    }
 }

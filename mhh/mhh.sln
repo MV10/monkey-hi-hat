@@ -27,6 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoSamples", "RepoSamples"
 		..\samples\eyecandy_demo_modes.vert = ..\samples\eyecandy_demo_modes.vert
 		..\samples\plasma_grid.conf = ..\samples\plasma_grid.conf
 		..\samples\plasma_grid.vert = ..\samples\plasma_grid.vert
+		..\samples\playlist.conf = ..\samples\playlist.conf
 		..\samples\pointy_eyeball.conf = ..\samples\pointy_eyeball.conf
 		..\samples\pointy_eyeball.vert = ..\samples\pointy_eyeball.vert
 		..\samples\VisualizerFragmentQuad.vert = ..\samples\VisualizerFragmentQuad.vert

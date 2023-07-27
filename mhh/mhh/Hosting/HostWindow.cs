@@ -37,6 +37,9 @@ namespace mhh
         private bool CommandFlag_Paused = false;
         private bool CommandFlag_QuitRequested = false;
 
+        private bool TrackingSilentPeriod = false;
+        private bool RespondedToSilence = false;
+
         private object NewVisualizerLock = new();
         private VisualizerConfig NewVisualizer = null;
 
@@ -113,6 +116,38 @@ namespace mhh
                 return;
             }
 
+            // silence detection handling
+            if(Program.AppConfig.DetectSilenceSeconds > 0)
+            {
+                double duration = 0;
+                if(Engine.IsSilent)
+                {
+                    if(!TrackingSilentPeriod)
+                    {
+                        TrackingSilentPeriod = true;
+                        RespondedToSilence = false;
+                    }
+                    else
+                    {
+                        if (!RespondedToSilence) duration = DateTime.Now.Subtract(Engine.SilenceStarted).TotalSeconds;
+                    }
+                }
+                else
+                {
+                    if(TrackingSilentPeriod)
+                    {
+                        TrackingSilentPeriod = false;
+                        if (!RespondedToSilence) duration = Engine.SilenceEnded.Subtract(Engine.SilenceStarted).TotalSeconds;
+                    }
+                }
+
+                if (duration >= Program.AppConfig.DetectSilenceSeconds)
+                {
+                    RespondToSilence(duration);
+                    return;
+                }
+            }
+
             // if the CommandLineSwitchPipe thread processed a request
             // to use a different shader, process that here where we know
             // the GLFW thread won't be trying to use the Shader object
@@ -163,12 +198,14 @@ namespace mhh
             var newViz = new VisualizerConfig(visualizerConfPathname);
             if (newViz.Config.Content.Count == 0)
             {
-                var msg = $"Unable to load visualizer configuration {newViz.Config.Pathname}";
-                LogHelper.Logger?.LogError(msg);
-                return msg;
+                var err = $"Unable to load visualizer configuration {newViz.Config.Pathname}";
+                LogHelper.Logger?.LogError(err);
+                return err;
             }
             ChangeVisualizer(newViz);
-            return $"Loading {newViz.Config.Pathname}";
+            var msg = $"Loading {newViz.Config.Pathname}";
+            LogHelper.Logger?.LogInformation(msg);
+            return msg;
         }
 
         /// <summary>
@@ -184,8 +221,8 @@ namespace mhh
         /// Handler for the --info command-line switch.
         /// </summary>
         public string Command_Info()
-            =>
-$@"
+        {
+            var msg = $@"
 elapsed sec: {Clock.Elapsed.TotalSeconds:0.####}
 frame rate : {FramesPerSecond}
 average fps: {AverageFramesPerSecond}
@@ -196,6 +233,9 @@ vert shader: {ActiveVisualizer.VertexShaderPathname}
 frag shader: {ActiveVisualizer.FragmentShaderPathname}
 vizualizer : {ActiveVisualizer.VisualizerTypeName}
 ";
+            LogHelper.Logger?.LogInformation(msg);
+            return msg;
+        }
 
         /// <summary>
         /// Handler for the --idle command-line switch.
@@ -250,6 +290,25 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
         /// </summary>
         public List<(string command, string value)> Command_VizHelp()
             => Visualizer.CommandLineArgumentHelp();
+
+        /// <summary>
+        /// Implements the configured action when silence is detected by OnUpdateFrame
+        /// </summary>
+        private void RespondToSilence(double duration)
+        {
+            RespondedToSilence = true;
+
+            LogHelper.Logger?.LogDebug($"Silence detected (duration: {duration:0.####} sec");
+
+            lock (NewVisualizerLock)
+            {
+                NewVisualizer = Program.AppConfig.DetectSilenceAction switch
+                {
+                    SilenceAction.Blank => Program.AppConfig.BlankVisualizer,
+                    SilenceAction.Idle => Program.AppConfig.IdleVisualizer,
+                };
+            }
+        }
 
         /// <summary>
         /// Mostly an emergency bail-out for StartNewVisualizer.

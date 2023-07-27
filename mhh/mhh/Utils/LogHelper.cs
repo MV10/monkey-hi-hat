@@ -31,7 +31,7 @@ namespace mhh
             logPath = Path.GetFullPath(logPath);
             if (!alreadyRunning && File.Exists(logPath)) File.Delete(logPath);
 
-            var logLevel = appConfig.ReadValue(ApplicationConfiguration.SectionOS, "loglevel").ToEnum(LogLevel.Warning);
+            var logLevel = appConfig.ReadValue("setup", "loglevel").ToEnum(LogLevel.Warning);
             LevelSwitch = new(LevelConvert.ToSerilogLevel(logLevel));
 
             var cfg = new LoggerConfiguration()
@@ -43,6 +43,8 @@ namespace mhh
             Log.Logger = cfg.CreateLogger();
 
             Logger = new SerilogLoggerFactory().CreateLogger("monkey-hi-hat");
+
+            Logger.LogDebug($"ILogger created (PID {Environment.ProcessId})");
         }
 
         /// <summary>

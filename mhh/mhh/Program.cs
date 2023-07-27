@@ -65,12 +65,12 @@ namespace mhh
 
             try
             {
-                // Parse the application configuration file
-                AppConfig = new ApplicationConfiguration(appConfigFile, "InternalShaders/idle.conf");
+                LogHelper.Logger?.LogInformation($"Starting (PID {Environment.ProcessId})");
 
                 // Send args to an already-running instance?
                 if (await CommandLineSwitchServer.TrySendArgs())
                 {
+                    LogHelper.Logger?.LogDebug($"Sending switch: {args[0]}");
                     Console.WriteLine(CommandLineSwitchServer.QueryResponse);
                     return;
                 }
@@ -79,23 +79,33 @@ namespace mhh
                 Console.Clear();
                 Console.WriteLine($"\nmonkey-hi-hat (PID {Environment.ProcessId})");
 
+                // Parse the application configuration file and internal shaders
+                AppConfig = new ApplicationConfiguration(appConfigFile);
+
                 // Start listening for commands
                 ctsSwitchPipe = new();
                 _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessExecutionSwitches, ctsSwitchPipe.Token));
 
-                // Prepare the window configurations
+                // Prepare the eycandy library
                 ErrorLogging.Logger = LogHelper.Logger;
 
-                var AudioConfig = new EyeCandyCaptureConfig();
-                AudioConfig.DriverName = AppConfig.CaptureDriverName;
-                AudioConfig.CaptureDeviceName = AppConfig.CaptureDeviceName;
+                var AudioConfig = new EyeCandyCaptureConfig()
+                {
+                    DriverName = AppConfig.CaptureDriverName,
+                    CaptureDeviceName = AppConfig.CaptureDeviceName,
+                    DetectSilence = true, // always detect, playlists may need it
+                    MaximumSilenceRMS = AppConfig.DetectSilenceMaxRMS,
+                };
 
-                var WindowConfig = new EyeCandyWindowConfig();
+                var WindowConfig = new EyeCandyWindowConfig()
+                {
+                    StartFullScreen = AppConfig.StartFullScreen,
+                    HideMousePointer = AppConfig.HideMousePointer,
+                    VertexShaderPathname = AppConfig.IdleVisualizer.VertexShaderPathname,
+                    FragmentShaderPathname = AppConfig.IdleVisualizer.FragmentShaderPathname,
+                };
                 WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
                 WindowConfig.OpenTKNativeWindowSettings.Size = (AppConfig.SizeX, AppConfig.SizeY);
-                WindowConfig.StartFullScreen = AppConfig.StartFullScreen;
-                WindowConfig.VertexShaderPathname = AppConfig.IdleVisualizer.VertexShaderPathname;
-                WindowConfig.FragmentShaderPathname = AppConfig.IdleVisualizer.FragmentShaderPathname;
 
                 // Spin up the window and get the show started
                 win = new(WindowConfig, AudioConfig);
@@ -109,25 +119,40 @@ namespace mhh
                 var e = ex;
                 while(e != null)
                 {
-                    LogHelper.Logger.LogError($"{e.GetType().Name}: {e.Message}");
+                    LogException($"{e.GetType().Name}: {e.Message}");
                     e = e.InnerException;
                 }
-                LogHelper.Logger.LogError(ex.StackTrace);
+                LogException(ex.StackTrace);
             }
             finally
             {
                 // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
                 ctsSwitchPipe?.Cancel();
                 win?.Dispose();
+                LogHelper.Logger?.LogInformation($"Exiting (PID {Environment.ProcessId})");
                 Log.CloseAndFlush();
+            }
+        }
+
+        private static void LogException(string message)
+        {
+            if(LogHelper.Logger is null)
+            {
+                Console.WriteLine($"[no logger] {message}");
+            }
+            else
+            {
+                LogHelper.Logger.LogError(message);
             }
         }
 
         private static string ProcessExecutionSwitches(string[] args)
         {
-            // TODO - add --slideshow and --next switches
+            // TODO - add --playlist and --next switches
 
             if (args.Length == 0) return ShowHelp();
+
+            LogHelper.Logger?.LogInformation($"Processing switches: {string.Join(" ", args)}");
 
             switch (args[0].ToLowerInvariant())
             {
@@ -139,6 +164,27 @@ namespace mhh
 
                     //...otherwise prefix with the shader path
                     return win.Command_Load(Path.Combine(AppConfig.ShaderPath, args[1]));
+
+                case "--list":
+                    if (args.Length != 2) return ShowHelp();
+
+                    var sb = new StringBuilder();
+
+                    if (args[1].ToLowerInvariant().Equals("viz"))
+                    {
+                        // ERR: prefix expected by GUI control app
+                        if (string.IsNullOrEmpty(AppConfig.ShaderPath)) return "ERR: ShaderPath not defined in mhh.conf.";
+                        return GetConfigFiles(AppConfig.ShaderPath);
+                    }
+
+                    if (args[1].ToLowerInvariant().Equals("playlists"))
+                    {
+                        // ERR: prefix expected by GUI control app
+                        if (string.IsNullOrEmpty(AppConfig.PlaylistPath)) return "ERR: PlaylistPath not defined in mhh.conf.";
+                        return GetConfigFiles(AppConfig.PlaylistPath);
+                    }
+
+                    return ShowHelp();
 
                 case "--help":
                     if (args.Length == 2 && args[1].ToLowerInvariant().Equals("viz")) return ShowVizHelp();
@@ -177,8 +223,8 @@ namespace mhh
                     return Environment.ProcessId.ToString();
 
                 case "--log":
-                    if (args.Length == 1) return $"current log level {LevelConvert.ToExtensionsLevel(LogHelper.LevelSwitch.MinimumLevel).ToString()}";
-                    return $"setting log level {LogHelper.SetLogLevel(args[1])}";
+                    if (args.Length == 1) return $"Current log level {LevelConvert.ToExtensionsLevel(LogHelper.LevelSwitch.MinimumLevel).ToString()}";
+                    return $"Setting log level {LogHelper.SetLogLevel(args[1])}";
 
                 case "--viz":
                     if (args.Length != 3) return ShowHelp();
@@ -187,6 +233,17 @@ namespace mhh
                 default:
                     return ShowHelp();
             }
+        }
+
+        private static string GetConfigFiles(string path)
+        {
+            var sb = new StringBuilder();
+            foreach(var filename in Directory.EnumerateFiles(path, "*.conf"))
+            {
+                sb.AppendLine(Path.GetFileNameWithoutExtension(filename));
+            }
+
+            return (sb.Length > 0) ? sb.ToString() : "ERR: No conf files available.";
         }
 
         private static string ShowVizHelp()
@@ -215,6 +272,7 @@ All switches are passed to the already-running instance:
 --help                      shows help (surprise!)
 --load [shader]             loads [shader].conf from ShaderPath defined in mhh.conf
 --load [path/shader]        must use forward slash; if present, loads [shader].conf from requested location
+--list [viz|playlists]      shows visualization confs or playlists in the default storage locations
 --quit                      ends the program
 --info                      writes shader and execution details to the console
 --fps                       writes FPS information to the console

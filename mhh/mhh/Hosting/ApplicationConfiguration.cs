@@ -14,30 +14,42 @@ namespace mhh
         public readonly bool StartFullScreen;
         public readonly int SizeX;
         public readonly int SizeY;
+        public readonly bool HideMousePointer;
 
         public readonly string CaptureDriverName = string.Empty;
         public readonly string CaptureDeviceName = string.Empty;
 
+        public readonly int DetectSilenceSeconds = 0;
+        public readonly double DetectSilenceMaxRMS = 1.5d;
+        public readonly SilenceAction DetectSilenceAction = SilenceAction.None;
+
         public readonly VisualizerConfig IdleVisualizer;
+        public readonly VisualizerConfig BlankVisualizer;
 
         public readonly ConfigFile Config;
 
-        public ApplicationConfiguration(ConfigFile appConfigFile, string idleVisualizerConfigPathname)
+        public ApplicationConfiguration(ConfigFile appConfigFile)
         {
             Config = appConfigFile;
 
-            StartFullScreen = Config.ReadValue("setup", "startfullscreen").ToBool(false);
+            StartFullScreen = Config.ReadValue("setup", "startfullscreen").ToBool(true);
             SizeX = Config.ReadValue("setup", "sizex").ToInt32(960);
             SizeY = Config.ReadValue("setup", "sizey").ToInt32(540);
+            HideMousePointer = Config.ReadValue("setup", "hidemousepointer").ToBool(true);
 
             ShaderPath = Config.ReadValue(SectionOS, "shaderpath");
             PlaylistPath = Config.ReadValue(SectionOS, "playlistpath");
             PluginPath = Config.ReadValue(SectionOS, "pluginpath");
 
+            DetectSilenceSeconds = Config.ReadValue("setup", "detectsilenceseconds").ToInt32(0);
+            DetectSilenceMaxRMS = Config.ReadValue("setup", "detectsilencemaxrms").ToDouble(1.5d);
+            DetectSilenceAction = Config.ReadValue("setup", "detectsilenceaction").ToEnum(SilenceAction.Blank);
+
             CaptureDriverName = Config.ReadValue(SectionOS, "capturedrivername");
             CaptureDeviceName = Config.ReadValue(SectionOS, "capturedevicename");
 
-            IdleVisualizer = new(idleVisualizerConfigPathname);
+            IdleVisualizer = new("./InternalShaders/idle.conf");
+            BlankVisualizer = new("./InternalShaders/blank.conf");
         }
     }
 }
