@@ -28,4 +28,25 @@ namespace mhh
         Idle = 1,
         Blank = 2,
     }
+
+    /// <summary>
+    /// How the visualizers in a playlist are processed
+    /// </summary>
+    public enum PlaylistOrder
+    {
+        Sequential = 0,
+        Alternating = 1,
+        Random = 2,
+        RandomWeighted = 3,
+    }
+
+    /// <summary>
+    /// Trigger condition to advance to next visualizer in the playlist
+    /// </summary>
+    public enum PlaylistSwitchModes
+    {
+        Silence = 0,
+        Time = 1,
+        External = 2,
+    }
 }

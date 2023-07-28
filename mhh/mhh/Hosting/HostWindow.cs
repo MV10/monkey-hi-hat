@@ -1,4 +1,5 @@
 ﻿using eyecandy;
+using mhh.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -23,6 +24,11 @@ namespace mhh
         public VisualizerConfig ActiveVisualizer;
 
         /// <summary>
+        /// The current playlist, if any.
+        /// </summary>
+        public PlaylistConfig ActivePlaylist;
+
+        /// <summary>
         /// Audio and texture processing by the eyecandy library.
         /// </summary>
         public AudioTextureEngine Engine;
@@ -38,10 +44,17 @@ namespace mhh
         private bool CommandFlag_QuitRequested = false;
 
         private bool TrackingSilentPeriod = false;
-        private bool RespondedToSilence = false;
+        private bool SilenceIdleDetectionTriggered = false;
 
         private object NewVisualizerLock = new();
         private VisualizerConfig NewVisualizer = null;
+
+        // TODO automate playlist changes
+
+        private int PlaylistPointer = 0;
+        private DateTime PlaylistAdvanceAt = DateTime.MaxValue;
+        private DateTime PlaylistIgnoreSilenceUntil = DateTime.MinValue;
+        private Random rnd = new();
 
         public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
             : base(windowConfig, createShaderFromConfig: false)
@@ -117,35 +130,47 @@ namespace mhh
             }
 
             // silence detection handling
-            if(Program.AppConfig.DetectSilenceSeconds > 0)
+            double duration = 0;
+            if(Engine.IsSilent)
             {
-                double duration = 0;
-                if(Engine.IsSilent)
+                if(!TrackingSilentPeriod)
                 {
-                    if(!TrackingSilentPeriod)
-                    {
-                        TrackingSilentPeriod = true;
-                        RespondedToSilence = false;
-                    }
-                    else
-                    {
-                        if (!RespondedToSilence) duration = DateTime.Now.Subtract(Engine.SilenceStarted).TotalSeconds;
-                    }
+                    TrackingSilentPeriod = true;
+                    SilenceIdleDetectionTriggered = false;
                 }
                 else
                 {
-                    if(TrackingSilentPeriod)
-                    {
-                        TrackingSilentPeriod = false;
-                        if (!RespondedToSilence) duration = Engine.SilenceEnded.Subtract(Engine.SilenceStarted).TotalSeconds;
-                    }
+                    duration = DateTime.Now.Subtract(Engine.SilenceStarted).TotalSeconds;
                 }
-
-                if (duration >= Program.AppConfig.DetectSilenceSeconds)
+            }
+            else
+            {
+                if(TrackingSilentPeriod)
                 {
-                    RespondToSilence(duration);
-                    return;
+                    TrackingSilentPeriod = false;
+                    duration = Engine.SilenceEnded.Subtract(Engine.SilenceStarted).TotalSeconds;
                 }
+            }
+
+            // long-duration silence switches to the lower-overhead Idle or Blank viz
+            if (Program.AppConfig.DetectSilenceSeconds > 0 && duration >= Program.AppConfig.DetectSilenceSeconds)
+            {
+                RespondToSilence(duration);
+                return;
+            }
+
+            // short-duration silence for playlist track-change viz-advancement
+            if(ActivePlaylist?.SwitchMode == PlaylistSwitchModes.Silence && DateTime.Now >= PlaylistIgnoreSilenceUntil && duration >= ActivePlaylist.SwitchSeconds)
+            {
+                Command_PlaylistNext(autoAdvance: true);
+                return;
+            }
+
+            // playlist viz-advancement by time
+            if(ActivePlaylist?.SwitchMode == PlaylistSwitchModes.Time && DateTime.Now >= PlaylistAdvanceAt)
+            {
+                Command_PlaylistNext(autoAdvance: true);
+                return;
             }
 
             // if the CommandLineSwitchPipe thread processed a request
@@ -193,18 +218,79 @@ namespace mhh
         /// <summary>
         /// Handler for the --load command-line switch.
         /// </summary>
-        public string Command_Load(string visualizerConfPathname)
+        public string Command_Load(string visualizerConfPathname, bool killPlaylist = true)
         {
             var newViz = new VisualizerConfig(visualizerConfPathname);
             if (newViz.Config.Content.Count == 0)
             {
                 var err = $"Unable to load visualizer configuration {newViz.Config.Pathname}";
                 LogHelper.Logger?.LogError(err);
-                return err;
+                return $"ERR: {err}";
             }
+            if (killPlaylist) ActivePlaylist = null;
             ChangeVisualizer(newViz);
             var msg = $"Loading {newViz.Config.Pathname}";
             LogHelper.Logger?.LogInformation(msg);
+            return msg;
+        }
+
+        /// <summary>
+        /// Loads and begins using a playlist.
+        /// </summary>
+        public string Command_Playlist(string playlistConfPathname)
+        {
+            ActivePlaylist = null;
+            var cfg = new PlaylistConfig(playlistConfPathname);
+            if(cfg.Visualizations.Count == 0 && cfg.Favorites.Count == 0)
+            {
+                var err = "Invalid playlist configuration file, no visualizations loaded, aborted";
+                LogHelper.Logger?.LogError(err);
+                return $"ERR: {err}";
+            }
+            PlaylistPointer = 0;
+            ActivePlaylist = cfg;
+            return Command_PlaylistNext();
+        }
+
+        /// <summary>
+        /// Advances to the next visualization when a playlist is active.
+        /// </summary>
+        public string Command_PlaylistNext(bool autoAdvance = false)
+        {
+            if(ActivePlaylist is null) return "ERR: No playlist is active";
+
+            string filename = string.Empty;
+            if(ActivePlaylist.Order == PlaylistOrder.RandomWeighted)
+            {
+                if(rnd.Next(100) < 50 || rnd.Next(100) < ActivePlaylist.FavoritesPct)
+                {
+                    filename = ActivePlaylist.Favorites[rnd.Next(ActivePlaylist.Favorites.Count)];
+                }
+                else
+                {
+                    filename = ActivePlaylist.Visualizations[rnd.Next(ActivePlaylist.Visualizations.Count)];
+                }
+            }
+            else
+            {
+                filename = ActivePlaylist.Playlist[PlaylistPointer++];
+                if (PlaylistPointer == ActivePlaylist.Playlist.Length)
+                {
+                    PlaylistPointer = 0;
+                    ActivePlaylist.GeneratePlaylist();
+                }
+            }
+
+            PlaylistAdvanceAt = (ActivePlaylist.SwitchMode == PlaylistSwitchModes.Time)
+                ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchSeconds)
+                : DateTime.MaxValue;
+            
+            PlaylistIgnoreSilenceUntil = (autoAdvance && ActivePlaylist.SwitchMode == PlaylistSwitchModes.Silence)
+                ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchCooldownSeconds)
+                : DateTime.MinValue;
+            
+            var msg = Command_Load(Path.Combine(Program.AppConfig.ShaderPath, filename), killPlaylist: false);
+            // TODO handle ERR message
             return msg;
         }
 
@@ -232,6 +318,7 @@ config file: {ActiveVisualizer.Config.Pathname}
 vert shader: {ActiveVisualizer.VertexShaderPathname}
 frag shader: {ActiveVisualizer.FragmentShaderPathname}
 vizualizer : {ActiveVisualizer.VisualizerTypeName}
+playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathname )}
 ";
             LogHelper.Logger?.LogInformation(msg);
             return msg;
@@ -296,7 +383,8 @@ vizualizer : {ActiveVisualizer.VisualizerTypeName}
         /// </summary>
         private void RespondToSilence(double duration)
         {
-            RespondedToSilence = true;
+            SilenceIdleDetectionTriggered = true;
+            ActivePlaylist = null;
 
             LogHelper.Logger?.LogDebug($"Silence detected (duration: {duration:0.####} sec");
 

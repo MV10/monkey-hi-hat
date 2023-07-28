@@ -148,8 +148,6 @@ namespace mhh
 
         private static string ProcessExecutionSwitches(string[] args)
         {
-            // TODO - add --playlist and --next switches
-
             if (args.Length == 0) return ShowHelp();
 
             LogHelper.Logger?.LogInformation($"Processing switches: {string.Join(" ", args)}");
@@ -164,6 +162,18 @@ namespace mhh
 
                     //...otherwise prefix with the shader path
                     return win.Command_Load(Path.Combine(AppConfig.ShaderPath, args[1]));
+
+                case "--playlist":
+                    if (args.Length != 2) return ShowHelp();
+
+                    // if a path separator exists, just send the argument as-is...
+                    if (args[1].Contains('/')) return win.Command_Playlist(args[1]);
+
+                    //...otherwise prefix with the playlist path
+                    return win.Command_Playlist(Path.Combine(AppConfig.PlaylistPath, args[1]));
+
+                case "--next":
+                    return win.Command_PlaylistNext();
 
                 case "--list":
                     if (args.Length != 2) return ShowHelp();
@@ -272,6 +282,9 @@ All switches are passed to the already-running instance:
 --help                      shows help (surprise!)
 --load [shader]             loads [shader].conf from ShaderPath defined in mhh.conf
 --load [path/shader]        must use forward slash; if present, loads [shader].conf from requested location
+--playlist [file]           loads [file].conf from PlaylistPath defined in mhh.conf
+--playlist [path/file]      must use forward slash; if present, loads [file].conf from requested location
+--next                      when a playlist is active, advances to the next shader (according to the Order)
 --list [viz|playlists]      shows visualization confs or playlists in the default storage locations
 --quit                      ends the program
 --info                      writes shader and execution details to the console

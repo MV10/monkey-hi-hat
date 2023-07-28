@@ -17,6 +17,9 @@ Executing "mhh" with no switches launches the program. After that, you run it ag
 --help                      shows help (surprise!)
 --load [shader]             loads [shader].conf from ShaderPath defined in mhh.conf
 --load [path/shader]        must use forward slash; if present, loads [shader].conf from requested location
+--playlist [file]           loads [file].conf from PlaylistPath defined in mhh.conf
+--playlist [path/file]      must use forward slash; if present, loads [file].conf from requested location
+--next                      when a playlist is active, advances to the next shader (according to the Order)
 --list [viz|playlists]      shows visualization confs or playlists in the default storage locations
 --quit                      ends the program
 --info                      writes shader and execution details to the console
@@ -31,7 +34,7 @@ Executing "mhh" with no switches launches the program. After that, you run it ag
 --help viz                  list --viz command/value options for the current visalizer, if any
 ```
 
-By default, warnings and errors are written to `mhh.log` in the application directory. The log level can be changed although currently the application and its libraries only write events with Warning or Error levels. Microsoft libraries are not wired into the logger at this time.
+By default, warnings and errors are written to `mhh.log` in the application directory. The log level can be changed in `mhh.conf` or on-the-fly with the `--log` switch. Microsoft libraries are not wired into the logger at this time.
 
 As the last two lines note, visualizers may support additional commands. At this time only one visualizer supports commands. When it's loaded and running, `--help viz` shows:
 
@@ -43,7 +46,7 @@ Runtime commands for VisualizerVertexIntegerArray:
 
 # Application Configuration
 
-The [`mhh.conf`](https://github.com/MV10/monkey-hi-hat/blob/master/mhh/mhh/mhh.conf) file in the repository documents all currently-available settings. This will probably change a lot as I continue to work on the project. When the project is more stable, I will document this in more detail in the repo's wiki.
+The [`mhh.conf`](https://github.com/MV10/monkey-hi-hat/blob/master/mhh/mhh/mhh.conf) file in the repository documents all currently-available settings. When the project is more stable, I will document this in more detail in the repo's wiki.
 
 Generally it contains things like paths and audio device information. Some information is listed twice according to whether it is running under Windows or Linux.
 
@@ -104,3 +107,9 @@ void main()
     fragColor = texture(sound, fragCoord);
 }
 ```
+
+# Playlist Configuration
+
+The sample [`demo_playlist.conf`](https://github.com/MV10/monkey-hi-hat/tree/master/samples/demo_playlist.conf) file in the repository's Samples directory documents all currently-available settings and options.
+
+If silence detection doesn't seem to be working, run the "silence" demo in the eyecandy library, your system may generate a low level of noise that isn't audible to you. Adjust the `DetectSilenceMaxRMS` value in the `mhh.conf` configuration file. For example, my desktop machine is "silent" at about 1.5, but my Raspberry Pi works as low as 0.2. 
