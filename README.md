@@ -1,13 +1,15 @@
 # monkey-hi-hat
 Streaming music visualization host
 
-This is a work-in-progress based on my [eyecandy](https://github.com/MV10/eyecandy) audio-to-texture library. The basic idea is to create "playlists" of audio-reactive shaders to run on our big TV when we're listening to music or otherwise in the room but not actually interested in TV. What can I say? A 77" OLED deserves better than standard-definition Star Trek and Babylon 5 re-runs.
+This application intercepts audio using OpenAL and my [eyecandy](https://github.com/MV10/eyecandy) audio-to-texture library, allowing the creation of various audio-reactive OpenGL shaders as interesting visualizations to accompany the music. Playlists of these visualizations can be created with various criteria for rotating among the listed shaders.
 
-My original goal was to run this on a Raspberry Pi 4B, however the GPU can only handle relatively simple shaders with any decent frame rate, so my target is now a Windows-based mini-PC. However, I will still test on the Pi and document that setup process (which is enormously more complicated than Windows), so I'm guessing this will still work on other Linux hardware, too. The eyecandy repo has (or will have) instructions about OS configuration for audio capture on both platforms.
+Although I still consider this a work-in-progress, I try to keep the main branch of the repository in a working state. It currently requires .NET 6 and runs under Windows or Linux. My original goal was to run this on a Raspberry Pi 4B, however the GPU can only handle relatively simple shaders with any decent frame rate, so my target is now a Windows-based mini-PC. However, I will still test on the Pi and document that setup process (which is enormously more complicated than Windows), so I'm guessing this will still work on other Linux hardware, too. The eyecandy repo has (or will have) instructions about OS configuration for audio capture on both platforms.
 
-As the computer will be stashed away behind the AV equipment, control will be via SSH terminal connections, sending commands (like "refresh the playlist" or "switch to shader XYZ") via named-pipe using my [CommandLineSwitchPipe](https://github.com/MV10/CommandLineSwitchPipe) library. And maybe if I'm feeling frisky, I'll write a simple Android app, too.
+Until I feel like declaring a "version 1.0" you will have to build from source.
 
-Why "monkey-hi-hat"? My wife's D&D character's familiar "Volt" is something monkey-based, and at some point we're going to try to animate a model of this thing in time with music. Ya gotta have goals, right? Plus, I had to call it _something_...
+As the computer will be stashed away behind the AV equipment, control is via SSH terminal connections, sending commands (like "refresh the playlist" or "switch to shader XYZ") via named-pipe using my [CommandLineSwitchPipe](https://github.com/MV10/CommandLineSwitchPipe) library. And maybe if I'm feeling frisky, I'll write a simple Android app, too (keep an eye out for this at my [monkey-droid](https://github.com/MV10/monkey-droid) repository).
+
+Sample shaders, accompanying configuration files, and where all these oddball names came from can be found in my [Volt's Laboratory](https://github.com/MV10/volts-laboratory) repository.
 
 # Commands
 
@@ -52,7 +54,7 @@ Generally it contains things like paths and audio device information. Some infor
 
 # Visualization Configuration
 
-A visualization consists of three files: the configuration, a vertex shader source file, and a fragment shader source file. There are many examples in the repo's [samples](https://github.com/MV10/monkey-hi-hat/tree/master/samples) directory, but here is a one that reproduces the FFT Frequency Magnitude display from the eyecandy repository's History demo.
+A visualization consists of three files: the configuration, a vertex shader source file, and a fragment shader source file. There are many examples in [shader repo](https://github.com/MV10/volts-laboratory/tree/master/shaders), and I'll be adding to those over time, but here is a one that reproduces the FFT Frequency Magnitude display from the eyecandy repository's History demo.
 
 This illustrates a few important points. This particular visualization needs an audio texture. The type of visualizer is similar to Shadertoy.com, which means most of the work is done in the frag shader. Thus, a default vert shader is used (although that isn't required by any means). The frag shader is re-used among multiple visualizations based on the eyecandy History demo (namely, the other audio texture styles).
 
@@ -110,6 +112,6 @@ void main()
 
 # Playlist Configuration
 
-The sample [`demo_playlist.conf`](https://github.com/MV10/monkey-hi-hat/tree/master/samples/demo_playlist.conf) file in the repository's Samples directory documents all currently-available settings and options.
+The sample [`demo_playlist.conf`](https://github.com/MV10/volts-laboratory/blob/master/playlists/demo_playlist.conf) file in the shader repository documents all currently-available settings and options.
 
 If silence detection doesn't seem to be working, run the "silence" demo in the eyecandy library, your system may generate a low level of noise that isn't audible to you. Adjust the `DetectSilenceMaxRMS` value in the `mhh.conf` configuration file. For example, my desktop machine is "silent" at about 1.5, but my Raspberry Pi works as low as 0.2. 

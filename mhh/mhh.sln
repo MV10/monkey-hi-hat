@@ -11,31 +11,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoFiles", "RepoFiles", "{
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoSamples", "RepoSamples", "{0EA01471-2A9A-45FF-AAFE-6A7C2139FF5C}"
-	ProjectSection(SolutionItems) = preProject
-		..\samples\cloud_tunnel.conf = ..\samples\cloud_tunnel.conf
-		..\samples\cloud_tunnel.frag = ..\samples\cloud_tunnel.frag
-		..\samples\cube_field.conf = ..\samples\cube_field.conf
-		..\samples\cube_field.frag = ..\samples\cube_field.frag
-		..\samples\eyecandy_demo_history.frag = ..\samples\eyecandy_demo_history.frag
-		..\samples\demo_playlist.conf = ..\samples\demo_playlist.conf
-		..\samples\eyecandy_demo_history_4channel.conf = ..\samples\eyecandy_demo_history_4channel.conf
-		..\samples\eyecandy_demo_history_freqdb.conf = ..\samples\eyecandy_demo_history_freqdb.conf
-		..\samples\eyecandy_demo_history_freqmag.conf = ..\samples\eyecandy_demo_history_freqmag.conf
-		..\samples\eyecandy_demo_history_pcmwave.conf = ..\samples\eyecandy_demo_history_pcmwave.conf
-		..\samples\eyecandy_demo_history_volume.conf = ..\samples\eyecandy_demo_history_volume.conf
-		..\samples\eyecandy_demo_modes.conf = ..\samples\eyecandy_demo_modes.conf
-		..\samples\eyecandy_demo_modes.vert = ..\samples\eyecandy_demo_modes.vert
-		..\samples\plasma_grid.conf = ..\samples\plasma_grid.conf
-		..\samples\plasma_grid.vert = ..\samples\plasma_grid.vert
-		..\samples\pointy_eyeball.conf = ..\samples\pointy_eyeball.conf
-		..\samples\pointy_eyeball.vert = ..\samples\pointy_eyeball.vert
-		..\samples\VisualizerFragmentQuad.vert = ..\samples\VisualizerFragmentQuad.vert
-		..\samples\VisualizerVertexIntegerArray.frag = ..\samples\VisualizerVertexIntegerArray.frag
-		..\samples\vogue_circles.conf = ..\samples\vogue_circles.conf
-		..\samples\vogue_circles.vert = ..\samples\vogue_circles.vert
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
