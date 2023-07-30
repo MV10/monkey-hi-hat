@@ -241,9 +241,11 @@ namespace mhh
         {
             ActivePlaylist = null;
             var cfg = new PlaylistConfig(playlistConfPathname);
-            if(cfg.Visualizations.Count == 0 && cfg.Favorites.Count == 0)
+            string err = null;
+            if(cfg.Playlist.Length < 2) err = "Invalid playlist configuration file, one or zero visualizations loaded, aborted";
+            if (cfg.Order == PlaylistOrder.RandomWeighted && cfg.Favorites.Count == 0) err = "RandomWeighted playlist requires Favorites visualizations, aborted";
+            if(err is not null)
             {
-                var err = "Invalid playlist configuration file, no visualizations loaded, aborted";
                 LogHelper.Logger?.LogError(err);
                 return $"ERR: {err}";
             }
@@ -259,17 +261,21 @@ namespace mhh
         {
             if(ActivePlaylist is null) return "ERR: No playlist is active";
 
+            string currentVizFilename = Path.GetFileNameWithoutExtension(ActiveVisualizer.Config.Pathname);
             string filename = string.Empty;
             if(ActivePlaylist.Order == PlaylistOrder.RandomWeighted)
             {
-                if(rnd.Next(100) < 50 || rnd.Next(100) < ActivePlaylist.FavoritesPct)
+                do
                 {
-                    filename = ActivePlaylist.Favorites[rnd.Next(ActivePlaylist.Favorites.Count)];
-                }
-                else
-                {
-                    filename = ActivePlaylist.Visualizations[rnd.Next(ActivePlaylist.Visualizations.Count)];
-                }
+                    if (rnd.Next(100) < 50 || rnd.Next(100) < ActivePlaylist.FavoritesPct)
+                    {
+                        filename = ActivePlaylist.Favorites[rnd.Next(ActivePlaylist.Favorites.Count)];
+                    }
+                    else
+                    {
+                        filename = ActivePlaylist.Visualizations[rnd.Next(ActivePlaylist.Visualizations.Count)];
+                    }
+                } while (filename.Equals(currentVizFilename));
             }
             else
             {

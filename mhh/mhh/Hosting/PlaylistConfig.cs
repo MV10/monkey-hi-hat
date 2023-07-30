@@ -113,7 +113,18 @@ namespace mhh.Hosting
         private List<string> LoadNames(string section)
         {
             if (!Config.Content.ContainsKey(section) || Config.Content[section].Values.Count == 0) return new(1);
-            return Config.Content[section].Values.ToList();
+
+            var list = Config.Content[section].Values.ToList();
+
+            for(int i = 0; i < list.Count; i++)
+            {
+                if (list[i].EndsWith(".conf", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    list[i] = list[i].Substring(0, list[i].Length - 5);
+                }
+            }
+
+            return list;
         }
     }
 }
