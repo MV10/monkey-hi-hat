@@ -44,6 +44,7 @@ namespace mhh
             }
 
             var section = string.Empty;
+            int sectionID = 0;
             foreach (var line in File.ReadAllLines(Pathname))
             {
                 if (!string.IsNullOrWhiteSpace(line) && !line.Trim().StartsWith("#"))
@@ -52,14 +53,20 @@ namespace mhh
                     if (text.StartsWith("[") && text.EndsWith("]"))
                     {
                         section = text.Substring(1, text.Length - 2).ToLowerInvariant();
+                        sectionID = 0;
                     }
                     else
                     {
-                        var kvp = (text + " ").Split("=", 2, StringSplitOptions.TrimEntries);
-                        if (kvp.Length == 2 && !string.IsNullOrWhiteSpace(section))
+                        if(!string.IsNullOrWhiteSpace(section))
                         {
-                            if (!Content.ContainsKey(section)) Content.Add(section, new());
-                            Content[section].Add(kvp[0].ToLowerInvariant(), kvp[1]);
+                            var kvp = (text + " ").Split("=", 2, StringSplitOptions.TrimEntries);
+                            if(kvp.Length > 0)
+                            {
+                                if (!Content.ContainsKey(section)) Content.Add(section, new());
+                                var key = (kvp.Length == 2) ? kvp[0] : (sectionID++).ToString();
+                                var value = (kvp.Length == 2) ? kvp[1] : kvp[0];
+                                Content[section].Add(key.ToLowerInvariant(), value);
+                            }
                         }
                     }
                 }

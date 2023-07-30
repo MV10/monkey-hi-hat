@@ -1,5 +1,6 @@
-# monkey-hi-hat
-Streaming music visualization host
+# monkey-hi-hat <img src="https://github.com/MV10/volts-laboratory/blob/master/misc/mhh-icon.png" height="32px"/>
+
+**Streaming music visualization host**
 
 This application intercepts audio using OpenAL and my [eyecandy](https://github.com/MV10/eyecandy) audio-to-texture library, allowing the creation of various audio-reactive OpenGL shaders as interesting visualizations to accompany the music. Playlists of these visualizations can be created with various criteria for rotating among the listed shaders.
 
