@@ -11,6 +11,7 @@ namespace mhh.Hosting
         public readonly PlaylistSwitchModes SwitchMode;
         public readonly double SwitchSeconds;
         public readonly double SwitchCooldownSeconds;
+        public readonly double MaxRunSeconds;
 
         /// <summary>
         /// Pre-sorted/randomized combination of Visualizations
@@ -33,6 +34,7 @@ namespace mhh.Hosting
 
             SwitchMode = Config.ReadValue("setup", "switch").ToEnum(PlaylistSwitchModes.Time);
             SwitchCooldownSeconds = Config.ReadValue("setup", "switchcooldownseconds").ToDouble(60d);
+            MaxRunSeconds = Config.ReadValue("setup", "maxrunseconds").ToDouble(420d);
             SwitchSeconds = (SwitchMode == PlaylistSwitchModes.Time)
                 ? Config.ReadValue("setup", "switchseconds").ToDouble(120d)
                 : Config.ReadValue("setup", "switchseconds").ToDouble(0.5d);

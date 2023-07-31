@@ -44,12 +44,9 @@ namespace mhh
         private bool CommandFlag_QuitRequested = false;
 
         private bool TrackingSilentPeriod = false;
-        private bool SilenceIdleDetectionTriggered = false;
 
         private object NewVisualizerLock = new();
         private VisualizerConfig NewVisualizer = null;
-
-        // TODO automate playlist changes
 
         private int PlaylistPointer = 0;
         private DateTime PlaylistAdvanceAt = DateTime.MaxValue;
@@ -136,7 +133,6 @@ namespace mhh
                 if(!TrackingSilentPeriod)
                 {
                     TrackingSilentPeriod = true;
-                    SilenceIdleDetectionTriggered = false;
                 }
                 else
                 {
@@ -289,7 +285,9 @@ namespace mhh
 
             PlaylistAdvanceAt = (ActivePlaylist.SwitchMode == PlaylistSwitchModes.Time)
                 ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchSeconds)
-                : DateTime.MaxValue;
+                : (ActivePlaylist.SwitchMode == PlaylistSwitchModes.Silence)
+                    ? DateTime.Now.AddSeconds(ActivePlaylist.MaxRunSeconds)
+                    : DateTime.MaxValue;
             
             PlaylistIgnoreSilenceUntil = (autoAdvance && ActivePlaylist.SwitchMode == PlaylistSwitchModes.Silence)
                 ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchCooldownSeconds)
@@ -389,7 +387,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         /// </summary>
         private void RespondToSilence(double duration)
         {
-            SilenceIdleDetectionTriggered = true;
             ActivePlaylist = null;
 
             LogHelper.Logger?.LogDebug($"Silence detected (duration: {duration:0.####} sec");
