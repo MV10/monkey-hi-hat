@@ -116,13 +116,21 @@ namespace mhh
                 return;
             }
 
-            // ESC to quit is the only keyboard input supported
             var input = KeyboardState;
-            if (input.IsKeyDown(Keys.Escape))
+
+            // ESC to quit
+            if (input.IsKeyReleased(Keys.Escape))
             {
                 // set the flag to ensure the render callback starts
                 // short-circuiting before we start releasing stuff
                 CommandFlag_QuitRequested = true;
+                return;
+            }
+
+            // Right-arrow for next in playlist
+            if (input.IsKeyReleased(Keys.Right) && ActivePlaylist is not null)
+            {
+                Command_PlaylistNext(temporarilyIgnoreSilence: true);
                 return;
             }
 
@@ -158,14 +166,14 @@ namespace mhh
             // short-duration silence for playlist track-change viz-advancement
             if(ActivePlaylist?.SwitchMode == PlaylistSwitchModes.Silence && DateTime.Now >= PlaylistIgnoreSilenceUntil && duration >= ActivePlaylist.SwitchSeconds)
             {
-                Command_PlaylistNext(autoAdvance: true);
+                Command_PlaylistNext(temporarilyIgnoreSilence: true);
                 return;
             }
 
             // playlist viz-advancement by time
-            if(ActivePlaylist?.SwitchMode == PlaylistSwitchModes.Time && DateTime.Now >= PlaylistAdvanceAt)
+            if(DateTime.Now >= PlaylistAdvanceAt)
             {
-                Command_PlaylistNext(autoAdvance: true);
+                Command_PlaylistNext(temporarilyIgnoreSilence: true);
                 return;
             }
 
@@ -253,7 +261,7 @@ namespace mhh
         /// <summary>
         /// Advances to the next visualization when a playlist is active.
         /// </summary>
-        public string Command_PlaylistNext(bool autoAdvance = false)
+        public string Command_PlaylistNext(bool temporarilyIgnoreSilence = false)
         {
             if(ActivePlaylist is null) return "ERR: No playlist is active";
 
@@ -289,7 +297,7 @@ namespace mhh
                     ? DateTime.Now.AddSeconds(ActivePlaylist.MaxRunSeconds)
                     : DateTime.MaxValue;
             
-            PlaylistIgnoreSilenceUntil = (autoAdvance && ActivePlaylist.SwitchMode == PlaylistSwitchModes.Silence)
+            PlaylistIgnoreSilenceUntil = (temporarilyIgnoreSilence && ActivePlaylist.SwitchMode == PlaylistSwitchModes.Silence)
                 ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchCooldownSeconds)
                 : DateTime.MinValue;
             
