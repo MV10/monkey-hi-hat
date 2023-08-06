@@ -13,3 +13,8 @@ Although I still consider this a work-in-progress, I try to keep the main branch
 As the computer will be stashed away behind the AV equipment, control is via SSH terminal connections, sending commands (like "refresh the playlist" or "switch to shader XYZ") via named-pipe using my [CommandLineSwitchPipe](https://github.com/MV10/CommandLineSwitchPipe) library. And maybe if I'm feeling frisky, I'll write a simple Android app, too (keep an eye out for this at my [monkey-droid](https://github.com/MV10/monkey-droid) repository).
 
 Sample shaders, accompanying configuration files, and where all these oddball names came from can be found in my [Volt's Laboratory](https://github.com/MV10/volts-laboratory) repository.
+
+Click this for a quick video (1m20s) which cycles through a few of the visualizers:
+
+[![sample video](http://img.youtube.com/vi/mcuK73TyRRA/0.jpg)](http://www.youtube.com/watch?v=mcuK73TyRRA)
+
