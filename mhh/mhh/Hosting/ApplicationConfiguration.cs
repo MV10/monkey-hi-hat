@@ -15,6 +15,7 @@ namespace mhh
         public readonly int SizeX;
         public readonly int SizeY;
         public readonly bool HideMousePointer;
+        public readonly int UnsecuredPort;
 
         public readonly string CaptureDriverName = string.Empty;
         public readonly string CaptureDeviceName = string.Empty;
@@ -36,6 +37,7 @@ namespace mhh
             SizeX = Config.ReadValue("setup", "sizex").ToInt32(960);
             SizeY = Config.ReadValue("setup", "sizey").ToInt32(540);
             HideMousePointer = Config.ReadValue("setup", "hidemousepointer").ToBool(true);
+            UnsecuredPort = Config.ReadValue("setup", "unsecuredport").ToInt32(0);
 
             ShaderPath = Config.ReadValue(SectionOS, "shaderpath");
             PlaylistPath = Config.ReadValue(SectionOS, "playlistpath");

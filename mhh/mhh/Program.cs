@@ -2,6 +2,7 @@
 using CommandLineSwitchPipe;
 using eyecandy;
 using Microsoft.Extensions.Logging;
+using OpenTK.Windowing.Desktop;
 using Serilog;
 using Serilog.Extensions.Logging;
 using System.Text;
@@ -32,6 +33,9 @@ namespace mhh
 {
     public class Program
     {
+        static readonly string ConfigFilename = "mhh.conf";
+        static readonly string SwitchPipeName = "monkey-hi-hat";
+
         /// <summary>
         /// Content parsed from the mhh.conf configuration file and the
         /// default idle shader conf file.
@@ -46,12 +50,15 @@ namespace mhh
 
         static async Task Main(string[] args)
         {
+            Console.Clear();
+            Console.WriteLine($"\nmonkey-hi-hat (PID {Environment.ProcessId})");
+
             // Load the application configuration file (parsed later)
-            var appConfigFile = new ConfigFile("mhh.conf");
+            var appConfigFile = new ConfigFile(ConfigFilename);
 
             // Prepare logging and the switch server
-            CommandLineSwitchServer.Options.PipeName = "monkey-hi-hat";
-            var alreadyRunning = await CommandLineSwitchServer.TryConnect();
+            CommandLineSwitchServer.Options.PipeName = SwitchPipeName;
+            var alreadyRunning = await CommandLineSwitchServer.TryConnect().ConfigureAwait(false);
             LogHelper.Initialize(appConfigFile, alreadyRunning);
             CommandLineSwitchServer.Options.Logger = LogHelper.Logger;
 
@@ -68,7 +75,7 @@ namespace mhh
                 LogHelper.Logger?.LogInformation($"Starting (PID {Environment.ProcessId})");
 
                 // Send args to an already-running instance?
-                if (await CommandLineSwitchServer.TrySendArgs())
+                if (await CommandLineSwitchServer.TrySendArgs().ConfigureAwait(false))
                 {
                     LogHelper.Logger?.LogDebug($"Sending switch: {args[0]}");
                     Console.WriteLine(CommandLineSwitchServer.QueryResponse);
@@ -76,15 +83,12 @@ namespace mhh
                 }
                 // ...or continue running since we're the first instance
 
-                Console.Clear();
-                Console.WriteLine($"\nmonkey-hi-hat (PID {Environment.ProcessId})");
-
                 // Parse the application configuration file and internal shaders
                 AppConfig = new ApplicationConfiguration(appConfigFile);
 
                 // Start listening for commands
                 ctsSwitchPipe = new();
-                _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessExecutionSwitches, ctsSwitchPipe.Token));
+                _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessExecutionSwitches, ctsSwitchPipe.Token, AppConfig.UnsecuredPort));
 
                 // Prepare the eycandy library
                 ErrorLogging.Logger = LogHelper.Logger;
@@ -96,6 +100,14 @@ namespace mhh
                     DetectSilence = true, // always detect, playlists may need it
                     MaximumSilenceRMS = AppConfig.DetectSilenceMaxRMS,
                 };
+
+                // Since console programs don't have a SynchronizationContext, the use of await prior to
+                // this point means that we're most likely not on the main thread (managed thread ID #1),
+                // and GLFW (or the OpenTK wrapper) complains about this. However, they also provided this
+                // to disable that check, and I'm not seeing any negative repercussions, so this is easier
+                // than something like https://github.com/StephenCleary/AsyncEx/wiki#asynccontext. Needed
+                // at this point because the GameWindow constructor checks the thread ID by default.
+                GLFWProvider.CheckForMainThread = false;
 
                 var WindowConfig = new EyeCandyWindowConfig()
                 {
@@ -132,6 +144,9 @@ namespace mhh
                 LogHelper.Logger?.LogInformation($"Exiting (PID {Environment.ProcessId})");
                 Log.CloseAndFlush();
             }
+
+            // Give the sloooow console time to catch up...
+            await Task.Delay(250);
         }
 
         private static void LogException(string message)
