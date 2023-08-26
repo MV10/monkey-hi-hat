@@ -171,11 +171,11 @@ namespace mhh
             {
                 case "--load":
                     if (args.Length != 2) return ShowHelp();
-                    return win.Command_Load(GetPathname(args[1]));
+                    return win.Command_Load(GetShaderPathname(args[1]));
 
                 case "--playlist":
                     if (args.Length != 2) return ShowHelp();
-                    return win.Command_Playlist(GetPathname(args[1]));
+                    return win.Command_Playlist(GetPlaylistPathname(args[1]));
 
                 case "--next":
                     return win.Command_PlaylistNext();
@@ -245,14 +245,17 @@ namespace mhh
 
                 case "--md.detail":
                     if (args.Length != 2) return "ERR: Visualizer name or pathname required.";
-                    return GetShaderDetail(GetPathname(args[1]));
+                    return GetShaderDetail(GetShaderPathname(args[1]));
 
                 default:
                     return ShowHelp();
             }
         }
 
-        private static string GetPathname(string fromArg)
+        private static string GetPlaylistPathname(string fromArg)
+            => fromArg.Contains('/') ? fromArg : Path.Combine(AppConfig.PlaylistPath, fromArg);
+
+        private static string GetShaderPathname(string fromArg)
             => fromArg.Contains('/') ? fromArg : Path.Combine(AppConfig.ShaderPath, fromArg);
 
         private static string GetShaderDetail(string pathname)
