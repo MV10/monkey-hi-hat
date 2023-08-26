@@ -171,45 +171,33 @@ namespace mhh
             {
                 case "--load":
                     if (args.Length != 2) return ShowHelp();
-
-                    // if a path separator exists, just send the argument as-is...
-                    if (args[1].Contains('/')) return win.Command_Load(args[1]);
-
-                    //...otherwise prefix with the shader path
-                    return win.Command_Load(Path.Combine(AppConfig.ShaderPath, args[1]));
+                    return win.Command_Load(GetPathname(args[1]));
 
                 case "--playlist":
                     if (args.Length != 2) return ShowHelp();
-
-                    // if a path separator exists, just send the argument as-is...
-                    if (args[1].Contains('/')) return win.Command_Playlist(args[1]);
-
-                    //...otherwise prefix with the playlist path
-                    return win.Command_Playlist(Path.Combine(AppConfig.PlaylistPath, args[1]));
+                    return win.Command_Playlist(GetPathname(args[1]));
 
                 case "--next":
                     return win.Command_PlaylistNext();
 
                 case "--list":
-                    if (args.Length != 2) return ShowHelp();
-
-                    var sb = new StringBuilder();
-
-                    if (args[1].ToLowerInvariant().Equals("viz"))
+                case "--md.list":
+                    var readable = args[0].ToLowerInvariant().Equals("--list");
+                    var separator =  readable ? "\n" : CommandLineSwitchServer.Options.Advanced.SeparatorControlCode;
+                    
+                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("viz"))
                     {
-                        // ERR: prefix expected by GUI control app
                         if (string.IsNullOrEmpty(AppConfig.ShaderPath)) return "ERR: ShaderPath not defined in mhh.conf.";
-                        return GetConfigFiles(AppConfig.ShaderPath);
+                        return GetConfigFiles(AppConfig.ShaderPath, separator);
                     }
 
-                    if (args[1].ToLowerInvariant().Equals("playlists"))
+                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("playlists"))
                     {
-                        // ERR: prefix expected by GUI control app
                         if (string.IsNullOrEmpty(AppConfig.PlaylistPath)) return "ERR: PlaylistPath not defined in mhh.conf.";
-                        return GetConfigFiles(AppConfig.PlaylistPath);
+                        return GetConfigFiles(AppConfig.PlaylistPath, separator);
                     }
 
-                    return ShowHelp();
+                    return readable ? ShowHelp() : string.Empty;
 
                 case "--help":
                     if (args.Length == 2 && args[1].ToLowerInvariant().Equals("viz")) return ShowVizHelp();
@@ -255,17 +243,38 @@ namespace mhh
                     if (args.Length != 3) return ShowHelp();
                     return win.Command_VizCommand(args[1], args[2]);
 
+                case "--md.detail":
+                    if (args.Length != 2) return "ERR: Visualizer name or pathname required.";
+                    return GetShaderDetail(GetPathname(args[1]));
+
                 default:
                     return ShowHelp();
             }
         }
 
-        private static string GetConfigFiles(string path)
+        private static string GetPathname(string fromArg)
+            => fromArg.Contains('/') ? fromArg : Path.Combine(AppConfig.ShaderPath, fromArg);
+
+        private static string GetShaderDetail(string pathname)
+        {
+            // returns 0/1 for uses music, followed by shader:description entry
+            var cfg = new ConfigFile(pathname);
+            var usesAudio = cfg.Content.ContainsKey("audiotextures") ? "1" : "0";
+            var description = cfg.Content.TryGetValue("shader", out var shaderInfo)
+                ? shaderInfo.TryGetValue("description", out var desc)
+                    ? desc
+                    : "(No description)"
+                : "(No description)";
+            return $"{usesAudio}{description}";
+        }
+
+        private static string GetConfigFiles(string path, string separator)
         {
             var sb = new StringBuilder();
-            foreach(var filename in Directory.EnumerateFiles(path, "*.conf"))
+            foreach (var filename in Directory.EnumerateFiles(path, "*.conf"))
             {
-                sb.AppendLine(Path.GetFileNameWithoutExtension(filename));
+                if (sb.Length > 0) sb.Append(separator);
+                sb.Append(Path.GetFileNameWithoutExtension(filename));
             }
 
             return (sb.Length > 0) ? sb.ToString() : "ERR: No conf files available.";
