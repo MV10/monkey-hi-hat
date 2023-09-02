@@ -39,6 +39,8 @@ namespace mhh
         static readonly string DebugConfigFilename = "mhh.debug.conf";
         static readonly string SwitchPipeName = "monkey-hi-hat";
 
+        static readonly Version OpenGLVersion = new(4, 6);
+
         /// <summary>
         /// Content parsed from the mhh.conf configuration file and the
         /// default idle shader conf file.
@@ -121,6 +123,7 @@ namespace mhh
                 };
                 WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
                 WindowConfig.OpenTKNativeWindowSettings.Size = (AppConfig.SizeX, AppConfig.SizeY);
+                WindowConfig.OpenTKNativeWindowSettings.APIVersion = OpenGLVersion;
 
                 // Spin up the window and get the show started
                 win = new(WindowConfig, AudioConfig);

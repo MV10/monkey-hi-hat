@@ -509,9 +509,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         {
             if (Engine is null || ActiveVisualizerConfig is null) return;
 
-            // Enum Texture0 is some big weird number, but they increment serially from there
-            int unit0 = (int)TextureUnit.Texture0;
-
             var defaultEnabled = (object)true;
 
             foreach (var tex in ActiveVisualizerConfig.AudioTextureTypeNames)
@@ -522,8 +519,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
                 // call the engine to create the object
                 if (TextureType is not null)
                 {
-                    var textureUnit = (object)(TextureUnit)(tex.Key + unit0);
-
                     var uniformName = (object)(ActiveVisualizerConfig.AudioTextureUniformNames.ContainsKey(tex.Key)
                         ? ActiveVisualizerConfig.AudioTextureUniformNames[tex.Key]
                         : tex.Value.ToString());
@@ -537,7 +532,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
                     method.Invoke(Engine, new object[]
                     {
                     uniformName,
-                    textureUnit,
                     multiplier,
                     defaultEnabled,
                     });

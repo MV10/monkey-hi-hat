@@ -52,13 +52,13 @@ namespace mhh
                 // Each entry is "unit#=uniform TypeName"
                 foreach(var tex in Config.Content["audiotextures"])
                 {
-                    var unit = tex.Key.ToInt32(-1);
+                    var id = tex.Key.ToInt32(-1);
                     var definition = tex.Value.Split(' ');
-                    if(unit >-1 && unit <32 && definition.Length == 2 && !AudioTextureTypeNames.ContainsKey(unit))
+                    if(id >-1 && id <32 && definition.Length == 2 && !AudioTextureTypeNames.ContainsKey(id))
                     {
-                        AudioTextureUniformNames.Add(unit, definition[0]);
-                        AudioTextureTypeNames.Add(unit, definition[1]);
-                        AudioTextureMultipliers.Add(unit, 1.0f);
+                        AudioTextureUniformNames.Add(id, definition[0]);
+                        AudioTextureTypeNames.Add(id, definition[1]);
+                        AudioTextureMultipliers.Add(id, 1.0f);
                     }
                 }
             }
@@ -67,11 +67,11 @@ namespace mhh
             {
                 foreach (var tex in Config.Content["audiotexturemultipliers"])
                 {
-                    var unit = tex.Key.ToInt32(-1);
+                    var id = tex.Key.ToInt32(-1);
                     var mult = tex.Value.ToFloat(float.MinValue);
-                    if (mult > float.MinValue && AudioTextureMultipliers.ContainsKey(unit))
+                    if (mult > float.MinValue && AudioTextureMultipliers.ContainsKey(id))
                     {
-                        AudioTextureMultipliers[unit] = mult;
+                        AudioTextureMultipliers[id] = mult;
                     }
                 }
             }
