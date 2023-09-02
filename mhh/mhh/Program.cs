@@ -1,10 +1,12 @@
 ﻿
 using CommandLineSwitchPipe;
 using eyecandy;
+using mhh.Utils;
 using Microsoft.Extensions.Logging;
 using OpenTK.Windowing.Desktop;
 using Serilog;
 using Serilog.Extensions.Logging;
+using System.Diagnostics;
 using System.Text;
 
 /*
@@ -34,6 +36,7 @@ namespace mhh
     public class Program
     {
         static readonly string ConfigFilename = "mhh.conf";
+        static readonly string DebugConfigFilename = "mhh.debug.conf";
         static readonly string SwitchPipeName = "monkey-hi-hat";
 
         /// <summary>
@@ -54,7 +57,7 @@ namespace mhh
             Console.WriteLine($"\nmonkey-hi-hat (PID {Environment.ProcessId})");
 
             // Load the application configuration file (parsed later)
-            var appConfigFile = new ConfigFile(ConfigFilename);
+            var appConfigFile = new ConfigFile(Debugger.IsAttached ? DebugConfigFilename : ConfigFilename);
 
             // Prepare logging and the switch server
             CommandLineSwitchServer.Options.PipeName = SwitchPipeName;
@@ -95,7 +98,7 @@ namespace mhh
 
                 var AudioConfig = new EyeCandyCaptureConfig()
                 {
-                    DriverName = AppConfig.CaptureDriverName,
+                    //DriverName = AppConfig.CaptureDriverName, // unnecessary for capture as of eyecandy 1.0.81
                     CaptureDeviceName = AppConfig.CaptureDeviceName,
                     DetectSilence = true, // always detect, playlists may need it
                     MaximumSilenceRMS = AppConfig.DetectSilenceMaxRMS,
@@ -171,11 +174,15 @@ namespace mhh
             {
                 case "--load":
                     if (args.Length != 2) return ShowHelp();
-                    return win.Command_Load(GetShaderPathname(args[1]));
+                    var shaderPathname = GetShaderPathname(args[1]);
+                    if (shaderPathname is null) return "ERR: Shader not found.";
+                    return win.Command_Load(shaderPathname);
 
                 case "--playlist":
                     if (args.Length != 2) return ShowHelp();
-                    return win.Command_Playlist(GetPlaylistPathname(args[1]));
+                    var playlistPathname = GetPlaylistPathname(args[1]);
+                    if (playlistPathname is null) return "ERR: Playlist not found.";
+                    return win.Command_Playlist(playlistPathname);
 
                 case "--next":
                     return win.Command_PlaylistNext();
@@ -253,10 +260,13 @@ namespace mhh
         }
 
         private static string GetPlaylistPathname(string fromArg)
-            => fromArg.Contains('/') ? fromArg : Path.Combine(AppConfig.PlaylistPath, fromArg);
+            => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.PlaylistPath, fromArg);
 
         private static string GetShaderPathname(string fromArg)
-            => fromArg.Contains('/') ? fromArg : Path.Combine(AppConfig.ShaderPath, fromArg);
+            => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.ShaderPath, fromArg);
+
+        private static bool HasPathSeparators(string fromArg)
+            => fromArg.Contains(Path.DirectorySeparatorChar) || fromArg.Contains(Path.AltDirectorySeparatorChar);
 
         private static string GetShaderDetail(string pathname)
         {
@@ -271,13 +281,17 @@ namespace mhh
             return $"{usesAudio}{description}";
         }
 
-        private static string GetConfigFiles(string path, string separator)
+        private static string GetConfigFiles(string pathspec, string separator)
         {
             var sb = new StringBuilder();
-            foreach (var filename in Directory.EnumerateFiles(path, "*.conf"))
+            var paths = pathspec.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            foreach(var path in paths)
             {
-                if (sb.Length > 0) sb.Append(separator);
-                sb.Append(Path.GetFileNameWithoutExtension(filename));
+                foreach (var filename in Directory.EnumerateFiles(path, "*.conf"))
+                {
+                    if (sb.Length > 0) sb.Append(separator);
+                    sb.Append(Path.GetFileNameWithoutExtension(filename));
+                }
             }
 
             return (sb.Length > 0) ? sb.ToString() : "ERR: No conf files available.";
@@ -286,10 +300,10 @@ namespace mhh
         private static string ShowVizHelp()
         {
             var help = win.Command_VizHelp();
-            if(help.Count == 0) return $"\n{win.ActiveVisualizer.VisualizerTypeName} does not accept runtime commands.";
+            if(help.Count == 0) return $"\n{win.ActiveVisualizerConfig.VisualizerTypeName} does not accept runtime commands.";
 
             var sb = new StringBuilder();
-            sb.AppendLine($"\nRuntime commands for {win.ActiveVisualizer.VisualizerTypeName}:\n");
+            sb.AppendLine($"\nRuntime commands for {win.ActiveVisualizerConfig.VisualizerTypeName}:\n");
             foreach(var cv in help)
             {
                 sb.AppendLine($"--viz [{cv.command}] [{cv.value}]");

@@ -1,5 +1,6 @@
 ﻿using eyecandy;
 using mhh.Hosting;
+using mhh.Utils;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -7,7 +8,6 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Diagnostics;
 using System.Reflection;
-using System.Text;
 
 namespace mhh
 {
@@ -21,7 +21,7 @@ namespace mhh
         /// <summary>
         /// The current visualizer.
         /// </summary>
-        public VisualizerConfig ActiveVisualizer;
+        public VisualizerConfig ActiveVisualizerConfig;
 
         /// <summary>
         /// The current playlist, if any.
@@ -46,12 +46,14 @@ namespace mhh
         private bool TrackingSilentPeriod = false;
 
         private object NewVisualizerLock = new();
-        private VisualizerConfig NewVisualizer = null;
+        private VisualizerConfig NewVisualizerConfig = null;
 
         private int PlaylistPointer = 0;
         private DateTime PlaylistAdvanceAt = DateTime.MaxValue;
         private DateTime PlaylistIgnoreSilenceUntil = DateTime.MinValue;
         private Random rnd = new();
+
+        private bool IsDisposed = false;
 
         public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
             : base(windowConfig, createShaderFromConfig: false)
@@ -90,7 +92,7 @@ namespace mhh
             Engine.UpdateTextures();
             Engine.SetTextureUniforms(Shader);
 
-            Shader.SetUniform("resolution", new Vector2(Size.X, Size.Y));
+            Shader.SetUniform("resolution", new Vector2(ClientSize.X, ClientSize.Y));
             Shader.SetUniform("time", (float)Clock.Elapsed.TotalSeconds);
 
             Visualizer.OnRenderFrame(this, e);
@@ -182,12 +184,12 @@ namespace mhh
             // the GLFW thread won't be trying to use the Shader object
             lock (NewVisualizerLock)
             {
-                if(NewVisualizer is not null)
+                if(NewVisualizerConfig is not null)
                 {
                     EndVisualization();
 
-                    ActiveVisualizer = NewVisualizer;
-                    NewVisualizer = null;
+                    ActiveVisualizerConfig = NewVisualizerConfig;
+                    NewVisualizerConfig = null;
 
                     StartNewVisualizer();
                     Clock.Restart();
@@ -196,12 +198,6 @@ namespace mhh
             }
 
             Visualizer.OnUpdateFrame(this, e);
-        }
-
-        public new void Dispose()
-        {
-            Engine?.Dispose();
-            base.Dispose(); // disposes the Shader
         }
 
         /// <summary>
@@ -215,7 +211,7 @@ namespace mhh
                 // actual update occurs in OnUpdateFrame which is "safe"
                 // because it won't be busy doing things like using the
                 // current Shader object in an OnRenderFrame call.
-                NewVisualizer = newVisualizerConfig;
+                NewVisualizerConfig = newVisualizerConfig;
             }
         }
 
@@ -265,7 +261,7 @@ namespace mhh
         {
             if(ActivePlaylist is null) return "ERR: No playlist is active";
 
-            string currentVizFilename = Path.GetFileNameWithoutExtension(ActiveVisualizer.Config.Pathname);
+            string currentVizFilename = Path.GetFileNameWithoutExtension(ActiveVisualizerConfig.Config.Pathname);
             string filename = string.Empty;
             if(ActivePlaylist.Order == PlaylistOrder.RandomWeighted)
             {
@@ -300,10 +296,16 @@ namespace mhh
             PlaylistIgnoreSilenceUntil = (temporarilyIgnoreSilence && ActivePlaylist.SwitchMode == PlaylistSwitchModes.Silence)
                 ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchCooldownSeconds)
                 : DateTime.MinValue;
-            
-            var msg = Command_Load(Path.Combine(Program.AppConfig.ShaderPath, filename), killPlaylist: false);
-            // TODO handle ERR message
-            return msg;
+
+            var pathname = PathHelper.FindConfigFile(Program.AppConfig.ShaderPath, filename);
+            if(pathname is not null)
+            {
+                var msg = Command_Load(pathname, killPlaylist: false);
+                // TODO handle ERR message
+                return msg;
+            }
+
+            return $"ERR - {filename} not found in shader path(s)";
         }
 
         /// <summary>
@@ -325,11 +327,11 @@ elapsed sec: {Clock.Elapsed.TotalSeconds:0.####}
 frame rate : {FramesPerSecond}
 average fps: {AverageFramesPerSecond}
 avg fps sec: {AverageFPSTimeframeSeconds}
-description: {ActiveVisualizer.Description}
-config file: {ActiveVisualizer.Config.Pathname}
-vert shader: {ActiveVisualizer.VertexShaderPathname}
-frag shader: {ActiveVisualizer.FragmentShaderPathname}
-vizualizer : {ActiveVisualizer.VisualizerTypeName}
+description: {ActiveVisualizerConfig.Description}
+config file: {ActiveVisualizerConfig.Config.Pathname}
+vert shader: {ActiveVisualizerConfig.VertexShaderPathname}
+frag shader: {ActiveVisualizerConfig.FragmentShaderPathname}
+vizualizer : {ActiveVisualizerConfig.VisualizerTypeName}
 playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathname )}
 ";
             LogHelper.Logger?.LogInformation(msg);
@@ -374,7 +376,7 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         /// </summary>
         public string Command_Reload()
         {
-            ChangeVisualizer(new(ActiveVisualizer.Config.Pathname));
+            ChangeVisualizer(new(ActiveVisualizerConfig.Config.Pathname));
             return "ACK";
         }
 
@@ -401,7 +403,7 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
 
             lock (NewVisualizerLock)
             {
-                NewVisualizer = Program.AppConfig.DetectSilenceAction switch
+                NewVisualizerConfig = Program.AppConfig.DetectSilenceAction switch
                 {
                     SilenceAction.Blank => Program.AppConfig.BlankVisualizer,
                     SilenceAction.Idle => Program.AppConfig.IdleVisualizer,
@@ -414,12 +416,12 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         /// </summary>
         private void ForceIdleVisualization(bool initializingWindow)
         {
-            if(!initializingWindow && ActiveVisualizer == Program.AppConfig.IdleVisualizer)
+            if(!initializingWindow && ActiveVisualizerConfig == Program.AppConfig.IdleVisualizer)
             {
                 throw new Exception("Built-in idle visualizer has failed.");
             }
             if(!initializingWindow) EndVisualization();
-            ActiveVisualizer = Program.AppConfig.IdleVisualizer;
+            ActiveVisualizerConfig = Program.AppConfig.IdleVisualizer;
             StartNewVisualizer();
         }
 
@@ -434,7 +436,33 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
             Shader?.Dispose();
             Shader = null; // eyecandy 1.0.1 should be able to handle this now
             Engine?.EndAudioProcessing_SynchronousHack();
-            DestroyAudioTextures();
+
+            if (Engine is null || ActiveVisualizerConfig is null) return;
+
+            // The engine tracks audio textures by type, so loop through all known
+            // types and call Destroy on each; unused types will be ignored.
+            foreach (var tex in ActiveVisualizerConfig.AudioTextureTypeNames)
+            {
+                // AudioTextureEngine.Destroy<TextureType>()
+                var TextureType = KnownTypes.AudioTextureTypes.FindType(tex.Value);
+                var method = EngineDestroyTexture.MakeGenericMethod(TextureType);
+                method.Invoke(Engine, null);
+            }
+
+            // Program.cs should call Dispose to clean up the Engine object
+        }
+
+        // "new" hides the non-overridable base method
+        public new void Dispose()
+        {
+            if (IsDisposed) return;
+
+            if (Visualizer is not null) EndVisualization();
+            base.Dispose(); // disposes the Shader
+            Engine?.Dispose();
+
+            IsDisposed = true;
+            GC.SuppressFinalize(true);
         }
 
         /// <summary>
@@ -445,10 +473,10 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         private void StartNewVisualizer()
         {
             // if the type name isn't recognized, default to the idle viz
-            var VizType = KnownTypes.Visualizers.FindType(ActiveVisualizer.VisualizerTypeName);
+            var VizType = KnownTypes.Visualizers.FindType(ActiveVisualizerConfig.VisualizerTypeName);
             if (VizType is null)
             {
-                LogHelper.Logger.LogError($"Visualizer type not recognized: {ActiveVisualizer.VisualizerTypeName}; using default idle-viz.");
+                LogHelper.Logger.LogError($"Visualizer type not recognized: {ActiveVisualizerConfig.VisualizerTypeName}; using default idle-viz.");
                 ForceIdleVisualization(false);
                 return;
             }
@@ -456,10 +484,10 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
 
             CreateAudioTextures();
 
-            Shader = new(ActiveVisualizer.VertexShaderPathname, ActiveVisualizer.FragmentShaderPathname);
+            Shader = new(ActiveVisualizerConfig.VertexShaderPathname, ActiveVisualizerConfig.FragmentShaderPathname);
             if(!Shader.IsValid)
             {
-                LogHelper.Logger.LogError($"Shader not valid for {ActiveVisualizer.Config.Pathname}; using default idle-viz.");
+                LogHelper.Logger.LogError($"Shader not valid for {ActiveVisualizerConfig.Config.Pathname}; using default idle-viz.");
                 ForceIdleVisualization(false);
                 return;
             }
@@ -468,7 +496,7 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
 
             if (OnLoadCompleted)
             {
-                Configuration.BackgroundColor = ActiveVisualizer.BackgroundColor;
+                Configuration.BackgroundColor = ActiveVisualizerConfig.BackgroundColor;
                 GL.ClearColor(Configuration.BackgroundColor);
                 Visualizer.OnLoad(this);
             }
@@ -479,14 +507,14 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         /// </summary>
         private void CreateAudioTextures()
         {
-            if (Engine is null || ActiveVisualizer is null) return;
+            if (Engine is null || ActiveVisualizerConfig is null) return;
 
             // Enum Texture0 is some big weird number, but they increment serially from there
             int unit0 = (int)TextureUnit.Texture0;
 
             var defaultEnabled = (object)true;
 
-            foreach (var tex in ActiveVisualizer.AudioTextureTypeNames)
+            foreach (var tex in ActiveVisualizerConfig.AudioTextureTypeNames)
             {
                 // match the string value to one of the known Eyecandy types
                 var TextureType = KnownTypes.AudioTextureTypes.FindType(tex.Value);
@@ -496,12 +524,12 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
                 {
                     var textureUnit = (object)(TextureUnit)(tex.Key + unit0);
 
-                    var uniformName = (object)(ActiveVisualizer.AudioTextureUniformNames.ContainsKey(tex.Key)
-                        ? ActiveVisualizer.AudioTextureUniformNames[tex.Key]
+                    var uniformName = (object)(ActiveVisualizerConfig.AudioTextureUniformNames.ContainsKey(tex.Key)
+                        ? ActiveVisualizerConfig.AudioTextureUniformNames[tex.Key]
                         : tex.Value.ToString());
 
-                    var multiplier = (object)(ActiveVisualizer.AudioTextureMultipliers.ContainsKey(tex.Key)
-                        ? ActiveVisualizer.AudioTextureMultipliers[tex.Key]
+                    var multiplier = (object)(ActiveVisualizerConfig.AudioTextureMultipliers.ContainsKey(tex.Key)
+                        ? ActiveVisualizerConfig.AudioTextureMultipliers[tex.Key]
                         : 1.0f);
 
                     // AudioTextureEngine.Create<TextureType>(uniform, assignedTextureUnit, multiplier, enabled)
@@ -518,23 +546,5 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
 
             Engine.EvaluateRequirements();
         }
-
-        /// <summary>
-        /// The engine tracks audio textures by type, so loop through all known
-        /// types and call Destroy on each; unused types will be ignored.
-        /// </summary>
-        private void DestroyAudioTextures()
-        {
-            if (Engine is null || ActiveVisualizer is null) return;
-
-            foreach(var tex in ActiveVisualizer.AudioTextureTypeNames)
-            {
-                // AudioTextureEngine.Destroy<TextureType>()
-                var TextureType = KnownTypes.AudioTextureTypes.FindType(tex.Value);
-                var method = EngineDestroyTexture.MakeGenericMethod(TextureType);
-                method.Invoke(Engine, null);
-            }
-        }
-
     }
 }

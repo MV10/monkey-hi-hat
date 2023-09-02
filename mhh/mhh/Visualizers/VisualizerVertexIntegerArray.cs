@@ -31,13 +31,13 @@ namespace mhh
 
         public void Start(HostWindow hostWindow)
         {
-            var mhhMode = hostWindow.ActiveVisualizer.Config
+            var mhhMode = hostWindow.ActiveVisualizerConfig.Config
                 .ReadValue("VisualizerVertexIntegerArray", "ArrayDrawingMode")
                 .ToEnum(ArrayDrawingMode.Points);
 
             DrawingMode = Array.FindIndex(Modes, m => m.Equals(mhhMode.GetGLDrawingMode()));
 
-            VertexIntegerCount = hostWindow.ActiveVisualizer.Config.ReadValue("VisualizerVertexIntegerArray", "VertexIntegerCount").ToInt32(1000);
+            VertexIntegerCount = hostWindow.ActiveVisualizerConfig.Config.ReadValue("VisualizerVertexIntegerArray", "VertexIntegerCount").ToInt32(1000);
             VertexIds = new float[VertexIntegerCount];
             for (var i = 0; i < VertexIntegerCount; i++)
             {
@@ -84,7 +84,7 @@ namespace mhh
 
         public void Dispose()
         {
-            // do nothing
+            GC.SuppressFinalize(true);
         }
 
         public string CommandLineArgument(HostWindow hostWindow, string command, string value)

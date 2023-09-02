@@ -84,7 +84,7 @@ namespace mhh
 
         public void Dispose()
         {
-            // do nothing
+            GC.SuppressFinalize(true);
         }
 
         public string CommandLineArgument(HostWindow hostWindow, string command, string value)
