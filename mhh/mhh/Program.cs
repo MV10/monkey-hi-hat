@@ -91,6 +91,9 @@ namespace mhh
                 // Parse the application configuration file and internal shaders
                 AppConfig = new ApplicationConfiguration(appConfigFile);
 
+                // Initialize the cache
+                Caching.Shaders = new(AppConfig.ShaderCache);
+
                 // Start listening for commands
                 ctsSwitchPipe = new();
                 _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessExecutionSwitches, ctsSwitchPipe.Token, AppConfig.UnsecuredPort));

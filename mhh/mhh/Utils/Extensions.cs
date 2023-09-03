@@ -1,5 +1,6 @@
 ﻿
 using OpenTK.Graphics.OpenGL;
+using System.Numerics;
 using System.Reflection;
 
 namespace mhh
@@ -92,5 +93,29 @@ namespace mhh
         /// </summary>
         public static bool LowercaseEquals(this string lhv, string comparison)
             => (lhv.ToLowerInvariant().Equals(comparison.ToLowerInvariant()));
+
+        /// <summary>
+        /// Used by Murmur3Hash.
+        /// </summary>
+        public static ulong RotateLeft(this ulong original, int bits)
+            => (original << bits) | (original >> (64 - bits));
+
+        /// <summary>
+        /// Used by Murmur3Hash.
+        /// </summary>
+        public static ulong RotateRight(this ulong original, int bits)
+            => (original >> bits) | (original << (64 - bits));
+
+        /// <summary>
+        /// Used by Murmur3Hash.
+        /// </summary>
+        public static ulong GetUInt64(this byte[] bb, int pos)
+            => (UInt32)(bb[pos++] | bb[pos++] << 8 | bb[pos++] << 16 | bb[pos++] << 24);
+
+        /// <summary>
+        /// Turn a byte-array into a signed immutable BigInteger structure.
+        /// </summary>
+        public static BigInteger ToBigInteger(this byte[] bb)
+            => new(bb);
     }
 }

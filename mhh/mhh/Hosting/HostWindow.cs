@@ -433,8 +433,11 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
             Visualizer?.Stop(this);
             Visualizer?.Dispose();
             Visualizer = null;
-            Shader?.Dispose();
+
+            //Shader?.Dispose();  Do not dispose now that shader objects are cached
+
             Shader = null; // eyecandy 1.0.1 should be able to handle this now
+
             Engine?.EndAudioProcessing_SynchronousHack();
 
             if (Engine is null || ActiveVisualizerConfig is null) return;
@@ -444,7 +447,7 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
             foreach (var tex in ActiveVisualizerConfig.AudioTextureTypeNames)
             {
                 // AudioTextureEngine.Destroy<TextureType>()
-                var TextureType = KnownTypes.AudioTextureTypes.FindType(tex.Value);
+                var TextureType = Caching.KnownAudioTextures.FindType(tex.Value);
                 var method = EngineDestroyTexture.MakeGenericMethod(TextureType);
                 method.Invoke(Engine, null);
             }
@@ -458,7 +461,10 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
             if (IsDisposed) return;
 
             if (Visualizer is not null) EndVisualization();
-            base.Dispose(); // disposes the Shader
+            Caching.Shaders.Clear(); // diposes any cached shaders
+
+            base.Dispose(); // don't call this earlier, it will try to dispose the Shader object
+
             Engine?.Dispose();
 
             IsDisposed = true;
@@ -473,7 +479,7 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         private void StartNewVisualizer()
         {
             // if the type name isn't recognized, default to the idle viz
-            var VizType = KnownTypes.Visualizers.FindType(ActiveVisualizerConfig.VisualizerTypeName);
+            var VizType = Caching.KnownVisualizers.FindType(ActiveVisualizerConfig.VisualizerTypeName);
             if (VizType is null)
             {
                 LogHelper.Logger.LogError($"Visualizer type not recognized: {ActiveVisualizerConfig.VisualizerTypeName}; using default idle-viz.");
@@ -484,13 +490,22 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
 
             CreateAudioTextures();
 
-            Shader = new(ActiveVisualizerConfig.VertexShaderPathname, ActiveVisualizerConfig.FragmentShaderPathname);
-            if(!Shader.IsValid)
+            var shaderCacheKey = CachedShader.KeyFrom(ActiveVisualizerConfig.VertexShaderPathname, ActiveVisualizerConfig.FragmentShaderPathname);
+            var cachedShader = Caching.Shaders.Get(shaderCacheKey);
+            if(cachedShader is null)
             {
-                LogHelper.Logger.LogError($"Shader not valid for {ActiveVisualizerConfig.Config.Pathname}; using default idle-viz.");
-                ForceIdleVisualization(false);
-                return;
+                cachedShader = new(ActiveVisualizerConfig.VertexShaderPathname, ActiveVisualizerConfig.FragmentShaderPathname);
+                if (!cachedShader.IsValid)
+                {
+                    LogHelper.Logger.LogError($"Shader not valid for {ActiveVisualizerConfig.Config.Pathname}; using default idle-viz.");
+                    ForceIdleVisualization(false);
+                    return;
+                }
+
+                if(!Caching.Shaders.TryAdd(shaderCacheKey, cachedShader)) LogHelper.Logger.LogWarning($"Failed to cache shader for {ActiveVisualizerConfig.Config.Pathname}");
             }
+
+            Shader = cachedShader;
 
             Visualizer.Start(this);
 
@@ -514,7 +529,7 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
             foreach (var tex in ActiveVisualizerConfig.AudioTextureTypeNames)
             {
                 // match the string value to one of the known Eyecandy types
-                var TextureType = KnownTypes.AudioTextureTypes.FindType(tex.Value);
+                var TextureType = Caching.KnownAudioTextures.FindType(tex.Value);
 
                 // call the engine to create the object
                 if (TextureType is not null)
