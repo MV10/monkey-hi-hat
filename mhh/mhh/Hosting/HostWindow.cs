@@ -7,6 +7,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Diagnostics;
+using System.Numerics;
 using System.Reflection;
 
 namespace mhh
@@ -34,6 +35,7 @@ namespace mhh
         public AudioTextureEngine Engine;
 
         private IVisualizer Visualizer;
+        private BigInteger? ShaderKey;
         private bool OnLoadCompleted = false;
         private Stopwatch Clock = new();
 
@@ -47,6 +49,7 @@ namespace mhh
 
         private object NewVisualizerLock = new();
         private VisualizerConfig NewVisualizerConfig = null;
+        private bool ReplaceCachedShader = false;
 
         private int PlaylistPointer = 0;
         private DateTime PlaylistAdvanceAt = DateTime.MaxValue;
@@ -203,7 +206,7 @@ namespace mhh
         /// <summary>
         /// Preps and executes a new visualization
         /// </summary>
-        public void ChangeVisualizer(VisualizerConfig newVisualizerConfig)
+        public void ChangeVisualizer(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)
         {
             lock(NewVisualizerLock)
             {
@@ -212,6 +215,7 @@ namespace mhh
                 // because it won't be busy doing things like using the
                 // current Shader object in an OnRenderFrame call.
                 NewVisualizerConfig = newVisualizerConfig;
+                ReplaceCachedShader = replaceCachedShader;
             }
         }
 
@@ -376,7 +380,7 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         /// </summary>
         public string Command_Reload()
         {
-            ChangeVisualizer(new(ActiveVisualizerConfig.Config.Pathname));
+            ChangeVisualizer(new(ActiveVisualizerConfig.Config.Pathname), replaceCachedShader: true);
             return "ACK";
         }
 
@@ -434,9 +438,17 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
             Visualizer?.Dispose();
             Visualizer = null;
 
-            //Shader?.Dispose();  Do not dispose now that shader objects are cached
+            // The --reload switch sets ReplaceCachedShader to true
+            if(ReplaceCachedShader && ShaderKey is not null)
+            {
+                // .Value necessary because ShaderKey is nullable
+                Caching.Shaders.Remove(ShaderKey.Value);
+                ReplaceCachedShader = false;
+            }
 
+            //Shader?.Dispose();  Do not dispose now that shader objects are cached
             Shader = null; // eyecandy 1.0.1 should be able to handle this now
+            ShaderKey = null;
 
             Engine?.EndAudioProcessing_SynchronousHack();
 
@@ -451,8 +463,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
                 var method = EngineDestroyTexture.MakeGenericMethod(TextureType);
                 method.Invoke(Engine, null);
             }
-
-            // Program.cs should call Dispose to clean up the Engine object
         }
 
         // "new" hides the non-overridable base method
@@ -506,6 +516,7 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
             }
 
             Shader = cachedShader;
+            ShaderKey = shaderCacheKey;
 
             Visualizer.Start(this);
 

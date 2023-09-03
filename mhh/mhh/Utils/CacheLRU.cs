@@ -4,6 +4,9 @@ using System.Runtime.InteropServices;
 
 namespace mhh.Utils;
 
+/// <summary>
+/// A thread-safe size-limited Least Recently Used cache collection.
+/// </summary>
 public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
 {
     private readonly record struct Entry(TKey Key, Lazy<TValue> Lazy);
@@ -26,6 +29,9 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
         valueIsDisposable = typeof(TValue) is IDisposable;
     }
 
+    /// <summary>
+    /// Returns the requested item.
+    /// </summary>
     public TValue Get(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
@@ -45,6 +51,9 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
         return default;
     }
 
+    /// <summary>
+    /// Attempts to add the item to the collection. Return value indicates success or failure.
+    /// </summary>
     public bool TryAdd(TKey key, TValue value)
     {
         ArgumentNullException.ThrowIfNull(key);
@@ -69,6 +78,9 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
         return true;
     }
 
+    /// <summary>
+    /// Indicates whether the key exists in the collection.
+    /// </summary>
     public bool ContainsKey(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
@@ -78,6 +90,30 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
         }
     }
 
+    /// <summary>
+    /// Removes an item from the collection.
+    /// </summary>
+    public void Remove(TKey key)
+    {
+        ArgumentNullException.ThrowIfNull(key);
+        lock (lockStorage)
+        {
+            if (storage.ContainsKey(key))
+            {
+                storage.Remove(key);
+                ref LinkedListNode<Entry> refNode = ref CollectionsMarshal.GetValueRefOrAddDefault(storage, key, out bool exists);
+                if(valueIsDisposable)
+                {
+                    (refNode.Value.Lazy.Value as IDisposable).Dispose();
+                }
+                order.Remove(refNode);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Removes all items from the collection.
+    /// </summary>
     public void Clear()
     {
         lock (lockStorage)
@@ -94,6 +130,9 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
         }
     }
 
+    /// <summary>
+    /// Returns the IEnumerator for the collection.
+    /// </summary>
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {
         lock (lockStorage)
