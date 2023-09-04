@@ -6,6 +6,7 @@ namespace mhh
     public class ApplicationConfiguration
     {
         public static readonly string SectionOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux";
+        public static readonly string InternalShaderPath = "./InternalShaders/";
 
         public readonly string ShaderPath = string.Empty;
         public readonly string PlaylistPath = string.Empty;
@@ -52,8 +53,8 @@ namespace mhh
             CaptureDriverName = Config.ReadValue(SectionOS, "capturedrivername");
             CaptureDeviceName = Config.ReadValue(SectionOS, "capturedevicename");
 
-            IdleVisualizer = new("./InternalShaders/idle.conf");
-            BlankVisualizer = new("./InternalShaders/blank.conf");
+            IdleVisualizer = new(Path.Combine(InternalShaderPath, "idle.conf"));
+            BlankVisualizer = new(Path.Combine(InternalShaderPath, "blank.conf"));
         }
     }
 }
