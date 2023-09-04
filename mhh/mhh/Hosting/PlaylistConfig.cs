@@ -3,7 +3,7 @@ namespace mhh.Hosting
 {
     public class PlaylistConfig
     {
-        public readonly ConfigFile Config;
+        public readonly ConfigFile ConfigSource;
 
         public readonly PlaylistOrder Order;
         public readonly int FavoritesPct;
@@ -27,17 +27,17 @@ namespace mhh.Hosting
         
         public PlaylistConfig(string pathname)
         {
-            Config = new ConfigFile(pathname);
+            ConfigSource = new ConfigFile(pathname);
 
-            Order = Config.ReadValue("setup", "order").ToEnum(PlaylistOrder.RandomWeighted);
-            FavoritesPct = Config.ReadValue("setup", "favoritespct").ToInt32(20);
+            Order = ConfigSource.ReadValue("setup", "order").ToEnum(PlaylistOrder.RandomWeighted);
+            FavoritesPct = ConfigSource.ReadValue("setup", "favoritespct").ToInt32(20);
 
-            SwitchMode = Config.ReadValue("setup", "switch").ToEnum(PlaylistSwitchModes.Time);
-            SwitchCooldownSeconds = Config.ReadValue("setup", "switchcooldownseconds").ToDouble(60d);
-            MaxRunSeconds = Config.ReadValue("setup", "maxrunseconds").ToDouble(420d);
+            SwitchMode = ConfigSource.ReadValue("setup", "switch").ToEnum(PlaylistSwitchModes.Time);
+            SwitchCooldownSeconds = ConfigSource.ReadValue("setup", "switchcooldownseconds").ToDouble(60d);
+            MaxRunSeconds = ConfigSource.ReadValue("setup", "maxrunseconds").ToDouble(420d);
             SwitchSeconds = (SwitchMode == PlaylistSwitchModes.Time)
-                ? Config.ReadValue("setup", "switchseconds").ToDouble(120d)
-                : Config.ReadValue("setup", "switchseconds").ToDouble(0.5d);
+                ? ConfigSource.ReadValue("setup", "switchseconds").ToDouble(120d)
+                : ConfigSource.ReadValue("setup", "switchseconds").ToDouble(0.5d);
 
             Visualizations = LoadNames("visualizations");
             Favorites = LoadNames("favorites");
@@ -114,9 +114,9 @@ namespace mhh.Hosting
 
         private List<string> LoadNames(string section)
         {
-            if (!Config.Content.ContainsKey(section) || Config.Content[section].Values.Count == 0) return new(1);
+            if (!ConfigSource.Content.ContainsKey(section) || ConfigSource.Content[section].Values.Count == 0) return new(1);
 
-            var list = Config.Content[section].Values.ToList();
+            var list = ConfigSource.Content[section].Values.ToList();
 
             for(int i = 0; i < list.Count; i++)
             {

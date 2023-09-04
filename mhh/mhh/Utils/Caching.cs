@@ -20,5 +20,10 @@ namespace mhh.Utils
         /// Compiled shader programs. The key is a murmur3 hash of the combined vert and frag pathnames.
         /// </summary>
         public static CacheLRU<BigInteger, CachedShader> Shaders;
+
+        /// <summary>
+        /// Compiled internal shaders keyed on the name (blank, idle, crossfade).
+        /// </summary>
+        public static Dictionary<string, Shader> InternalShaders = new();
     }
 }

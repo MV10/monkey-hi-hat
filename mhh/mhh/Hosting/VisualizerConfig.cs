@@ -11,7 +11,7 @@ namespace mhh
     /// </summary>
     public class VisualizerConfig
     {
-        public readonly ConfigFile Config;
+        public readonly ConfigFile ConfigSource;
 
         public readonly string Description;
         public readonly string VertexShaderPathname;
@@ -27,15 +27,15 @@ namespace mhh
 
         public VisualizerConfig(string pathname)
         {
-            Config = new ConfigFile(pathname);
+            ConfigSource = new ConfigFile(pathname);
 
-            Description = Config.ReadValue("shader", "description");
+            Description = ConfigSource.ReadValue("shader", "description");
 
-            var configFileLocation = Path.GetDirectoryName(Config.Pathname);
-            VertexShaderPathname = Path.Combine(configFileLocation, Config.ReadValue("shader", "vertexshaderfilename"));
-            FragmentShaderPathname = Path.Combine(configFileLocation, Config.ReadValue("shader", "fragmentshaderfilename"));
+            var configFileLocation = Path.GetDirectoryName(ConfigSource.Pathname);
+            VertexShaderPathname = Path.Combine(configFileLocation, ConfigSource.ReadValue("shader", "vertexshaderfilename"));
+            FragmentShaderPathname = Path.Combine(configFileLocation, ConfigSource.ReadValue("shader", "fragmentshaderfilename"));
 
-            var rgb = Config.ReadValue("shader", "backgroundfloatrgb").Split(",");
+            var rgb = ConfigSource.ReadValue("shader", "backgroundfloatrgb").Split(",");
             if(rgb.Length == 3)
             {
                 BackgroundColor = new(rgb[0].ToFloat(0), rgb[1].ToFloat(0), rgb[2].ToFloat(0), 1f);
@@ -45,12 +45,12 @@ namespace mhh
                 BackgroundColor = new(0f, 0f, 0f, 1f);
             }
 
-            VisualizerTypeName = Config.ReadValue("shader", "visualizertypename");
+            VisualizerTypeName = ConfigSource.ReadValue("shader", "visualizertypename");
 
-            if(Config.Content.ContainsKey("audiotextures"))
+            if(ConfigSource.Content.ContainsKey("audiotextures"))
             {
                 // Each entry is "unit#=uniform TypeName"
-                foreach(var tex in Config.Content["audiotextures"])
+                foreach(var tex in ConfigSource.Content["audiotextures"])
                 {
                     var id = tex.Key.ToInt32(-1);
                     var definition = tex.Value.Split(' ');
@@ -63,9 +63,9 @@ namespace mhh
                 }
             }
 
-            if(Config.Content.ContainsKey("audiotexturemultipliers"))
+            if(ConfigSource.Content.ContainsKey("audiotexturemultipliers"))
             {
-                foreach (var tex in Config.Content["audiotexturemultipliers"])
+                foreach (var tex in ConfigSource.Content["audiotexturemultipliers"])
                 {
                     var id = tex.Key.ToInt32(-1);
                     var mult = tex.Value.ToFloat(float.MinValue);

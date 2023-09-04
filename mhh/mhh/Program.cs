@@ -47,11 +47,13 @@ namespace mhh
         /// </summary>
         public static ApplicationConfiguration AppConfig;
 
+        /// <summary>
+        /// Where the magic happens.
+        /// </summary>
+        public static HostWindow AppWindow;
+
         // cancel this to terminate the switch server's named pipe.
         private static CancellationTokenSource ctsSwitchPipe;
-
-        // where the magic happens
-        private static HostWindow win;
 
         static async Task Main(string[] args)
         {
@@ -91,9 +93,6 @@ namespace mhh
                 // Parse the application configuration file and internal shaders
                 AppConfig = new ApplicationConfiguration(appConfigFile);
 
-                // Initialize the cache
-                Caching.Shaders = new(AppConfig.ShaderCache);
-
                 // Start listening for commands
                 ctsSwitchPipe = new();
                 _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessExecutionSwitches, ctsSwitchPipe.Token, AppConfig.UnsecuredPort));
@@ -129,9 +128,9 @@ namespace mhh
                 WindowConfig.OpenTKNativeWindowSettings.APIVersion = OpenGLVersion;
 
                 // Spin up the window and get the show started
-                win = new(WindowConfig, AudioConfig);
-                win.Focus();
-                win.Run(); // blocks
+                AppWindow = new(WindowConfig, AudioConfig);
+                AppWindow.Focus();
+                AppWindow.Run(); // blocks
             }
             catch (OperationCanceledException)
             { } // normal, disregard
@@ -149,7 +148,7 @@ namespace mhh
             {
                 // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
                 ctsSwitchPipe?.Cancel();
-                win?.Dispose();
+                AppWindow?.Dispose();
                 LogHelper.Logger?.LogInformation($"Exiting (PID {Environment.ProcessId})");
                 Log.CloseAndFlush();
             }
@@ -182,16 +181,16 @@ namespace mhh
                     if (args.Length != 2) return ShowHelp();
                     var shaderPathname = GetShaderPathname(args[1]);
                     if (shaderPathname is null) return "ERR: Shader not found.";
-                    return win.Command_Load(shaderPathname);
+                    return AppWindow.Command_Load(shaderPathname);
 
                 case "--playlist":
                     if (args.Length != 2) return ShowHelp();
                     var playlistPathname = GetPlaylistPathname(args[1]);
                     if (playlistPathname is null) return "ERR: Playlist not found.";
-                    return win.Command_Playlist(playlistPathname);
+                    return AppWindow.Command_Playlist(playlistPathname);
 
                 case "--next":
-                    return win.Command_PlaylistNext();
+                    return AppWindow.Command_PlaylistNext();
 
                 case "--list":
                 case "--md.list":
@@ -212,37 +211,33 @@ namespace mhh
 
                     return readable ? ShowHelp() : string.Empty;
 
-                case "--help":
-                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("viz")) return ShowVizHelp();
-                    return ShowHelp();
-
                 case "--quit":
                     if (args.Length > 1) return ShowHelp();
-                    return win.Command_Quit();
+                    return AppWindow.Command_Quit();
 
                 case "--info":
                     if (args.Length > 1) return ShowHelp();
-                    return win.Command_Info();
+                    return AppWindow.Command_Info();
 
                 case "--fps":
                     if (args.Length > 1) return ShowHelp();
-                    return $"{win.FramesPerSecond} FPS\n{win.AverageFramesPerSecond} average FPS over {win.AverageFPSTimeframeSeconds} seconds";
+                    return $"{AppWindow.FramesPerSecond} FPS\n{AppWindow.AverageFramesPerSecond} average FPS over {AppWindow.AverageFPSTimeframeSeconds} seconds";
 
                 case "--idle":
                     if (args.Length > 1) return ShowHelp();
-                    return win.Command_Idle();
+                    return AppWindow.Command_Idle();
 
                 case "--pause":
                     if (args.Length > 1) return ShowHelp();
-                    return win.Command_Pause();
+                    return AppWindow.Command_Pause();
 
                 case "--run":
                     if (args.Length > 1) return ShowHelp();
-                    return win.Command_Run();
+                    return AppWindow.Command_Run();
 
                 case "--reload":
                     if (args.Length > 1) return ShowHelp();
-                    return win.Command_Reload();
+                    return AppWindow.Command_Reload();
 
                 case "--pid":
                     if (args.Length > 1) return ShowHelp();
@@ -251,10 +246,6 @@ namespace mhh
                 case "--log":
                     if (args.Length == 1) return $"Current log level {LevelConvert.ToExtensionsLevel(LogHelper.LevelSwitch.MinimumLevel).ToString()}";
                     return $"Setting log level {LogHelper.SetLogLevel(args[1])}";
-
-                case "--viz":
-                    if (args.Length != 3) return ShowHelp();
-                    return win.Command_VizCommand(args[1], args[2]);
 
                 case "--md.detail":
                     if (args.Length != 2) return "ERR: Visualizer name or pathname required.";
@@ -303,20 +294,6 @@ namespace mhh
             return (sb.Length > 0) ? sb.ToString() : "ERR: No conf files available.";
         }
 
-        private static string ShowVizHelp()
-        {
-            var help = win.Command_VizHelp();
-            if(help.Count == 0) return $"\n{win.ActiveVisualizerConfig.VisualizerTypeName} does not accept runtime commands.";
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"\nRuntime commands for {win.ActiveVisualizerConfig.VisualizerTypeName}:\n");
-            foreach(var cv in help)
-            {
-                sb.AppendLine($"--viz [{cv.command}] [{cv.value}]");
-            }
-            return sb.ToString();
-        }
-
         private static string ShowHelp()
             =>
 @"
@@ -342,8 +319,6 @@ All switches are passed to the already-running instance:
 --reload                    unloads and reloads the current shader
 --pid                       shows the current Process ID
 --log [level]               shows or sets log-level (None, Trace, Debug, Information, Warning, Error, Critical)
---viz [command] [value]     send commands to the current visualizer (if supported; see below)
---help viz                  list --viz command/value options for the current visalizer, if any
 
 ";
     }

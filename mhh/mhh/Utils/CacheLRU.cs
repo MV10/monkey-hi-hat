@@ -114,7 +114,7 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
     /// <summary>
     /// Removes all items from the collection.
     /// </summary>
-    public void Clear()
+    public void DisposeAndClear()
     {
         lock (lockStorage)
         {

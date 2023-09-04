@@ -4,6 +4,7 @@ using mhh.Hosting;
 using mhh.Utils;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Diagnostics;
@@ -19,11 +20,6 @@ namespace mhh
     public class HostWindow : BaseWindow
     {
         /// <summary>
-        /// The current visualizer.
-        /// </summary>
-        public VisualizerConfig ActiveVisualizerConfig;
-
-        /// <summary>
         /// The current playlist, if any.
         /// </summary>
         public PlaylistConfig ActivePlaylist;
@@ -31,63 +27,59 @@ namespace mhh
         /// <summary>
         /// Audio and texture processing by the eyecandy library.
         /// </summary>
-        public AudioTextureEngine Engine;
+        public AudioTextureEngine Eyecandy;
 
         /// <summary>
-        /// The currently-active Shader.
+        /// Used by the renderer for the "time" uniform.
         /// </summary>
-        public new CachedShader Shader; // do not use eyecandy.BaseWindow Shader object
+        public float TimeUniform;
 
-        private IVisualizer Visualizer;
-        private bool OnLoadCompleted = false;
+        /// <summary>
+        /// Used by the renderer for the "resolution" uniform. Updated every frame.
+        /// </summary>
+        public Vector2 ResolutionUniform;
+
         private Stopwatch Clock = new();
 
-        private MethodInfo EngineCreateMethod;
-        private MethodInfo EngineDestroyMethod;
+        private MethodInfo EyecandyEnableMethod;
+        private MethodInfo EyecandyDisableMethod;
+        private MethodInfo EyecandyMultiplierMethod;
 
         private bool CommandFlag_Paused = false;
         private bool CommandFlag_QuitRequested = false;
 
         private bool TrackingSilentPeriod = false;
 
-        private object NewVisualizerLock = new();
-        private VisualizerConfig NewVisualizerConfig = null;
-        private bool ReplaceCachedShader = false;
+        private object QueuedVisualizerLock = new();
+        private VisualizerConfig QueuedVisualizerConfig = null;
 
         private int PlaylistPointer = 0;
         private DateTime PlaylistAdvanceAt = DateTime.MaxValue;
         private DateTime PlaylistIgnoreSilenceUntil = DateTime.MinValue;
         private Random rnd = new();
 
-        private List<(int hBuffer, int hTexture)> Framebuffers = new(3);
-
-        private Shader CrossfadeShader;
-        private Stopwatch CrossfadeTimer = new();
-        private VisualizerConfig PreviousVisualizerConfig;
-        private IVisualizer PreviousVisualizer;
-
-        private bool IsDisposed = false;
+        private RenderManager Renderer = new();
 
         public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
             : base(windowConfig, createShaderFromConfig: false)
         {
-            Engine = new(audioConfig);
-            EngineCreateMethod = Engine.GetType().GetMethod("Create");
-            EngineDestroyMethod = Engine.GetType().GetMethod("Destroy");
+            Eyecandy = new(audioConfig);
+            EyecandyEnableMethod = Eyecandy.GetType().GetMethod("Enable");
+            EyecandyDisableMethod = Eyecandy.GetType().GetMethod("Disable");
+            EyecandyMultiplierMethod = Eyecandy.GetType().GetMethod("SetMultiplier");
 
-            GenerateFramebuffers();
+            // TODO default these to enabled: false
+            Eyecandy.Create<AudioTextureWaveHistory>("eyecandyWave", enabled: true);
+            Eyecandy.Create<AudioTextureFrequencyDecibelHistory>("eyecandyFreqDB", enabled: true);
+            Eyecandy.Create<AudioTextureFrequencyMagnitudeHistory>("eyecandyFreqMag", enabled: true);
+            Eyecandy.Create<AudioTextureWebAudioHistory>("eyecandyWebAudio", enabled: true);
+            Eyecandy.Create<AudioTextureShadertoy>("eyecandyShadertoy", enabled: true);
+            Eyecandy.Create<AudioTexture4ChannelHistory>("eyecandy4Channel", enabled: true);
+            Eyecandy.EvaluateRequirements();
 
-            CrossfadeShader = new(
-                Path.Combine(ApplicationConfiguration.InternalShaderPath, "crossfade.vert"),
-                Path.Combine(ApplicationConfiguration.InternalShaderPath, "crossfade.frag"));
+            InitializeCache();
 
-            if(!CrossfadeShader.IsValid)
-            {
-                Console.WriteLine("\n\nFATAL ERROR: Internal crossfade shader was not found or failed to compile.\n\n");
-                Thread.Sleep(250);
-                Environment.Exit(-1);
-            }
-
+            // TODO use Renderer
             ForceIdleVisualization(true);
 
             Clock.Start();
@@ -99,9 +91,7 @@ namespace mhh
         protected override void OnLoad()
         {
             base.OnLoad();
-            Visualizer.OnLoad(this);
-            Engine.BeginAudioProcessing();
-            OnLoadCompleted = true;
+            Eyecandy.BeginAudioProcessing();
         }
 
         /// <summary>
@@ -111,17 +101,15 @@ namespace mhh
         /// </summary>
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            if (CommandFlag_Paused || CommandFlag_QuitRequested || Visualizer is null || Shader is null) return;
+            if (CommandFlag_Paused || CommandFlag_QuitRequested || Renderer.ActiveRenderer is null) return;
 
             base.OnRenderFrame(e);
 
-            Engine.UpdateTextures();
-            Engine.SetTextureUniforms(Shader);
+            Eyecandy.UpdateTextures();
+            TimeUniform = (float)Clock.Elapsed.TotalSeconds;
+            ResolutionUniform = new(ClientSize.X, ClientSize.Y);
 
-            Shader.SetUniform("resolution", new OpenTK.Mathematics.Vector2(ClientSize.X, ClientSize.Y));
-            Shader.SetUniform("time", (float)Clock.Elapsed.TotalSeconds);
-
-            Visualizer.OnRenderFrame(this, e);
+            Renderer.RenderFrame();
 
             SwapBuffers();
             CalculateFPS();
@@ -139,7 +127,7 @@ namespace mhh
             // key on a previous pass in the next block of code
             if (CommandFlag_QuitRequested)
             {
-                EndVisualization();
+                Renderer?.Dispose();
                 Close();
                 return;
             }
@@ -164,7 +152,7 @@ namespace mhh
 
             // silence detection handling
             double duration = 0;
-            if(Engine.IsSilent)
+            if(Eyecandy.IsSilent)
             {
                 if(!TrackingSilentPeriod)
                 {
@@ -172,7 +160,7 @@ namespace mhh
                 }
                 else
                 {
-                    duration = DateTime.Now.Subtract(Engine.SilenceStarted).TotalSeconds;
+                    duration = DateTime.Now.Subtract(Eyecandy.SilenceStarted).TotalSeconds;
                 }
             }
             else
@@ -180,7 +168,7 @@ namespace mhh
                 if(TrackingSilentPeriod)
                 {
                     TrackingSilentPeriod = false;
-                    duration = Engine.SilenceEnded.Subtract(Engine.SilenceStarted).TotalSeconds;
+                    duration = Eyecandy.SilenceEnded.Subtract(Eyecandy.SilenceStarted).TotalSeconds;
                 }
             }
 
@@ -208,30 +196,15 @@ namespace mhh
             // if the CommandLineSwitchPipe thread processed a request
             // to use a different shader, process here where we know
             // the GLFW thread won't be trying to use the Shader object
-            lock (NewVisualizerLock)
+            lock (QueuedVisualizerLock)
             {
-                if(NewVisualizerConfig is not null)
+                if(QueuedVisualizerConfig is not null)
                 {
-                    if(ActivePlaylist is not null)
-                    {
-                        // crossfade...
-                        // and figure out what to do with end/startviz if crossfade in progress etc.
-                    }
-                    else
-                    {
-                        EndVisualization();
-
-                        ActiveVisualizerConfig = NewVisualizerConfig;
-                        NewVisualizerConfig = null;
-
-                        StartNewVisualizer();
-                        Clock.Restart();
-                        Engine.BeginAudioProcessing();
-                    }
+                    Renderer.PrepareNewRenderer(QueuedVisualizerConfig);
+                    QueuedVisualizerConfig = null;
+                    Clock.Restart();
                 }
             }
-
-            Visualizer.OnUpdateFrame(this, e);
         }
 
         /// <summary>
@@ -240,25 +213,34 @@ namespace mhh
         protected override void OnResize(ResizeEventArgs e)
         {
             base.OnResize(e);
-            GenerateFramebuffers();
+            Renderer.ViewportResized(ClientSize.X, ClientSize.Y);
         }
 
+        /// <summary>
+        /// Sets the uniforms generally available to all shaders (resolution, time).
+        /// </summary>
+        public void SetStandardUniforms(Shader shader)
+        {
+            shader.SetUniform("resolution", ResolutionUniform);
+            shader.SetUniform("time", TimeUniform);
+        }
 
         /// <summary>
-        /// Preps and executes a new visualization
+        /// Queues a new visualizer configuration to send to
+        /// the RenderManager on the next OnUpdateFrame pass.
         /// </summary>
-        public void ChangeVisualizer(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)
+        public void QueueNextVisualizerConfig(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)
         {
-            lock(NewVisualizerLock)
+            lock(QueuedVisualizerLock)
             {
                 // CommandLineSwitchPipe invokes this from another thread;
                 // actual update occurs in OnUpdateFrame which is "safe"
                 // because it won't be busy doing things like using the
                 // current Shader object in an OnRenderFrame call.
-                NewVisualizerConfig = newVisualizerConfig;
+                QueuedVisualizerConfig = newVisualizerConfig;
 
-                // This is true when the --reload command has been issued.
-                ReplaceCachedShader = replaceCachedShader;
+                // When the --reload command has been issued we want to compile a fresh copy.
+                RenderingHelper.ReplaceCachedShader = replaceCachedShader;
             }
         }
 
@@ -268,15 +250,15 @@ namespace mhh
         public string Command_Load(string visualizerConfPathname, bool terminatesPlaylist = true)
         {
             var newViz = new VisualizerConfig(visualizerConfPathname);
-            if (newViz.Config.Content.Count == 0)
+            if (newViz.ConfigSource.Content.Count == 0)
             {
-                var err = $"Unable to load visualizer configuration {newViz.Config.Pathname}";
+                var err = $"Unable to load visualizer configuration {newViz.ConfigSource.Pathname}";
                 LogHelper.Logger?.LogError(err);
                 return $"ERR: {err}";
             }
             if (terminatesPlaylist) ActivePlaylist = null;
-            ChangeVisualizer(newViz);
-            var msg = $"Loading {newViz.Config.Pathname}";
+            QueueNextVisualizerConfig(newViz);
+            var msg = $"Loading {newViz.ConfigSource.Pathname}";
             LogHelper.Logger?.LogInformation(msg);
             return msg;
         }
@@ -308,8 +290,7 @@ namespace mhh
         {
             if(ActivePlaylist is null) return "ERR: No playlist is active";
 
-            string currentVizFilename = Path.GetFileNameWithoutExtension(ActiveVisualizerConfig.Config.Pathname);
-            string filename = string.Empty;
+            string filename;
             if(ActivePlaylist.Order == PlaylistOrder.RandomWeighted)
             {
                 do
@@ -322,7 +303,7 @@ namespace mhh
                     {
                         filename = ActivePlaylist.Visualizations[rnd.Next(ActivePlaylist.Visualizations.Count)];
                     }
-                } while (filename.Equals(currentVizFilename));
+                } while (filename.Equals(Renderer.ActiveRenderer.Filename));
             }
             else
             {
@@ -369,17 +350,14 @@ namespace mhh
         /// </summary>
         public string Command_Info()
         {
+            // TODO call Renderer GetInfo
             var msg = $@"
 elapsed sec: {Clock.Elapsed.TotalSeconds:0.####}
 frame rate : {FramesPerSecond}
 average fps: {AverageFramesPerSecond}
 avg fps sec: {AverageFPSTimeframeSeconds}
-description: {ActiveVisualizerConfig.Description}
-config file: {ActiveVisualizerConfig.Config.Pathname}
-vert shader: {ActiveVisualizerConfig.VertexShaderPathname}
-frag shader: {ActiveVisualizerConfig.FragmentShaderPathname}
-vizualizer : {ActiveVisualizerConfig.VisualizerTypeName}
-playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathname )}
+visualizer : {Renderer.ActiveRenderer.Filename}
+playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.ConfigSource.Pathname )}
 ";
             LogHelper.Logger?.LogInformation(msg);
             return msg;
@@ -390,7 +368,7 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         /// </summary>
         public string Command_Idle()
         {
-            ChangeVisualizer(Program.AppConfig.IdleVisualizer);
+            QueueNextVisualizerConfig(Program.AppConfig.IdleVisualizer);
             return "ACK";
         }
 
@@ -400,7 +378,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         public string Command_Pause()
         {
             if (CommandFlag_Paused) return "already paused; use --run to resume";
-            Visualizer?.Stop(this);
             Clock.Stop();
             CommandFlag_Paused = true;
             return "ACK";
@@ -412,7 +389,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         public string Command_Run()
         {
             if (!CommandFlag_Paused) return "already running; use --pause to suspend";
-            Visualizer?.Start(this);
             Clock.Start();
             CommandFlag_Paused = false;
             return "ACK";
@@ -423,21 +399,23 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         /// </summary>
         public string Command_Reload()
         {
-            ChangeVisualizer(new(ActiveVisualizerConfig.Config.Pathname), replaceCachedShader: true);
-            return "ACK";
+            var filename = Renderer.ActiveRenderer.Filename;
+            var pathname = PathHelper.FindConfigFile(Program.AppConfig.ShaderPath, filename);
+            if (pathname is null) return $"ERR - {filename} not found in shader path(s)";
+
+            var newViz = new VisualizerConfig(pathname);
+            if (newViz.ConfigSource.Content.Count == 0)
+            {
+                var err = $"Unable to load visualizer configuration {newViz.ConfigSource.Pathname}";
+                LogHelper.Logger?.LogError(err);
+                return $"ERR: {err}";
+            }
+
+            QueueNextVisualizerConfig(newViz, replaceCachedShader: true);
+            var msg = $"Reloading {newViz.ConfigSource.Pathname}";
+            LogHelper.Logger?.LogInformation(msg);
+            return msg;
         }
-
-        /// <summary>
-        /// Pass-through for IVisualizer.CommandLineArgument
-        /// </summary>
-        public string Command_VizCommand(string command, string value)
-            => Visualizer.CommandLineArgument(this, command, value);
-
-        /// <summary>
-        /// Pass-through for IVisualizer.CommandLineArgumentHelp
-        /// </summary>
-        public List<(string command, string value)> Command_VizHelp()
-            => Visualizer.CommandLineArgumentHelp();
 
         /// <summary>
         /// Implements the configured action when silence is detected by OnUpdateFrame
@@ -448,9 +426,9 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
 
             LogHelper.Logger?.LogDebug($"Silence detected (duration: {duration:0.####} sec");
 
-            lock (NewVisualizerLock)
+            lock (QueuedVisualizerLock)
             {
-                NewVisualizerConfig = Program.AppConfig.DetectSilenceAction switch
+                QueuedVisualizerConfig = Program.AppConfig.DetectSilenceAction switch
                 {
                     SilenceAction.Blank => Program.AppConfig.BlankVisualizer,
                     SilenceAction.Idle => Program.AppConfig.IdleVisualizer,
@@ -463,179 +441,89 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.Config.Pathnam
         /// </summary>
         private void ForceIdleVisualization(bool initializingWindow)
         {
-            if(!initializingWindow && ActiveVisualizerConfig == Program.AppConfig.IdleVisualizer)
+            if(!initializingWindow && Renderer.ActiveRenderer.Filename.Equals("idle", StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new Exception("Built-in idle visualizer has failed.");
             }
-            if(!initializingWindow) EndVisualization();
-            ActiveVisualizerConfig = Program.AppConfig.IdleVisualizer;
-            StartNewVisualizer();
+            Renderer.PrepareNewRenderer(Program.AppConfig.IdleVisualizer);
+        }
+
+        // Example of how to invoke generic method
+        //private void CreateAudioTextures()
+        //{
+        //    if (Eyecandy is null || ActiveVisualizerConfig is null) return;
+        //
+        //    var defaultEnabled = (object)true;
+        //
+        //    foreach (var tex in ActiveVisualizerConfig.AudioTextureTypeNames)
+        //    {
+        //        // match the string value to one of the known Eyecandy types
+        //        var TextureType = Caching.KnownAudioTextures.FindType(tex.Value);
+        //
+        //        // call the engine to create the object
+        //        if (TextureType is not null)
+        //        {
+        //            var uniformName = (object)(ActiveVisualizerConfig.AudioTextureUniformNames.ContainsKey(tex.Key)
+        //                ? ActiveVisualizerConfig.AudioTextureUniformNames[tex.Key]
+        //                : tex.Value.ToString());
+        //
+        //            var multiplier = (object)(ActiveVisualizerConfig.AudioTextureMultipliers.ContainsKey(tex.Key)
+        //                ? ActiveVisualizerConfig.AudioTextureMultipliers[tex.Key]
+        //                : 1.0f);
+        //
+        //            // AudioTextureEngine.Create<TextureType>(uniform, assignedTextureUnit, multiplier, enabled)
+        //            var method = EyecandyEnableMethod.MakeGenericMethod(TextureType);
+        //            method.Invoke(Eyecandy, new object[]
+        //            {
+        //            uniformName,
+        //            multiplier,
+        //            defaultEnabled,
+        //            });
+        //        }
+        //    }
+        //
+        //    Eyecandy.EvaluateRequirements();
+        //}
+
+        private void InitializeCache()
+        {
+            Caching.Shaders = new(Program.AppConfig.ShaderCacheSize);
+
+            CacheInternalShader("idle");
+            CacheInternalShader("blank");
+            CacheInternalShader("crossfade");
         }
 
         /// <summary>
-        /// Starts up the visualizer defined by the ActiveVisualizer field. Any cleanup of the
-        /// previous visualizer (such as DestroyAudioTextures) is assumed to have been done prior
-        /// to calling this (see OnUpdateFrame where this is addressed).
+        /// The program exits if the shader pathname is invalid or compilation fails.
         /// </summary>
-        private void StartNewVisualizer()
+        private void CacheInternalShader(string name)
         {
-            // if the type name isn't recognized, default to the idle viz
-            var VizType = Caching.KnownVisualizers.FindType(ActiveVisualizerConfig.VisualizerTypeName);
-            if (VizType is null)
+            Shader shader = new(
+                Path.Combine(ApplicationConfiguration.InternalShaderPath, $"{name}.vert"),
+                Path.Combine(ApplicationConfiguration.InternalShaderPath, $"{name}.frag"));
+
+            if (!shader.IsValid)
             {
-                LogHelper.Logger.LogError($"Visualizer type not recognized: {ActiveVisualizerConfig.VisualizerTypeName}; using default idle-viz.");
-                ForceIdleVisualization(false);
-                return;
-            }
-            Visualizer = Activator.CreateInstance(VizType) as IVisualizer;
-
-            CreateAudioTextures();
-
-            var shaderCacheKey = CachedShader.KeyFrom(ActiveVisualizerConfig.VertexShaderPathname, ActiveVisualizerConfig.FragmentShaderPathname);
-            var cachedShader = Caching.Shaders.Get(shaderCacheKey);
-            if (cachedShader is null)
-            {
-                cachedShader = new(ActiveVisualizerConfig.VertexShaderPathname, ActiveVisualizerConfig.FragmentShaderPathname);
-                if (!cachedShader.IsValid)
-                {
-                    LogHelper.Logger.LogError($"Shader not valid for {ActiveVisualizerConfig.Config.Pathname}; using default idle-viz.");
-                    ForceIdleVisualization(false);
-                    return;
-                }
-
-                if (!Caching.Shaders.TryAdd(shaderCacheKey, cachedShader)) LogHelper.Logger.LogWarning($"Failed to cache shader for {ActiveVisualizerConfig.Config.Pathname}");
+                Console.WriteLine($"\n\nFATAL ERROR: Internal {name} shader was not found or failed to compile.\n\n");
+                Thread.Sleep(250);
+                Environment.Exit(-1);
             }
 
-            Shader = cachedShader;
-
-            Visualizer.Start(this);
-
-            if (OnLoadCompleted)
-            {
-                Configuration.BackgroundColor = ActiveVisualizerConfig.BackgroundColor;
-                GL.ClearColor(Configuration.BackgroundColor);
-                Visualizer.OnLoad(this);
-            }
+            Caching.InternalShaders.Add(name, shader);
         }
 
-        /// <summary>
-        /// Prepartion for starting a new viz, or for exiting the program.
-        /// </summary>
-        private void EndVisualization()
-        {
-            Visualizer?.Stop(this);
-            Visualizer?.Dispose();
-            Visualizer = null;
-
-            // The --reload switch sets ReplaceCachedShader to true
-            if(ReplaceCachedShader && Shader is not null)
-            {
-                // .Value necessary because ShaderKey is nullable
-                Caching.Shaders.Remove(Shader.Key);
-                ReplaceCachedShader = false;
-            }
-
-            Shader = null;
-
-            Engine?.EndAudioProcessing_SynchronousHack();
-
-            if (Engine is null || ActiveVisualizerConfig is null) return;
-
-            // The engine tracks audio textures by type, so loop through all known
-            // types and call Destroy on each; unused types will be ignored.
-            foreach (var tex in ActiveVisualizerConfig.AudioTextureTypeNames)
-            {
-                // AudioTextureEngine.Destroy<TextureType>()
-                var TextureType = Caching.KnownAudioTextures.FindType(tex.Value);
-                var method = EngineDestroyMethod.MakeGenericMethod(TextureType);
-                method.Invoke(Engine, null);
-            }
-        }
-
-        /// <summary>
-        /// Calls Create on all types listed in the visualization definition.
-        /// </summary>
-        private void CreateAudioTextures()
-        {
-            if (Engine is null || ActiveVisualizerConfig is null) return;
-
-            var defaultEnabled = (object)true;
-
-            foreach (var tex in ActiveVisualizerConfig.AudioTextureTypeNames)
-            {
-                // match the string value to one of the known Eyecandy types
-                var TextureType = Caching.KnownAudioTextures.FindType(tex.Value);
-
-                // call the engine to create the object
-                if (TextureType is not null)
-                {
-                    var uniformName = (object)(ActiveVisualizerConfig.AudioTextureUniformNames.ContainsKey(tex.Key)
-                        ? ActiveVisualizerConfig.AudioTextureUniformNames[tex.Key]
-                        : tex.Value.ToString());
-
-                    var multiplier = (object)(ActiveVisualizerConfig.AudioTextureMultipliers.ContainsKey(tex.Key)
-                        ? ActiveVisualizerConfig.AudioTextureMultipliers[tex.Key]
-                        : 1.0f);
-
-                    // AudioTextureEngine.Create<TextureType>(uniform, assignedTextureUnit, multiplier, enabled)
-                    var method = EngineCreateMethod.MakeGenericMethod(TextureType);
-                    method.Invoke(Engine, new object[]
-                    {
-                    uniformName,
-                    multiplier,
-                    defaultEnabled,
-                    });
-                }
-            }
-
-            Engine.EvaluateRequirements();
-        }
-
-        private void GenerateFramebuffers()
-        {
-            Framebuffers.Clear();
-
-            for (int i = 0; i < Framebuffers.Capacity; i++)
-            {
-                var framebufferHandle = GL.GenFramebuffer();
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebufferHandle);
-
-                var textureHandle = GL.GenTexture();
-                GL.BindTexture(TextureTarget.Texture2D, textureHandle);
-
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, ClientSize.X, ClientSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-                GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, textureHandle, 0);
-
-                var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
-                if (!status.Equals(FramebufferErrorCode.FramebufferComplete) && !status.Equals(FramebufferErrorCode.FramebufferCompleteExt))
-                {
-                    Console.WriteLine($"Error creating framebuffer {i}: {status}");
-                    Thread.Sleep(250);
-                    Environment.Exit(-1);
-                }
-
-                Framebuffers.Add((framebufferHandle, textureHandle));
-            }
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        }
-
-        // "new" hides the non-overridable base method
-        public new void Dispose()
+        private bool IsDisposed = false;
+        public new void Dispose() // "new" hides the non-overridable base method
         {
             if (IsDisposed) return;
+            base.Dispose();
 
-            if (Visualizer is not null) EndVisualization();
-            Caching.Shaders.Clear(); // diposes any cached shaders
-
-            base.Dispose(); // don't call this earlier, it will try to dispose the Shader object
-
-            Engine?.Dispose();
+            Eyecandy?.EndAudioProcessing_SynchronousHack();
+            Renderer?.Dispose();
+            Caching.InternalShaders.DisposeAndClear();
+            Caching.Shaders.DisposeAndClear();
+            Eyecandy?.Dispose();
 
             IsDisposed = true;
             GC.SuppressFinalize(true);

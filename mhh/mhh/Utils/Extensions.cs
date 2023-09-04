@@ -7,6 +7,10 @@ namespace mhh
 {
     public static class Extensions
     {
+        //-----------------------------------------------------------------------------------------------
+        // Caching support
+        //-----------------------------------------------------------------------------------------------
+
         /// <summary>
         /// Returns classes that inherit from the requested Type in the current Assembly.
         /// </summary>
@@ -27,6 +31,21 @@ namespace mhh
                 //.Where(t => t != type && type.IsSubclassOf(t))
                 .ToList();
         }
+
+        /// <summary>
+        /// Calls Dispose on all stored objects then clears the dictionary.
+        /// </summary>
+        public static void DisposeAndClear<K,V>(this Dictionary<K,V> dictionary)
+        {
+            foreach (var kvp in dictionary)
+                (kvp.Value as IDisposable).Dispose();
+
+            dictionary.Clear();
+        }
+
+        //-----------------------------------------------------------------------------------------------
+        // Config file support
+        //-----------------------------------------------------------------------------------------------
 
         /// <summary>
         /// Returns the standard OpenGL PrimitiveType that corresponds to the MHH-supported ArrayDrawingMode.
@@ -82,17 +101,19 @@ namespace mhh
         public static string DefaultString(this string textValue, string defaultValue)
             => string.IsNullOrWhiteSpace(textValue) ? defaultValue : textValue;
 
+        //-----------------------------------------------------------------------------------------------
+        // Visualizer / Rendering support
+        //-----------------------------------------------------------------------------------------------
+
         /// <summary>
         /// Finds a concrete Type by name from an IReadOnlyList<Type> collection
         /// </summary>
         public static Type FindType(this IReadOnlyList<Type> list, string typeName)
             => list.FirstOrDefault(t => t.Name.ToLowerInvariant().Equals(typeName.ToLowerInvariant()));
 
-        /// <summary>
-        /// Used in command-line switch parsing. Yes, I'm that lazy.
-        /// </summary>
-        public static bool LowercaseEquals(this string lhv, string comparison)
-            => (lhv.ToLowerInvariant().Equals(comparison.ToLowerInvariant()));
+        //-----------------------------------------------------------------------------------------------
+        // Murmur3 hashing support
+        //-----------------------------------------------------------------------------------------------
 
         /// <summary>
         /// Used by Murmur3Hash.
@@ -117,5 +138,15 @@ namespace mhh
         /// </summary>
         public static BigInteger ToBigInteger(this byte[] bb)
             => new(bb);
+
+        //-----------------------------------------------------------------------------------------------
+        // Command Parsing support
+        //-----------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// Used in command-line switch parsing. Yes, I'm that lazy.
+        /// </summary>
+        public static bool LowercaseEquals(this string lhv, string comparison)
+            => (lhv.ToLowerInvariant().Equals(comparison.ToLowerInvariant()));
     }
 }
