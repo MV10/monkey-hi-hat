@@ -100,13 +100,13 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
         {
             if (storage.ContainsKey(key))
             {
-                storage.Remove(key);
                 ref LinkedListNode<Entry> refNode = ref CollectionsMarshal.GetValueRefOrAddDefault(storage, key, out bool exists);
                 if(valueIsDisposable)
                 {
                     (refNode.Value.Lazy.Value as IDisposable).Dispose();
                 }
                 order.Remove(refNode);
+                storage.Remove(key);
             }
         }
     }
