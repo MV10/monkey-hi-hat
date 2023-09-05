@@ -1,5 +1,5 @@
 ﻿
-namespace mhh.Hosting
+namespace mhh
 {
     public class PlaylistConfig
     {
@@ -78,7 +78,7 @@ namespace mhh.Hosting
                         var faves = new List<string>(Favorites);
                         while(viz.Count > 0 || faves.Count > 0)
                         {
-                            if(rand.Next(100) < 50)
+                            if(faves.Count == 0 || rand.Next(100) < 50)
                             {
                                 int v = rand.Next(viz.Count);
                                 Playlist[i++] = viz[v];

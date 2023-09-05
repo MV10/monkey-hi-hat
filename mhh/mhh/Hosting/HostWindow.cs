@@ -1,9 +1,7 @@
 ﻿
 using eyecandy;
-using mhh.Hosting;
 using mhh.Utils;
 using Microsoft.Extensions.Logging;
-using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -20,9 +18,14 @@ namespace mhh
     public class HostWindow : BaseWindow
     {
         /// <summary>
-        /// The current playlist, if any.
+        /// Handles all visualization rendering prep and execution.
         /// </summary>
-        public PlaylistConfig ActivePlaylist;
+        public RenderManager Renderer = new();
+
+        /// <summary>
+        /// Handles playlist content.
+        /// </summary>
+        public PlaylistManager Playlist = new();
 
         /// <summary>
         /// Audio and texture processing by the eyecandy library.
@@ -43,6 +46,15 @@ namespace mhh
 
         private MethodInfo EyecandyEnableMethod;
         private MethodInfo EyecandyDisableMethod;
+        // Example of how to invoke generic method
+        //    // AudioTextureEngine.Create<TextureType>(uniform, assignedTextureUnit, multiplier, enabled)
+        //    var method = EyecandyCreateMethod.MakeGenericMethod(TextureType);
+        //    method.Invoke(Eyecandy, new object[]
+        //    {
+        //        uniformName,
+        //        multiplier,
+        //        defaultEnabled,
+        //    });
 
         private bool CommandFlag_Paused = false;
         private bool CommandFlag_QuitRequested = false;
@@ -51,13 +63,6 @@ namespace mhh
 
         private object QueuedVisualizerLock = new();
         private VisualizerConfig QueuedVisualizerConfig = null;
-
-        private int PlaylistPointer = 0;
-        private DateTime PlaylistAdvanceAt = DateTime.MaxValue;
-        private DateTime PlaylistIgnoreSilenceUntil = DateTime.MinValue;
-        private Random rnd = new();
-
-        private RenderManager Renderer = new();
 
         public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
             : base(windowConfig, createShaderFromConfig: false)
@@ -141,54 +146,22 @@ namespace mhh
             }
 
             // Right-arrow for next in playlist
-            if (input.IsKeyReleased(Keys.Right) && ActivePlaylist is not null)
+            if (input.IsKeyReleased(Keys.Right))
             {
                 Command_PlaylistNext(temporarilyIgnoreSilence: true);
                 return;
             }
 
-            // silence detection handling
-            double duration = 0;
-            if(Eyecandy.IsSilent)
-            {
-                if(!TrackingSilentPeriod)
-                {
-                    TrackingSilentPeriod = true;
-                }
-                else
-                {
-                    duration = DateTime.Now.Subtract(Eyecandy.SilenceStarted).TotalSeconds;
-                }
-            }
-            else
-            {
-                if(TrackingSilentPeriod)
-                {
-                    TrackingSilentPeriod = false;
-                    duration = Eyecandy.SilenceEnded.Subtract(Eyecandy.SilenceStarted).TotalSeconds;
-                }
-            }
-
-            // long-duration silence switches to the lower-overhead Idle or Blank viz
+            double duration = DetectSilence();
             if (Program.AppConfig.DetectSilenceSeconds > 0 && duration >= Program.AppConfig.DetectSilenceSeconds)
             {
+                // long-duration silence switches to the lower-overhead Idle or Blank viz
                 RespondToSilence(duration);
                 return;
             }
 
-            // short-duration silence for playlist track-change viz-advancement
-            if(ActivePlaylist?.SwitchMode == PlaylistSwitchModes.Silence && DateTime.Now >= PlaylistIgnoreSilenceUntil && duration >= ActivePlaylist.SwitchSeconds)
-            {
-                Command_PlaylistNext(temporarilyIgnoreSilence: true);
-                return;
-            }
-
-            // playlist viz-advancement by time
-            if(DateTime.Now >= PlaylistAdvanceAt)
-            {
-                Command_PlaylistNext(temporarilyIgnoreSilence: true);
-                return;
-            }
+            // playlists can be configured to advance after a short duration of silence
+            Playlist.UpdateFrame(duration);
 
             // if the CommandLineSwitchPipe thread processed a request
             // to use a different shader, process here where we know
@@ -253,7 +226,7 @@ namespace mhh
                 LogHelper.Logger?.LogError(err);
                 return $"ERR: {err}";
             }
-            if (terminatesPlaylist) ActivePlaylist = null;
+            if (terminatesPlaylist) Playlist.TerminatePlaylist();
             QueueNextVisualizerConfig(newViz);
             var msg = $"Loading {newViz.ConfigSource.Pathname}";
             LogHelper.Logger?.LogInformation(msg);
@@ -264,74 +237,13 @@ namespace mhh
         /// Loads and begins using a playlist.
         /// </summary>
         public string Command_Playlist(string playlistConfPathname)
-        {
-            ActivePlaylist = null;
-            var cfg = new PlaylistConfig(playlistConfPathname);
-            string err = null;
-            if(cfg.Playlist.Length < 2) err = "Invalid playlist configuration file, one or zero visualizations loaded, aborted";
-            if (cfg.Order == PlaylistOrder.RandomWeighted && cfg.Favorites.Count == 0) err = "RandomWeighted playlist requires Favorites visualizations, aborted";
-            if(err is not null)
-            {
-                LogHelper.Logger?.LogError(err);
-                return $"ERR: {err}";
-            }
-            PlaylistPointer = 0;
-            ActivePlaylist = cfg;
-            return Command_PlaylistNext();
-        }
+            => Playlist.StartNewPlaylist(playlistConfPathname);
 
         /// <summary>
         /// Advances to the next visualization when a playlist is active.
         /// </summary>
         public string Command_PlaylistNext(bool temporarilyIgnoreSilence = false)
-        {
-            if(ActivePlaylist is null) return "ERR: No playlist is active";
-
-            string filename;
-            if(ActivePlaylist.Order == PlaylistOrder.RandomWeighted)
-            {
-                do
-                {
-                    if (rnd.Next(100) < 50 || rnd.Next(100) < ActivePlaylist.FavoritesPct)
-                    {
-                        filename = ActivePlaylist.Favorites[rnd.Next(ActivePlaylist.Favorites.Count)];
-                    }
-                    else
-                    {
-                        filename = ActivePlaylist.Visualizations[rnd.Next(ActivePlaylist.Visualizations.Count)];
-                    }
-                } while (filename.Equals(Renderer.ActiveRenderer.Filename));
-            }
-            else
-            {
-                filename = ActivePlaylist.Playlist[PlaylistPointer++];
-                if (PlaylistPointer == ActivePlaylist.Playlist.Length)
-                {
-                    PlaylistPointer = 0;
-                    ActivePlaylist.GeneratePlaylist();
-                }
-            }
-
-            PlaylistAdvanceAt = (ActivePlaylist.SwitchMode == PlaylistSwitchModes.Time)
-                ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchSeconds)
-                : (ActivePlaylist.SwitchMode == PlaylistSwitchModes.Silence)
-                    ? DateTime.Now.AddSeconds(ActivePlaylist.MaxRunSeconds)
-                    : DateTime.MaxValue;
-            
-            PlaylistIgnoreSilenceUntil = (temporarilyIgnoreSilence && ActivePlaylist.SwitchMode == PlaylistSwitchModes.Silence)
-                ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchCooldownSeconds)
-                : DateTime.MinValue;
-
-            var pathname = PathHelper.FindConfigFile(Program.AppConfig.ShaderPath, filename);
-            if(pathname is not null)
-            {
-                var msg = Command_Load(pathname, terminatesPlaylist: false);
-                // TODO handle ERR message
-                return msg;
-            }
-
-            return $"ERR - {filename} not found in shader path(s)";
-        }
+            => Playlist.NextVisualization(temporarilyIgnoreSilence);
 
         /// <summary>
         /// Handler for the --quit command-line switch.
@@ -353,8 +265,8 @@ elapsed sec: {Clock.Elapsed.TotalSeconds:0.####}
 frame rate : {FramesPerSecond}
 average fps: {AverageFramesPerSecond}
 avg fps sec: {AverageFPSTimeframeSeconds}
-visualizer : {Renderer.ActiveRenderer.Filename}
-playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.ConfigSource.Pathname )}
+visualizer : {Renderer.GetInfo()}
+playlist   : {Playlist.GetInfo()}
 ";
             LogHelper.Logger?.LogInformation(msg);
             return msg;
@@ -414,14 +326,39 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.ConfigSource.P
             return msg;
         }
 
+        private double DetectSilence()
+        {
+            if (Eyecandy.IsSilent)
+            {
+                if (!TrackingSilentPeriod)
+                {
+                    TrackingSilentPeriod = true;
+                }
+                else
+                {
+                    return DateTime.Now.Subtract(Eyecandy.SilenceStarted).TotalSeconds;
+                }
+            }
+            else
+            {
+                if (TrackingSilentPeriod)
+                {
+                    TrackingSilentPeriod = false;
+                    return Eyecandy.SilenceEnded.Subtract(Eyecandy.SilenceStarted).TotalSeconds;
+                }
+            }
+
+            return 0;
+        }
+
         /// <summary>
         /// Implements the configured action when silence is detected by OnUpdateFrame
         /// </summary>
         private void RespondToSilence(double duration)
         {
-            ActivePlaylist = null;
+            LogHelper.Logger?.LogDebug($"Long-term silence detected (duration: {duration:0.####} sec");
 
-            LogHelper.Logger?.LogDebug($"Silence detected (duration: {duration:0.####} sec");
+            Playlist.TerminatePlaylist();
 
             lock (QueuedVisualizerLock)
             {
@@ -444,37 +381,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.ConfigSource.P
             }
             Renderer.PrepareNewRenderer(Program.AppConfig.IdleVisualizer);
         }
-
-        // Example of how to invoke generic method
-        //private void CreateAudioTextures()
-        //{
-        //    foreach (var tex in ActiveVisualizerConfig.AudioTextureTypeNames)
-        //    {
-        //        // match the string value to one of the known Eyecandy types
-        //        var TextureType = Caching.KnownAudioTextures.FindType(tex.Value);
-        //
-        //        // call the engine to create the object
-        //        if (TextureType is not null)
-        //        {
-        //            var uniformName = (object)(ActiveVisualizerConfig.AudioTextureUniformNames.ContainsKey(tex.Key)
-        //                ? ActiveVisualizerConfig.AudioTextureUniformNames[tex.Key]
-        //                : tex.Value.ToString());
-        //
-        //            var multiplier = (object)(ActiveVisualizerConfig.AudioTextureMultipliers.ContainsKey(tex.Key)
-        //                ? ActiveVisualizerConfig.AudioTextureMultipliers[tex.Key]
-        //                : 1.0f);
-        //
-        //            // AudioTextureEngine.Create<TextureType>(uniform, assignedTextureUnit, multiplier, enabled)
-        //            var method = EyecandyEnableMethod.MakeGenericMethod(TextureType);
-        //            method.Invoke(Eyecandy, new object[]
-        //            {
-        //            uniformName,
-        //            multiplier,
-        //            defaultEnabled,
-        //            });
-        //        }
-        //    }
-        //}
 
         private void InitializeCache()
         {
