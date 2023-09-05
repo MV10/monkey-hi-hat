@@ -105,7 +105,6 @@ public class RenderManager : IDisposable
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
-    private bool IsDisposed = false;
     public void Dispose()
     {
         if (IsDisposed) return;
@@ -121,4 +120,5 @@ public class RenderManager : IDisposable
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
+    private bool IsDisposed = false;
 }

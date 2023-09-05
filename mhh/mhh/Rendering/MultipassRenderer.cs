@@ -20,7 +20,6 @@ public class MultipassRenderer : IRenderer
 
     }
 
-    private bool IsDisposed = false;
     public void Dispose()
     {
         if (IsDisposed) return;
@@ -28,4 +27,5 @@ public class MultipassRenderer : IRenderer
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
+    private bool IsDisposed = false;
 }

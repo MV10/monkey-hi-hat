@@ -1,6 +1,5 @@
 ﻿
 using mhh.Utils;
-using Microsoft.Extensions.Logging;
 
 namespace mhh;
 
@@ -35,14 +34,6 @@ public class SingleVisualizerRenderer : IRenderer
         Visualizer.RenderFrame(Shader);
     }
 
-    private void LogInvalidReason(string reason)
-    {
-        IsValid = false;
-        InvalidReason = reason;
-        LogHelper.Logger.LogError(reason);
-    }
-
-    private bool IsDisposed = false;
     public void Dispose()
     {
         if (IsDisposed) return;
@@ -53,4 +44,5 @@ public class SingleVisualizerRenderer : IRenderer
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
+    private bool IsDisposed = false;
 }

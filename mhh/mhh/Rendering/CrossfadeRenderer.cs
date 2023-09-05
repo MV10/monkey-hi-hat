@@ -17,7 +17,6 @@ public class CrossfadeRenderer : IRenderer
 
     }
 
-    private bool IsDisposed = false;
     public void Dispose()
     {
         if (IsDisposed) return;
@@ -25,4 +24,5 @@ public class CrossfadeRenderer : IRenderer
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
+    private bool IsDisposed = false;
 }

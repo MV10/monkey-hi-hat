@@ -13,6 +13,11 @@ public static class RenderingHelper
     /// </summary>
     public static bool ReplaceCachedShader = false;
 
+    /// <summary>
+    /// Retreives a shader from the cache, optionally replacing it with a newly loaded and
+    /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader
+    /// flag).
+    /// </summary>
     public static CachedShader GetShader(IRenderer renderer, VisualizerConfig visualizerConfig)
     {
         var shaderKey = CachedShader.KeyFrom(visualizerConfig.VertexShaderPathname, visualizerConfig.FragmentShaderPathname);
@@ -39,12 +44,23 @@ public static class RenderingHelper
         return shader;
     }
 
+    /// <summary>
+    /// Returns an IVisualizer matching the primary visualizer listed in the config file.
+    /// The caller must invoke the Initialize method on the returned object instance.
+    /// </summary>
     public static IVisualizer GetVisualizer(IRenderer renderer, VisualizerConfig visualizerConfig)
+        => GetVisualizer(renderer, visualizerConfig.VisualizerTypeName);
+
+    /// <summary>
+    /// Returns an IVisualizer matching the requested type name. The caller must invoke the
+    /// Initialize method on the returned object instance.
+    /// </summary>
+    public static IVisualizer GetVisualizer(IRenderer renderer, string visualizerTypeName)
     {
-        var vizType = Caching.KnownVisualizers.FindType(visualizerConfig.VisualizerTypeName);
+        var vizType = Caching.KnownVisualizers.FindType(visualizerTypeName);
         if (vizType is null)
         {
-            LogInvalidReason($"Visualizer type not recognized: {visualizerConfig.VisualizerTypeName}", renderer);
+            LogInvalidReason($"Visualizer type not recognized: {visualizerTypeName}", renderer);
             return null;
         }
 

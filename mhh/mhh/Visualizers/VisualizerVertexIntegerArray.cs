@@ -29,9 +29,10 @@ public class VisualizerVertexIntegerArray : IVisualizer
         PrimitiveType.TriangleFan,
     };
 
-
     public void Initialize(VisualizerConfig config, Shader shader)
     {
+        shader.Use();
+
         var mhhMode = config.ConfigSource
             .ReadValue("VisualizerVertexIntegerArray", "ArrayDrawingMode")
             .ToEnum(ArrayDrawingMode.Points);
@@ -66,12 +67,15 @@ public class VisualizerVertexIntegerArray : IVisualizer
         GL.DrawArrays(Modes[DrawingMode], 0, VertexIntegerCount);
     }
 
-    private bool IsDisposed = false;
     public void Dispose()
     {
         if (IsDisposed) return;
 
+        GL.DeleteVertexArray(VertexArrayObject);
+        GL.DeleteBuffer(VertexBufferObject);
+
         IsDisposed = true;
         GC.SuppressFinalize(true);
     }
+    private bool IsDisposed = false;
 }

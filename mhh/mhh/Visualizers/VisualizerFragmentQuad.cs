@@ -38,6 +38,8 @@ public class VisualizerFragmentQuad : IVisualizer
 
     public void Initialize(VisualizerConfig config, Shader shader)
     {
+        shader.Use();
+
         VertexArrayObject = GL.GenVertexArray();
         GL.BindVertexArray(VertexArrayObject);
 
@@ -48,8 +50,6 @@ public class VisualizerFragmentQuad : IVisualizer
         ElementBufferObject = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, ElementBufferObject);
         GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
-
-        shader.Use();
 
         var locationVertices = shader.GetAttribLocation("vertices");
         GL.EnableVertexAttribArray(locationVertices);
@@ -68,12 +68,16 @@ public class VisualizerFragmentQuad : IVisualizer
         GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
     }
 
-    private bool IsDisposed = false;
     public void Dispose()
     {
         if (IsDisposed) return;
 
+        GL.DeleteVertexArray(VertexArrayObject);
+        GL.DeleteBuffer(VertexBufferObject);
+        GL.DeleteBuffer(ElementBufferObject);
+
         IsDisposed = true;
         GC.SuppressFinalize(true);
     }
+    private bool IsDisposed = false;
 }

@@ -43,7 +43,6 @@ namespace mhh
 
         private MethodInfo EyecandyEnableMethod;
         private MethodInfo EyecandyDisableMethod;
-        private MethodInfo EyecandyMultiplierMethod;
 
         private bool CommandFlag_Paused = false;
         private bool CommandFlag_QuitRequested = false;
@@ -66,7 +65,6 @@ namespace mhh
             Eyecandy = new(audioConfig);
             EyecandyEnableMethod = Eyecandy.GetType().GetMethod("Enable");
             EyecandyDisableMethod = Eyecandy.GetType().GetMethod("Disable");
-            EyecandyMultiplierMethod = Eyecandy.GetType().GetMethod("SetMultiplier");
 
             // TODO default these to enabled: false
             Eyecandy.Create<AudioTextureWaveHistory>("eyecandyWave", enabled: true);
@@ -79,10 +77,9 @@ namespace mhh
 
             InitializeCache();
 
-            // TODO use Renderer
-            ForceIdleVisualization(true);
-
             Clock.Start();
+
+            Renderer.PrepareNewRenderer(Program.AppConfig.IdleVisualizer);
         }
 
         /// <summary>
@@ -451,10 +448,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.ConfigSource.P
         // Example of how to invoke generic method
         //private void CreateAudioTextures()
         //{
-        //    if (Eyecandy is null || ActiveVisualizerConfig is null) return;
-        //
-        //    var defaultEnabled = (object)true;
-        //
         //    foreach (var tex in ActiveVisualizerConfig.AudioTextureTypeNames)
         //    {
         //        // match the string value to one of the known Eyecandy types
@@ -481,8 +474,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.ConfigSource.P
         //            });
         //        }
         //    }
-        //
-        //    Eyecandy.EvaluateRequirements();
         //}
 
         private void InitializeCache()
@@ -513,7 +504,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.ConfigSource.P
             Caching.InternalShaders.Add(name, shader);
         }
 
-        private bool IsDisposed = false;
         public new void Dispose() // "new" hides the non-overridable base method
         {
             if (IsDisposed) return;
@@ -528,5 +518,6 @@ playlist   : {(ActivePlaylist is null ? "(none)" : ActivePlaylist.ConfigSource.P
             IsDisposed = true;
             GC.SuppressFinalize(true);
         }
+        private bool IsDisposed = false;
     }
 }
