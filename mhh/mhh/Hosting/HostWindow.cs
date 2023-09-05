@@ -84,7 +84,7 @@ namespace mhh
 
             Clock.Start();
 
-            Renderer.PrepareNewRenderer(Program.AppConfig.IdleVisualizer);
+            Renderer.PrepareNewRenderer(Caching.IdleVisualizer);
         }
 
         /// <summary>
@@ -277,7 +277,7 @@ playlist   : {Playlist.GetInfo()}
         /// </summary>
         public string Command_Idle()
         {
-            QueueNextVisualizerConfig(Program.AppConfig.IdleVisualizer);
+            QueueNextVisualizerConfig(Caching.IdleVisualizer);
             return "ACK";
         }
 
@@ -364,27 +364,18 @@ playlist   : {Playlist.GetInfo()}
             {
                 QueuedVisualizerConfig = Program.AppConfig.DetectSilenceAction switch
                 {
-                    SilenceAction.Blank => Program.AppConfig.BlankVisualizer,
-                    SilenceAction.Idle => Program.AppConfig.IdleVisualizer,
+                    SilenceAction.Blank => Caching.BlankVisualizer,
+                    SilenceAction.Idle => Caching.IdleVisualizer,
                 };
             }
-        }
-
-        /// <summary>
-        /// Mostly an emergency bail-out for StartNewVisualizer.
-        /// </summary>
-        private void ForceIdleVisualization(bool initializingWindow)
-        {
-            if(!initializingWindow && Renderer.ActiveRenderer.Filename.Equals("idle", StringComparison.InvariantCultureIgnoreCase))
-            {
-                throw new Exception("Built-in idle visualizer has failed.");
-            }
-            Renderer.PrepareNewRenderer(Program.AppConfig.IdleVisualizer);
         }
 
         private void InitializeCache()
         {
             Caching.Shaders = new(Program.AppConfig.ShaderCacheSize);
+
+            Caching.IdleVisualizer = new(Path.Combine(ApplicationConfiguration.InternalShaderPath, "idle.conf"));
+            Caching.BlankVisualizer = new(Path.Combine(ApplicationConfiguration.InternalShaderPath, "blank.conf"));
 
             CacheInternalShader("idle");
             CacheInternalShader("blank");

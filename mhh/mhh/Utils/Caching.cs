@@ -25,5 +25,16 @@ namespace mhh.Utils
         /// Compiled internal shaders keyed on the name (blank, idle, crossfade).
         /// </summary>
         public static Dictionary<string, Shader> InternalShaders = new();
+
+        /// <summary>
+        /// The built-in default visualizer.
+        /// </summary>
+        public static VisualizerConfig IdleVisualizer;
+
+        /// <summary>
+        /// The built-in visualizer to optionally blank the screen in response
+        /// to long-term silence detection.
+        /// </summary>
+        public static VisualizerConfig BlankVisualizer;
     }
 }

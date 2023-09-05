@@ -26,9 +26,6 @@ namespace mhh
         public readonly double DetectSilenceMaxRMS = 1.5d;
         public readonly SilenceAction DetectSilenceAction = SilenceAction.None;
 
-        public readonly VisualizerConfig IdleVisualizer;
-        public readonly VisualizerConfig BlankVisualizer;
-
         public readonly ConfigFile Config;
 
         public ApplicationConfiguration(ConfigFile appConfigFile)
@@ -52,9 +49,6 @@ namespace mhh
 
             CaptureDriverName = Config.ReadValue(SectionOS, "capturedrivername");
             CaptureDeviceName = Config.ReadValue(SectionOS, "capturedevicename");
-
-            IdleVisualizer = new(Path.Combine(InternalShaderPath, "idle.conf"));
-            BlankVisualizer = new(Path.Combine(InternalShaderPath, "blank.conf"));
         }
     }
 }

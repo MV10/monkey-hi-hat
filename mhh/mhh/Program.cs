@@ -120,8 +120,6 @@ namespace mhh
                 {
                     StartFullScreen = AppConfig.StartFullScreen,
                     HideMousePointer = AppConfig.HideMousePointer,
-                    VertexShaderPathname = AppConfig.IdleVisualizer.VertexShaderPathname,
-                    FragmentShaderPathname = AppConfig.IdleVisualizer.FragmentShaderPathname,
                 };
                 WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
                 WindowConfig.OpenTKNativeWindowSettings.Size = (AppConfig.SizeX, AppConfig.SizeY);
