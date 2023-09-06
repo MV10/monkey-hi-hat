@@ -39,7 +39,10 @@ public class SingleVisualizerRenderer : IRenderer
         if (IsDisposed) return;
 
         Visualizer?.Dispose();
-        if(Shader is not null && !Caching.Shaders.ContainsKey(Shader.Key)) Shader.Dispose();
+        Visualizer = null;
+
+        RenderingHelper.DisposeUncachedShader(Shader);
+        Shader = null;
 
         IsDisposed = true;
         GC.SuppressFinalize(this);

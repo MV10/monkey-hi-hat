@@ -3,7 +3,6 @@ using eyecandy;
 using mhh.Utils;
 using OpenTK.Graphics.OpenGL;
 using System.Diagnostics;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace mhh;
 
@@ -20,14 +19,14 @@ public class CrossfadeRenderer : IRenderer
     public string InvalidReason { get; set; } = string.Empty;
     public string Filename { get; set; } = string.Empty;
 
-    // During crossfade, this becomes the RenderManager.ActiveRenderer.
-    // Upon completion, RenderManager retrieves NewRenderer from here.
+    // During crossfade, the Crossfade class becomes the RenderManager.ActiveRenderer.
+    // Upon completion, RenderManager retrieves NewRenderer and makes it ActiveRenderer.
     public IRenderer OldRenderer;
     public IRenderer NewRenderer;
 
-    // Maintains a pair of output framebuffers in case one or both are
-    // not multi-pass (meaning they are designed to target the default
-    // OpenGL swapbuffers).
+    // Maintains a pair of output framebuffers in case the old and/or new renderers
+    // are not multi-pass (meaning they are designed to target the default OpenGL
+    // swap buffers if they run stand-alone).
     private Guid OwnerName = Guid.NewGuid();
     private IReadOnlyList<GLResources> Resources;
 
@@ -38,7 +37,7 @@ public class CrossfadeRenderer : IRenderer
     private GLResources OldDrawTarget = null;
     private GLResources NewDrawTarget = null;
 
-    // Copied from the renderer or the internally-managed resources
+    // Copied from the old/new renderers or the internally-managed resources
     private int OldTextureHandle;
     private int NewTextureHandle;
     private TextureUnit OldTextureUnit;
@@ -104,7 +103,7 @@ public class CrossfadeRenderer : IRenderer
         CrossfadeShader.SetTexture("newBuffer", NewTextureHandle, NewTextureUnit);
         FragQuadViz.RenderFrame(CrossfadeShader);
 
-        //...and the window OnRenderFrame swaps the back-buffer to the output
+        //...and now AppWindow's OnRenderFrame swaps the back-buffer to the output
     }
 
     public void Dispose()

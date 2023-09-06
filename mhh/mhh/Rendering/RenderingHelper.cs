@@ -1,4 +1,5 @@
 ﻿
+using eyecandy;
 using mhh.Utils;
 using Microsoft.Extensions.Logging;
 
@@ -19,10 +20,18 @@ public static class RenderingHelper
     /// flag).
     /// </summary>
     public static CachedShader GetShader(IRenderer renderer, VisualizerConfig visualizerConfig)
-    {
-        var shaderKey = CachedShader.KeyFrom(visualizerConfig.VertexShaderPathname, visualizerConfig.FragmentShaderPathname);
+        => GetShader(renderer, visualizerConfig.VertexShaderPathname, visualizerConfig.FragmentShaderPathname);
 
-        if(ReplaceCachedShader)
+    /// <summary>
+    /// Retreives a shader from the cache, optionally replacing it with a newly loaded and
+    /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader
+    /// flag).
+    /// </summary>
+    public static CachedShader GetShader(IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname)
+    {
+        var shaderKey = CachedShader.KeyFrom(vertexShaderPathname, fragmentShaderPathname);
+
+        if (ReplaceCachedShader)
         {
             Caching.Shaders.Remove(shaderKey);
             ReplaceCachedShader = false;
@@ -31,7 +40,7 @@ public static class RenderingHelper
         var shader = Caching.Shaders.Get(shaderKey);
         if (shader is null)
         {
-            shader = new(visualizerConfig.VertexShaderPathname, visualizerConfig.FragmentShaderPathname);
+            shader = new(vertexShaderPathname, fragmentShaderPathname);
             if (!shader.IsValid)
             {
                 LogInvalidReason("Shader invalid", renderer);
@@ -39,9 +48,18 @@ public static class RenderingHelper
             }
 
             var cached = Caching.Shaders.TryAdd(shaderKey, shader);
-            if (!cached) LogHelper.Logger.LogWarning($"Failed to cache shader for {visualizerConfig.ConfigSource.Pathname}");
+            if (!cached) LogHelper.Logger.LogWarning($"Failed to cache shader for {vertexShaderPathname} and {fragmentShaderPathname}");
         }
         return shader;
+    }
+
+    /// <summary>
+    /// If the shader isn't cached, it will be disposed. Otherwise, the cache will dispose of
+    /// it later and the caller should simply set the local reference to null.
+    /// </summary>
+    public static void DisposeUncachedShader(CachedShader shader)
+    {
+        if (shader is not null && !Caching.Shaders.ContainsKey(shader.Key)) shader.Dispose();
     }
 
     /// <summary>

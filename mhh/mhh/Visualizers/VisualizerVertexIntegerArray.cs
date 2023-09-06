@@ -29,19 +29,27 @@ public class VisualizerVertexIntegerArray : IVisualizer
         PrimitiveType.TriangleFan,
     };
 
+    // via interface
     public void Initialize(VisualizerConfig config, Shader shader)
     {
-        shader.Use();
+        var count = config.ConfigSource
+            .ReadValue("VisualizerVertexIntegerArray", "VertexIntegerCount")
+            .ToInt32(1000);
 
-        var mhhMode = config.ConfigSource
+        var mode = config.ConfigSource
             .ReadValue("VisualizerVertexIntegerArray", "ArrayDrawingMode")
             .ToEnum(ArrayDrawingMode.Points);
 
-        DrawingMode = Array.FindIndex(Modes, m => m.Equals(mhhMode.GetGLDrawingMode()));
+        DirectInit(count, mode, shader);
+    }
 
-        VertexIntegerCount = config.ConfigSource
-            .ReadValue("VisualizerVertexIntegerArray", "VertexIntegerCount")
-            .ToInt32(1000);
+    // used by multipass renderer
+    public void DirectInit(int vertexIntegerCount, ArrayDrawingMode arrayDrawingMode, Shader shader)
+    {
+        shader.Use();
+
+        VertexIntegerCount = vertexIntegerCount;
+        DrawingMode = Array.FindIndex(Modes, m => m.Equals(arrayDrawingMode.GetGLDrawingMode()));
 
         VertexIds = new float[VertexIntegerCount];
         for (var i = 0; i < VertexIntegerCount; i++)

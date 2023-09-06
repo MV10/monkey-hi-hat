@@ -1,5 +1,6 @@
 ﻿
 using mhh.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace mhh;
 
@@ -42,7 +43,11 @@ public class RenderManager : IDisposable
             renderer = new SingleVisualizerRenderer(visualizerConfig);
         }
 
-        if (!renderer.IsValid) return renderer;
+        if (!renderer.IsValid)
+        {
+            LogHelper.Logger?.LogError(renderer.InvalidReason);
+            return renderer;
+        }
 
         if (ActiveRenderer is null)
         {

@@ -63,6 +63,15 @@ namespace mhh
             : string.Empty;
 
         /// <summary>
+        /// Config sections with cotnent not in the key=value format use a sequential integer as the key. This
+        /// returns a List of string values ordered by that key.
+        /// </summary>
+        public static IReadOnlyList<string> SequentialSection(this ConfigFile config, string section)
+            => (config.Content.ContainsKey(section.ToLower()))
+            ? config.Content[section.ToLower()].OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value).ToList()
+            : new();
+
+        /// <summary>
         /// String-conversion helper
         /// </summary>
         public static bool ToBool(this string textValue, bool defaultValue)
