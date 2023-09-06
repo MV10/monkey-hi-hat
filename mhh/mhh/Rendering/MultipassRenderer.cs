@@ -3,14 +3,14 @@ using mhh.Utils;
 
 namespace mhh;
 
-public class MultipassRenderer : IRenderer, IGLResourceOwner
+public class MultipassRenderer : IRenderer, IFramebufferOwner
 {
     public bool IsValid { get; set; } = true;
     public string InvalidReason { get; set; } = string.Empty;
     public string Filename { get; set; }
 
-    private Guid FramebufferName = Guid.NewGuid();
-    private IReadOnlyList<GLResources> Framebuffers;
+    private Guid OwnerName = Guid.NewGuid();
+    private IReadOnlyList<GLResources> Resources;
     private int OutputFramebuffer = -1;
 
     public MultipassRenderer(VisualizerConfig visualizerConfig)
@@ -26,21 +26,15 @@ public class MultipassRenderer : IRenderer, IGLResourceOwner
 
     }
 
-    public Guid GetFramebufferOwnerName()
-        => FramebufferName;
-
-    public int GetFramebufferCount()
-        => Framebuffers?.Count ?? 0;
-
-    public GLResources GetOutputFramebuffer()
-        => (OutputFramebuffer == -1) ? null : Framebuffers?[OutputFramebuffer] ?? null;
+    public GLResources GetFinalDrawTargetResource()
+        => (OutputFramebuffer == -1) ? null : Resources?[OutputFramebuffer] ?? null;
 
     public void Dispose()
     {
         if (IsDisposed) return;
 
-        if(Framebuffers?.Count > 0) RenderManager.ResourceManager.DestroyFramebuffers(FramebufferName);
-        Framebuffers = null;
+        if(Resources?.Count > 0) RenderManager.ResourceManager.DestroyResources(OwnerName);
+        Resources = null;
 
         IsDisposed = true;
         GC.SuppressFinalize(this);

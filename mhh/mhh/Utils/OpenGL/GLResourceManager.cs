@@ -37,7 +37,7 @@ public class GLResourceManager : IDisposable
     }
     private static GLResourceManager Instance = null;
 
-    private Dictionary<Guid, IReadOnlyList<GLResources>> Framebuffers = new();
+    private Dictionary<Guid, IReadOnlyList<GLResources>> AllocatedResources = new();
 
     private List<int> AvailableTextureUnits = new(Caching.MaxAvailableTextureUnit);
 
@@ -53,17 +53,17 @@ public class GLResourceManager : IDisposable
     /// This request for new framebuffers returns a list collection of buffers. An exception
     /// is thrown if buffers are already allocated to the owner.
     /// </summary>
-    public IReadOnlyList<GLResources> CreateFramebuffers(Guid ownerName, int totalBuffersRequired)
+    public IReadOnlyList<GLResources> CreateResources(Guid ownerName, int totalRequired)
     {
-        if (Framebuffers.ContainsKey(ownerName)) throw new InvalidOperationException($"Framebuffers already allocated to owner name {ownerName}");
-        if (totalBuffersRequired < 1) throw new ArgumentOutOfRangeException("Framebuffer allocation request must be 1 or greater");
+        if (AllocatedResources.ContainsKey(ownerName)) throw new InvalidOperationException($"GL resources already allocated to owner name {ownerName}");
+        if (totalRequired < 1) throw new ArgumentOutOfRangeException("GL resource allocation request must be 1 or greater");
 
-        List<GLResources> list = new(totalBuffersRequired);
+        List<GLResources> list = new(totalRequired);
 
         var viewportWidth = Program.AppWindow.ClientSize.X;
         var viewportHeight = Program.AppWindow.ClientSize.Y;
 
-        for(int i = 0; i < totalBuffersRequired; i++)
+        for(int i = 0; i < totalRequired; i++)
         {
             var info = new GLResources
             {
@@ -81,11 +81,13 @@ public class GLResourceManager : IDisposable
             AllocateFramebufferTexture(info.TextureHandle, viewportWidth, viewportHeight);
 
             ValidateFramebuffer();
+
+            list.Add(info);
         }
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
-        Framebuffers.Add(ownerName, list);
+        AllocatedResources.Add(ownerName, list);
         return list;
     }
 
@@ -93,11 +95,11 @@ public class GLResourceManager : IDisposable
     /// Cleans up all framebuffers associated with the caller's owner identifier. The caller should
     /// destroy any local copy of the list object that was returned by the create method.
     /// </summary>
-    public void DestroyFramebuffers(Guid ownerName)
+    public void DestroyResources(Guid ownerName)
     {
-        if (!Framebuffers.ContainsKey(ownerName)) return;
-        DestroyFramebuffers(Framebuffers[ownerName]);
-        Framebuffers.Remove(ownerName);
+        if (!AllocatedResources.ContainsKey(ownerName)) return;
+        DestroyResources(AllocatedResources[ownerName]);
+        AllocatedResources.Remove(ownerName);
     }
 
     /// <summary>
@@ -105,9 +107,9 @@ public class GLResourceManager : IDisposable
     /// </summary>
     public void ResizeTextures(int viewportWidth, int viewportHeight)
     {
-        if (Framebuffers.Count == 0) return;
+        if (AllocatedResources.Count == 0) return;
 
-        foreach(var kvp in Framebuffers)
+        foreach(var kvp in AllocatedResources)
         {
             foreach(var info in kvp.Value)
             {
@@ -153,7 +155,7 @@ public class GLResourceManager : IDisposable
         }
     }
 
-    private void DestroyFramebuffers(IReadOnlyList<GLResources> list)
+    private void DestroyResources(IReadOnlyList<GLResources> list)
     {
         int[] handles = list.Select(i => i.BufferHandle).ToArray();
         GL.DeleteFramebuffers(handles.Length, handles);
@@ -168,13 +170,13 @@ public class GLResourceManager : IDisposable
     {
         if (IsDisposed) return;
 
-        if(Framebuffers?.Count > 0)
+        if(AllocatedResources?.Count > 0)
         {
-            foreach (var kvp in Framebuffers)
+            foreach (var kvp in AllocatedResources)
             {
-                DestroyFramebuffers(kvp.Value);
+                DestroyResources(kvp.Value);
             }
-            Framebuffers.Clear();
+            AllocatedResources.Clear();
         }
 
         IsDisposed = true;

@@ -17,6 +17,7 @@ namespace mhh
         public readonly int SizeY;
         public readonly bool HideMousePointer;
         public readonly int ShaderCacheSize;
+        public readonly int CrossfadeSeconds;
         public readonly int UnsecuredPort;
 
         public readonly string CaptureDriverName = string.Empty;
@@ -37,6 +38,7 @@ namespace mhh
             SizeY = Config.ReadValue("setup", "sizey").ToInt32(540);
             HideMousePointer = Config.ReadValue("setup", "hidemousepointer").ToBool(true);
             ShaderCacheSize = Config.ReadValue("setup", "shadercachesize").ToInt32(50);
+            CrossfadeSeconds = Config.ReadValue("setup", "crossfadeseconds").ToInt32(2);
             UnsecuredPort = Config.ReadValue("setup", "unsecuredport").ToInt32(0);
 
             ShaderPath = Config.ReadValue(SectionOS, "shaderpath");

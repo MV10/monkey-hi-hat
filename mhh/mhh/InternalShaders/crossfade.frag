@@ -9,7 +9,7 @@ out vec4 fragColor;
 
 void main()
 {
-    vec4 oldTexel = texture(newBuffer, fragCoord) * (1.0 - fadeLevel);
+    vec4 oldTexel = texture(oldBuffer, fragCoord) * (1.0 - fadeLevel);
     vec4 newTexel = texture(newBuffer, fragCoord) * fadeLevel;
-    fragColor = oldTexel * newTexel;
+    fragColor = oldTexel + newTexel;
 }

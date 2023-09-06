@@ -64,9 +64,21 @@ public class RenderManager : IDisposable
     {
         if(NewRenderer is not null)
         {
-            ActiveRenderer.Dispose();
-            ActiveRenderer = NewRenderer;
-            NewRenderer = null;
+            if(Program.AppConfig.CrossfadeSeconds == 0)
+            {
+                // Crossfade disabled, just do the switch
+                ActiveRenderer.Dispose();
+                ActiveRenderer = NewRenderer;
+                NewRenderer = null;
+            }
+            else
+            {
+                // Crossfade enabled, hand off control and make the crossfader active
+                var oldRenderer = ActiveRenderer;
+                ActiveRenderer = new CrossfadeRenderer(oldRenderer, NewRenderer, CrossfadeCompleted);
+                NewRenderer = null;
+            }
+
         }
 
         ActiveRenderer?.RenderFrame();
@@ -86,6 +98,14 @@ public class RenderManager : IDisposable
     public string GetInfo()
     {
         return "TODO";
+    }
+
+    private void CrossfadeCompleted()
+    {
+        // Upon completion, re-take control of the new one and make it active
+        var newRenderer = (ActiveRenderer as CrossfadeRenderer).NewRenderer;
+        ActiveRenderer.Dispose();
+        ActiveRenderer = newRenderer;
     }
 
     /// <summary/>
