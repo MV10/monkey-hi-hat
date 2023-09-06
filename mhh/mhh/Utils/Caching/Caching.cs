@@ -36,5 +36,13 @@ namespace mhh.Utils
         /// to long-term silence detection.
         /// </summary>
         public static VisualizerConfig BlankVisualizer;
+
+        /// <summary>
+        /// Indicates the highest 0-based TextureUnit which can be assigned by FramebufferManager.
+        /// This is calculated from the GL MaxCombinedTextureImageUnits value, less 1 (for 0 offset)
+        /// and less the number of known audio texture classes (as the eyecandy library hard-assigns
+        /// those from the high end of the range).
+        /// </summary>
+        public static int MaxAvailableTextureUnit;
     }
 }

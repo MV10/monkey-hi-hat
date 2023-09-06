@@ -1,24 +1,35 @@
 ﻿
-using OpenTK.Graphics.OpenGL;
+using mhh.Utils;
 
 namespace mhh;
 
-// viz confs
-// viz objs
-// viz shaders & cache management
-// fx shaders
-// lib shaders
-// framebuffers & texture units
-// uniforms
-// eyecandy audio texture management
+// RenderManager can execute simple stand-alone visualizations, but it can also orchestrate
+// multi-pass rendering operations, including cross-fade, visualizations defined as multi-pass
+// and "attached" post-procesing effects (including "upgrading" a stand-alone to multi-pass).
 
 public class RenderManager : IDisposable
 {
+    /// <summary>
+    /// Multi-pass renderers use this to create and destroy framebuffers.
+    /// </summary>
+    public static GLResourceManager ResourceManager = GLResourceManager.GetInstanceForRenderManager();
+
+    /// <summary>
+    /// The renderer currently generating output, or in a cross-fade scenario, the old
+    /// visualizer that is becoming transparent.
+    /// </summary>
     public IRenderer ActiveRenderer { get; private set; }
+    
+    /// <summary>
+    /// The renderer to become active either on the next render call, or in a cross-fade
+    /// scenario, the visualizer that is becoming visible.
+    /// </summary>
     public IRenderer NewRenderer { get; private set; }
 
-    private List<(int hBuffer, int hTexture)> Framebuffers;
-
+    /// <summary>
+    /// Queues up a renderer to run the visualization as the next active renderer. May
+    /// employ a cross-fade effect before the new one is running exclusively.
+    /// </summary>
     public IRenderer PrepareNewRenderer(VisualizerConfig visualizerConfig)
     {
         IRenderer renderer;
@@ -43,11 +54,12 @@ public class RenderManager : IDisposable
             NewRenderer = renderer;
         }
 
-        // TODO recalc framebuffer requirements here?
-
         return renderer;
     }
 
+    /// <summary>
+    /// Called by AppWindow.OnRenderFrame.
+    /// </summary>
     public void RenderFrame()
     {
         if(NewRenderer is not null)
@@ -60,51 +72,23 @@ public class RenderManager : IDisposable
         ActiveRenderer?.RenderFrame();
     }
 
+    /// <summary>
+    /// Called by AppWindow.OnResizeWindow
+    /// </summary>
     public void ViewportResized(int viewportWidth, int viewportHeight)
     {
-        //GenerateFramebuffers(viewportWidth, viewportHeight);
+        ResourceManager.ResizeTextures(viewportWidth, viewportHeight);
     }
 
+    /// <summary>
+    /// Visualization / renderer information for the --info command.
+    /// </summary>
     public string GetInfo()
     {
         return "TODO";
     }
 
-    private void GenerateFramebuffers(int viewportWidth, int viewportHeight)
-    {
-        if (Framebuffers is null) return;
-        Framebuffers.Clear(); // TODO Framebuffers need to be deleted?
-
-        for (int i = 0; i < Framebuffers.Capacity; i++)
-        {
-            var framebufferHandle = GL.GenFramebuffer();
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, framebufferHandle);
-
-            var textureHandle = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, textureHandle);
-
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, viewportWidth, viewportHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-            GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, textureHandle, 0);
-
-            var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
-            if (!status.Equals(FramebufferErrorCode.FramebufferComplete) && !status.Equals(FramebufferErrorCode.FramebufferCompleteExt))
-            {
-                Console.WriteLine($"Error creating framebuffer {i}: {status}");
-                Thread.Sleep(250);
-                Environment.Exit(-1);
-            }
-
-            Framebuffers.Add((framebufferHandle, textureHandle));
-        }
-
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-    }
-
+    /// <summary/>
     public void Dispose()
     {
         if (IsDisposed) return;
@@ -115,7 +99,7 @@ public class RenderManager : IDisposable
         ActiveRenderer?.Dispose();
         ActiveRenderer = null;
 
-        // TODO delete framebuffers and textures
+        ResourceManager?.Dispose();
 
         IsDisposed = true;
         GC.SuppressFinalize(this);

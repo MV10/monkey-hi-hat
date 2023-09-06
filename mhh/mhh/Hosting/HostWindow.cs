@@ -2,6 +2,7 @@
 using eyecandy;
 using mhh.Utils;
 using Microsoft.Extensions.Logging;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -380,6 +381,11 @@ playlist   : {Playlist.GetInfo()}
             CacheInternalShader("idle");
             CacheInternalShader("blank");
             CacheInternalShader("crossfade");
+
+            // see property comments for an explanation
+            GL.GetInteger(GetPName.MaxCombinedTextureImageUnits, out var maxTU);
+            Caching.MaxAvailableTextureUnit = maxTU - 1 - Caching.KnownAudioTextures.Count;
+            LogHelper.Logger?.LogInformation($"This GPU supports a combined maximum of {maxTU} TextureUnits.");
         }
 
         /// <summary>

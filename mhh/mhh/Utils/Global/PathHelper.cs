@@ -1,5 +1,5 @@
 ﻿
-namespace mhh.Utils;
+namespace mhh;
 
 internal static class PathHelper
 {
