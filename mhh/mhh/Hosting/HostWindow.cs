@@ -85,6 +85,7 @@ namespace mhh
         protected override void OnLoad()
         {
             base.OnLoad();
+            GL.Enable(EnableCap.ProgramPointSize);
             Eyecandy.BeginAudioProcessing();
         }
 
