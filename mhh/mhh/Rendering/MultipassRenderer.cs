@@ -17,6 +17,7 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
 
     private List<MultipassDrawCall> DrawCalls;
     private int OutputFramebuffer = -1;
+    private bool CopyToBackbuffer = true;
 
     public MultipassRenderer(VisualizerConfig visualizerConfig)
     {
@@ -53,18 +54,26 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
             pass.Visualizer.RenderFrame(pass.Shader);
         }
 
-        GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
-        GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, Resources[OutputFramebuffer].BufferHandle);
-        GL.BlitFramebuffer(
-            0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
-            0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
-            ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
+        // The CrossfadeRenderer will read from the last framebuffer (as input to the crossfade
+        // shader, so this renderer doesn't need a costly blit operation to update the backbuffer).
+        if(CopyToBackbuffer)
+        {
+            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, Resources[OutputFramebuffer].BufferHandle);
+            GL.BlitFramebuffer(
+                0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
+                0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
+                ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
 
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        }
     }
 
-    public GLResources GetFinalDrawTargetResource()
-        => (OutputFramebuffer == -1) ? null : Resources?[OutputFramebuffer] ?? null;
+    public GLResources GetFinalDrawTargetResource(bool interceptActive)
+    {
+        CopyToBackbuffer = !interceptActive;
+        return (OutputFramebuffer == -1) ? null : Resources?[OutputFramebuffer] ?? null;
+    }
 
     // the [multipass] section is documented by comments in multipass.conf in the TestContent directory
     private void ParseMultipassConfig()

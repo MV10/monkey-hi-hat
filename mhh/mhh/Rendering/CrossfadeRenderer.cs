@@ -1,6 +1,7 @@
 ﻿
 using eyecandy;
 using mhh.Utils;
+using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using System.Diagnostics;
 
@@ -55,17 +56,20 @@ public class CrossfadeRenderer : IRenderer
         CrossfadeShader = Caching.InternalShaders["crossfade"];
 
         FragQuadViz = new VisualizerFragmentQuad(); 
-        FragQuadViz.Initialize(null, CrossfadeShader);
+        FragQuadViz.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
         
         OldRenderer = oldRenderer;
-        OldDrawTarget = (OldRenderer as IFramebufferOwner)?.GetFinalDrawTargetResource();
+        OldDrawTarget = (OldRenderer as IFramebufferOwner)?.GetFinalDrawTargetResource(true);
         OldTextureHandle = OldDrawTarget?.TextureHandle ?? Resources[0].TextureHandle;
         OldTextureUnit = OldDrawTarget?.TextureUnit ?? Resources[0].TextureUnit;
         
         NewRenderer = newRenderer;
-        NewDrawTarget = (NewRenderer as IFramebufferOwner)?.GetFinalDrawTargetResource();
+        NewDrawTarget = (NewRenderer as IFramebufferOwner)?.GetFinalDrawTargetResource(true);
         NewTextureHandle = NewDrawTarget?.TextureHandle ?? Resources[1].TextureHandle;
         NewTextureUnit = NewDrawTarget?.TextureUnit ?? Resources[1].TextureUnit;
+
+        LogHelper.Logger?.LogDebug($"Crossfading old, filename: {OldRenderer.Filename}, multipass? {OldRenderer is IFramebufferOwner}");
+        LogHelper.Logger?.LogDebug($"Crossfading new, filename: {NewRenderer.Filename}, multipass? {NewRenderer is IFramebufferOwner}");
 
         CompletionCallback = completionCallback;
         DurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
@@ -76,20 +80,25 @@ public class CrossfadeRenderer : IRenderer
     {
         float fadeLevel = (float)Clock.ElapsedMilliseconds / DurationMS;
 
-        // once we pass the 1.0 point, invoke the callback once then stop rendering
+        // after new renderer fade is 1.0, invoke the callback once, let the
+        // new renderer know the final output is no longer being intercepted,
+        // and stop rendering until the RenderManager takes over
         if(fadeLevel > 1f)
         {
             CompletionCallback?.Invoke();
             CompletionCallback = null;
+            (NewRenderer as IFramebufferOwner)?.GetFinalDrawTargetResource(false);
             return;
         }
 
         // the old renderer draws to its own framebuffer or buffer #0 provided here
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         if (OldDrawTarget is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[0].BufferHandle);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         OldRenderer.RenderFrame();
 
         // the new renderer draws to its own framebuffer or buffer #1 provided here
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         if (NewDrawTarget is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[1].BufferHandle);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         NewRenderer.RenderFrame();
