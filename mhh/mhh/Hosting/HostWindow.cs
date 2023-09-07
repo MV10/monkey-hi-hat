@@ -283,7 +283,7 @@ playlist   : {Playlist.GetInfo()}
         public string Command_Reload()
         {
             var filename = Renderer.ActiveRenderer.Filename;
-            var pathname = PathHelper.FindConfigFile(Program.AppConfig.ShaderPath, filename);
+            var pathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, filename);
             if (pathname is null) return $"ERR - {filename} not found in shader path(s)";
 
             var newViz = new VisualizerConfig(pathname);

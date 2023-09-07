@@ -140,12 +140,12 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
             // column 2 & 3: vertex and frag shader filenames
             var vert = (column[2].Equals("*")) ? Path.GetFileNameWithoutExtension(Config.VertexShaderPathname) : column[2];
             if (!vert.EndsWith(".vert", StringComparison.InvariantCultureIgnoreCase)) vert += ".vert";
-            var vertPathname = PathHelper.FindFile(Program.AppConfig.ShaderPath, vert);
+            var vertPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, vert);
             if (vertPathname is null) throw new ArgumentException($"{err} Failed to find vertex shader source file {vert}");
 
             var frag = (column[3].Equals("*")) ? Path.GetFileNameWithoutExtension(Config.FragmentShaderPathname) : column[3];
             if (!frag.EndsWith(".frag", StringComparison.InvariantCultureIgnoreCase)) frag += ".frag";
-            var fragPathname = PathHelper.FindFile(Program.AppConfig.ShaderPath, frag);
+            var fragPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, frag);
             if (fragPathname is null) throw new ArgumentException($"{err} Failed to find fragment shader source file {frag}");
 
             // when a --reload command is in effect, reload all shaders used by this renderer

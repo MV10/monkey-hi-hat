@@ -75,7 +75,7 @@ public class PlaylistManager
             ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchCooldownSeconds)
             : DateTime.MinValue;
 
-        var pathname = PathHelper.FindConfigFile(Program.AppConfig.ShaderPath, filename);
+        var pathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, filename);
         if (pathname is not null)
         {
             var msg = Program.AppWindow.Command_Load(pathname, terminatesPlaylist: false);

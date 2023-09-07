@@ -8,8 +8,9 @@ namespace mhh
         public static readonly string SectionOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux";
         public static readonly string InternalShaderPath = "./InternalShaders/";
 
-        public readonly string ShaderPath = string.Empty;
+        public readonly string VisualizerPath = string.Empty;
         public readonly string PlaylistPath = string.Empty;
+        public readonly string FXPath = string.Empty;
         public readonly string PluginPath = string.Empty;
 
         public readonly bool StartFullScreen;
@@ -41,8 +42,9 @@ namespace mhh
             CrossfadeSeconds = Config.ReadValue("setup", "crossfadeseconds").ToInt32(2);
             UnsecuredPort = Config.ReadValue("setup", "unsecuredport").ToInt32(0);
 
-            ShaderPath = Config.ReadValue(SectionOS, "shaderpath");
+            VisualizerPath = Config.ReadValue(SectionOS, "visualizerpath");
             PlaylistPath = Config.ReadValue(SectionOS, "playlistpath");
+            FXPath = Config.ReadValue(SectionOS, "fxpath");
             PluginPath = Config.ReadValue(SectionOS, "pluginpath");
 
             DetectSilenceSeconds = Config.ReadValue("setup", "detectsilenceseconds").ToInt32(0);

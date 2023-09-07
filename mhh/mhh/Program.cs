@@ -197,8 +197,8 @@ namespace mhh
                     
                     if (args.Length == 2 && args[1].ToLowerInvariant().Equals("viz"))
                     {
-                        if (string.IsNullOrEmpty(AppConfig.ShaderPath)) return "ERR: ShaderPath not defined in mhh.conf.";
-                        return GetConfigFiles(AppConfig.ShaderPath, separator);
+                        if (string.IsNullOrEmpty(AppConfig.VisualizerPath)) return "ERR: ShaderPath not defined in mhh.conf.";
+                        return GetConfigFiles(AppConfig.VisualizerPath, separator);
                     }
 
                     if (args.Length == 2 && args[1].ToLowerInvariant().Equals("playlists"))
@@ -258,7 +258,7 @@ namespace mhh
             => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.PlaylistPath, fromArg);
 
         private static string GetShaderPathname(string fromArg)
-            => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.ShaderPath, fromArg);
+            => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.VisualizerPath, fromArg);
 
         private static bool HasPathSeparators(string fromArg)
             => fromArg.Contains(Path.DirectorySeparatorChar) || fromArg.Contains(Path.AltDirectorySeparatorChar);
