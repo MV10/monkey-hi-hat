@@ -2,13 +2,15 @@
 
 **Streaming music visualization host**
 
-> Version 1.2.0 has been [released](https://github.com/MV10/monkey-hi-hat/releases)!
+> Version 2.0.0 has been [released](https://github.com/MV10/monkey-hi-hat/releases)!
 
 All important documentation has been moved to the [wiki](https://github.com/MV10/monkey-hi-hat/wiki).
 
 This application intercepts audio using OpenAL and my [eyecandy](https://github.com/MV10/eyecandy) audio-to-texture library, allowing the creation of various audio-reactive OpenGL shaders as interesting visualizations to accompany the music. Playlists of these visualizations can be created with various criteria for rotating among the listed shaders.
 
 Requires .NET 6 and runs under Windows or Linux.
+
+Version 2 is a _major_ update with many new features, architectural improvements and more. In particular, shader crossfade is here, and a new multi-pass shader model is available, allowing for dramatically more complex effects. This version requires OpenGL 4.6 support (which should be widely available, and is apparently the final version of OpenGL now that Khronos is down the rabbit-hole of the "new" Vulkan API).
 
 As the computer will be stashed away behind the AV equipment, remote control was an essential feature. Windows or Android users can install the convenient [monkey-droid](https://github.com/MV10/monkey-droid) GUI (the installers are available from this repo's release page) -- these can control monkey-hi-hat running on a Linux host, but there is no Linux GUI. Alternately, basic command-line-style control is via SSH terminal connections, sending commands (like "refresh the playlist" or "switch to shader XYZ") via named-pipe using my [CommandLineSwitchPipe](https://github.com/MV10/CommandLineSwitchPipe) library. See the wiki for details about setting up and using SSH.
 
