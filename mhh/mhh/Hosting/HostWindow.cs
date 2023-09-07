@@ -71,6 +71,7 @@ namespace mhh
             Eyecandy.Create<AudioTextureWebAudioHistory>("eyecandyWebAudio", enabled: true);
             Eyecandy.Create<AudioTextureShadertoy>("eyecandyShadertoy", enabled: true);
             Eyecandy.Create<AudioTexture4ChannelHistory>("eyecandy4Channel", enabled: true);
+            Eyecandy.Create<AudioTextureVolumeHistory>("eyecandyVolume", enabled: true);
             Eyecandy.EvaluateRequirements();
 
             InitializeCache();
