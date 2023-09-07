@@ -34,16 +34,9 @@ namespace mhh
         public AudioTextureEngine Eyecandy;
 
         /// <summary>
-        /// Used by the renderer for the "time" uniform.
-        /// </summary>
-        public float TimeUniform;
-
-        /// <summary>
         /// Used by the renderer for the "resolution" uniform. Updated every frame.
         /// </summary>
         public Vector2 ResolutionUniform;
-
-        private Stopwatch Clock = new();
 
         private MethodInfo EyecandyEnableMethod;
         private MethodInfo EyecandyDisableMethod;
@@ -83,8 +76,6 @@ namespace mhh
 
             InitializeCache();
 
-            Clock.Start();
-
             Renderer.PrepareNewRenderer(Caching.IdleVisualizer);
         }
 
@@ -105,15 +96,10 @@ namespace mhh
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             if (CommandFlag_Paused || CommandFlag_QuitRequested || Renderer.ActiveRenderer is null) return;
-
             base.OnRenderFrame(e);
-
-            Eyecandy.UpdateTextures();
-            TimeUniform = (float)Clock.Elapsed.TotalSeconds;
             ResolutionUniform = new(ClientSize.X, ClientSize.Y);
-
+            Eyecandy.UpdateTextures();
             Renderer.RenderFrame();
-
             SwapBuffers();
             CalculateFPS();
         }
@@ -173,7 +159,6 @@ namespace mhh
                 {
                     Renderer.PrepareNewRenderer(QueuedVisualizerConfig);
                     QueuedVisualizerConfig = null;
-                    Clock.Restart();
                 }
             }
         }
@@ -185,15 +170,6 @@ namespace mhh
         {
             base.OnResize(e);
             Renderer.ViewportResized(ClientSize.X, ClientSize.Y);
-        }
-
-        /// <summary>
-        /// Sets the uniforms generally available to all shaders (resolution, time).
-        /// </summary>
-        public void SetStandardUniforms(Shader shader)
-        {
-            shader.SetUniform("resolution", ResolutionUniform);
-            shader.SetUniform("time", TimeUniform);
         }
 
         /// <summary>
@@ -262,7 +238,7 @@ namespace mhh
         {
             // TODO call Renderer GetInfo
             var msg = $@"
-elapsed sec: {Clock.Elapsed.TotalSeconds:0.####}
+elapsed sec: // TODO get from RenderManager
 frame rate : {FramesPerSecond}
 average fps: {AverageFramesPerSecond}
 avg fps sec: {AverageFPSTimeframeSeconds}
@@ -288,7 +264,7 @@ playlist   : {Playlist.GetInfo()}
         public string Command_Pause()
         {
             if (CommandFlag_Paused) return "already paused; use --run to resume";
-            Clock.Stop();
+            Renderer.TimePaused = true;
             CommandFlag_Paused = true;
             return "ACK";
         }
@@ -299,7 +275,7 @@ playlist   : {Playlist.GetInfo()}
         public string Command_Run()
         {
             if (!CommandFlag_Paused) return "already running; use --pause to suspend";
-            Clock.Start();
+            Renderer.TimePaused = false;
             CommandFlag_Paused = false;
             return "ACK";
         }

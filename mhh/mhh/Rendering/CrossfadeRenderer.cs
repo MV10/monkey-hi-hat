@@ -47,8 +47,8 @@ public class CrossfadeRenderer : IRenderer
     private IVisualizer FragQuadViz;
     private Shader CrossfadeShader;
     private Action CompletionCallback;
-    private Stopwatch Clock = new();
     private float DurationMS;
+    private Stopwatch Clock = new();
 
     public CrossfadeRenderer(IRenderer oldRenderer, IRenderer newRenderer, Action completionCallback)
     {
@@ -73,7 +73,20 @@ public class CrossfadeRenderer : IRenderer
 
         CompletionCallback = completionCallback;
         DurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
+    }
+
+    public void StartClock()
+    {
         Clock.Start();
+        OldRenderer?.StartClock();
+        NewRenderer?.StartClock();
+    }
+
+    public void StopClock()
+    {
+        Clock.Stop();
+        OldRenderer?.StopClock();
+        NewRenderer?.StopClock();
     }
 
     public void RenderFrame()

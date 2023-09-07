@@ -28,6 +28,28 @@ public class RenderManager : IDisposable
     public IRenderer NewRenderer { get; private set; }
 
     /// <summary>
+    /// When true, any renderer clocks (which normally sets a "time" uniform) are stopped.
+    /// The default value is false (clocks are running upon renderer initialization).
+    /// </summary>
+    public bool TimePaused
+    {
+        get => IsTimePaused;
+        set
+        {
+            IsTimePaused = value;
+            if (IsTimePaused)
+            {
+                ActiveRenderer?.StopClock();
+            }
+            else
+            {
+                ActiveRenderer?.StartClock();
+            }
+        }
+    }
+    private bool IsTimePaused = false;
+
+    /// <summary>
     /// Queues up a renderer to run the visualization as the next active renderer. May
     /// employ a cross-fade effect before the new one is running exclusively.
     /// </summary>
@@ -52,10 +74,11 @@ public class RenderManager : IDisposable
         if (ActiveRenderer is null)
         {
             ActiveRenderer = renderer;
+            if (!IsTimePaused) ActiveRenderer.StartClock();
         }
         else
         {
-            if (NewRenderer is not null) NewRenderer.Dispose();
+            NewRenderer?.Dispose();
             NewRenderer = renderer;
         }
 
@@ -75,6 +98,7 @@ public class RenderManager : IDisposable
                 ActiveRenderer.Dispose();
                 ActiveRenderer = NewRenderer;
                 NewRenderer = null;
+                if (!IsTimePaused) ActiveRenderer.StartClock();
             }
             else
             {
@@ -82,6 +106,7 @@ public class RenderManager : IDisposable
                 var oldRenderer = ActiveRenderer;
                 ActiveRenderer = new CrossfadeRenderer(oldRenderer, NewRenderer, CrossfadeCompleted);
                 NewRenderer = null;
+                if (!IsTimePaused) ActiveRenderer.StartClock();
             }
 
         }

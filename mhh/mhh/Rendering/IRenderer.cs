@@ -1,4 +1,6 @@
 ﻿
+using System.Diagnostics;
+
 namespace mhh;
 
 public interface IRenderer : IDisposable
@@ -24,4 +26,18 @@ public interface IRenderer : IDisposable
     /// framebuffers are prepared for drawing.
     /// </summary>
     public void RenderFrame();
+
+    /// <summary>
+    /// Renderers should maintain an internal Stopwatch and set a float uniform named "time".
+    /// The renderer should not automatically start the clock; the RenderManager should control
+    /// start / stop activity.
+    /// </summary>
+    public void StartClock();
+
+    /// <summary>
+    /// Renderers should maintain an internal Stopwatch and set a float uniform named "time".
+    /// The renderer should not automatically start the clock; the RenderManager should control
+    /// start / stop activity.
+    /// </summary>
+    public void StopClock();
 }

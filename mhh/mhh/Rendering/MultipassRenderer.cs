@@ -1,6 +1,8 @@
 ﻿
+using eyecandy;
 using mhh.Utils;
 using OpenTK.Graphics.OpenGL;
+using System.Diagnostics;
 
 namespace mhh;
 
@@ -14,6 +16,7 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
 
     private Guid OwnerName = Guid.NewGuid();
     private IReadOnlyList<GLResources> Resources;
+    private Stopwatch Clock = new();
 
     private List<MultipassDrawCall> DrawCalls;
     private int OutputFramebuffer = -1;
@@ -35,14 +38,23 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
         }
     }
 
+    public void StartClock()
+        => Clock.Start();
+
+    public void StopClock()
+        => Clock.Stop();
+
     public void RenderFrame()
     {
+        var timeUniform = (float)Clock.Elapsed.TotalSeconds;
+
         foreach(var pass in DrawCalls)
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, pass.DrawBufferHandle);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
-            Program.AppWindow.SetStandardUniforms(pass.Shader);
+            pass.Shader.SetUniform("resolution", Program.AppWindow.ResolutionUniform);
+            pass.Shader.SetUniform("time", timeUniform);
             if(pass.InputBufferIndex.Count > 0)
             {
                 for(int i = 0; i < pass.InputBufferIndex.Count; i++)

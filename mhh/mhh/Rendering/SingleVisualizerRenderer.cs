@@ -1,5 +1,6 @@
 ﻿
 using mhh.Utils;
+using System.Diagnostics;
 
 namespace mhh;
 
@@ -12,6 +13,8 @@ public class SingleVisualizerRenderer : IRenderer
     public VisualizerConfig Config;
     public IVisualizer Visualizer;
     public CachedShader Shader;
+
+    private Stopwatch Clock = new();
 
     public SingleVisualizerRenderer(VisualizerConfig visualizerConfig)
     {
@@ -27,10 +30,18 @@ public class SingleVisualizerRenderer : IRenderer
         Visualizer.Initialize(Config, Shader);
     }
 
+    public void StartClock()
+        => Clock.Start();
+
+    public void StopClock()
+        => Clock.Stop();
+
     public void RenderFrame()
     {
+        var timeUniform = (float)Clock.Elapsed.TotalSeconds;
         Program.AppWindow.Eyecandy.SetTextureUniforms(Shader);
-        Program.AppWindow.SetStandardUniforms(Shader);
+        Shader.SetUniform("resolution", Program.AppWindow.ResolutionUniform);
+        Shader.SetUniform("time", timeUniform);
         Visualizer.RenderFrame(Shader);
     }
 
