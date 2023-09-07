@@ -89,6 +89,9 @@ public class CrossfadeRenderer : IRenderer
         NewRenderer?.StopClock();
     }
 
+    public float ElapsedTime()
+        => OldRenderer?.ElapsedTime() ?? 0f;
+
     public void RenderFrame()
     {
         float fadeLevel = (float)Clock.ElapsedMilliseconds / DurationMS;

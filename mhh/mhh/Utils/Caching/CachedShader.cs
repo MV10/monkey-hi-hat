@@ -4,8 +4,8 @@ using System.Numerics;
 
 namespace mhh.Utils;
 
-// TODO: .net7 adds a UInt128 type from two 64-bit ints, probably better than
-// BigInteger and likely to become a true value type in a future C# version
+// TODO: .net7 adds a UInt128 type from two 64-bit ints, probably better than BigInteger
+// and likely to become a true value type in a future C# version
 // https://learn.microsoft.com/en-us/dotnet/api/system.int128?view=net-7.0
 
 public class CachedShader : Shader

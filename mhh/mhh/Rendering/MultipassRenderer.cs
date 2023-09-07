@@ -44,9 +44,12 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
     public void StopClock()
         => Clock.Stop();
 
+    public float ElapsedTime()
+        => (float)Clock.Elapsed.TotalSeconds;
+
     public void RenderFrame()
     {
-        var timeUniform = (float)Clock.Elapsed.TotalSeconds;
+        var timeUniform = ElapsedTime();
 
         foreach(var pass in DrawCalls)
         {

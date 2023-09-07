@@ -126,9 +126,7 @@ public class RenderManager : IDisposable
     /// Visualization / renderer information for the --info command.
     /// </summary>
     public string GetInfo()
-    {
-        return "TODO";
-    }
+        => $"elapsed sec: {ActiveRenderer?.ElapsedTime() ?? 0}\nvisualizer : {ActiveRenderer?.Filename ?? "(none)"}";
 
     private void CrossfadeCompleted()
     {

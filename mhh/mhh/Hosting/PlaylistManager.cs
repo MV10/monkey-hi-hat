@@ -1,5 +1,4 @@
 ﻿
-using mhh.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace mhh;
@@ -102,7 +101,5 @@ public class PlaylistManager
     }
 
     public string GetInfo()
-        => (ActivePlaylist is null)
-            ? "(none)"
-            : ActivePlaylist.ConfigSource.Pathname;
+        => ActivePlaylist?.ConfigSource.Pathname ?? "(none)";
 }

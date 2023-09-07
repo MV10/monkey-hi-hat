@@ -40,4 +40,9 @@ public interface IRenderer : IDisposable
     /// start / stop activity.
     /// </summary>
     public void StopClock();
+
+    /// <summary>
+    /// Returns the total elapsed seconds used for the shader "time" uniform.
+    /// </summary>
+    public float ElapsedTime();
 }

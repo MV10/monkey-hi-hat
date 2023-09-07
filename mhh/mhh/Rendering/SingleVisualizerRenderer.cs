@@ -36,12 +36,14 @@ public class SingleVisualizerRenderer : IRenderer
     public void StopClock()
         => Clock.Stop();
 
+    public float ElapsedTime()
+        => (float)Clock.Elapsed.TotalSeconds;
+
     public void RenderFrame()
     {
-        var timeUniform = (float)Clock.Elapsed.TotalSeconds;
         Program.AppWindow.Eyecandy.SetTextureUniforms(Shader);
         Shader.SetUniform("resolution", Program.AppWindow.ResolutionUniform);
-        Shader.SetUniform("time", timeUniform);
+        Shader.SetUniform("time", ElapsedTime());
         Visualizer.RenderFrame(Shader);
     }
 

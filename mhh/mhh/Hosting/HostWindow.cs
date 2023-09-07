@@ -6,7 +6,6 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using System.Diagnostics;
 using System.Reflection;
 
 namespace mhh
@@ -236,14 +235,12 @@ namespace mhh
         /// </summary>
         public string Command_Info()
         {
-            // TODO call Renderer GetInfo
             var msg = $@"
-elapsed sec: // TODO get from RenderManager
 frame rate : {FramesPerSecond}
 average fps: {AverageFramesPerSecond}
 avg fps sec: {AverageFPSTimeframeSeconds}
-visualizer : {Renderer.GetInfo()}
 playlist   : {Playlist.GetInfo()}
+{Renderer.GetInfo()}
 ";
             LogHelper.Logger?.LogInformation(msg);
             return msg;
