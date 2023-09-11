@@ -72,8 +72,8 @@ public class GLResourceManager : IDisposable
                 TextureUnitOrdinal = AssignTextureUnit(),
             };
 
-            info.BufferHandle = GL.GenFramebuffer();
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, info.BufferHandle);
+            info.FramebufferHandle = GL.GenFramebuffer();
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, info.FramebufferHandle);
 
             info.TextureHandle = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2D, info.TextureHandle);
@@ -113,7 +113,7 @@ public class GLResourceManager : IDisposable
         {
             foreach(var info in kvp.Value)
             {
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, info.BufferHandle);
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, info.FramebufferHandle);
                 GL.BindTexture(TextureTarget.Texture2D, info.TextureHandle);
                 AllocateFramebufferTexture(info.TextureHandle, viewportWidth, viewportHeight);
                 ValidateFramebuffer();
@@ -157,7 +157,7 @@ public class GLResourceManager : IDisposable
 
     private void DestroyResources(IReadOnlyList<GLResources> list)
     {
-        int[] handles = list.Select(i => i.BufferHandle).ToArray();
+        int[] handles = list.Select(i => i.FramebufferHandle).ToArray();
         GL.DeleteFramebuffers(handles.Length, handles);
 
         handles = list.Select(i => i.TextureHandle).ToArray();

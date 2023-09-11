@@ -22,7 +22,7 @@ public class GLResources
     /// <summary>
     /// Handle to the OpenGL FramebufferObject.
     /// </summary>
-    public int BufferHandle;
+    public int FramebufferHandle;
 
     /// <summary>
     /// Handle to the Texture attached to the framebuffer.

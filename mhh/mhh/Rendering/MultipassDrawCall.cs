@@ -12,13 +12,16 @@ namespace mhh;
 public class MultipassDrawCall
 {
     // Data used during rendering
-    public int DrawBufferHandle;
+    public int DrawbufferHandle;
+    public int BackbufferHandle;
     public List<int> InputTextureHandle;
     public List<TextureUnit> InputTextureUnit;
+    public List<string> InputTextureUniform;
     public CachedShader Shader;
     public IVisualizer Visualizer;
 
     // Data collected during parsing
-    public int DrawBufferIndex;
-    public List<int> InputBufferIndex;
+    public int ParseDrawbufferIndex;
+    public List<int> ParseInputDrawbufferIndex;
+    public List<string> ParseInputBackbufferKey;
 }

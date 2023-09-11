@@ -1,5 +1,4 @@
 ﻿
-using eyecandy;
 using mhh.Utils;
 using OpenTK.Graphics.OpenGL;
 using System.Diagnostics;
@@ -53,35 +52,28 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
 
         foreach(var pass in DrawCalls)
         {
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, pass.DrawBufferHandle);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, pass.DrawbufferHandle);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
             pass.Shader.SetUniform("resolution", Program.AppWindow.ResolutionUniform);
             pass.Shader.SetUniform("time", timeUniform);
-            if(pass.InputBufferIndex.Count > 0)
+            for(int i = 0; i < pass.InputTextureHandle.Count; i++)
             {
-                for(int i = 0; i < pass.InputBufferIndex.Count; i++)
-                {
-                    var uniform = $"input{pass.InputBufferIndex[i]}";
-                    pass.Shader.SetTexture(uniform, pass.InputTextureHandle[i], pass.InputTextureUnit[i]);
-                }
+                pass.Shader.SetTexture(pass.InputTextureUniform[i], pass.InputTextureHandle[i], pass.InputTextureUnit[i]);
             }
             pass.Visualizer.RenderFrame(pass.Shader);
         }
 
-        // The CrossfadeRenderer will read from the last framebuffer (as input to the crossfade
-        // shader, so this renderer doesn't need a costly blit operation to update the backbuffer).
-        if(CopyToBackbuffer)
+        // rendering completed; update the backbuffers for the next frame
+        foreach (var pass in DrawCalls)
         {
-            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
-            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, Resources[OutputFramebuffer].BufferHandle);
-            GL.BlitFramebuffer(
-                0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
-                0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
-                ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            if (pass.BackbufferHandle > -1)
+                CopyFramebuffer(pass.DrawbufferHandle, pass.BackbufferHandle);
         }
+
+        // blit to OpenGL's backbuffer unless Crossfade is intercepting the final draw buffer
+        if (CopyToBackbuffer)
+            CopyFramebuffer(Resources[OutputFramebuffer].FramebufferHandle, 0);
     }
 
     public GLResources GetFinalDrawTargetResource(bool interceptActive)
@@ -90,7 +82,7 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
         return (OutputFramebuffer == -1) ? null : Resources?[OutputFramebuffer] ?? null;
     }
 
-    // the [multipass] section is documented by comments in multipass.conf in the TestContent directory
+    // the [multipass] section is documented by comments in multipass.conf and doublebuffer.conf in the TestContent directory
     private void ParseMultipassConfig()
     {
         // [multipass] exists because RenderManager looks for it to create this class
@@ -98,7 +90,9 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
         DrawCalls = new(drawCalls.Count);
 
         // indicates how many resources to request and simple validation
-        int maxFramebuffer = -1;
+        int maxDrawbuffer = -1;
+        int maxBackbuffer = -1;
+        string backbufferKeys = string.Empty;
 
         var err = $"Error in {Filename} [multipass] section: ";
         foreach (var kvp in Config.ConfigSource.Content["multipass"])
@@ -108,34 +102,64 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
             var column = kvp.Value.Split(' ', Const.SplitOptions);
             if (column.Length < 4 || column.Length > 6) throw new ArgumentException($"{err} Invalid entry, 4 to 6 parameters required; content {kvp.Value}");
 
+            //---------------------------------------------------------------------------------------
             // column 0: draw buffer number
-            if (!int.TryParse(column[0], out var drawBuffer) || drawBuffer < 0) throw new ArgumentException($"{err} The draw buffer number is not valid; content {column[0]}");
-            if (drawBuffer > maxFramebuffer + 1) throw new ArgumentException($"{err} Each new draw buffer number can only increment by 1 at most; content {column[0]}");
-            maxFramebuffer = Math.Max(maxFramebuffer, drawBuffer);
-            drawCall.DrawBufferIndex = drawBuffer;
+            //---------------------------------------------------------------------------------------
 
-            // column 1: comma-delimited input buffer numbers, or * for no buffer inputs
+            if (!int.TryParse(column[0], out var drawBuffer) || drawBuffer < 0) throw new ArgumentException($"{err} The draw buffer number is not valid; content {column[0]}");
+            if (drawBuffer > maxDrawbuffer + 1) throw new ArgumentException($"{err} Each new draw buffer number can only increment by 1 at most; content {column[0]}");
+            maxDrawbuffer = Math.Max(maxDrawbuffer, drawBuffer);
+            drawCall.ParseDrawbufferIndex = drawBuffer;
+
+            //---------------------------------------------------------------------------------------
+            // column 1: comma-delimited input buffer numbers and letters, or * for no buffer inputs
+            //---------------------------------------------------------------------------------------
+
             if (column[1].Equals("*"))
             {
-                drawCall.InputBufferIndex = new(1);
+                drawCall.ParseInputDrawbufferIndex = new(1);
+                drawCall.ParseInputBackbufferKey = new(1);
                 drawCall.InputTextureHandle = new(1);
                 drawCall.InputTextureUnit = new(1);
+                drawCall.InputTextureUniform = new(1);
             }
             else
             {
                 var inputs = column[1].Split(',', Const.SplitOptions);
-                if (inputs.Length < 1) throw new ArgumentException($"{err} The input buffer designation is not valid; content {column[1]}");
-                drawCall.InputBufferIndex = new(inputs.Length);
-                drawCall.InputTextureHandle = new(inputs.Length);
-                drawCall.InputTextureUnit = new(inputs.Length);
+                drawCall.ParseInputDrawbufferIndex = new(inputs.Length);
+                drawCall.ParseInputBackbufferKey = new(inputs.Length);
                 foreach (var i in inputs)
                 {
-                    if (!int.TryParse(i, out var inputBuffer) || inputBuffer < 0 || inputBuffer > maxFramebuffer) throw new ArgumentException($"{err} The input buffer number is not valid; content {column[1]}");
-                    drawCall.InputBufferIndex.Add(inputBuffer);
+                    if (!int.TryParse(i, out var inputBuffer))
+                    {
+                        // backbuffers are A-Z
+                        inputBuffer = i.IsAlpha() ? i.ToOrdinal() : -1;
+                        if (i.Length > 1 || inputBuffer < 0 || inputBuffer > 25) throw new ArgumentException($"{err} The input buffer number is not valid; content {column[1]}");
+                        var key = i.ToUpper();
+                        drawCall.ParseInputBackbufferKey.Add(key);
+                        if(!backbufferKeys.Contains(key)) backbufferKeys += key;
+                        maxBackbuffer = Math.Max(maxBackbuffer, inputBuffer);
+                    }
+                    else
+                    {
+                        // current-pass buffers are integers
+                        if(inputBuffer < 0 || inputBuffer > maxDrawbuffer) throw new ArgumentException($"{err} The input buffer number is not valid; content {column[1]}");
+                        drawCall.ParseInputDrawbufferIndex.Add(inputBuffer);
+                    }
                 }
+                var count = drawCall.ParseInputDrawbufferIndex.Count + drawCall.ParseInputBackbufferKey.Count;
+                drawCall.InputTextureHandle = new(count);
+                drawCall.InputTextureUnit = new(count);
+                drawCall.InputTextureUniform = new(count);
             }
 
+            // assume this won't be backbuffered (can only be determined after all rows parsed)
+            drawCall.BackbufferHandle = -1;
+
+            //---------------------------------------------------------------------------------------
             // column 2 & 3: vertex and frag shader filenames
+            //---------------------------------------------------------------------------------------
+
             var vert = (column[2].Equals("*")) ? Path.GetFileNameWithoutExtension(Config.VertexShaderPathname) : column[2];
             if (!vert.EndsWith(".vert", StringComparison.InvariantCultureIgnoreCase)) vert += ".vert";
             var vertPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, vert);
@@ -152,8 +176,11 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
             if (!IsValid) return;
             RenderingHelper.ReplaceCachedShader = replaceCachedShader;
 
-            // column 4: visualizer class
-            if(column.Length > 4)
+            //---------------------------------------------------------------------------------------
+            // column 4 & 5: visualizer class and settings
+            //---------------------------------------------------------------------------------------
+
+            if (column.Length > 4)
             {
                 var viz = RenderingHelper.GetVisualizer(this, column[4]);
                 if (viz is null) throw new ArgumentException($"{err} Failed to recognize / create visualizer type name {column[4]}");
@@ -208,22 +235,49 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
             DrawCalls.Add(drawCall);
         }
 
+        // highest backbuffer can only be validated after we know all draw buffers
+        if (maxBackbuffer > maxDrawbuffer) throw new ArgumentException($"{err} Backbuffer {maxBackbuffer.ToAlpha()} referenced but draw buffer {maxBackbuffer} wasn't used");
+
         // allocate resources
-        Resources = RenderManager.ResourceManager.CreateResources(OwnerName, maxFramebuffer + 1);
+        Resources = RenderManager.ResourceManager.CreateResources(OwnerName, (maxDrawbuffer + 1) + backbufferKeys.Length);
 
         // extract the resource values used during rendering
         foreach(var call in DrawCalls)
         {
-            call.DrawBufferHandle = Resources[call.DrawBufferIndex].BufferHandle;
-            foreach(var input in call.InputBufferIndex)
+            call.DrawbufferHandle = Resources[call.ParseDrawbufferIndex].FramebufferHandle;
+
+            foreach(var drawIndex in call.ParseInputDrawbufferIndex)
             {
-                call.InputTextureHandle.Add(Resources[input].TextureHandle);
-                call.InputTextureUnit.Add(Resources[input].TextureUnit);
+                call.InputTextureHandle.Add(Resources[drawIndex].TextureHandle);
+                call.InputTextureUnit.Add(Resources[drawIndex].TextureUnit);
+                call.InputTextureUniform.Add($"input{drawIndex}");
+            }
+
+            int backbufferOffset = maxDrawbuffer + 1;
+            foreach(var key in call.ParseInputBackbufferKey)
+            {
+                var resourceIndex = backbufferKeys.IndexOf(key) + backbufferOffset;
+                call.InputTextureHandle.Add(Resources[resourceIndex].TextureHandle);
+                call.InputTextureUnit.Add(Resources[resourceIndex].TextureUnit);
+                call.InputTextureUniform.Add($"input{key}");
+                DrawCalls[key.ToOrdinal()].BackbufferHandle = Resources[resourceIndex].FramebufferHandle;
             }
         }
 
         // store the last draw buffer index number
-        OutputFramebuffer = DrawCalls[DrawCalls.Count - 1].DrawBufferIndex;
+        OutputFramebuffer = DrawCalls[DrawCalls.Count - 1].ParseDrawbufferIndex;
+    }
+
+    private void CopyFramebuffer(int sourceHandle, int destHandle)
+    {
+        GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, sourceHandle);
+        GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, destHandle);
+        GL.BlitFramebuffer(
+            0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
+            0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
+            ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
+
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
     public void Dispose()
@@ -246,6 +300,5 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
-
     private bool IsDisposed = false;
 }

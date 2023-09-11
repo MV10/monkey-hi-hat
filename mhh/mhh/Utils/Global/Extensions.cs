@@ -2,6 +2,7 @@
 using OpenTK.Graphics.OpenGL;
 using System.Numerics;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace mhh
 {
@@ -119,6 +120,30 @@ namespace mhh
         /// </summary>
         public static Type FindType(this IReadOnlyList<Type> list, string typeName)
             => list.FirstOrDefault(t => t.Name.ToLowerInvariant().Equals(typeName.ToLowerInvariant()));
+
+        /// <summary>
+        /// Determines whether a character is A-Z (case-insensitive)
+        /// </summary>
+        public static bool IsAlpha(this string value)
+            => !Regex.IsMatch(value, "[^a-zA-Z]");
+
+        /// <summary>
+        /// Converts an A-Z character to integer 0-25
+        /// </summary>
+        public static int ToOrdinal(this char value)
+            => (int)value % 32 - 1;
+
+        /// <summary>
+        /// Converts an A-Z character to integer 0-25
+        /// </summary>
+        public static int ToOrdinal(this string value)
+            => ((char)value[0]).ToOrdinal();
+
+        /// <summary>
+        /// Converts a 0-25 integer to string A-Z
+        /// </summary>
+        public static string ToAlpha(this int value)
+            => ('A' + value).ToString();
 
         //-----------------------------------------------------------------------------------------------
         // Murmur3 hashing support

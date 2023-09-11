@@ -109,13 +109,13 @@ public class CrossfadeRenderer : IRenderer
 
         // the old renderer draws to its own framebuffer or buffer #0 provided here
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        if (OldDrawTarget is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[0].BufferHandle);
+        if (OldDrawTarget is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[0].FramebufferHandle);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         OldRenderer.RenderFrame();
 
         // the new renderer draws to its own framebuffer or buffer #1 provided here
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        if (NewDrawTarget is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[1].BufferHandle);
+        if (NewDrawTarget is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[1].FramebufferHandle);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         NewRenderer.RenderFrame();
 
