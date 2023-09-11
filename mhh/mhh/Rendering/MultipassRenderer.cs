@@ -93,8 +93,6 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
     // the [multipass] section is documented by comments in multipass.conf in the TestContent directory
     private void ParseMultipassConfig()
     {
-        var splitOptions = StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries;
-
         // [multipass] exists because RenderManager looks for it to create this class
         var drawCalls = Config.ConfigSource.SequentialSection("multipass");
         DrawCalls = new(drawCalls.Count);
@@ -107,7 +105,7 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
         {
             MultipassDrawCall drawCall = new();
 
-            var column = kvp.Value.Split(' ', splitOptions);
+            var column = kvp.Value.Split(' ', Const.SplitOptions);
             if (column.Length < 4 || column.Length > 6) throw new ArgumentException($"{err} Invalid entry, 4 to 6 parameters required; content {kvp.Value}");
 
             // column 0: draw buffer number
@@ -125,7 +123,7 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
             }
             else
             {
-                var inputs = column[1].Split(',', splitOptions);
+                var inputs = column[1].Split(',', Const.SplitOptions);
                 if (inputs.Length < 1) throw new ArgumentException($"{err} The input buffer designation is not valid; content {column[1]}");
                 drawCall.InputBufferIndex = new(inputs.Length);
                 drawCall.InputTextureHandle = new(inputs.Length);
@@ -168,10 +166,10 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
                 if(column.Length == 6)
                 {
                     // VisualizerVertexIntegerArray
-                    var settings = column[5].Split(';', splitOptions);
+                    var settings = column[5].Split(';', Const.SplitOptions);
                     if (settings.Length != 2) throw new ArgumentException($"{err} Visualizer type {column[4]} required settings are missing or invalid");
-                    var s0 = settings[0].Split('=', splitOptions);
-                    var s1 = settings[1].Split('=', splitOptions);
+                    var s0 = settings[0].Split('=', Const.SplitOptions);
+                    var s1 = settings[1].Split('=', Const.SplitOptions);
                     if (s0.Length != 2 || s1.Length != 2) throw new ArgumentException($"{err} Visualizer type {column[4]}  required settings are missing or invalid");
 
                     string sIntCount = s0[0].Equals("VertexIntegerCount", StringComparison.InvariantCultureIgnoreCase)

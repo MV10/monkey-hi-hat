@@ -5,7 +5,7 @@ internal static class PathHelper
 {
     public static string FindFile(string pathspec, string filename)
     {
-        var paths = pathspec.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
+        var paths = pathspec.Split(Path.PathSeparator, Const.SplitOptions);
         foreach (var path in paths)
         {
             string pathname = Path.Combine(path, filename);

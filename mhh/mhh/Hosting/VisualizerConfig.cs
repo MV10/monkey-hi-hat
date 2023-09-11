@@ -33,7 +33,7 @@ namespace mhh
             VertexShaderPathname = Path.Combine(configFileLocation, ConfigSource.ReadValue("shader", "vertexshaderfilename"));
             FragmentShaderPathname = Path.Combine(configFileLocation, ConfigSource.ReadValue("shader", "fragmentshaderfilename"));
 
-            var rgb = ConfigSource.ReadValue("shader", "backgroundfloatrgb").Split(",");
+            var rgb = ConfigSource.ReadValue("shader", "backgroundfloatrgb").Split(",", Const.SplitOptions);
             if(rgb.Length == 3)
             {
                 BackgroundColor = new(rgb[0].ToFloat(0), rgb[1].ToFloat(0), rgb[2].ToFloat(0), 1f);
@@ -52,6 +52,8 @@ namespace mhh
                     AudioTextureUniformNames.Add(tex.Value);
                 }
             }
+
+            // shader pathnames and visualizer type names are validated in RenderingHelper
         }
     }
 }

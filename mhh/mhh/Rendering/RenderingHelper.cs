@@ -29,6 +29,13 @@ public static class RenderingHelper
     /// </summary>
     public static CachedShader GetShader(IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname)
     {
+        if(string.IsNullOrWhiteSpace(vertexShaderPathname) 
+            || string.IsNullOrWhiteSpace(fragmentShaderPathname))
+        {
+            LogInvalidReason("Invalid shader pathname", renderer);
+            return null;
+        }
+
         var shaderKey = CachedShader.KeyFrom(vertexShaderPathname, fragmentShaderPathname);
 
         if (ReplaceCachedShader)

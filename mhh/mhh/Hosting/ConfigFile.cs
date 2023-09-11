@@ -49,7 +49,7 @@ namespace mhh
             {
                 if (!string.IsNullOrWhiteSpace(line) && !line.Trim().StartsWith("#"))
                 {
-                    var text = (line.Contains("#")) ? line.Split("#")[0].Trim() : line.Trim();
+                    var text = (line.Contains("#")) ? line.Split("#", Const.SplitOptions)[0].Trim() : line.Trim();
                     if (text.StartsWith("[") && text.EndsWith("]"))
                     {
                         section = text.Substring(1, text.Length - 2).ToLowerInvariant();
@@ -59,7 +59,7 @@ namespace mhh
                     {
                         if(!string.IsNullOrWhiteSpace(section))
                         {
-                            var kvp = (text + " ").Split("=", 2, StringSplitOptions.TrimEntries);
+                            var kvp = (text + " ").Split("=", 2, Const.SplitOptions);
                             if(kvp.Length > 0)
                             {
                                 if (!Content.ContainsKey(section)) Content.Add(section, new());

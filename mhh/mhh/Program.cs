@@ -279,7 +279,7 @@ namespace mhh
         private static string GetConfigFiles(string pathspec, string separator)
         {
             var sb = new StringBuilder();
-            var paths = pathspec.Split(';', StringSplitOptions.RemoveEmptyEntries);
+            var paths = pathspec.Split(';', Const.SplitOptions);
             foreach(var path in paths)
             {
                 foreach (var filename in Directory.EnumerateFiles(path, "*.conf"))

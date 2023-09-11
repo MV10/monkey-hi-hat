@@ -53,6 +53,17 @@ namespace mhh
 
             CaptureDriverName = Config.ReadValue(SectionOS, "capturedrivername");
             CaptureDeviceName = Config.ReadValue(SectionOS, "capturedevicename");
+
+            // validation
+            if (string.IsNullOrWhiteSpace(VisualizerPath)) ConfError("VisualizerPath is required.");
+            if (ShaderCacheSize < 1) ConfError("ShaderCacheSize must be 1 or greater. Default is 50 when omitted.");
+            if (CrossfadeSeconds < 0) ConfError("CrossfadeSeconds must be 0 or greater. Default is 2, use 0 to disable.");
+            if (UnsecuredPort < 0 || UnsecuredPort > 65534) ConfError("UnsecuredPort must be 0 to 65534, recommended range is 49152 or higher, use 0 to disable.");
+            if (DetectSilenceSeconds < 0) ConfError("DetectSilenceSeconds must be 0 or greater.");
+            if (DetectSilenceMaxRMS < 0) ConfError("DetectSilienceMaxRMS must be 0 or greater.");
         }
+
+        private void ConfError(string message)
+            => throw new ArgumentException($"Error in mhh.conf: {message}");
     }
 }
