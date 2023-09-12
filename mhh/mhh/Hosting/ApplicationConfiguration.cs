@@ -19,6 +19,7 @@ namespace mhh
         public readonly bool HideMousePointer;
         public readonly int ShaderCacheSize;
         public readonly int CrossfadeSeconds;
+        public readonly int FrameRateLock;
         public readonly int UnsecuredPort;
 
         public readonly string CaptureDriverName = string.Empty;
@@ -40,6 +41,7 @@ namespace mhh
             HideMousePointer = Config.ReadValue("setup", "hidemousepointer").ToBool(true);
             ShaderCacheSize = Config.ReadValue("setup", "shadercachesize").ToInt32(50);
             CrossfadeSeconds = Config.ReadValue("setup", "crossfadeseconds").ToInt32(2);
+            FrameRateLock = Config.ReadValue("setup", "frameratelock").ToInt32(0);
             UnsecuredPort = Config.ReadValue("setup", "unsecuredport").ToInt32(0);
 
             VisualizerPath = Config.ReadValue(SectionOS, "visualizerpath");
@@ -58,6 +60,7 @@ namespace mhh
             if (string.IsNullOrWhiteSpace(VisualizerPath)) ConfError("VisualizerPath is required.");
             if (ShaderCacheSize < 1) ConfError("ShaderCacheSize must be 1 or greater. Default is 50 when omitted.");
             if (CrossfadeSeconds < 0) ConfError("CrossfadeSeconds must be 0 or greater. Default is 2, use 0 to disable.");
+            if (FrameRateLock < 0 || FrameRateLock > 9999) ConfError("FrameRateLock must be 0 to 9999. Default is 0 which is disabled.");
             if (UnsecuredPort < 0 || UnsecuredPort > 65534) ConfError("UnsecuredPort must be 0 to 65534, recommended range is 49152 or higher, use 0 to disable.");
             if (DetectSilenceSeconds < 0) ConfError("DetectSilenceSeconds must be 0 or greater.");
             if (DetectSilenceMaxRMS < 0) ConfError("DetectSilienceMaxRMS must be 0 or greater.");

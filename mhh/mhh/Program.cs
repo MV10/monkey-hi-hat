@@ -124,6 +124,7 @@ namespace mhh
                 WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
                 WindowConfig.OpenTKNativeWindowSettings.Size = (AppConfig.SizeX, AppConfig.SizeY);
                 WindowConfig.OpenTKNativeWindowSettings.APIVersion = OpenGLVersion;
+                WindowConfig.OpenTKGameWindowSettings.RenderFrequency = AppConfig.FrameRateLock;
 
                 // Spin up the window and get the show started
                 AppWindow = new(WindowConfig, AudioConfig);
@@ -218,8 +219,19 @@ namespace mhh
                     return AppWindow.Command_Info();
 
                 case "--fps":
-                    if (args.Length > 1) return ShowHelp();
-                    return $"{AppWindow.FramesPerSecond} FPS\n{AppWindow.AverageFramesPerSecond} average FPS over {AppWindow.AverageFPSTimeframeSeconds} seconds";
+                    if (args.Length > 2) return ShowHelp();
+                    if(args.Length == 2)
+                    {
+                        if (!int.TryParse(args[1], out var fpsTarget) || fpsTarget < 0 || fpsTarget > 9999) return ShowHelp();
+                        AppWindow.RenderFrequency = fpsTarget;
+                        return (fpsTarget == 0) ? "FPS target disabled (max possible FPS)" : $"FPS target set to {fpsTarget}";
+                    }
+                    else
+                    {
+                        return $"{AppWindow.FramesPerSecond} FPS" +
+                            $"\n{AppWindow.AverageFramesPerSecond} average FPS over past {AppWindow.AverageFPSTimeframeSeconds} seconds" +
+                            $"\nFPS target is {(AppWindow.RenderFrequency == 0 ? "not locked (max FPS)" : $"locked to {AppWindow.RenderFrequency} FPS" )}";
+                    }
 
                 case "--idle":
                     if (args.Length > 1) return ShowHelp();
@@ -311,6 +323,7 @@ All switches are passed to the already-running instance:
 --quit                      ends the program
 --info                      writes shader and execution details to the console
 --fps                       writes FPS information to the console
+--fps [0-9999]              sets a frame rate lock (FPS target), or 0 to disable (max possible FPS)
 --idle                      load the default/idle shader
 --pause                     stops the current shader
 --run                       executes the current shader
