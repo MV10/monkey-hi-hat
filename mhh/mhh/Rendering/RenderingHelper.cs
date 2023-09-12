@@ -1,7 +1,10 @@
 ﻿
 using eyecandy;
 using mhh.Utils;
+using OpenTK.Graphics.OpenGL;
 using Microsoft.Extensions.Logging;
+using StbImageSharp;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace mhh;
 
@@ -93,10 +96,78 @@ public static class RenderingHelper
         return viz;
     }
 
+    /// <summary>
+    /// Maps visualizer config [textures] data to GLImageTexture resource assignments and loads
+    /// the indicated filenames.
+    /// </summary>
+    public static IReadOnlyList<GLImageTexture> GetTextures(Guid ownerName, VisualizerConfig config)
+    {
+        if (!config.ConfigSource.Content.ContainsKey("textures")) return null;
+
+        var textureDefs = config.ConfigSource.Content["textures"];
+        var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, textureDefs.Count);
+        int i = 0;
+        foreach (var kvp in textureDefs)
+        {
+            var tex = resources[i++];
+            tex.Filename = kvp.Value;
+
+            if(kvp.Key.EndsWith("!"))
+            {
+                tex.UniformName = kvp.Key.Substring(0, kvp.Key.Length - 1);
+                tex.ImageLoaded = LoadImageFile(tex, TextureWrapMode.Repeat);
+            }
+            else
+            {
+                tex.UniformName = kvp.Key;
+                tex.ImageLoaded = LoadImageFile(tex);
+            }
+        }
+
+
+        return resources;
+    }
+
+    /// <summary>
+    /// Called by visualizer RenderFrame to set any loaded image texture uniforms before drawing.
+    /// </summary>
+    public static void SetTextureUniforms(IReadOnlyList<GLImageTexture> textures, Shader shader)
+    {
+        if (textures is null) return;
+        foreach(var tex in textures)
+        {
+            if(tex.ImageLoaded) shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit);
+        }
+    }
+
     private static void LogInvalidReason(string reason, IRenderer renderer)
     {
         renderer.IsValid = false;
         renderer.InvalidReason = reason;
         LogHelper.Logger.LogError(reason);
+    }
+
+    private static bool LoadImageFile(GLImageTexture tex, TextureWrapMode wrapMode = TextureWrapMode.ClampToEdge)
+    {
+        var pathname = PathHelper.FindFile(Program.AppConfig.TexturePath, tex.Filename);
+        if (pathname is null) return false;
+
+        // OpenGL origin is bottom left instead of top left
+        StbImage.stbi_set_flip_vertically_on_load(1);
+
+        GL.ActiveTexture(tex.TextureUnit);
+        GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+
+        using var stream = File.OpenRead(pathname);
+        var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
+
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+
+        return true;
     }
 }

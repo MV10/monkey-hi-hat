@@ -1,5 +1,6 @@
 ﻿
 using OpenTK.Graphics.OpenGL;
+using System.Reflection.Metadata;
 
 namespace mhh.Utils;
 
@@ -38,7 +39,7 @@ public class GLResourceManager : IDisposable
     private static GLResourceManager Instance = null;
 
     private Dictionary<Guid, IReadOnlyList<GLResources>> AllocatedResources = new();
-
+    private Dictionary<Guid, IReadOnlyList<GLImageTexture>> AllocatedImages = new();
     private List<int> AvailableTextureUnits = new(Caching.MaxAvailableTextureUnit);
 
     private GLResourceManager()
@@ -91,15 +92,46 @@ public class GLResourceManager : IDisposable
         return list;
     }
 
+    public IReadOnlyList<GLImageTexture> CreateTextureResources(Guid ownerName, int totalRequired)
+    {
+        if (AllocatedImages.ContainsKey(ownerName)) throw new InvalidOperationException($"GL texture resources already allocated to owner name {ownerName}");
+        if (totalRequired < 1) throw new ArgumentOutOfRangeException("GL texture resource allocation request must be 1 or greater");
+
+        List<GLImageTexture> list = new(totalRequired);
+
+        for(int i = 0; i < totalRequired; i++)
+        {
+            var info = new GLImageTexture
+            {
+                OwnerName = ownerName,
+                TextureHandle = GL.GenTexture(),
+                TextureUnitOrdinal = AssignTextureUnit(),
+            };
+
+            list.Add(info);
+        }
+
+        AllocatedImages.Add(ownerName, list);
+        return list;
+    }
+
     /// <summary>
     /// Cleans up all framebuffers associated with the caller's owner identifier. The caller should
     /// destroy any local copy of the list object that was returned by the create method.
     /// </summary>
     public void DestroyResources(Guid ownerName)
     {
-        if (!AllocatedResources.ContainsKey(ownerName)) return;
-        DestroyResources(AllocatedResources[ownerName]);
-        AllocatedResources.Remove(ownerName);
+        if (AllocatedResources.ContainsKey(ownerName))
+        {
+            DestroyGLResources(AllocatedResources[ownerName]);
+            AllocatedResources.Remove(ownerName);
+        }
+
+        if (AllocatedImages.ContainsKey(ownerName))
+        {
+            DestroyGLImageTextures(AllocatedImages[ownerName]);
+            AllocatedImages.Remove(ownerName);
+        }
     }
 
     /// <summary>
@@ -155,12 +187,20 @@ public class GLResourceManager : IDisposable
         }
     }
 
-    private void DestroyResources(IReadOnlyList<GLResources> list)
+    private void DestroyGLResources(IReadOnlyList<GLResources> list)
     {
         int[] handles = list.Select(i => i.FramebufferHandle).ToArray();
         GL.DeleteFramebuffers(handles.Length, handles);
 
         handles = list.Select(i => i.TextureHandle).ToArray();
+        GL.DeleteTextures(handles.Length, handles);
+
+        AvailableTextureUnits.AddRange(list.Select(i => i.TextureUnitOrdinal).ToList());
+    }
+
+    private void DestroyGLImageTextures(IReadOnlyList<GLImageTexture> list)
+    {
+        int[] handles = list.Select(i => i.TextureHandle).ToArray();
         GL.DeleteTextures(handles.Length, handles);
 
         AvailableTextureUnits.AddRange(list.Select(i => i.TextureUnitOrdinal).ToList());
@@ -174,9 +214,18 @@ public class GLResourceManager : IDisposable
         {
             foreach (var kvp in AllocatedResources)
             {
-                DestroyResources(kvp.Value);
+                DestroyGLResources(kvp.Value);
             }
             AllocatedResources.Clear();
+        }
+
+        if(AllocatedImages?.Count > 0)
+        {
+            foreach(var kvp in AllocatedImages)
+            {
+                DestroyGLImageTextures(kvp.Value);
+            }
+            AllocatedImages.Clear();
         }
 
         IsDisposed = true;

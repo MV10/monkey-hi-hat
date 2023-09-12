@@ -1,5 +1,6 @@
 ﻿
 using eyecandy;
+using mhh.Utils;
 using OpenTK.Graphics.OpenGL;
 
 namespace mhh;
@@ -29,7 +30,10 @@ public class VisualizerVertexIntegerArray : IVisualizer
         PrimitiveType.TriangleFan,
     };
 
-    // via interface
+    private Guid OwnerName = Guid.NewGuid();
+    private IReadOnlyList<GLImageTexture> Textures;
+
+    // init from config via interface (only way to load textures)
     public void Initialize(VisualizerConfig config, Shader shader)
     {
         var count = config.ConfigSource
@@ -40,10 +44,12 @@ public class VisualizerVertexIntegerArray : IVisualizer
             .ReadValue("VisualizerVertexIntegerArray", "ArrayDrawingMode")
             .ToEnum(ArrayDrawingMode.Points);
 
+        Textures = RenderingHelper.GetTextures(OwnerName, config);
+
         DirectInit(count, mode, shader);
     }
 
-    // used by multipass renderer
+    // init with args (used by multipass renderer)
     public void DirectInit(int vertexIntegerCount, ArrayDrawingMode arrayDrawingMode, Shader shader)
     {
         shader.Use();
@@ -70,6 +76,7 @@ public class VisualizerVertexIntegerArray : IVisualizer
     public void RenderFrame(Shader shader)
     {
         shader.SetUniform("vertexCount", (float)VertexIntegerCount);
+        RenderingHelper.SetTextureUniforms(Textures, shader);
 
         GL.BindVertexArray(VertexArrayObject);
         GL.DrawArrays(Modes[DrawingMode], 0, VertexIntegerCount);
@@ -81,6 +88,8 @@ public class VisualizerVertexIntegerArray : IVisualizer
 
         GL.DeleteVertexArray(VertexArrayObject);
         GL.DeleteBuffer(VertexBufferObject);
+
+        RenderManager.ResourceManager.DestroyResources(OwnerName);
 
         IsDisposed = true;
         GC.SuppressFinalize(true);

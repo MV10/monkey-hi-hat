@@ -10,6 +10,7 @@ namespace mhh
 
         public readonly string VisualizerPath = string.Empty;
         public readonly string PlaylistPath = string.Empty;
+        public readonly string TexturePath = string.Empty;
         public readonly string FXPath = string.Empty;
         public readonly string PluginPath = string.Empty;
 
@@ -46,6 +47,7 @@ namespace mhh
 
             VisualizerPath = Config.ReadValue(SectionOS, "visualizerpath");
             PlaylistPath = Config.ReadValue(SectionOS, "playlistpath");
+            TexturePath = Config.ReadValue(SectionOS, "texturepath");
             FXPath = Config.ReadValue(SectionOS, "fxpath");
             PluginPath = Config.ReadValue(SectionOS, "pluginpath");
 

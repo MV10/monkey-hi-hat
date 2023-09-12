@@ -1,5 +1,6 @@
 ﻿
 using eyecandy;
+using mhh.Utils;
 using OpenTK.Graphics.OpenGL;
 
 namespace mhh;
@@ -36,6 +37,9 @@ public class VisualizerFragmentQuad : IVisualizer
     private int VertexBufferObject;
     private int VertexArrayObject;
 
+    private Guid OwnerName = Guid.NewGuid();
+    private IReadOnlyList<GLImageTexture> Textures;
+
     public void Initialize(VisualizerConfig config, Shader shader)
     {
         shader.Use();
@@ -60,10 +64,17 @@ public class VisualizerFragmentQuad : IVisualizer
         GL.EnableVertexAttribArray(locationTexCoords);
         GL.VertexAttribPointer(locationTexCoords, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
         //                                        ^ tex coords is 2 floats                 ^ 5 per row        ^ 4th and 5th float in each row
+
+        // Crossfade initializes this with a null config
+        if (config is null) return;
+
+        Textures = RenderingHelper.GetTextures(OwnerName, config);
     }
 
     public void RenderFrame(Shader shader)
     {
+        RenderingHelper.SetTextureUniforms(Textures, shader);
+
         GL.BindVertexArray(VertexArrayObject);
         GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
     }
@@ -75,6 +86,8 @@ public class VisualizerFragmentQuad : IVisualizer
         GL.DeleteVertexArray(VertexArrayObject);
         GL.DeleteBuffer(VertexBufferObject);
         GL.DeleteBuffer(ElementBufferObject);
+
+        RenderManager.ResourceManager.DestroyResources(OwnerName);
 
         IsDisposed = true;
         GC.SuppressFinalize(true);
