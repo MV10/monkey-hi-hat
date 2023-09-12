@@ -15,6 +15,7 @@ public class SingleVisualizerRenderer : IRenderer
     public CachedShader Shader;
 
     private Stopwatch Clock = new();
+    private float FrameCount = 0;
 
     public SingleVisualizerRenderer(VisualizerConfig visualizerConfig)
     {
@@ -44,7 +45,10 @@ public class SingleVisualizerRenderer : IRenderer
         Program.AppWindow.Eyecandy.SetTextureUniforms(Shader);
         Shader.SetUniform("resolution", Program.AppWindow.ResolutionUniform);
         Shader.SetUniform("time", ElapsedTime());
+        Shader.SetUniform("frame", FrameCount);
         Visualizer.RenderFrame(Shader);
+
+        FrameCount++;
     }
 
     public void Dispose()

@@ -33,6 +33,7 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
     private IReadOnlyList<GLResources> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
     private Stopwatch Clock = new();
+    private float FrameCount = 0;
 
     public MultipassRenderer(VisualizerConfig visualizerConfig)
     {
@@ -70,7 +71,8 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
             pass.Shader.SetUniform("resolution", Program.AppWindow.ResolutionUniform);
             pass.Shader.SetUniform("time", timeUniform);
-            foreach(var index in pass.InputFrontbufferResources)
+            pass.Shader.SetUniform("frame", FrameCount);
+            foreach (var index in pass.InputFrontbufferResources)
             {
                 var resource = Resources[index];
                 pass.Shader.SetTexture(resource.UniformName, resource.TextureHandle, resource.TextureUnit);
@@ -105,6 +107,8 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
             if (pass.Backbuffers is not null)
                 (pass.Drawbuffers, pass.Backbuffers) = (pass.Backbuffers, pass.Drawbuffers);
         }
+
+        FrameCount++;
     }
 
     // the [multipass] section is documented by comments in multipass.conf and doublebuffer.conf in the TestContent directory
