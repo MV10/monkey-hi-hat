@@ -107,20 +107,29 @@ public static class RenderingHelper
         var textureDefs = config.ConfigSource.Content["textures"];
         var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, textureDefs.Count);
         int i = 0;
-        foreach (var kvp in textureDefs)
+        foreach (var tex in textureDefs)
         {
-            var tex = resources[i++];
-            tex.Filename = kvp.Value;
+            var res = resources[i++];
 
-            if(kvp.Key.EndsWith("!"))
+            var parts = tex.Value.Split(':', Const.SplitOptions);
+            if(parts.Length == 2)
             {
-                tex.UniformName = kvp.Key.Substring(0, kvp.Key.Length - 1);
-                tex.ImageLoaded = LoadImageFile(tex, TextureWrapMode.Repeat);
+                res.Filename = parts[1];
+
+                if (parts[0].EndsWith("!"))
+                {
+                    res.UniformName = parts[0].Substring(0, tex.Key.Length - 1);
+                    res.ImageLoaded = LoadImageFile(res, TextureWrapMode.ClampToEdge);
+                }
+                else
+                {
+                    res.UniformName = parts[0];
+                    res.ImageLoaded = LoadImageFile(res);
+                }
             }
             else
             {
-                tex.UniformName = kvp.Key;
-                tex.ImageLoaded = LoadImageFile(tex);
+                res.ImageLoaded = false;
             }
         }
 
@@ -147,7 +156,7 @@ public static class RenderingHelper
         LogHelper.Logger.LogError(reason);
     }
 
-    private static bool LoadImageFile(GLImageTexture tex, TextureWrapMode wrapMode = TextureWrapMode.ClampToEdge)
+    private static bool LoadImageFile(GLImageTexture tex, TextureWrapMode wrapMode = TextureWrapMode.Repeat)
     {
         var pathname = PathHelper.FindFile(Program.AppConfig.TexturePath, tex.Filename);
         if (pathname is null) return false;
