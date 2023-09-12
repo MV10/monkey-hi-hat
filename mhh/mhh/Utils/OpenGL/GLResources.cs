@@ -15,9 +15,16 @@ public class GLResources
     /// buffer handle to bind for drawing, and/or texture handle to set
     /// as a shader input uniform. These correspond to the buffer numbers
     /// specified in the visualizer configuration [multipass] section,
-    /// for example.
+    /// for example. For backbuffer resource collections, these must be
+    /// remapped by the resource owner to match the correct frontbuffer
+    /// index.
     /// </summary>
-    public int Index;
+    public int DrawbufferIndex;
+
+    /// <summary>
+    /// The resource owner should set this.
+    /// </summary>
+    public string UniformName;
 
     /// <summary>
     /// Handle to the OpenGL FramebufferObject.

@@ -1,6 +1,5 @@
 ﻿
 using mhh.Utils;
-using OpenTK.Graphics.OpenGL;
 
 namespace mhh;
 
@@ -11,17 +10,46 @@ namespace mhh;
 /// </summary>
 public class MultipassDrawCall
 {
-    // Data used during rendering
-    public int DrawbufferHandle;
-    public int BackbufferHandle;
-    public List<int> InputTextureHandle;
-    public List<TextureUnit> InputTextureUnit;
-    public List<string> InputTextureUniform;
-    public CachedShader Shader;
-    public IVisualizer Visualizer;
+    /// <summary>
+    /// The zero-based number to draw into for this pass. This should only be 
+    /// associated with the [multipass] draw buffer declarations, not resource list
+    /// indexes.
+    /// </summary>
+    public int DrawbufferIndex;
 
-    // Data collected during parsing
-    public int ParseDrawbufferIndex;
-    public List<int> ParseInputDrawbufferIndex;
-    public List<string> ParseInputBackbufferKey;
+    /// <summary>
+    /// The active OpenGL resources to use for drawing. If Backbuffers is populated, these
+    /// will be swapped at the end of each frame.
+    /// </summary>
+    public GLResources Drawbuffers;
+
+    /// <summary>
+    /// The OpenGL resources drawn into on the previous frame. If this is populated, it
+    /// will be swapped with Drawbuffers at the end of each frame.
+    /// </summary>
+    public GLResources Backbuffers;
+
+    /// <summary>
+    /// Input-texture indexes rendered during earlier passes in the current frame. These
+    /// have uniform names like "input0" and "input1" where the number corresponds to a
+    /// Buffer ID.
+    /// </summary>
+    public List<int> InputFrontbufferResources;
+
+    /// <summary>
+    /// Input-texture indexes rendered in the previous frame. These have uniform names
+    /// like "inputA" and "inputB" where the letter corresponds to the 0-25 / A-Z mapping
+    /// of a Buffer ID.
+    /// </summary>
+    public List<int> InputBackbufferResources;
+
+    /// <summary>
+    /// The shader which will render this pass.
+    /// </summary>
+    public CachedShader Shader;
+
+    /// <summary>
+    /// The visualizer providing content for this pass.
+    /// </summary>
+    public IVisualizer Visualizer;
 }

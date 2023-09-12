@@ -25,24 +25,14 @@ public class CrossfadeRenderer : IRenderer
     public IRenderer OldRenderer;
     public IRenderer NewRenderer;
 
+    private IFramebufferOwner OldFramebufferOwner;
+    private IFramebufferOwner NewFramebufferOwner;
+
     // Maintains a pair of output framebuffers in case the old and/or new renderers
     // are not multi-pass (meaning they are designed to target the default OpenGL
     // swap buffers if they run stand-alone).
     private Guid OwnerName = Guid.NewGuid();
     private IReadOnlyList<GLResources> Resources;
-
-    // When either of these are null, a single-viz renderer is written
-    // to target the default buffers so crossfade will bind an internal
-    // one; otherwise these are the final outputs from each renderer to
-    // feed into the crossfade mixing renderer
-    private GLResources OldDrawTarget = null;
-    private GLResources NewDrawTarget = null;
-
-    // Copied from the old/new renderers or the internally-managed resources
-    private int OldTextureHandle;
-    private int NewTextureHandle;
-    private TextureUnit OldTextureUnit;
-    private TextureUnit NewTextureUnit;
 
     private IVisualizer FragQuadViz;
     private Shader CrossfadeShader;
@@ -59,14 +49,10 @@ public class CrossfadeRenderer : IRenderer
         FragQuadViz.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
         
         OldRenderer = oldRenderer;
-        OldDrawTarget = (OldRenderer as IFramebufferOwner)?.GetFinalDrawTargetResource(true);
-        OldTextureHandle = OldDrawTarget?.TextureHandle ?? Resources[0].TextureHandle;
-        OldTextureUnit = OldDrawTarget?.TextureUnit ?? Resources[0].TextureUnit;
+        OldFramebufferOwner = OldRenderer as IFramebufferOwner;
         
         NewRenderer = newRenderer;
-        NewDrawTarget = (NewRenderer as IFramebufferOwner)?.GetFinalDrawTargetResource(true);
-        NewTextureHandle = NewDrawTarget?.TextureHandle ?? Resources[1].TextureHandle;
-        NewTextureUnit = NewDrawTarget?.TextureUnit ?? Resources[1].TextureUnit;
+        NewFramebufferOwner = NewRenderer as IFramebufferOwner;
 
         LogHelper.Logger?.LogDebug($"Crossfading old, filename: {OldRenderer.Filename}, multipass? {OldRenderer is IFramebufferOwner}");
         LogHelper.Logger?.LogDebug($"Crossfading new, filename: {NewRenderer.Filename}, multipass? {NewRenderer is IFramebufferOwner}");
@@ -103,29 +89,33 @@ public class CrossfadeRenderer : IRenderer
         {
             CompletionCallback?.Invoke();
             CompletionCallback = null;
-            (NewRenderer as IFramebufferOwner)?.GetFinalDrawTargetResource(false);
+            if (NewFramebufferOwner is not null) NewFramebufferOwner.OutputIntercepted = false;
             return;
         }
 
         // the old renderer draws to its own framebuffer or buffer #0 provided here
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        if (OldDrawTarget is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[0].FramebufferHandle);
+        if (OldFramebufferOwner is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[0].FramebufferHandle);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         OldRenderer.RenderFrame();
 
         // the new renderer draws to its own framebuffer or buffer #1 provided here
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        if (NewDrawTarget is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[1].FramebufferHandle);
+        if (NewFramebufferOwner is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[1].FramebufferHandle);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         NewRenderer.RenderFrame();
 
-        // crossfade draws to the default back-buffer using the old and new textures as inputs
+        // the GLResources can't be stored in the constructor because a multipass
+        // renderer might be swapping front/back buffers after each frame
+        var oldResource = OldFramebufferOwner?.OutputBuffers ?? Resources[0];
+        var newResource = NewFramebufferOwner?.OutputBuffers ?? Resources[1];
+
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         CrossfadeShader.Use();
         CrossfadeShader.SetUniform("fadeLevel", fadeLevel);
-        CrossfadeShader.SetTexture("oldBuffer", OldTextureHandle, OldTextureUnit);
-        CrossfadeShader.SetTexture("newBuffer", NewTextureHandle, NewTextureUnit);
+        CrossfadeShader.SetTexture("oldBuffer", oldResource.TextureHandle, oldResource.TextureUnit);
+        CrossfadeShader.SetTexture("newBuffer", newResource.TextureHandle, newResource.TextureUnit);
         FragQuadViz.RenderFrame(CrossfadeShader);
 
         //...and now AppWindow's OnRenderFrame swaps the back-buffer to the output

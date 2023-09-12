@@ -6,12 +6,13 @@ namespace mhh;
 public interface IFramebufferOwner
 {
     /// <summary>
-    /// Returns the GLResources object that defines the final draw-state
-    /// framebuffer which a multi-pass renderer outputs. When interceptActive
-    /// is true, this implies the final framebuffer is used as input elsewhere
-    /// (like crossfade) and any final blit-to-backbuffer can be skipped. When
-    /// interceptActive is false, the renderer should assume it controls final
-    /// output and blit to the backbuffer.
+    /// The resource group that contains the output at the end of the frame.
     /// </summary>
-    public GLResources GetFinalDrawTargetResource(bool interceptActive);
+    public GLResources OutputBuffers { get; }
+
+    /// <summary>
+    /// When true, the implementation can disable any blitter calls 
+    /// to the OpenGL-provided display backbuffer.
+    /// </summary>
+    public bool OutputIntercepted { set; }
 }

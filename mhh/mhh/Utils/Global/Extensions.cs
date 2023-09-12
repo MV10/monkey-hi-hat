@@ -143,7 +143,7 @@ namespace mhh
         /// Converts a 0-25 integer to string A-Z
         /// </summary>
         public static string ToAlpha(this int value)
-            => ('A' + value).ToString();
+            => ((char)('A' + value)).ToString();
 
         //-----------------------------------------------------------------------------------------------
         // Murmur3 hashing support
