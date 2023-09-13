@@ -14,24 +14,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoFiles", "RepoFiles", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent", "TestContent", "{15B3A716-BDC6-4E8B-A455-F480A001FBBA}"
 	ProjectSection(SolutionItems) = preProject
-		..\testcontent\colorbeat.conf = ..\testcontent\colorbeat.conf
-		..\testcontent\colorbeat.frag = ..\testcontent\colorbeat.frag
 		..\testcontent\doublebuffer.conf = ..\testcontent\doublebuffer.conf
-		..\testcontent\fine-scale-plasma.frag = ..\testcontent\fine-scale-plasma.frag
-		..\testcontent\doublebuffer1.frag = ..\testcontent\doublebuffer1.frag
 		..\testcontent\doublebuffer0.frag = ..\testcontent\doublebuffer0.frag
-		..\testcontent\fx-cloud-fringe.frag = ..\testcontent\fx-cloud-fringe.frag
-		..\testcontent\fx-colorize.frag = ..\testcontent\fx-colorize.frag
-		..\testcontent\fx-desaturate.frag = ..\testcontent\fx-desaturate.frag
-		..\testcontent\fx-sobel-edge.frag = ..\testcontent\fx-sobel-edge.frag
+		..\testcontent\doublebuffer1.frag = ..\testcontent\doublebuffer1.frag
 		..\testcontent\multipass.conf = ..\testcontent\multipass.conf
 		..\testcontent\playlist-test.conf = ..\testcontent\playlist-test.conf
+		..\testcontent\multipass4.frag = ..\testcontent\multipass4.frag
+		..\testcontent\multipass3.frag = ..\testcontent\multipass3.frag
+		..\testcontent\multipass2.frag = ..\testcontent\multipass2.frag
+		..\testcontent\multipass0.frag = ..\testcontent\multipass0.frag
+		..\testcontent\multipass1.frag = ..\testcontent\multipass1.frag
 		..\testcontent\texture.conf = ..\testcontent\texture.conf
 		..\testcontent\texture.frag = ..\testcontent\texture.frag
 		..\testcontent\VisualizerFragmentQuad.vert = ..\testcontent\VisualizerFragmentQuad.vert
 		..\testcontent\VisualizerVertexIntegerArray.frag = ..\testcontent\VisualizerVertexIntegerArray.frag
-		..\testcontent\vogue_circles.conf = ..\testcontent\vogue_circles.conf
-		..\testcontent\vogue_circles.vert = ..\testcontent\vogue_circles.vert
+		..\testcontent\vizvertint.vert = ..\testcontent\vizvertint.vert
+		..\testcontent\vizvertint.conf = ..\testcontent\vizvertint.conf
+		..\testcontent\vizfragquad.frag = ..\testcontent\vizfragquad.frag
+		..\testcontent\vizfragquad.conf = ..\testcontent\vizfragquad.conf
 	EndProjectSection
 EndProject
 Global
