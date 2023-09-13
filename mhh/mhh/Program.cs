@@ -124,7 +124,8 @@ namespace mhh
                 WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
                 WindowConfig.OpenTKNativeWindowSettings.Size = (AppConfig.SizeX, AppConfig.SizeY);
                 WindowConfig.OpenTKNativeWindowSettings.APIVersion = OpenGLVersion;
-                WindowConfig.OpenTKGameWindowSettings.RenderFrequency = AppConfig.FrameRateLock;
+                WindowConfig.OpenTKGameWindowSettings.UpdateFrequency = AppConfig.FrameRateLock;
+                // OpenTK 4.8 obsoleted the separate RenderFrequency setting :(
 
                 // Spin up the window and get the show started
                 AppWindow = new(WindowConfig, AudioConfig);
@@ -223,14 +224,14 @@ namespace mhh
                     if(args.Length == 2)
                     {
                         if (!int.TryParse(args[1], out var fpsTarget) || fpsTarget < 0 || fpsTarget > 9999) return ShowHelp();
-                        AppWindow.RenderFrequency = fpsTarget;
+                        AppWindow.UpdateFrequency = fpsTarget;
                         return (fpsTarget == 0) ? "FPS target disabled (max possible FPS)" : $"FPS target set to {fpsTarget}";
                     }
                     else
                     {
                         return $"{AppWindow.FramesPerSecond} FPS" +
                             $"\n{AppWindow.AverageFramesPerSecond} average FPS over past {AppWindow.AverageFPSTimeframeSeconds} seconds" +
-                            $"\nFPS target is {(AppWindow.RenderFrequency == 0 ? "not locked (max FPS)" : $"locked to {AppWindow.RenderFrequency} FPS" )}";
+                            $"\nFPS target is {(AppWindow.UpdateFrequency == 0 ? "not locked (max FPS)" : $"locked to {AppWindow.UpdateFrequency} FPS" )}";
                     }
 
                 case "--idle":
