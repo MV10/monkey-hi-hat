@@ -3,7 +3,6 @@ using eyecandy;
 using mhh.Utils;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
-using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Reflection;
@@ -15,7 +14,7 @@ namespace mhh
     /// audio texture and capture processing, and supplies the "resolution"
     /// and "time" uniforms. The visualizers do most of the other work.
     /// </summary>
-    public class HostWindow : BaseWindow
+    public class HostWindow : BaseWindow, IDisposable, IAsyncDisposable
     {
         /// <summary>
         /// Handles all visualization rendering prep and execution.
@@ -32,11 +31,6 @@ namespace mhh
         /// </summary>
         public AudioTextureEngine Eyecandy;
 
-        /// <summary>
-        /// Used by the renderer for the "resolution" uniform. Updated every frame.
-        /// </summary>
-        public Vector2 ResolutionUniform;
-
         private MethodInfo EyecandyEnableMethod;
         private MethodInfo EyecandyDisableMethod;
         // Example of how to invoke generic method
@@ -49,8 +43,9 @@ namespace mhh
         //        defaultEnabled,
         //    });
 
-        private bool CommandFlag_Paused = false;
-        private bool CommandFlag_QuitRequested = false;
+
+        private CommandRequest CommandRequested = CommandRequest.None;
+        private bool IsPaused = false;
 
         private bool TrackingSilentPeriod = false;
 
@@ -75,8 +70,6 @@ namespace mhh
             Eyecandy.EvaluateRequirements();
 
             InitializeCache();
-
-            Renderer.PrepareNewRenderer(Caching.IdleVisualizer);
         }
 
         /// <summary>
@@ -86,6 +79,7 @@ namespace mhh
         {
             base.OnLoad();
             GL.Enable(EnableCap.ProgramPointSize);
+            Renderer.PrepareNewRenderer(Caching.IdleVisualizer);
             Eyecandy.BeginAudioProcessing();
         }
 
@@ -96,9 +90,8 @@ namespace mhh
         /// </summary>
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            if (CommandFlag_Paused || CommandFlag_QuitRequested || Renderer.ActiveRenderer is null) return;
+            if (CommandRequested != CommandRequest.None || Renderer.ActiveRenderer is null) return;
             base.OnRenderFrame(e);
-            ResolutionUniform = new(ClientSize.X, ClientSize.Y);
             Eyecandy.UpdateTextures();
             Renderer.RenderFrame();
             SwapBuffers();
@@ -113,13 +106,38 @@ namespace mhh
         {
             base.OnUpdateFrame(e);
 
-            // either requested from the command line or the ESC
-            // key on a previous pass in the next block of code
-            if (CommandFlag_QuitRequested)
+            switch(CommandRequested)
             {
-                Renderer?.Dispose();
-                Close();
-                return;
+                case CommandRequest.Quit:
+                {
+                    CommandRequested = CommandRequest.None;
+                    Renderer?.Dispose();
+                    Close();
+                    return;
+                }
+
+                case CommandRequest.ToggleFullscreen:
+                {
+                    switch(WindowState)
+                    {
+                        case WindowState.Fullscreen:
+                            WindowState = WindowState.Normal;
+                            break;
+
+                        case WindowState.Normal:
+                            WindowState = WindowState.Fullscreen;
+                            break;
+
+                        default:
+                            break;
+                    }
+                    CommandRequested = CommandRequest.None;
+                    return;
+                }
+
+                default:
+                    CommandRequested = CommandRequest.None;
+                    break;
             }
 
             var input = KeyboardState;
@@ -129,7 +147,7 @@ namespace mhh
             {
                 // set the flag to ensure the render callback starts
                 // short-circuiting before we start releasing stuff
-                CommandFlag_QuitRequested = true;
+                CommandRequested = CommandRequest.Quit;
                 return;
             }
 
@@ -137,6 +155,13 @@ namespace mhh
             if (input.IsKeyReleased(Keys.Right))
             {
                 Command_PlaylistNext(temporarilyIgnoreSilence: true);
+                return;
+            }
+
+            // Spacebar to toggle full-screen mode
+            if (input.IsKeyReleased(Keys.Space))
+            {
+                CommandRequested = CommandRequest.ToggleFullscreen;
                 return;
             }
 
@@ -170,7 +195,7 @@ namespace mhh
         protected override void OnResize(ResizeEventArgs e)
         {
             base.OnResize(e);
-            Renderer.ViewportResized(ClientSize.X, ClientSize.Y);
+            Renderer.OnResize();
         }
 
         /// <summary>
@@ -228,7 +253,7 @@ namespace mhh
         /// </summary>
         public string Command_Quit()
         {
-            CommandFlag_QuitRequested = true;
+            CommandRequested = CommandRequest.Quit;
             return "ACK";
         }
 
@@ -249,6 +274,15 @@ playlist   : {Playlist.GetInfo()}
         }
 
         /// <summary>
+        /// Handler for the --fullscreen command-line switch.
+        /// </summary>
+        public string Command_FullScreen()
+        {
+            CommandRequested = CommandRequest.ToggleFullscreen;
+            return "ACK";
+        }
+
+        /// <summary>
         /// Handler for the --idle command-line switch.
         /// </summary>
         public string Command_Idle()
@@ -262,9 +296,9 @@ playlist   : {Playlist.GetInfo()}
         /// </summary>
         public string Command_Pause()
         {
-            if (CommandFlag_Paused) return "already paused; use --run to resume";
+            if (IsPaused) return "already paused; use --run to resume";
             Renderer.TimePaused = true;
-            CommandFlag_Paused = true;
+            IsPaused = true;
             return "ACK";
         }
 
@@ -273,9 +307,9 @@ playlist   : {Playlist.GetInfo()}
         /// </summary>
         public string Command_Run()
         {
-            if (!CommandFlag_Paused) return "already running; use --pause to suspend";
+            if (!IsPaused) return "already running; use --pause to suspend";
             Renderer.TimePaused = false;
-            CommandFlag_Paused = false;
+            IsPaused = false;
             return "ACK";
         }
 
@@ -382,12 +416,15 @@ playlist   : {Playlist.GetInfo()}
             Caching.InternalShaders.Add(name, shader);
         }
 
-        public new void Dispose() // "new" hides the non-overridable base method
+        public new void Dispose()
+            => throw new InvalidOperationException("Invoke \"await DisposeAsync\" instead of Dispose");
+
+        public async ValueTask DisposeAsync()
         {
             if (IsDisposed) return;
             base.Dispose();
 
-            Eyecandy?.EndAudioProcessing_SynchronousHack();
+            await Eyecandy?.EndAudioProcessing();
             Renderer?.Dispose();
             Caching.InternalShaders.DisposeAndClear();
             Caching.Shaders.DisposeAndClear();

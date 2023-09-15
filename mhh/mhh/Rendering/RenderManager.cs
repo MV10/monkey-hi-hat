@@ -53,7 +53,7 @@ public class RenderManager : IDisposable
     /// Queues up a renderer to run the visualization as the next active renderer. May
     /// employ a cross-fade effect before the new one is running exclusively.
     /// </summary>
-    public IRenderer PrepareNewRenderer(VisualizerConfig visualizerConfig)
+    public void PrepareNewRenderer(VisualizerConfig visualizerConfig)
     {
         IRenderer renderer;
         if (visualizerConfig.ConfigSource.Content.ContainsKey("multipass"))
@@ -68,21 +68,24 @@ public class RenderManager : IDisposable
         if (!renderer.IsValid)
         {
             LogHelper.Logger?.LogError(renderer.InvalidReason);
-            return renderer;
+            return;
+        }
+
+        if (ActiveRenderer is CrossfadeRenderer)
+        {
+            ActiveRenderer.Dispose();
+            ActiveRenderer = null;
         }
 
         if (ActiveRenderer is null)
         {
             ActiveRenderer = renderer;
             if (!IsTimePaused) ActiveRenderer.StartClock();
-        }
-        else
-        {
-            NewRenderer?.Dispose();
-            NewRenderer = renderer;
+            return;
         }
 
-        return renderer;
+        NewRenderer?.Dispose();
+        NewRenderer = renderer;
     }
 
     /// <summary>
@@ -115,11 +118,12 @@ public class RenderManager : IDisposable
     }
 
     /// <summary>
-    /// Called by AppWindow.OnResizeWindow
+    /// Called by AppWindow.OnResize
     /// </summary>
-    public void ViewportResized(int viewportWidth, int viewportHeight)
+    public void OnResize()
     {
-        ResourceManager.ResizeTextures(viewportWidth, viewportHeight);
+        ActiveRenderer?.OnResize();
+        NewRenderer?.OnResize();
     }
 
     /// <summary>

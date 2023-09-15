@@ -3,7 +3,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace mhh.Utils;
 
-public class GLResources
+public class GLResourceGroup
 {
     /// <summary>
     /// Identifies the object which requested the allocation.

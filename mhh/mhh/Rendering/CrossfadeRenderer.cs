@@ -3,6 +3,7 @@ using eyecandy;
 using mhh.Utils;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
 using System.Diagnostics;
 
 namespace mhh;
@@ -25,14 +26,18 @@ public class CrossfadeRenderer : IRenderer
     public IRenderer OldRenderer;
     public IRenderer NewRenderer;
 
-    private IFramebufferOwner OldFramebufferOwner;
-    private IFramebufferOwner NewFramebufferOwner;
+    // not applicable to this renderer
+    public GLResourceGroup OutputBuffers { get => null; }
+    public Vector2 Resolution { get => Program.AppWindow.ClientSize; }
+    public bool OutputIntercepted { set { } }
 
     // Maintains a pair of output framebuffers in case the old and/or new renderers
     // are not multi-pass (meaning they are designed to target the default OpenGL
     // swap buffers if they run stand-alone).
-    private Guid OwnerName = Guid.NewGuid();
-    private IReadOnlyList<GLResources> Resources;
+    private Guid OldOwnerName = Guid.NewGuid();
+    private Guid NewOwnerName = Guid.NewGuid();
+    private GLResourceGroup OldResourceGroup = null;
+    private GLResourceGroup NewResourceGroup = null;
 
     private IVisualizer FragQuadViz;
     private Shader CrossfadeShader;
@@ -42,23 +47,70 @@ public class CrossfadeRenderer : IRenderer
 
     public CrossfadeRenderer(IRenderer oldRenderer, IRenderer newRenderer, Action completionCallback)
     {
-        Resources = RenderManager.ResourceManager.CreateResources(OwnerName, 2);
         CrossfadeShader = Caching.InternalShaders["crossfade"];
 
         FragQuadViz = new VisualizerFragmentQuad(); 
         FragQuadViz.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
         
         OldRenderer = oldRenderer;
-        OldFramebufferOwner = OldRenderer as IFramebufferOwner;
-        
         NewRenderer = newRenderer;
-        NewFramebufferOwner = NewRenderer as IFramebufferOwner;
+        CreateResourceGroups();
 
-        LogHelper.Logger?.LogDebug($"Crossfading old, filename: {OldRenderer.Filename}, multipass? {OldRenderer is IFramebufferOwner}");
-        LogHelper.Logger?.LogDebug($"Crossfading new, filename: {NewRenderer.Filename}, multipass? {NewRenderer is IFramebufferOwner}");
+        LogHelper.Logger?.LogDebug($"Crossfading old, filename: {OldRenderer.Filename}, multipass? {OldRenderer.OutputBuffers is not null}");
+        LogHelper.Logger?.LogDebug($"Crossfading new, filename: {NewRenderer.Filename}, multipass? {NewRenderer.OutputBuffers is not null}");
 
         CompletionCallback = completionCallback;
         DurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
+    }
+
+    public void RenderFrame()
+    {
+        float fadeLevel = (float)Clock.ElapsedMilliseconds / DurationMS;
+
+        // after new renderer fade is 1.0, invoke the callback once, let the
+        // new renderer know the final output is no longer being intercepted,
+        // and stop rendering until the RenderManager takes over
+        if(fadeLevel > 1f)
+        {
+            CompletionCallback?.Invoke();
+            CompletionCallback = null;
+            NewRenderer.OutputIntercepted = false;
+            return;
+        }
+
+        // the old renderer draws to its own framebuffer or buffer #0 provided here
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        if (OldRenderer.OutputBuffers is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, OldResourceGroup.FramebufferHandle);
+        GL.Clear(ClearBufferMask.ColorBufferBit);
+        OldRenderer.RenderFrame();
+
+        // the new renderer draws to its own framebuffer or buffer #1 provided here
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        if (OldRenderer.OutputBuffers is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, NewResourceGroup.FramebufferHandle);
+        GL.Clear(ClearBufferMask.ColorBufferBit);
+        NewRenderer.RenderFrame();
+
+        // the GLResources can't be stored in the constructor because a multipass
+        // renderer might be swapping front/back buffers after each frame
+        var oldResource = OldRenderer.OutputBuffers ?? OldResourceGroup;
+        var newResource = NewRenderer.OutputBuffers ?? NewResourceGroup;
+
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        GL.Clear(ClearBufferMask.ColorBufferBit);
+        CrossfadeShader.Use();
+        CrossfadeShader.SetUniform("fadeLevel", fadeLevel);
+        CrossfadeShader.SetTexture("oldBuffer", oldResource.TextureHandle, oldResource.TextureUnit);
+        CrossfadeShader.SetTexture("newBuffer", newResource.TextureHandle, newResource.TextureUnit);
+        FragQuadViz.RenderFrame(CrossfadeShader);
+
+        //...and now AppWindow's OnRenderFrame swaps the back-buffer to the output
+    }
+
+    public void OnResize()
+    {
+        OldRenderer?.OnResize();
+        NewRenderer?.OnResize();
+        CreateResourceGroups();
     }
 
     public void StartClock()
@@ -78,47 +130,12 @@ public class CrossfadeRenderer : IRenderer
     public float ElapsedTime()
         => OldRenderer?.ElapsedTime() ?? 0f;
 
-    public void RenderFrame()
+    private void CreateResourceGroups()
     {
-        float fadeLevel = (float)Clock.ElapsedMilliseconds / DurationMS;
-
-        // after new renderer fade is 1.0, invoke the callback once, let the
-        // new renderer know the final output is no longer being intercepted,
-        // and stop rendering until the RenderManager takes over
-        if(fadeLevel > 1f)
-        {
-            CompletionCallback?.Invoke();
-            CompletionCallback = null;
-            if (NewFramebufferOwner is not null) NewFramebufferOwner.OutputIntercepted = false;
-            return;
-        }
-
-        // the old renderer draws to its own framebuffer or buffer #0 provided here
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        if (OldFramebufferOwner is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[0].FramebufferHandle);
-        GL.Clear(ClearBufferMask.ColorBufferBit);
-        OldRenderer.RenderFrame();
-
-        // the new renderer draws to its own framebuffer or buffer #1 provided here
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        if (NewFramebufferOwner is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, Resources[1].FramebufferHandle);
-        GL.Clear(ClearBufferMask.ColorBufferBit);
-        NewRenderer.RenderFrame();
-
-        // the GLResources can't be stored in the constructor because a multipass
-        // renderer might be swapping front/back buffers after each frame
-        var oldResource = OldFramebufferOwner?.OutputBuffers ?? Resources[0];
-        var newResource = NewFramebufferOwner?.OutputBuffers ?? Resources[1];
-
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        GL.Clear(ClearBufferMask.ColorBufferBit);
-        CrossfadeShader.Use();
-        CrossfadeShader.SetUniform("fadeLevel", fadeLevel);
-        CrossfadeShader.SetTexture("oldBuffer", oldResource.TextureHandle, oldResource.TextureUnit);
-        CrossfadeShader.SetTexture("newBuffer", newResource.TextureHandle, newResource.TextureUnit);
-        FragQuadViz.RenderFrame(CrossfadeShader);
-
-        //...and now AppWindow's OnRenderFrame swaps the back-buffer to the output
+        RenderManager.ResourceManager.DestroyAllResources(OldOwnerName);
+        RenderManager.ResourceManager.DestroyAllResources(NewOwnerName);
+        if (OldRenderer.OutputBuffers is null) OldResourceGroup = RenderManager.ResourceManager.CreateResourceGroups(OldOwnerName, 1, OldRenderer.Resolution)[0];
+        if (NewRenderer.OutputBuffers is null) NewResourceGroup = RenderManager.ResourceManager.CreateResourceGroups(NewOwnerName, 1, NewRenderer.Resolution)[0];
     }
 
     public void Dispose()
@@ -127,8 +144,10 @@ public class CrossfadeRenderer : IRenderer
 
         FragQuadViz?.Dispose();
 
-        if (Resources?.Count > 0) RenderManager.ResourceManager.DestroyResources(OwnerName);
-        Resources = null;
+        RenderManager.ResourceManager.DestroyAllResources(OldOwnerName);
+        RenderManager.ResourceManager.DestroyAllResources(NewOwnerName);
+        OldResourceGroup = null;
+        NewResourceGroup = null;
 
         IsDisposed = true;
         GC.SuppressFinalize(this);

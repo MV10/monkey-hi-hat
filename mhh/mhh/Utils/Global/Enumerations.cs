@@ -49,4 +49,11 @@ namespace mhh
         Time = 1,
         External = 2,
     }
+
+    public enum CommandRequest
+    {
+        None = 0,
+        Quit = 1,
+        ToggleFullscreen = 2,
+    }
 }

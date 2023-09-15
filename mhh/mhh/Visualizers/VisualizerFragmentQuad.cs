@@ -42,16 +42,26 @@ public class VisualizerFragmentQuad : IVisualizer
 
     public void Initialize(VisualizerConfig config, Shader shader)
     {
+        VertexArrayObject = GL.GenVertexArray();
+        VertexBufferObject = GL.GenBuffer();
+        ElementBufferObject = GL.GenBuffer();
+        BindBuffers(shader);
+
+        // Crossfade initializes this with a null config
+        if (config is null) return;
+
+        Textures = RenderingHelper.GetTextures(OwnerName, config);
+    }
+
+    public void BindBuffers(Shader shader)
+    {
         shader.Use();
 
-        VertexArrayObject = GL.GenVertexArray();
         GL.BindVertexArray(VertexArrayObject);
 
-        VertexBufferObject = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferObject);
         GL.BufferData(BufferTarget.ArrayBuffer, vertices.Length * sizeof(float), vertices, BufferUsageHint.StaticDraw);
 
-        ElementBufferObject = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, ElementBufferObject);
         GL.BufferData(BufferTarget.ElementArrayBuffer, indices.Length * sizeof(uint), indices, BufferUsageHint.StaticDraw);
 
@@ -64,11 +74,6 @@ public class VisualizerFragmentQuad : IVisualizer
         GL.EnableVertexAttribArray(locationTexCoords);
         GL.VertexAttribPointer(locationTexCoords, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
         //                                        ^ tex coords is 2 floats                 ^ 5 per row        ^ 4th and 5th float in each row
-
-        // Crossfade initializes this with a null config
-        if (config is null) return;
-
-        Textures = RenderingHelper.GetTextures(OwnerName, config);
     }
 
     public void RenderFrame(Shader shader)
@@ -83,11 +88,11 @@ public class VisualizerFragmentQuad : IVisualizer
     {
         if (IsDisposed) return;
 
-        GL.DeleteVertexArray(VertexArrayObject);
         GL.DeleteBuffer(VertexBufferObject);
         GL.DeleteBuffer(ElementBufferObject);
+        GL.DeleteVertexArray(VertexArrayObject);
 
-        RenderManager.ResourceManager.DestroyResources(OwnerName);
+        RenderManager.ResourceManager.DestroyAllResources(OwnerName);
 
         IsDisposed = true;
         GC.SuppressFinalize(true);

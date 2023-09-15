@@ -46,14 +46,12 @@ public class VisualizerVertexIntegerArray : IVisualizer
 
         Textures = RenderingHelper.GetTextures(OwnerName, config);
 
-        DirectInit(count, mode, shader);
+        Initialize(count, mode, shader);
     }
 
-    // init with args (used by multipass renderer)
-    public void DirectInit(int vertexIntegerCount, ArrayDrawingMode arrayDrawingMode, Shader shader)
+    // init with args (multipass renderer only knows these values, no .conf file available)
+    public void Initialize(int vertexIntegerCount, ArrayDrawingMode arrayDrawingMode, Shader shader)
     {
-        shader.Use();
-
         VertexIntegerCount = vertexIntegerCount;
         DrawingMode = Array.FindIndex(Modes, m => m.Equals(arrayDrawingMode.GetGLDrawingMode()));
 
@@ -64,10 +62,18 @@ public class VisualizerVertexIntegerArray : IVisualizer
         }
 
         VertexBufferObject = GL.GenBuffer();
+        VertexArrayObject = GL.GenVertexArray();
+
+        BindBuffers(shader);
+    }
+
+    public void BindBuffers(Shader shader)
+    {
+        shader.Use();
+
         GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferObject);
         GL.BufferData(BufferTarget.ArrayBuffer, VertexIds.Length * sizeof(float), VertexIds, BufferUsageHint.StaticDraw);
 
-        VertexArrayObject = GL.GenVertexArray();
         GL.BindVertexArray(VertexArrayObject);
         GL.VertexAttribPointer(0, 1, VertexAttribPointerType.Float, false, sizeof(float), 0);
         GL.EnableVertexAttribArray(0); // 0 = location of vertexId attribute
@@ -86,10 +92,10 @@ public class VisualizerVertexIntegerArray : IVisualizer
     {
         if (IsDisposed) return;
 
-        GL.DeleteVertexArray(VertexArrayObject);
         GL.DeleteBuffer(VertexBufferObject);
+        GL.DeleteVertexArray(VertexArrayObject);
 
-        RenderManager.ResourceManager.DestroyResources(OwnerName);
+        RenderManager.ResourceManager.DestroyAllResources(OwnerName);
 
         IsDisposed = true;
         GC.SuppressFinalize(true);

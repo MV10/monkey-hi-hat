@@ -1,6 +1,6 @@
 ﻿
 using OpenTK.Graphics.OpenGL;
-using System.Reflection.Metadata;
+using OpenTK.Mathematics;
 
 namespace mhh.Utils;
 
@@ -38,8 +38,8 @@ public class GLResourceManager : IDisposable
     }
     private static GLResourceManager Instance = null;
 
-    private Dictionary<Guid, IReadOnlyList<GLResources>> AllocatedResources = new();
-    private Dictionary<Guid, IReadOnlyList<GLImageTexture>> AllocatedImages = new();
+    private Dictionary<Guid, IReadOnlyList<GLResourceGroup>> AllocatedResourceGroups = new();
+    private Dictionary<Guid, IReadOnlyList<GLImageTexture>> AllocatedImageTextures = new();
     private List<int> AvailableTextureUnits = new(Caching.MaxAvailableTextureUnit);
 
     private GLResourceManager()
@@ -54,19 +54,23 @@ public class GLResourceManager : IDisposable
     /// This request for new framebuffers returns a list collection of buffers. An exception
     /// is thrown if buffers are already allocated to the owner.
     /// </summary>
-    public IReadOnlyList<GLResources> CreateResources(Guid ownerName, int totalRequired)
+    public IReadOnlyList<GLResourceGroup> CreateResourceGroups(Guid ownerName, int totalRequired, Vector2 viewportResolution)
+        => CreateResourceGroups(ownerName, totalRequired, (int)viewportResolution.X, (int)viewportResolution.Y);
+
+    /// <summary>
+    /// This request for new framebuffers returns a list collection of buffers. An exception
+    /// is thrown if buffers are already allocated to the owner.
+    /// </summary>
+    public IReadOnlyList<GLResourceGroup> CreateResourceGroups(Guid ownerName, int totalRequired, int viewportWidth, int viewportHeight)
     {
-        if (AllocatedResources.ContainsKey(ownerName)) throw new InvalidOperationException($"GL resources already allocated to owner name {ownerName}");
+        if (AllocatedResourceGroups.ContainsKey(ownerName)) throw new InvalidOperationException($"GL resources already allocated to owner name {ownerName}");
         if (totalRequired < 1) throw new ArgumentOutOfRangeException("GL resource allocation request must be 1 or greater");
 
-        List<GLResources> list = new(totalRequired);
-
-        var viewportWidth = Program.AppWindow.ClientSize.X;
-        var viewportHeight = Program.AppWindow.ClientSize.Y;
+        List<GLResourceGroup> list = new(totalRequired);
 
         for(int i = 0; i < totalRequired; i++)
         {
-            var info = new GLResources
+            var info = new GLResourceGroup
             {
                 OwnerName = ownerName,
                 DrawbufferIndex = i,
@@ -74,13 +78,11 @@ public class GLResourceManager : IDisposable
             };
 
             info.FramebufferHandle = GL.GenFramebuffer();
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, info.FramebufferHandle);
-
             info.TextureHandle = GL.GenTexture();
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, info.FramebufferHandle);
             GL.BindTexture(TextureTarget.Texture2D, info.TextureHandle);
-
             AllocateFramebufferTexture(info.TextureHandle, viewportWidth, viewportHeight);
-
             ValidateFramebuffer();
 
             list.Add(info);
@@ -88,13 +90,13 @@ public class GLResourceManager : IDisposable
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
-        AllocatedResources.Add(ownerName, list);
+        AllocatedResourceGroups.Add(ownerName, list);
         return list;
     }
 
     public IReadOnlyList<GLImageTexture> CreateTextureResources(Guid ownerName, int totalRequired)
     {
-        if (AllocatedImages.ContainsKey(ownerName)) throw new InvalidOperationException($"GL texture resources already allocated to owner name {ownerName}");
+        if (AllocatedImageTextures.ContainsKey(ownerName)) throw new InvalidOperationException($"GL texture resources already allocated to owner name {ownerName}");
         if (totalRequired < 1) throw new ArgumentOutOfRangeException("GL texture resource allocation request must be 1 or greater");
 
         List<GLImageTexture> list = new(totalRequired);
@@ -111,7 +113,7 @@ public class GLResourceManager : IDisposable
             list.Add(info);
         }
 
-        AllocatedImages.Add(ownerName, list);
+        AllocatedImageTextures.Add(ownerName, list);
         return list;
     }
 
@@ -119,36 +121,73 @@ public class GLResourceManager : IDisposable
     /// Cleans up all framebuffers associated with the caller's owner identifier. The caller should
     /// destroy any local copy of the list object that was returned by the create method.
     /// </summary>
-    public void DestroyResources(Guid ownerName)
+    public void DestroyAllResources(Guid ownerName)
     {
-        if (AllocatedResources.ContainsKey(ownerName))
+        if (AllocatedResourceGroups.ContainsKey(ownerName))
         {
-            DestroyGLResources(AllocatedResources[ownerName]);
-            AllocatedResources.Remove(ownerName);
+            DestroyResourceGroupsInternal(AllocatedResourceGroups[ownerName]);
+            AllocatedResourceGroups.Remove(ownerName);
         }
 
-        if (AllocatedImages.ContainsKey(ownerName))
+        if (AllocatedImageTextures.ContainsKey(ownerName))
         {
-            DestroyGLImageTextures(AllocatedImages[ownerName]);
-            AllocatedImages.Remove(ownerName);
+            DestroyImageTexturesInternal(AllocatedImageTextures[ownerName]);
+            AllocatedImageTextures.Remove(ownerName);
         }
     }
 
     /// <summary>
-    /// Called by RenderManager whenever the display area size has changed.
+    /// Called by renderers whenever the viewport size has changed. If old viewport
+    /// dimensions are provided, this is a signal to copy (scale) the old content, otherwise
+    /// the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTextures(int viewportWidth, int viewportHeight)
-    {
-        if (AllocatedResources.Count == 0) return;
+    public void ResizeTextures(Guid ownerName, Vector2 viewportResolution, Vector2 oldResolution = default)
+        => ResizeTextures(ownerName, (int)viewportResolution.X, (int)viewportResolution.Y, (int)oldResolution.X, (int)oldResolution.Y);
 
-        foreach(var kvp in AllocatedResources)
+    /// <summary>
+    /// Called by renderers whenever the viewport size has changed. If old viewport
+    /// dimensions are provided, this is a signal to copy (scale) the old content, otherwise
+    /// the new content is uninitialized (blank).
+    /// </summary>
+    public void ResizeTextures(Guid ownerName, int viewportWidth, int viewportHeight, int oldWidth = 0, int oldHeight = 0)
+    {
+        if (!AllocatedResourceGroups.ContainsKey(ownerName)) return;
+        var copyContent = oldWidth > 0 && oldHeight > 0;
+        int oldFramebufferHandle = 0;
+        int oldTextureHandle = 0;
+
+        foreach (var info in AllocatedResourceGroups[ownerName])
         {
-            foreach(var info in kvp.Value)
+            // When copying, we store the old FBO and texture handles and the
+            // GLResourceGroup ends up with brand new ones. The old ones are used
+            // for the copy and are then released.
+            if(copyContent)
             {
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, info.FramebufferHandle);
-                GL.BindTexture(TextureTarget.Texture2D, info.TextureHandle);
-                AllocateFramebufferTexture(info.TextureHandle, viewportWidth, viewportHeight);
-                ValidateFramebuffer();
+                oldFramebufferHandle = info.FramebufferHandle;
+                oldTextureHandle = info.TextureHandle;
+                info.FramebufferHandle = GL.GenFramebuffer();
+                info.TextureHandle = GL.GenTexture();
+            }
+
+            // Attach a new texture of a new size to the framebuffer
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, info.FramebufferHandle);
+            GL.BindTexture(TextureTarget.Texture2D, info.TextureHandle);
+            AllocateFramebufferTexture(info.TextureHandle, viewportWidth, viewportHeight);
+            ValidateFramebuffer();
+
+            // Do the copy, if requested, then delete the old buffers
+            if(copyContent)
+            {
+                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldFramebufferHandle);
+                GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, info.FramebufferHandle);
+                GL.BlitFramebuffer(
+                    0, 0, oldWidth, oldHeight,
+                    0, 0, viewportWidth, viewportHeight,
+                    ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
+
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                GL.DeleteTexture(oldTextureHandle);
+                GL.DeleteFramebuffer(oldFramebufferHandle);
             }
         }
 
@@ -187,7 +226,7 @@ public class GLResourceManager : IDisposable
         }
     }
 
-    private void DestroyGLResources(IReadOnlyList<GLResources> list)
+    private void DestroyResourceGroupsInternal(IReadOnlyList<GLResourceGroup> list)
     {
         int[] handles = list.Select(i => i.FramebufferHandle).ToArray();
         GL.DeleteFramebuffers(handles.Length, handles);
@@ -198,7 +237,7 @@ public class GLResourceManager : IDisposable
         AvailableTextureUnits.AddRange(list.Select(i => i.TextureUnitOrdinal).ToList());
     }
 
-    private void DestroyGLImageTextures(IReadOnlyList<GLImageTexture> list)
+    private void DestroyImageTexturesInternal(IReadOnlyList<GLImageTexture> list)
     {
         int[] handles = list.Select(i => i.TextureHandle).ToArray();
         GL.DeleteTextures(handles.Length, handles);
@@ -210,23 +249,17 @@ public class GLResourceManager : IDisposable
     {
         if (IsDisposed) return;
 
-        if(AllocatedResources?.Count > 0)
+        foreach (var kvp in AllocatedResourceGroups)
         {
-            foreach (var kvp in AllocatedResources)
-            {
-                DestroyGLResources(kvp.Value);
-            }
-            AllocatedResources.Clear();
+            DestroyResourceGroupsInternal(kvp.Value);
         }
+        AllocatedResourceGroups.Clear();
 
-        if(AllocatedImages?.Count > 0)
+        foreach(var kvp in AllocatedImageTextures)
         {
-            foreach(var kvp in AllocatedImages)
-            {
-                DestroyGLImageTextures(kvp.Value);
-            }
-            AllocatedImages.Clear();
+            DestroyImageTexturesInternal(kvp.Value);
         }
+        AllocatedImageTextures.Clear();
 
         IsDisposed = true;
         GC.SuppressFinalize(this);

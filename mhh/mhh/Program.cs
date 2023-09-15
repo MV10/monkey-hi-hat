@@ -148,7 +148,7 @@ namespace mhh
             {
                 // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
                 ctsSwitchPipe?.Cancel();
-                AppWindow?.Dispose();
+                await (AppWindow?.DisposeAsync() ?? ValueTask.CompletedTask); // ugly AF null conditional babysitting, thanks C# LDT!
                 LogHelper.Logger?.LogInformation($"Exiting (PID {Environment.ProcessId})");
                 Log.CloseAndFlush();
             }
@@ -234,6 +234,10 @@ namespace mhh
                             $"\nFPS target is {(AppWindow.UpdateFrequency == 0 ? "not locked (max FPS)" : $"locked to {AppWindow.UpdateFrequency} FPS" )}";
                     }
 
+                case "--fullscreen":
+                    if (args.Length > 1) return ShowHelp();
+                    return AppWindow.Command_FullScreen();
+
                 case "--idle":
                     if (args.Length > 1) return ShowHelp();
                     return AppWindow.Command_Idle();
@@ -315,20 +319,25 @@ There are no startup switches, the application always loads with the default ""i
 All switches are passed to the already-running instance:
 
 --help                      shows help (surprise!)
---load [shader]             loads [shader].conf from ShaderPath defined in mhh.conf
---load [path/shader]        must use forward slash; if present, loads [shader].conf from requested location
+--quit                      ends the program
+
+--load [viz]                loads [viz].conf from VisualizationPath defined in mhh.conf
+--load [path\viz]           if present, loads [viz].conf from requested path (use platform-specific separator)
+--list [viz|playlists]      shows visualization confs or playlists in the default storage locations
+--idle                      load the default/idle shader
+--reload                    unloads and reloads the current shader
+
 --playlist [file]           loads [file].conf from PlaylistPath defined in mhh.conf
 --playlist [path/file]      must use forward slash; if present, loads [file].conf from requested location
 --next                      when a playlist is active, advances to the next shader (according to the Order)
---list [viz|playlists]      shows visualization confs or playlists in the default storage locations
---quit                      ends the program
+
 --info                      writes shader and execution details to the console
---fps                       writes FPS information to the console
+--fullscreen                toggle between windowed and full-screen state
+--fps                       returns instantaneous FPS and average FPS over past 10 seconds
 --fps [0-9999]              sets a frame rate lock (FPS target), or 0 to disable (max possible FPS)
---idle                      load the default/idle shader
+
 --pause                     stops the current shader
 --run                       executes the current shader
---reload                    unloads and reloads the current shader
 --pid                       shows the current Process ID
 --log [level]               shows or sets log-level (None, Trace, Debug, Information, Warning, Error, Critical)
 

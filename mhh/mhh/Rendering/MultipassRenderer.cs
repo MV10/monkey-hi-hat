@@ -2,7 +2,9 @@
 using mhh.Utils;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using OpenTK.Mathematics;
 using System.Diagnostics;
+using eyecandy;
 
 namespace mhh;
 
@@ -13,68 +15,67 @@ namespace mhh;
 // buffers, and those for the backbuffers, which are then swapped in
 // the DrawCall objects that own double-buffers.
 
-public class MultipassRenderer : IRenderer, IFramebufferOwner
+public class MultipassRenderer : IRenderer
 {
     public bool IsValid { get; set; } = true;
     public string InvalidReason { get; set; } = string.Empty;
     public string Filename { get; set; }
-    
-    public GLResources OutputBuffers { get => FinalDrawbuffers; }
-    private GLResources FinalDrawbuffers;
-    
+
+    public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
+    private GLResourceGroup FinalDrawbuffers;
+
+    public Vector2 Resolution { get => ViewportResolution;  }
+    private Vector2 ViewportResolution;
+
     public bool OutputIntercepted { set => IsOutputIntercepted = value; }
     private bool IsOutputIntercepted = false;
 
     public VisualizerConfig Config;
 
-    private Guid OwnerName = Guid.NewGuid();
+    private Guid DrawbufferOwnerName = Guid.NewGuid();
     private Guid BackbufferOwnerName = Guid.NewGuid();
-    private IReadOnlyList<GLResources> Resources;
-    private IReadOnlyList<GLResources> BackbufferResources;
+    private IReadOnlyList<GLResourceGroup> DrawbufferResources;
+    private IReadOnlyList<GLResourceGroup> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
+
     private Stopwatch Clock = new();
     private float FrameCount = 0;
 
     public MultipassRenderer(VisualizerConfig visualizerConfig)
     {
+        ViewportResolution = new(Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y);
+
         Config = visualizerConfig;
         Filename = Path.GetFileNameWithoutExtension(Config.ConfigSource.Pathname);
+
+        // only calculate ViewportResolution
+        // when called from the constructor
+        OnResize();
 
         try
         {
             ParseMultipassConfig();
         }
-        catch(ArgumentException ex)
+        catch (ArgumentException ex)
         {
             IsValid = false;
             InvalidReason = ex.Message;
         }
     }
 
-    public void StartClock()
-        => Clock.Start();
-
-    public void StopClock()
-        => Clock.Stop();
-
-    public float ElapsedTime()
-        => (float)Clock.Elapsed.TotalSeconds;
-
     public void RenderFrame()
     {
         var timeUniform = ElapsedTime();
 
-        foreach(var pass in ShaderPasses)
+        foreach (var pass in ShaderPasses)
         {
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, pass.Drawbuffers.FramebufferHandle);
-            GL.Clear(ClearBufferMask.ColorBufferBit);
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
-            pass.Shader.SetUniform("resolution", Program.AppWindow.ResolutionUniform);
+            pass.Shader.SetUniform("resolution", ViewportResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);
             foreach (var index in pass.InputFrontbufferResources)
             {
-                var resource = Resources[index];
+                var resource = DrawbufferResources[index];
                 pass.Shader.SetTexture(resource.UniformName, resource.TextureHandle, resource.TextureUnit);
             }
             foreach (var index in pass.InputBackbufferResources)
@@ -82,19 +83,24 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
                 var resource = BackbufferResources[index];
                 pass.Shader.SetTexture(resource.UniformName, resource.TextureHandle, resource.TextureUnit);
             }
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, pass.Drawbuffers.FramebufferHandle);
+            GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
+            GL.Clear(ClearBufferMask.ColorBufferBit);
             pass.Visualizer.RenderFrame(pass.Shader);
         }
 
-        // store this in case crossfade is active and the output buffer does a front/backbuffer swap
+        // store this now so that crossfade can find the output buffer (it may have
+        // changed from the previous frame if that pass has a front/back buffer swap)
         FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
 
         // blit drawbuffer to OpenGL's backbuffer unless Crossfade is intercepting the final draw buffer
         if (!IsOutputIntercepted)
         {
-            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, FinalDrawbuffers.FramebufferHandle);
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, FinalDrawbuffers.FramebufferHandle);
             GL.BlitFramebuffer(
-                0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
+                0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y,
                 0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
                 ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
 
@@ -110,6 +116,33 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
 
         FrameCount++;
     }
+
+    public void OnResize()
+    {
+        var oldResolution = ViewportResolution;
+        (ViewportResolution, _) = RenderingHelper.CalculateViewportResolution(Config.RenderResolutionLimit);
+
+        // abort if the constructor called this, or if nothing changed
+        if (ShaderPasses is null || oldResolution.X == ViewportResolution.X && oldResolution.Y == ViewportResolution.Y) return;
+
+        // resize draw buffers, and resize/copy back buffers
+        RenderManager.ResourceManager.ResizeTextures(DrawbufferOwnerName, ViewportResolution);
+        if (BackbufferResources.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, oldResolution);
+
+        foreach (var pass in ShaderPasses)
+        {
+            pass.Visualizer.BindBuffers(pass.Shader);
+        }
+    }
+
+    public void StartClock()
+        => Clock.Start();
+
+    public void StopClock()
+        => Clock.Stop();
+
+    public float ElapsedTime()
+        => (float)Clock.Elapsed.TotalSeconds;
 
     // the [multipass] section is documented by comments in multipass.conf and doublebuffer.conf in the TestContent directory
     private void ParseMultipassConfig()
@@ -232,7 +265,7 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
                     var intCount = sIntCount.ToInt32(1000);
                     var drawMode = sDrawMode.ToEnum(ArrayDrawingMode.Points);
 
-                    (viz as VisualizerVertexIntegerArray).DirectInit(intCount, drawMode, shaderPass.Shader);
+                    (viz as VisualizerVertexIntegerArray).Initialize(intCount, drawMode, shaderPass.Shader);
                 }
                 else
                 {
@@ -255,8 +288,8 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
         if (maxBackbuffer > maxDrawbuffer) throw new ArgumentException($"{err} Backbuffer {maxBackbuffer.ToAlpha()} referenced but draw buffer {maxBackbuffer} wasn't used");
 
         // allocate drawbuffer resources (front buffers when double-buffering)
-        Resources = RenderManager.ResourceManager.CreateResources(OwnerName, maxDrawbuffer + 1);
-        foreach(var resource in Resources)
+        DrawbufferResources = RenderManager.ResourceManager.CreateResourceGroups(DrawbufferOwnerName, maxDrawbuffer + 1, ViewportResolution);
+        foreach(var resource in DrawbufferResources)
         {
             resource.UniformName = $"input{resource.DrawbufferIndex}";
         }
@@ -264,7 +297,7 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
         // allocate backbuffer resources
         if (maxBackbuffer > -1)
         {
-            BackbufferResources = RenderManager.ResourceManager.CreateResources(BackbufferOwnerName, maxBackbuffer + 1);
+            BackbufferResources = RenderManager.ResourceManager.CreateResourceGroups(BackbufferOwnerName, maxBackbuffer + 1, ViewportResolution);
 
             // The DrawbufferIndex in the resource list is generated sequentially. This reassigns
             // them based on the order of first backbuffer usage in the multipass config section.
@@ -298,7 +331,7 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
         // extract the resource values used during rendering
         foreach(var pass in ShaderPasses)
         {
-            pass.Drawbuffers = Resources[pass.DrawbufferIndex];
+            pass.Drawbuffers = DrawbufferResources[pass.DrawbufferIndex];
 
             var backbufferKey = pass.DrawbufferIndex.ToAlpha();
             var resourceIndex = backbufferKeys.IndexOf(backbufferKey);
@@ -320,9 +353,9 @@ public class MultipassRenderer : IRenderer, IFramebufferOwner
             ShaderPasses = null;
         }
 
-        if (Resources?.Count > 0) RenderManager.ResourceManager.DestroyResources(OwnerName);
-        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.DestroyResources(BackbufferOwnerName);
-        Resources = null;
+        RenderManager.ResourceManager.DestroyAllResources(DrawbufferOwnerName);
+        RenderManager.ResourceManager.DestroyAllResources(BackbufferOwnerName);
+        DrawbufferResources = null;
         BackbufferResources = null;
 
         IsDisposed = true;

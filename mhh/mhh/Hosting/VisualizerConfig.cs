@@ -18,6 +18,7 @@ namespace mhh
         public readonly string FragmentShaderPathname;
 
         public readonly Color4 BackgroundColor;
+        public readonly int RenderResolutionLimit;
 
         public readonly string VisualizerTypeName;
 
@@ -43,6 +44,8 @@ namespace mhh
                 BackgroundColor = new(0f, 0f, 0f, 1f);
             }
 
+            RenderResolutionLimit = ConfigSource.ReadValue("shader", "renderresolutionlimit").ToInt32(0);
+
             VisualizerTypeName = ConfigSource.ReadValue("shader", "visualizertypename");
 
             if(ConfigSource.Content.ContainsKey("audiotextures"))
@@ -54,6 +57,8 @@ namespace mhh
             }
 
             // shader pathnames and visualizer type names are validated in RenderingHelper
+            var err = $"Error in {ConfigSource.Pathname}: ";
+            if (RenderResolutionLimit < 256 && RenderResolutionLimit != 0) throw new ArgumentException($"{err} RenderResolutionLimit must be 256 or greater (default is 0 to disable)");
         }
     }
 }

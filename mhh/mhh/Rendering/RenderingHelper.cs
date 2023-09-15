@@ -2,9 +2,9 @@
 using eyecandy;
 using mhh.Utils;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
 using Microsoft.Extensions.Logging;
 using StbImageSharp;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace mhh;
 
@@ -147,6 +147,36 @@ public static class RenderingHelper
         {
             if(tex.ImageLoaded) shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit);
         }
+    }
+
+    /// <summary>
+    /// When a resize event occurs (or a renderer is starting for the first time), this
+    /// determines whether the full display area (viewport) size should be used, or if
+    /// the upper resolution limit (if specified in the viz.conf) should apply, and what
+    /// the resulting viewport/render-target resolution should be.
+    /// </summary>
+    public static (Vector2 resolution, bool isFullResolution) CalculateViewportResolution(int renderResolutionLimit)
+    {
+        var w = Program.AppWindow.ClientSize.X;
+        var h = Program.AppWindow.ClientSize.Y;
+
+        double larger = Math.Max(w, h);
+        double smaller = Math.Min(w, h);
+        if(renderResolutionLimit == 0 || larger <= renderResolutionLimit) return (new(w, h), true);
+
+        double aspect = smaller / larger;
+        var scaled = (int)(renderResolutionLimit * aspect);
+        if(w > h)
+        {
+            w = renderResolutionLimit;
+            h = scaled;
+        }
+        else
+        {
+            w = scaled;
+            h = renderResolutionLimit;
+        }
+        return (new(w, h), false);
     }
 
     private static void LogInvalidReason(string reason, IRenderer renderer)

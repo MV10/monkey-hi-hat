@@ -1,5 +1,6 @@
 ﻿
-using System.Diagnostics;
+using mhh.Utils;
+using OpenTK.Mathematics;
 
 namespace mhh;
 
@@ -26,6 +27,29 @@ public interface IRenderer : IDisposable
     /// framebuffers are prepared for drawing.
     /// </summary>
     public void RenderFrame();
+
+    /// <summary>
+    /// Called by RenderManager.OnResize in response to AppWindow.OnResize.
+    /// </summary>
+    public void OnResize();
+
+    /// <summary>
+    /// The resource group that contains the output at the end of the frame. Returning
+    /// null indicates output is rendered to the built-in OpenGL backbuffer rather than
+    /// an internally-managed framebuffer texture.
+    /// </summary>
+    public GLResourceGroup OutputBuffers { get; }
+
+    /// <summary>
+    /// Width and height of the rendered frame data.
+    /// </summary>
+    public Vector2 Resolution { get; }
+
+    /// <summary>
+    /// When true, the implementation can disable any blitter calls 
+    /// to the OpenGL-provided display backbuffer.
+    /// </summary>
+    public bool OutputIntercepted { set; }
 
     /// <summary>
     /// Renderers should maintain an internal Stopwatch and set a float uniform named "time".
