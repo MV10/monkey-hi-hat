@@ -142,7 +142,8 @@ public class MultipassRenderer : IRenderer
     public float ElapsedTime()
         => (float)Clock.Elapsed.TotalSeconds;
 
-    // the [multipass] section is documented by comments in multipass.conf and doublebuffer.conf in the TestContent directory
+    // The [multipass] section is documented by comments in multipass.conf,
+    // mpvizconf.conf, and doublebuffer.conf in the TestContent directory
     private void ParseMultipassConfig()
     {
         // [multipass] exists because RenderManager looks for it to create this class
@@ -154,13 +155,27 @@ public class MultipassRenderer : IRenderer
         int maxBackbuffer = -1;
         string backbufferKeys = string.Empty;
 
-        var err = $"Error in {Filename} [multipass] section: ";
+        bool replaceCachedShader;
+        string err;
+
+        int passline = 0;
         foreach (var kvp in Config.ConfigSource.Content["multipass"])
         {
+            err = $"Error in {Filename} [multipass] pass {passline++}: ";
+
             MultipassDrawCall shaderPass = new();
 
             var column = kvp.Value.Split(' ', Const.SplitOptions);
-            if (column.Length < 4 || column.Length > 6) throw new ArgumentException($"{err} Invalid entry, 4 to 6 parameters required; content {kvp.Value}");
+            if (column.Length == 3)
+            {
+                if (!column[2].Equals("*") && !column[2].EndsWith(".conf", StringComparison.InvariantCultureIgnoreCase))
+                    throw new ArgumentException($"{err} Invalid entry, 3 parameters must reference * or a visualizer .conf; content {kvp.Value}");
+            }
+            else
+            {
+                if (column.Length < 4 || column.Length > 6) 
+                    throw new ArgumentException($"{err} Invalid entry, 4 to 6 parameters required; content {kvp.Value}");
+            }
 
             //---------------------------------------------------------------------------------------
             // column 0: draw buffer number
@@ -204,7 +219,34 @@ public class MultipassRenderer : IRenderer
             }
 
             //---------------------------------------------------------------------------------------
-            // column 2 & 3: vertex and frag shader filenames
+            // column 2: visualizer.conf (shortcuts the loop upon completion)
+            //---------------------------------------------------------------------------------------
+
+            if(column.Length == 3)
+            {
+                var vizPathname = (column[2].Equals("*")) 
+                    ? Config.ConfigSource.Pathname 
+                    : PathHelper.FindFile(Program.AppConfig.VisualizerPath, column[2]);
+                if (vizPathname is null) throw new ArgumentException($"{err} Failed to find visualizer config {vizPathname}");
+
+                var vizConfig = new VisualizerConfig(vizPathname);
+
+                // when a --reload command is in effect, reload all shaders used by this renderer (save and restore the value)
+                replaceCachedShader = RenderingHelper.ReplaceCachedShader;
+                shaderPass.Shader = RenderingHelper.GetShader(this, vizConfig);
+                if (!IsValid) return;
+                RenderingHelper.ReplaceCachedShader = replaceCachedShader;
+
+                shaderPass.Visualizer = RenderingHelper.GetVisualizer(this, vizConfig);
+                shaderPass.Visualizer.Initialize(vizConfig, shaderPass.Shader);
+
+                // store it and shortcut the loop
+                ShaderPasses.Add(shaderPass);
+                continue;
+            }
+
+            //---------------------------------------------------------------------------------------
+            // column 2 & 3: or vertex and frag shader filenames
             //---------------------------------------------------------------------------------------
 
             var vert = (column[2].Equals("*")) ? Path.GetFileNameWithoutExtension(Config.VertexShaderPathname) : column[2];
@@ -217,8 +259,8 @@ public class MultipassRenderer : IRenderer
             var fragPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, frag);
             if (fragPathname is null) throw new ArgumentException($"{err} Failed to find fragment shader source file {frag}");
 
-            // when a --reload command is in effect, reload all shaders used by this renderer
-            var replaceCachedShader = RenderingHelper.ReplaceCachedShader;
+            // when a --reload command is in effect, reload all shaders used by this renderer (save and restore the value)
+            replaceCachedShader = RenderingHelper.ReplaceCachedShader;
             shaderPass.Shader = RenderingHelper.GetShader(this, vertPathname, fragPathname);
             if (!IsValid) return;
             RenderingHelper.ReplaceCachedShader = replaceCachedShader;
@@ -278,9 +320,15 @@ public class MultipassRenderer : IRenderer
                 shaderPass.Visualizer.Initialize(Config, shaderPass.Shader);
             }
 
+            //---------------------------------------------------------------------------------------
+            // all columns processed; note column 2 can shortcut the loop ("continue" statement)
+            //---------------------------------------------------------------------------------------
+
             // store it
             ShaderPasses.Add(shaderPass);
         }
+
+        err = $"Error in {Filename} [multipass] section: ";
 
         // highest backbuffer can only be validated after we know all draw buffers
         if (maxBackbuffer > maxDrawbuffer) throw new ArgumentException($"{err} Backbuffer {maxBackbuffer.ToAlpha()} referenced but draw buffer {maxBackbuffer} wasn't used");
@@ -335,6 +383,9 @@ public class MultipassRenderer : IRenderer
             var resourceIndex = backbufferKeys.IndexOf(backbufferKey);
             if (resourceIndex > -1) pass.Backbuffers = BackbufferResources[resourceIndex];
         }
+
+        // initialize the output buffer info
+        FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
     }
 
     public void Dispose()

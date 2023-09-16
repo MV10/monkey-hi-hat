@@ -158,34 +158,6 @@ namespace mhh
             => ((char)('A' + value)).ToString();
 
         //-----------------------------------------------------------------------------------------------
-        // Murmur3 hashing support
-        //-----------------------------------------------------------------------------------------------
-
-        /// <summary>
-        /// Used by Murmur3Hash.
-        /// </summary>
-        public static ulong RotateLeft(this ulong original, int bits)
-            => (original << bits) | (original >> (64 - bits));
-
-        /// <summary>
-        /// Used by Murmur3Hash.
-        /// </summary>
-        public static ulong RotateRight(this ulong original, int bits)
-            => (original >> bits) | (original << (64 - bits));
-
-        /// <summary>
-        /// Used by Murmur3Hash.
-        /// </summary>
-        public static ulong GetUInt64(this byte[] bb, int pos)
-            => (UInt32)(bb[pos++] | bb[pos++] << 8 | bb[pos++] << 16 | bb[pos++] << 24);
-
-        /// <summary>
-        /// Turn a byte-array into a signed immutable BigInteger structure.
-        /// </summary>
-        public static System.Numerics.BigInteger ToBigInteger(this byte[] bb)
-            => new(bb);
-
-        //-----------------------------------------------------------------------------------------------
         // Command Parsing support
         //-----------------------------------------------------------------------------------------------
 

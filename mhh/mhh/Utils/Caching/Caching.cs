@@ -1,8 +1,5 @@
 ﻿
 using eyecandy;
-using Microsoft.Extensions.Logging;
-using OpenTK.Graphics.OpenGL;
-using System.Numerics;
 
 namespace mhh;
 
@@ -21,7 +18,7 @@ public static class Caching
     /// <summary>
     /// Compiled shader programs. The key is a murmur3 hash of the combined vert and frag pathnames.
     /// </summary>
-    public static CacheLRU<BigInteger, CachedShader> Shaders;
+    public static CacheLRU<string, CachedShader> Shaders;
 
     /// <summary>
     /// The built-in default visualizer.
