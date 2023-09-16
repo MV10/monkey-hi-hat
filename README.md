@@ -29,7 +29,7 @@ _**v1.2.0 is the final release supporting the Raspberry Pi and ARM32HF.**_ My or
 * Doesn't temporarily disable screensavers and/or sleep timers
 
 ### Sample video
-Although YouTube _badly_ mangles the quality (not sure why, it was recorded at 1080P and 60FPS), click this for a quick video (1m20s) which cycles through a few of the visualizers -- but seriously, the real thing looks fantastic by comparison -- also, the audio recording came out weird (you get what you pay for, I guess):
+Although YouTube _badly_ mangles the video quality (not sure why, it was recorded at 720P and 60FPS), click this for a quick video (3 minutes) which cycles through a few of the visualizers -- but seriously, the real thing looks fantastic by comparison:
 
-[![sample video](http://img.youtube.com/vi/mcuK73TyRRA/0.jpg)](http://www.youtube.com/watch?v=mcuK73TyRRA)
+[![sample video](http://img.youtube.com/vi/YTmhQm-1bwU/0.jpg)](https://youtu.be/YTmhQm-1bwU)
 
