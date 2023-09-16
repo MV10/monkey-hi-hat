@@ -2,7 +2,7 @@
 using eyecandy;
 using System.Numerics;
 
-namespace mhh.Utils;
+namespace mhh;
 
 // TODO: .net7 adds a UInt128 type from two 64-bit ints, probably better than BigInteger
 // and likely to become a true value type in a future C# version

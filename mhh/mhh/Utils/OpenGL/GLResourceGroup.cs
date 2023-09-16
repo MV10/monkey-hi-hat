@@ -1,7 +1,7 @@
 ﻿
 using OpenTK.Graphics.OpenGL;
 
-namespace mhh.Utils;
+namespace mhh;
 
 public class GLResourceGroup
 {

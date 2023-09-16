@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Runtime.InteropServices;
 
-namespace mhh.Utils;
+namespace mhh;
 
 /// <summary>
 /// A thread-safe size-limited Least Recently Used cache collection.

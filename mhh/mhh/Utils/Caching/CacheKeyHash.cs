@@ -1,7 +1,7 @@
 ﻿
 using System.Text;
 
-namespace mhh.Utils;
+namespace mhh;
 
 // Murmur3 x64 128-bit low-collision string-hashing algorithm adapted from:
 // https://blog.teamleadnet.com/2012/08/murmurhash3-ultra-fast-hash-algorithm.html

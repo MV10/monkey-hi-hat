@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
-namespace mhh.Utils;
+namespace mhh;
 
 // Manages creation, assignment, tracking, and cleanup of OpenGL resources such
 // as framebuffers, textures, and TextureUnits.
