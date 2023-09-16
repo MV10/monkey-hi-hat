@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.Logging;
 using OpenTK.Mathematics;
 
 namespace mhh
@@ -44,7 +45,7 @@ namespace mhh
                 BackgroundColor = new(0f, 0f, 0f, 1f);
             }
 
-            RenderResolutionLimit = ConfigSource.ReadValue("shader", "renderresolutionlimit").ToInt32(0);
+            RenderResolutionLimit = ConfigSource.ReadValue("shader", "renderresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
 
             VisualizerTypeName = ConfigSource.ReadValue("shader", "visualizertypename");
 
@@ -59,6 +60,12 @@ namespace mhh
             // shader pathnames and visualizer type names are validated in RenderingHelper
             var err = $"Error in {ConfigSource.Pathname}: ";
             if (RenderResolutionLimit < 256 && RenderResolutionLimit != 0) throw new ArgumentException($"{err} RenderResolutionLimit must be 256 or greater (default is 0 to disable)");
+
+            if (Program.AppConfig.RenderResolutionLimit > 0 && RenderResolutionLimit > Program.AppConfig.RenderResolutionLimit)
+            {
+                LogHelper.Logger?.LogWarning($"Clamping visualizer to global RenderResolutionLimit {Program.AppConfig.RenderResolutionLimit} instead of {RenderResolutionLimit} in conf.");
+                RenderResolutionLimit = Program.AppConfig.RenderResolutionLimit;
+            }
         }
     }
 }

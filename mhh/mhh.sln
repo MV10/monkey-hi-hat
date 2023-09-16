@@ -14,8 +14,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoFiles", "RepoFiles", "{
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent", "TestContent", "{15B3A716-BDC6-4E8B-A455-F480A001FBBA}"
 	ProjectSection(SolutionItems) = preProject
-		..\testcontent\bufferblitter.conf = ..\testcontent\bufferblitter.conf
-		..\testcontent\bufferblitter.frag = ..\testcontent\bufferblitter.frag
 		..\testcontent\doublebuffer.conf = ..\testcontent\doublebuffer.conf
 		..\testcontent\doublebuffer0.frag = ..\testcontent\doublebuffer0.frag
 		..\testcontent\doublebuffer1.frag = ..\testcontent\doublebuffer1.frag
@@ -27,6 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent", "TestContent"
 		..\testcontent\multipass4.frag = ..\testcontent\multipass4.frag
 		..\testcontent\playlist-test.conf = ..\testcontent\playlist-test.conf
 		..\testcontent\texture.conf = ..\testcontent\texture.conf
+		..\testcontent\resolutionlimit.frag = ..\testcontent\resolutionlimit.frag
+		..\testcontent\resolutionlimit.conf = ..\testcontent\resolutionlimit.conf
 		..\testcontent\texture.frag = ..\testcontent\texture.frag
 		..\testcontent\VisualizerFragmentQuad.vert = ..\testcontent\VisualizerFragmentQuad.vert
 		..\testcontent\VisualizerVertexIntegerArray.frag = ..\testcontent\VisualizerVertexIntegerArray.frag

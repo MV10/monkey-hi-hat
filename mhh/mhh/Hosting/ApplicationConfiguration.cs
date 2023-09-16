@@ -17,6 +17,7 @@ namespace mhh
         public readonly bool StartFullScreen;
         public readonly int SizeX;
         public readonly int SizeY;
+        public readonly int RenderResolutionLimit;
         public readonly bool HideMousePointer;
         public readonly int ShaderCacheSize;
         public readonly int CrossfadeSeconds;
@@ -39,6 +40,7 @@ namespace mhh
             StartFullScreen = Config.ReadValue("setup", "startfullscreen").ToBool(true);
             SizeX = Config.ReadValue("setup", "sizex").ToInt32(960);
             SizeY = Config.ReadValue("setup", "sizey").ToInt32(540);
+            RenderResolutionLimit = Config.ReadValue("setup", "renderresolutionlimit").ToInt32(0);
             HideMousePointer = Config.ReadValue("setup", "hidemousepointer").ToBool(true);
             ShaderCacheSize = Config.ReadValue("setup", "shadercachesize").ToInt32(50);
             CrossfadeSeconds = Config.ReadValue("setup", "crossfadeseconds").ToInt32(2);
@@ -60,6 +62,7 @@ namespace mhh
 
             // validation
             if (string.IsNullOrWhiteSpace(VisualizerPath)) ConfError("VisualizerPath is required.");
+            if (RenderResolutionLimit < 256 && RenderResolutionLimit !=0) ConfError("RenderResolutionLimit must be 256 or greater (default is 0 to disable).");
             if (ShaderCacheSize < 1) ConfError("ShaderCacheSize must be 1 or greater. Default is 50 when omitted.");
             if (CrossfadeSeconds < 0) ConfError("CrossfadeSeconds must be 0 or greater. Default is 2, use 0 to disable.");
             if (FrameRateLock < 0 || FrameRateLock > 9999) ConfError("FrameRateLock must be 0 to 9999. Default is 0 which is disabled.");
