@@ -297,6 +297,7 @@ playlist   : {Playlist.GetInfo()}
         /// </summary>
         public string Command_Idle()
         {
+            Playlist.TerminatePlaylist();
             QueueNextVisualizerConfig(Caching.IdleVisualizer);
             return "ACK";
         }

@@ -88,6 +88,8 @@ public class PlaylistManager
 
     public void UpdateFrame(double silenceDuration)
     {
+        if (Program.AppWindow.Renderer.TimePaused) return;
+
         if (
             // short-duration silence for playlist track-change viz-advancement
             (ActivePlaylist?.SwitchMode == PlaylistSwitchModes.Silence 
