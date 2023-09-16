@@ -47,7 +47,7 @@ public class CrossfadeRenderer : IRenderer
 
     public CrossfadeRenderer(IRenderer oldRenderer, IRenderer newRenderer, Action completionCallback)
     {
-        CrossfadeShader = Caching.InternalShaders["crossfade"];
+        CrossfadeShader = Caching.CrossfadeShader;
 
         FragQuadViz = new VisualizerFragmentQuad(); 
         FragQuadViz.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
@@ -141,11 +141,17 @@ public class CrossfadeRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
+        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Visualizer");
         FragQuadViz?.Dispose();
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() OldRenderer Resources");
         RenderManager.ResourceManager.DestroyAllResources(OldOwnerName);
+
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() NewRenderer Resources");
         RenderManager.ResourceManager.DestroyAllResources(NewOwnerName);
+
         OldResourceGroup = null;
         NewResourceGroup = null;
 

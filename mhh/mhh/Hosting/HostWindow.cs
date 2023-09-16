@@ -5,7 +5,9 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using System.ComponentModel;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace mhh
 {
@@ -14,7 +16,7 @@ namespace mhh
     /// audio texture and capture processing, and supplies the "resolution"
     /// and "time" uniforms. The visualizers do most of the other work.
     /// </summary>
-    public class HostWindow : BaseWindow, IDisposable, IAsyncDisposable
+    public class HostWindow : BaseWindow, IDisposable
     {
         /// <summary>
         /// Handles all visualization rendering prep and execution.
@@ -111,7 +113,6 @@ namespace mhh
                 case CommandRequest.Quit:
                 {
                     CommandRequested = CommandRequest.None;
-                    Renderer?.Dispose();
                     Close();
                     return;
                 }
@@ -196,6 +197,15 @@ namespace mhh
         {
             base.OnResize(e);
             Renderer.OnResize();
+        }
+
+        /// <summary>
+        /// Trace-logs the event
+        /// </summary>
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            base.OnClosing(e);
+            LogHelper.Logger?.LogTrace($"{GetType()}.OnClosing() ----------------------------");
         }
 
         /// <summary>
@@ -387,9 +397,16 @@ playlist   : {Playlist.GetInfo()}
             Caching.IdleVisualizer = new(Path.Combine(ApplicationConfiguration.InternalShaderPath, "idle.conf"));
             Caching.BlankVisualizer = new(Path.Combine(ApplicationConfiguration.InternalShaderPath, "blank.conf"));
 
-            CacheInternalShader("idle");
-            CacheInternalShader("blank");
-            CacheInternalShader("crossfade");
+            Caching.CrossfadeShader = new(
+                Path.Combine(ApplicationConfiguration.InternalShaderPath, "crossfade.vert"),
+                Path.Combine(ApplicationConfiguration.InternalShaderPath, "crossfade.frag"));
+
+            if (!Caching.CrossfadeShader.IsValid)
+            {
+                Console.WriteLine($"\n\nFATAL ERROR: Internal crossfade shader was not found or failed to compile.\n\n");
+                Thread.Sleep(250);
+                Environment.Exit(-1);
+            }
 
             // see property comments for an explanation
             GL.GetInteger(GetPName.MaxCombinedTextureImageUnits, out var maxTU);
@@ -397,38 +414,27 @@ playlist   : {Playlist.GetInfo()}
             LogHelper.Logger?.LogInformation($"This GPU supports a combined maximum of {maxTU} TextureUnits.");
         }
 
-        /// <summary>
-        /// The program exits if the shader pathname is invalid or compilation fails.
-        /// </summary>
-        private void CacheInternalShader(string name)
-        {
-            Shader shader = new(
-                Path.Combine(ApplicationConfiguration.InternalShaderPath, $"{name}.vert"),
-                Path.Combine(ApplicationConfiguration.InternalShaderPath, $"{name}.frag"));
-
-            if (!shader.IsValid)
-            {
-                Console.WriteLine($"\n\nFATAL ERROR: Internal {name} shader was not found or failed to compile.\n\n");
-                Thread.Sleep(250);
-                Environment.Exit(-1);
-            }
-
-            Caching.InternalShaders.Add(name, shader);
-        }
-
         public new void Dispose()
-            => throw new InvalidOperationException("Invoke \"await DisposeAsync\" instead of Dispose");
-
-        public async ValueTask DisposeAsync()
         {
             if (IsDisposed) return;
+            LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+
             base.Dispose();
 
-            await Eyecandy?.EndAudioProcessing();
-            Renderer?.Dispose();
-            Caching.InternalShaders.DisposeAndClear();
-            Caching.Shaders.DisposeAndClear();
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy.EndAudioProcessing()");
+            Eyecandy?.EndAudioProcessing_SynchronousHack();
+
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy AudioTextureEngine");
             Eyecandy?.Dispose();
+
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Cached Shaders");
+            Caching.Shaders.Dispose();
+
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Internal Crossfade Shader");
+            Caching.CrossfadeShader.Dispose();
+
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Renderer / RenderManager");
+            Renderer?.Dispose();
 
             IsDisposed = true;
             GC.SuppressFinalize(true);

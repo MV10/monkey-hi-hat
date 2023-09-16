@@ -1,7 +1,6 @@
 ﻿
 using CommandLineSwitchPipe;
 using eyecandy;
-using mhh.Utils;
 using Microsoft.Extensions.Logging;
 using OpenTK.Windowing.Desktop;
 using Serilog;
@@ -131,6 +130,7 @@ namespace mhh
                 AppWindow = new(WindowConfig, AudioConfig);
                 AppWindow.Focus();
                 AppWindow.Run(); // blocks
+                LogHelper.Logger?.LogTrace("Program.Main AppWindow.Run has exited ----------------------------");
             }
             catch (OperationCanceledException)
             { } // normal, disregard
@@ -147,8 +147,12 @@ namespace mhh
             finally
             {
                 // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
+                LogHelper.Logger?.LogTrace("  Program.Main cancelling CommandLineSwitchPipe token");
                 ctsSwitchPipe?.Cancel();
-                await (AppWindow?.DisposeAsync() ?? ValueTask.CompletedTask); // ugly AF null conditional babysitting, thanks C# LDT!
+
+                LogHelper.Logger?.LogTrace("  Program.Main disposing AppWindow");
+                AppWindow?.Dispose();
+
                 LogHelper.Logger?.LogInformation($"Exiting (PID {Environment.ProcessId})");
                 Log.CloseAndFlush();
             }

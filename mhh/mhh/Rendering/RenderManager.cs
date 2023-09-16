@@ -144,13 +144,17 @@ public class RenderManager : IDisposable
     public void Dispose()
     {
         if (IsDisposed) return;
+        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() NewRenderer");
         NewRenderer?.Dispose();
         NewRenderer = null;
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ActiveRenderer");
         ActiveRenderer?.Dispose();
         ActiveRenderer = null;
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ResourceManager");
         ResourceManager?.Dispose();
 
         IsDisposed = true;

@@ -1,5 +1,6 @@
 ﻿
 using mhh.Utils;
+using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System.Diagnostics;
@@ -126,13 +127,17 @@ public class SingleVisualizerRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
+        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Visualizer");
         Visualizer?.Dispose();
         Visualizer = null;
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Uncached Shader");
         RenderingHelper.DisposeUncachedShader(Shader);
         Shader = null;
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Resources");
         RenderManager.ResourceManager.DestroyAllResources(OwnerName);
         FinalDrawbuffers = null;
 

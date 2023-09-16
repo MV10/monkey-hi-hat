@@ -1,5 +1,7 @@
 ﻿
 using eyecandy;
+using Microsoft.Extensions.Logging;
+using OpenTK.Graphics.OpenGL;
 using System.Numerics;
 
 namespace mhh.Utils
@@ -22,11 +24,6 @@ namespace mhh.Utils
         public static CacheLRU<BigInteger, CachedShader> Shaders;
 
         /// <summary>
-        /// Compiled internal shaders keyed on the name (blank, idle, crossfade).
-        /// </summary>
-        public static Dictionary<string, Shader> InternalShaders = new();
-
-        /// <summary>
         /// The built-in default visualizer.
         /// </summary>
         public static VisualizerConfig IdleVisualizer;
@@ -36,6 +33,11 @@ namespace mhh.Utils
         /// to long-term silence detection.
         /// </summary>
         public static VisualizerConfig BlankVisualizer;
+
+        /// <summary>
+        /// This gets used often enough we just store a separate copy (never in the LRU cache).
+        /// </summary>
+        public static Shader CrossfadeShader;
 
         /// <summary>
         /// Indicates the highest 0-based TextureUnit which can be assigned by FramebufferManager.

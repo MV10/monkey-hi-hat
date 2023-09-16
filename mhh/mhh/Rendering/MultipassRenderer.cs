@@ -1,10 +1,9 @@
 ﻿
 using mhh.Utils;
+using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
-using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Mathematics;
 using System.Diagnostics;
-using eyecandy;
 
 namespace mhh;
 
@@ -342,19 +341,27 @@ public class MultipassRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
+        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
 
-        if(ShaderPasses is not null)
+        if (ShaderPasses is not null)
         {
-            foreach (var dc in ShaderPasses)
+            foreach (var pass in ShaderPasses)
             {
-                dc.Visualizer?.Dispose();
-                RenderingHelper.DisposeUncachedShader(dc.Shader);
+                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Visualizer");
+                pass.Visualizer?.Dispose();
+
+                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Uncached Shader");
+                RenderingHelper.DisposeUncachedShader(pass.Shader);
             }
             ShaderPasses = null;
         }
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Drawbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(DrawbufferOwnerName);
+
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Backbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(BackbufferOwnerName);
+
         DrawbufferResources = null;
         BackbufferResources = null;
 

@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.Logging;
 using System.Collections;
 using System.Runtime.InteropServices;
 
@@ -7,7 +8,7 @@ namespace mhh.Utils;
 /// <summary>
 /// A thread-safe size-limited Least Recently Used cache collection.
 /// </summary>
-public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
+public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, IDisposable
 {
     private readonly record struct Entry(TKey Key, Lazy<TValue> Lazy);
 
@@ -112,25 +113,6 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
     }
 
     /// <summary>
-    /// Removes all items from the collection.
-    /// </summary>
-    public void DisposeAndClear()
-    {
-        lock (lockStorage)
-        {
-            if(valueIsDisposable)
-            {
-                foreach (var obj in order)
-                {
-                    (obj.Lazy.Value as IDisposable).Dispose();
-                }
-            }
-            storage.Clear();
-            order.Clear();
-        }
-    }
-
-    /// <summary>
     /// Returns the IEnumerator for the collection.
     /// </summary>
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
@@ -146,4 +128,28 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public void Dispose()
+    {
+        if (IsDisposed) return;
+        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+
+        lock (lockStorage)
+        {
+            if (valueIsDisposable)
+            {
+                foreach (var obj in order)
+                {
+                    LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() key {obj.Key}");
+                    (obj.Lazy.Value as IDisposable).Dispose();
+                }
+            }
+            storage.Clear();
+            order.Clear();
+        }
+
+        IsDisposed = true;
+        GC.SuppressFinalize(true);
+    }
+    private bool IsDisposed = false;
 }

@@ -33,17 +33,6 @@ namespace mhh
                 .ToList();
         }
 
-        /// <summary>
-        /// Calls Dispose on all stored objects then clears the dictionary.
-        /// </summary>
-        public static void DisposeAndClear<K,V>(this Dictionary<K,V> dictionary)
-        {
-            foreach (var kvp in dictionary)
-                (kvp.Value as IDisposable).Dispose();
-
-            dictionary.Clear();
-        }
-
         //-----------------------------------------------------------------------------------------------
         // Config file support
         //-----------------------------------------------------------------------------------------------

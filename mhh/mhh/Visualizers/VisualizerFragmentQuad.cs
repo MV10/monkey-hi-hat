@@ -1,6 +1,7 @@
 ﻿
 using eyecandy;
 using mhh.Utils;
+using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 
 namespace mhh;
@@ -87,11 +88,18 @@ public class VisualizerFragmentQuad : IVisualizer
     public void Dispose()
     {
         if (IsDisposed) return;
+        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VertexBufferObject");
         GL.DeleteBuffer(VertexBufferObject);
+
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ElementBufferObject");
         GL.DeleteBuffer(ElementBufferObject);
+
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VertexArrayObject");
         GL.DeleteVertexArray(VertexArrayObject);
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Resources");
         RenderManager.ResourceManager.DestroyAllResources(OwnerName);
 
         IsDisposed = true;

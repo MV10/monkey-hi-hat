@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
@@ -248,15 +249,18 @@ public class GLResourceManager : IDisposable
     public void Dispose()
     {
         if (IsDisposed) return;
+        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
 
         foreach (var kvp in AllocatedResourceGroups)
         {
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ResourceGroup owner {kvp.Key}");
             DestroyResourceGroupsInternal(kvp.Value);
         }
         AllocatedResourceGroups.Clear();
 
         foreach(var kvp in AllocatedImageTextures)
         {
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ImageTexture owner {kvp.Key}");
             DestroyImageTexturesInternal(kvp.Value);
         }
         AllocatedImageTextures.Clear();

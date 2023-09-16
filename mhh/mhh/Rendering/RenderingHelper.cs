@@ -1,9 +1,9 @@
 ﻿
 using eyecandy;
 using mhh.Utils;
+using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using Microsoft.Extensions.Logging;
 using StbImageSharp;
 
 namespace mhh;
@@ -69,7 +69,16 @@ public static class RenderingHelper
     /// </summary>
     public static void DisposeUncachedShader(CachedShader shader)
     {
-        if (shader is not null && !Caching.Shaders.ContainsKey(shader.Key)) shader.Dispose();
+        LogHelper.Logger?.LogTrace("RenderingHelper.DisposeUncachedShader() ----------------------------");
+        if (shader is not null && !Caching.Shaders.ContainsKey(shader.Key))
+        {
+            LogHelper.Logger?.LogTrace($"  Disposed key {shader.Key}");
+            shader.Dispose();
+        }
+        else
+        {
+            LogHelper.Logger?.LogTrace($"  Did not dispose key {shader.Key}");
+        }
     }
 
     /// <summary>
