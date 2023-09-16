@@ -61,7 +61,6 @@ namespace mhh
             CaptureDeviceName = Config.ReadValue(SectionOS, "capturedevicename");
 
             // validation
-            if (string.IsNullOrWhiteSpace(VisualizerPath)) ConfError("VisualizerPath is required.");
             if (RenderResolutionLimit < 256 && RenderResolutionLimit !=0) ConfError("RenderResolutionLimit must be 256 or greater (default is 0 to disable).");
             if (ShaderCacheSize < 1) ConfError("ShaderCacheSize must be 1 or greater. Default is 50 when omitted.");
             if (CrossfadeSeconds < 0) ConfError("CrossfadeSeconds must be 0 or greater. Default is 2, use 0 to disable.");
@@ -69,6 +68,25 @@ namespace mhh
             if (UnsecuredPort < 0 || UnsecuredPort > 65534) ConfError("UnsecuredPort must be 0 to 65534, recommended range is 49152 or higher, use 0 to disable.");
             if (DetectSilenceSeconds < 0) ConfError("DetectSilenceSeconds must be 0 or greater.");
             if (DetectSilenceMaxRMS < 0) ConfError("DetectSilienceMaxRMS must be 0 or greater.");
+
+            if (string.IsNullOrWhiteSpace(VisualizerPath)) ConfError("VisualizerPath is required.");
+            PathValidation(VisualizerPath);
+            PathValidation(PlaylistPath);
+            PathValidation(TexturePath);
+            PathValidation(FXPath);
+            PathValidation(PluginPath);
+        }
+
+        private void PathValidation(string pathspec)
+        {
+            if (string.IsNullOrWhiteSpace(pathspec)) return;
+
+            var paths = PathHelper.GetIndividualPaths(pathspec);
+            foreach(var path in paths)
+            {
+                if (!Path.IsPathFullyQualified(path)) ConfError($"Path not fully-qualified: {path}");
+                if (!Directory.Exists(path)) ConfError($"Path not found: {path}");
+            }
         }
 
         private void ConfError(string message)

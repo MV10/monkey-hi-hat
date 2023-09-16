@@ -3,11 +3,14 @@ namespace mhh;
 
 internal static class PathHelper
 {
+    public static string[] GetIndividualPaths(string pathspec)
+        => pathspec.Split(Path.PathSeparator, Const.SplitOptions);
+
     public static string FindFile(string pathspec, string filename)
     {
         if (string.IsNullOrWhiteSpace(pathspec)) return null;
 
-        var paths = pathspec.Split(Path.PathSeparator, Const.SplitOptions);
+        var paths = GetIndividualPaths(pathspec);
         foreach (var path in paths)
         {
             string pathname = Path.Combine(path, filename);
