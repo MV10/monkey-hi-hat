@@ -78,6 +78,7 @@ public class VisualizerFragmentQuad : IVisualizer
 
     public void RenderFrame(Shader shader)
     {
+        RenderingHelper.SetGlobalUniforms(shader);
         RenderingHelper.SetTextureUniforms(Textures, shader);
 
         GL.BindVertexArray(VertexArrayObject);

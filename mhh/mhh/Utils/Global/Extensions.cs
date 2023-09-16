@@ -1,6 +1,7 @@
 ﻿
+using eyecandy;
 using OpenTK.Graphics.OpenGL;
-using System.Numerics;
+using OpenTK.Mathematics;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
@@ -8,6 +9,28 @@ namespace mhh
 {
     public static class Extensions
     {
+        //-----------------------------------------------------------------------------------------------
+        // Temporary
+        //-----------------------------------------------------------------------------------------------
+
+        /// <summary>
+        /// TODO: Move the Vector4 implementation into the eyecandy.Shader class
+        /// </summary>
+        public static void SetUniform(this Shader shader, string name, Vector4 data)
+        {
+            if (!shader.UniformLocations.ContainsKey(name)) return;
+            //{
+            //    if (!IgnoredUniformNames.Contains(name))
+            //    {
+            //        ErrorLogging.LibraryError($"{nameof(SetUniform)}", $"No uniform named \"{name}\"; ignoring request.", LogLevel.Information);
+            //        IgnoredUniformNames.Add(name);
+            //    }
+            //    return;
+            //}
+            shader.Use();
+            GL.Uniform4(shader.UniformLocations[name], data);
+        }
+
         //-----------------------------------------------------------------------------------------------
         // Caching support
         //-----------------------------------------------------------------------------------------------
@@ -159,7 +182,7 @@ namespace mhh
         /// <summary>
         /// Turn a byte-array into a signed immutable BigInteger structure.
         /// </summary>
-        public static BigInteger ToBigInteger(this byte[] bb)
+        public static System.Numerics.BigInteger ToBigInteger(this byte[] bb)
             => new(bb);
 
         //-----------------------------------------------------------------------------------------------

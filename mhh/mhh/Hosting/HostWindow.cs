@@ -2,11 +2,11 @@
 using eyecandy;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.ComponentModel;
 using System.Reflection;
-using System.Xml.Linq;
 
 namespace mhh
 {
@@ -32,6 +32,28 @@ namespace mhh
         /// </summary>
         public AudioTextureEngine Eyecandy;
 
+        /// <summary>
+        /// A random 0-1 float that will not change for the duration of the program. The
+        /// uniform name is "randomseed".
+        /// </summary>
+        public float UniformRandomSeed;
+        
+        /// <summary>
+        /// A random 0-1 float that is generated for each new frame. The uniform name
+        /// is "randomnumber".
+        /// </summary>
+        public float UniformRandomNumber;
+
+        /// <summary>
+        /// The current date (year, month, date, seconds since midnight)
+        /// </summary>
+        public Vector4 UniformDate;
+
+        /// <summary>
+        /// The current time (hour, minute, seconds, UTC hour)
+        /// </summary>
+        public Vector4 UniformClockTime;
+
         private MethodInfo EyecandyEnableMethod;
         private MethodInfo EyecandyDisableMethod;
         // Example of how to invoke generic method
@@ -53,6 +75,8 @@ namespace mhh
         private object QueuedVisualizerLock = new();
         private VisualizerConfig QueuedVisualizerConfig = null;
 
+        private Random RNG = new();
+
         public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
             : base(windowConfig, createShaderFromConfig: false)
         {
@@ -69,6 +93,8 @@ namespace mhh
             Eyecandy.Create<AudioTexture4ChannelHistory>("eyecandy4Channel", enabled: true);
             Eyecandy.Create<AudioTextureVolumeHistory>("eyecandyVolume", enabled: true);
             Eyecandy.EvaluateRequirements();
+
+            UniformRandomSeed = RNG.NextSingle();
 
             InitializeCache();
         }
@@ -93,8 +119,15 @@ namespace mhh
         {
             if (CommandRequested != CommandRequest.None || Renderer.ActiveRenderer is null) return;
             base.OnRenderFrame(e);
+
             Eyecandy.UpdateTextures();
+
+            UniformRandomNumber = RNG.NextSingle();
+            UniformDate = new(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, (float)DateTime.Now.TimeOfDay.TotalSeconds);
+            UniformClockTime = new(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTime.UtcNow.Hour);
+
             Renderer.RenderFrame();
+
             SwapBuffers();
             CalculateFPS();
         }

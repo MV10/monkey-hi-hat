@@ -158,6 +158,17 @@ public static class RenderingHelper
     }
 
     /// <summary>
+    /// Called by visualizer RenderFrame to set any globally-defined uniforms like randomseed and date.
+    /// </summary>
+    public static void SetGlobalUniforms(Shader shader)
+    {
+        shader.SetUniform("randomseed", Program.AppWindow.UniformRandomSeed);
+        shader.SetUniform("randomnumber", Program.AppWindow.UniformRandomNumber);
+        shader.SetUniform("date", Program.AppWindow.UniformDate);
+        shader.SetUniform("clocktime", Program.AppWindow.UniformClockTime);
+    }
+
+    /// <summary>
     /// When a resize event occurs (or a renderer is starting for the first time), this
     /// determines whether the full display area (viewport) size should be used, or if
     /// the upper resolution limit (if specified in the viz.conf) should apply, and what

@@ -81,6 +81,7 @@ public class VisualizerVertexIntegerArray : IVisualizer
 
     public void RenderFrame(Shader shader)
     {
+        RenderingHelper.SetGlobalUniforms(shader);
         shader.SetUniform("vertexCount", (float)VertexIntegerCount);
         RenderingHelper.SetTextureUniforms(Textures, shader);
 
