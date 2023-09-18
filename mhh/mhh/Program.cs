@@ -193,6 +193,12 @@ namespace mhh
                     if (playlistPathname is null) return "ERR: Playlist not found.";
                     return AppWindow.Command_Playlist(playlistPathname);
 
+                case "--fx":
+                    if (args.Length != 2) return ShowHelp();
+                    var fxPathname = GetFxPathname(args[1]);
+                    if (fxPathname is null) return "ERR: FX not found.";
+                    return AppWindow.Command_ApplyFX(fxPathname);
+
                 case "--next":
                     return AppWindow.Command_PlaylistNext();
 
@@ -281,6 +287,9 @@ namespace mhh
         private static string GetShaderPathname(string fromArg)
             => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.VisualizerPath, fromArg);
 
+        private static string GetFxPathname(string fromArg)
+            => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.FXPath, fromArg);
+
         private static bool HasPathSeparators(string fromArg)
             => fromArg.Contains(Path.DirectorySeparatorChar) || fromArg.Contains(Path.AltDirectorySeparatorChar);
 
@@ -297,19 +306,15 @@ namespace mhh
             return $"{usesAudio}{description}";
         }
 
-        private static string GetConfigFiles(string pathspec, string separator)
+        private static string GetConfigFiles(string pathspec, string responseSeparator)
         {
+            var files = PathHelper.GetConfigFiles(pathspec);
             var sb = new StringBuilder();
-            var paths = pathspec.Split(';', Const.SplitOptions);
-            foreach(var path in paths)
+            foreach (var filename in files)
             {
-                foreach (var filename in Directory.EnumerateFiles(path, "*.conf"))
-                {
-                    if (sb.Length > 0) sb.Append(separator);
-                    sb.Append(Path.GetFileNameWithoutExtension(filename));
-                }
+                if (sb.Length > 0) sb.Append(responseSeparator);
+                sb.Append(filename);
             }
-
             return (sb.Length > 0) ? sb.ToString() : "ERR: No conf files available.";
         }
 
@@ -325,8 +330,8 @@ All switches are passed to the already-running instance:
 --help                      shows help (surprise!)
 --quit                      ends the program
 
---load [viz]                loads [viz].conf from VisualizationPath defined in mhh.conf
---load [path\viz]           if present, loads [viz].conf from requested path (use platform-specific separator)
+--load [file]               loads [file].conf from VisualizationPath defined in mhh.conf
+--load [path/file]          if present, loads [file].conf from requested path (use platform-specific separator)
 --list [viz|playlists]      shows visualization confs or playlists in the default storage locations
 --idle                      load the default/idle shader
 --reload                    unloads and reloads the current shader
@@ -334,6 +339,9 @@ All switches are passed to the already-running instance:
 --playlist [file]           loads [file].conf from PlaylistPath defined in mhh.conf
 --playlist [path/file]      must use forward slash; if present, loads [file].conf from requested location
 --next                      when a playlist is active, advances to the next shader (according to the Order)
+
+--fx [file]                 loads [file].conf from FXPath defined in mhh.conf
+--fx [path/file]            if present, loads [file].conf from requested path (use platform-specific separator)
 
 --info                      writes shader and execution details to the console
 --fullscreen                toggle between windowed and full-screen state

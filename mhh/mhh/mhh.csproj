@@ -41,6 +41,9 @@
     <None Update="InternalShaders\crossfade.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="InternalShaders\fx.vert">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="InternalShaders\idle.conf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

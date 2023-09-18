@@ -24,4 +24,18 @@ internal static class PathHelper
         if (!filename.EndsWith(".conf", StringComparison.InvariantCultureIgnoreCase)) filename += ".conf";
         return FindFile(pathspec, filename);
     }
+
+    public static IReadOnlyList<string> GetConfigFiles(string pathspec)
+    {
+        List<string> list = new();
+        var paths = pathspec.Split(';', Const.SplitOptions);
+        foreach (var path in paths)
+        {
+            foreach (var filename in Directory.EnumerateFiles(path, "*.conf"))
+            {
+                list.Add(Path.GetFileNameWithoutExtension(filename));
+            }
+        }
+        return list;
+    }
 }

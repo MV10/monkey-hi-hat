@@ -21,8 +21,10 @@ public class SimpleRenderer : IRenderer
     public bool OutputIntercepted { set => IsOutputIntercepted = value; }
     private bool IsOutputIntercepted = false;
 
-    public Guid OwnerName = Guid.NewGuid();
+    public ConfigFile ConfigSource { get => Config.ConfigSource; }
     public VisualizerConfig Config;
+
+    public Guid OwnerName = Guid.NewGuid();
     public IVisualizer Visualizer;
     public CachedShader Shader;
 
@@ -61,7 +63,7 @@ public class SimpleRenderer : IRenderer
             GL.Clear(ClearBufferMask.ColorBufferBit);
             Visualizer.RenderFrame(Shader);
 
-            // blit drawbuffer to OpenGL's backbuffer unless Crossfade is intercepting the final draw buffer
+            // blit drawbuffer to OpenGL's backbuffer unless Crossfade or FXRenderer is intercepting the final draw buffer
             if (!IsOutputIntercepted)
             {
                 GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, FinalDrawbuffers.FramebufferHandle);

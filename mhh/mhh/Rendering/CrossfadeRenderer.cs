@@ -29,6 +29,7 @@ public class CrossfadeRenderer : IRenderer
     public GLResourceGroup OutputBuffers { get => null; }
     public Vector2 Resolution { get => Program.AppWindow.ClientSize; }
     public bool OutputIntercepted { set { } }
+    public ConfigFile ConfigSource { get => null; }
 
     // Maintains a pair of output framebuffers in case the old and/or new renderers
     // are not multi-pass (meaning they are designed to target the default OpenGL

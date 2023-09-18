@@ -47,7 +47,7 @@ public class VisualizerFragmentQuad : IVisualizer
         ElementBufferObject = GL.GenBuffer();
         BindBuffers(shader);
 
-        // Crossfade initializes this with a null config
+        // Crossfade and FXRenderer initializes this with a null config
         if (config is null) return;
 
         Textures = RenderingHelper.GetTextures(OwnerName, config);

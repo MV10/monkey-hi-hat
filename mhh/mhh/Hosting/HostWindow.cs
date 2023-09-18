@@ -72,8 +72,9 @@ namespace mhh
 
         private bool TrackingSilentPeriod = false;
 
-        private object QueuedVisualizerLock = new();
+        private object QueuedConfigLock = new();
         private VisualizerConfig QueuedVisualizerConfig = null;
+        private FXConfig QueuedFXConfig = null;
 
         private Random RNG = new();
 
@@ -212,8 +213,14 @@ namespace mhh
             // if the CommandLineSwitchPipe thread processed a request
             // to use a different shader, process here where we know
             // the GLFW thread won't be trying to use the Shader object
-            lock (QueuedVisualizerLock)
+            lock (QueuedConfigLock)
             {
+                if(QueuedFXConfig is not null)
+                {
+                    Renderer.ApplyFX(QueuedFXConfig);
+                    QueuedFXConfig = null;
+                }
+
                 if(QueuedVisualizerConfig is not null)
                 {
                     Renderer.PrepareNewRenderer(QueuedVisualizerConfig);
@@ -241,25 +248,6 @@ namespace mhh
         }
 
         /// <summary>
-        /// Queues a new visualizer configuration to send to
-        /// the RenderManager on the next OnUpdateFrame pass.
-        /// </summary>
-        public void QueueNextVisualizerConfig(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)
-        {
-            lock(QueuedVisualizerLock)
-            {
-                // CommandLineSwitchPipe invokes this from another thread;
-                // actual update occurs in OnUpdateFrame which is "safe"
-                // because it won't be busy doing things like using the
-                // current Shader object in an OnRenderFrame call.
-                QueuedVisualizerConfig = newVisualizerConfig;
-
-                // When the --reload command has been issued we want to compile a fresh copy.
-                RenderingHelper.ReplaceCachedShader = replaceCachedShader;
-            }
-        }
-
-        /// <summary>
         /// Handler for the --load command-line switch.
         /// </summary>
         public string Command_Load(string visualizerConfPathname, bool terminatesPlaylist = true)
@@ -272,8 +260,26 @@ namespace mhh
                 return $"ERR: {err}";
             }
             if (terminatesPlaylist) Playlist.TerminatePlaylist();
-            QueueNextVisualizerConfig(newViz);
-            var msg = $"Loading {newViz.ConfigSource.Pathname}";
+            QueueNextConfig(newViz);
+            var msg = $"Requested visualizer {newViz.ConfigSource.Pathname}";
+            LogHelper.Logger?.LogInformation(msg);
+            return msg;
+        }
+
+        /// <summary>
+        /// Handler for the --fx command-line switch.
+        /// </summary>
+        public string Command_ApplyFX(string fxConfPathname)
+        {
+            var fx = new FXConfig(fxConfPathname);
+            if(fx.ConfigSource.Content.Count == 0)
+            {
+                var err = $"Unable to load FX configuration {fx.ConfigSource.Pathname}";
+                LogHelper.Logger?.LogError(err);
+                return $"ERR: {err}";
+            }
+            QueueNextConfig(fx);
+            var msg = $"Requested FX {fx.ConfigSource.Pathname}";
             LogHelper.Logger?.LogInformation(msg);
             return msg;
         }
@@ -330,7 +336,7 @@ playlist   : {Playlist.GetInfo()}
         public string Command_Idle()
         {
             Playlist.TerminatePlaylist();
-            QueueNextVisualizerConfig(Caching.IdleVisualizer);
+            QueueNextConfig(Caching.IdleVisualizer);
             return "ACK";
         }
 
@@ -361,6 +367,8 @@ playlist   : {Playlist.GetInfo()}
         /// </summary>
         public string Command_Reload()
         {
+            if (Renderer.ActiveRenderer is CrossfadeRenderer || Renderer.ActiveRenderer is FXRenderer) return "ERR - Crossfade or FX is active";
+
             var filename = Renderer.ActiveRenderer.Filename;
             var pathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, filename);
             if (pathname is null) return $"ERR - {filename} not found in shader path(s)";
@@ -373,10 +381,46 @@ playlist   : {Playlist.GetInfo()}
                 return $"ERR: {err}";
             }
 
-            QueueNextVisualizerConfig(newViz, replaceCachedShader: true);
+            QueueNextConfig(newViz, replaceCachedShader: true);
             var msg = $"Reloading {newViz.ConfigSource.Pathname}";
             LogHelper.Logger?.LogInformation(msg);
             return msg;
+        }
+
+        /// <summary>
+        /// Queues a new visualizer to send to the RenderManager on the next OnUpdateFrame pass.
+        /// </summary>
+        private void QueueNextConfig(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)
+        {
+            lock (QueuedConfigLock)
+            {
+                // CommandLineSwitchPipe invokes this from another thread;
+                // actual update occurs in OnUpdateFrame which is "safe"
+                // because it won't be busy doing things like using the
+                // current Shader object in an OnRenderFrame call.
+                QueuedVisualizerConfig = newVisualizerConfig;
+
+                // When the --reload command has been issued we want to compile a fresh copy.
+                RenderingHelper.ReplaceCachedShader = replaceCachedShader;
+            }
+        }
+
+        /// <summary>
+        /// Queues a new FX to send to the RenderManager on the next OnUpdateFrame pass.
+        /// </summary>
+        private void QueueNextConfig(FXConfig newVisualizerConfig)
+        {
+            lock (QueuedConfigLock)
+            {
+                // CommandLineSwitchPipe invokes this from another thread;
+                // actual update occurs in OnUpdateFrame which is "safe"
+                // because it won't be busy doing things like using the
+                // current Shader object in an OnRenderFrame call.
+                QueuedFXConfig = newVisualizerConfig;
+
+                // N
+                RenderingHelper.ReplaceCachedShader = false;
+            }
         }
 
         private double DetectSilence()
@@ -413,7 +457,7 @@ playlist   : {Playlist.GetInfo()}
 
             Playlist.TerminatePlaylist();
 
-            lock (QueuedVisualizerLock)
+            lock (QueuedConfigLock)
             {
                 QueuedVisualizerConfig = Program.AppConfig.DetectSilenceAction switch
                 {

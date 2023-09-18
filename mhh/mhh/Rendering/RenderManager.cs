@@ -88,6 +88,25 @@ public class RenderManager : IDisposable
     }
 
     /// <summary>
+    /// Converts the active renderer to an FXRenderer. Ignored if crossfade
+    /// is active, another FX is already active, or a NewRenderer is pending. The
+    /// return value indicates whether the request was ignored.
+    /// </summary>
+    public bool ApplyFX(FXConfig fxConfig)
+    {
+        if (ActiveRenderer is CrossfadeRenderer || ActiveRenderer is FXRenderer || NewRenderer is not null) return false;
+        var fxRenderer = new FXRenderer(fxConfig, ActiveRenderer);
+        if (!fxRenderer.IsValid)
+        {
+            LogHelper.Logger?.LogError(fxRenderer.InvalidReason);
+            return false;
+        }
+        ActiveRenderer = fxRenderer;
+        if(!IsTimePaused) ActiveRenderer.StartClock();
+        return true;
+    }
+
+    /// <summary>
     /// Called by AppWindow.OnRenderFrame.
     /// </summary>
     public void RenderFrame()

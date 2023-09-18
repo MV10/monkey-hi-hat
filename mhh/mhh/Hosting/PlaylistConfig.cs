@@ -1,9 +1,11 @@
 ﻿
+using Microsoft.Extensions.Logging;
+
 namespace mhh
 {
-    public class PlaylistConfig
+    public class PlaylistConfig : IConfigSource
     {
-        public readonly ConfigFile ConfigSource;
+        public ConfigFile ConfigSource { get; private set; }
 
         public readonly PlaylistOrder Order;
         public readonly int FavoritesPct;
@@ -13,6 +15,9 @@ namespace mhh
         public readonly double SwitchCooldownSeconds;
         public readonly double MaxRunSeconds;
 
+        public readonly int FXPercent;
+        public readonly int FXDelaySeconds;
+
         /// <summary>
         /// Pre-sorted/randomized combination of Visualizations
         /// and Favorites entries. Call GeneratePlaylist to update
@@ -20,11 +25,12 @@ namespace mhh
         /// </summary>
         public readonly string[] Playlist;
 
-        public readonly List<string> Visualizations;
-        public readonly List<string> Favorites;
+        public readonly IReadOnlyList<string> Visualizations;
+        public readonly IReadOnlyList<string> Favorites;
+        public readonly IReadOnlyList<string> FX;
 
         private readonly Random rand = new();
-        
+
         public PlaylistConfig(string pathname)
         {
             ConfigSource = new ConfigFile(pathname);
@@ -39,13 +45,45 @@ namespace mhh
                 ? ConfigSource.ReadValue("setup", "switchseconds").ToDouble(120d)
                 : ConfigSource.ReadValue("setup", "switchseconds").ToDouble(0.5d);
 
+            FavoritesPct = ConfigSource.ReadValue("setup", "favoritespct").ToInt32(20);
+
+            FXPercent = ConfigSource.ReadValue("setup", "fxpercent").ToInt32(0);
+            FXDelaySeconds = ConfigSource.ReadValue("setup", "fxdelayseconds").ToInt32(0);
+
             Visualizations = LoadNames("visualizations");
             Favorites = LoadNames("favorites");
+
+            if (FXPercent > 0 && FXPercent < 101)
+            {
+                if (string.IsNullOrWhiteSpace(Program.AppConfig.FXPath))
+                {
+                    Warning("FX settings ignored, mhh.conf does not define FXPath.");
+                    FXPercent = 0;
+                }
+
+                FX = LoadNames("fx");
+                if (FX.Count == 0)
+                {
+                    FX = PathHelper.GetConfigFiles(Program.AppConfig.FXPath);
+                    if (FX.Count == 0)
+                    {
+                        Warning("FX settings ignored, no .conf files in defined FXPath.");
+                        FXPercent = 0;
+                    }
+                }
+            }
 
             Playlist = new string[Math.Max(1, Visualizations.Count + Favorites.Count)];
             GeneratePlaylist();
 
             // TODO implement [Collections] section (reading from other playlists)
+
+            if (FXPercent < 0 || FXPercent > 100 || FXDelaySeconds < 0)
+            {
+                Warning("FX settings are invalid and will be ignored.");
+                FXPercent = 0;
+            }
+
         }
 
         public void GeneratePlaylist()
@@ -112,9 +150,12 @@ namespace mhh
             }
         }
 
-        private List<string> LoadNames(string section)
+        private void Warning(string message)
+            => LogHelper.Logger?.LogWarning($"Playlist {ConfigSource.Pathname}: {message}");
+
+        private IReadOnlyList<string> LoadNames(string section)
         {
-            if (!ConfigSource.Content.ContainsKey(section) || ConfigSource.Content[section].Values.Count == 0) return new(1);
+            if (!ConfigSource.Content.ContainsKey(section) || ConfigSource.Content[section].Values.Count == 0) return new List<string>(1);
 
             var list = ConfigSource.Content[section].Values.ToList();
 

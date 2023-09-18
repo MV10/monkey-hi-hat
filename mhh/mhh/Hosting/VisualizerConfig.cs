@@ -10,9 +10,9 @@ namespace mhh
     /// implementations are responsible for reading their own extra settings
     /// from the ConfigFile data stored here).
     /// </summary>
-    public class VisualizerConfig
+    public class VisualizerConfig : IConfigSource
     {
-        public readonly ConfigFile ConfigSource;
+        public ConfigFile ConfigSource { get; private set; }
 
         public readonly string Description;
         public readonly string VertexShaderPathname;

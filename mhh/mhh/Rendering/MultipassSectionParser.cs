@@ -2,10 +2,12 @@
 namespace mhh;
 
 /// <summary>
+/// Parses [multipass] sections for MultipassRenderer and FXRenderer.
 /// The [multipass] section is documented by comments in multipass.conf,
-/// mpvizconf.conf, and doublebuffer.conf in the TestContent directory.
+/// mpvizconf.conf, and doublebuffer.conf in the TestContent directory, and
+/// by waterflow.conf in the TestContent/FX directory.
 /// </summary>
-public class MultipassParser
+public class MultipassSectionParser
 {
     // The renderer will read these, then destroy the parser object
     public IReadOnlyList<GLResourceGroup> DrawbufferResources;
@@ -13,9 +15,14 @@ public class MultipassParser
     public List<MultipassDrawCall> ShaderPasses;
 
     // References to the object requesting parsing
-    private MultipassRenderer OwningRenderer;
+    private IRenderer OwningRenderer;
     private Guid DrawbufferOwnerName = Guid.NewGuid();
     private Guid BackbufferOwnerName = Guid.NewGuid();
+    private ConfigFile configSource;
+
+    // Type-specific configs from supported renderer types
+    private VisualizerConfig vizConfig;
+    private FXConfig fxConfig;
 
     // Indicates how many resources to request and simple validation
     private int MaxDrawbuffer = -1;
@@ -27,28 +34,42 @@ public class MultipassParser
     private string[] column;
     private string err;
 
-    public MultipassParser(MultipassRenderer forRenderer, Guid drawbufferOwnerName, Guid backbufferOwnerName)
+    public MultipassSectionParser(IRenderer forRenderer, Guid drawbufferOwnerName, Guid backbufferOwnerName)
     {
         OwningRenderer = forRenderer;
         DrawbufferOwnerName = drawbufferOwnerName;
         BackbufferOwnerName = backbufferOwnerName;
 
-        ShaderPasses = new(OwningRenderer.Config.ConfigSource.SequentialSection("multipass").Count);
+        configSource = (OwningRenderer as IConfigSource).ConfigSource;
 
-        Parse();
-        if (!OwningRenderer.IsValid) return;
-        AllocateResources();
+        if(OwningRenderer is MultipassRenderer)
+        {
+            vizConfig = (OwningRenderer as MultipassRenderer).Config;
+            MultipassRendererParse();
+            if (!OwningRenderer.IsValid) return;
+            AllocateResources();
+        }
+
+        if (OwningRenderer is FXRenderer)
+        {
+            fxConfig = (OwningRenderer as FXRenderer).Config;
+            FXRendererParse();
+            if (!OwningRenderer.IsValid) return;
+            AllocateResources();
+        }
     }
 
-    private void Parse()
+    private void MultipassRendererParse()
     {
+        ShaderPasses = new(configSource.SequentialSection("multipass").Count);
+
         int passline = 0;
-        foreach (var kvp in OwningRenderer.Config.ConfigSource.Content["multipass"])
+        foreach (var kvp in configSource.Content["multipass"])
         {
             err = $"Error in {OwningRenderer.Filename} [multipass] pass {passline++}: ";
             ShaderPass = new();
 
-            GetColumns(kvp);
+            GetMultipassColumns(kvp);
 
             // all decisions based on column.Length should be made here
             ParseDrawBuffer();
@@ -84,7 +105,7 @@ public class MultipassParser
                     else
                     {
                         // has to be VisualizerFragmentQuad
-                        ShaderPass.Visualizer.Initialize(OwningRenderer.Config, ShaderPass.Shader);
+                        ShaderPass.Visualizer.Initialize(vizConfig, ShaderPass.Shader);
                     }
                 }
             }
@@ -93,7 +114,44 @@ public class MultipassParser
         }
     }
 
-    private void GetColumns(KeyValuePair<string, string> kvp)
+    private void FXRendererParse()
+    {
+        ShaderPasses = new(configSource.SequentialSection("multipass").Count + 1);
+
+        // configure the first pass as the primary renderer
+        MaxDrawbuffer = 0;
+        ShaderPass = new()
+        {
+            DrawbufferIndex = 0,
+            InputFrontbufferResources = new(),
+            InputBackbufferResources = new(),
+        };
+        ShaderPasses.Add(ShaderPass);
+
+        int passline = 1;
+        foreach (var kvp in configSource.Content["multipass"])
+        {
+            err = $"Error in {OwningRenderer.Filename} [multipass] pass {passline++}: ";
+            ShaderPass = new();
+
+            GetFXColumns(kvp);
+            ParseDrawBuffer();
+
+            if (ShaderPass.DrawbufferIndex == 0) throw new ArgumentException($"{err} Draw buffer 0 is reserved for the primary visualization; content {column[0]}");
+
+            ParseInputBuffers();
+            ParseFXFragShader();
+            if (!OwningRenderer.IsValid) return;
+
+            // every FX pass uses a VisualizerFragmentQuad
+            ShaderPass.Visualizer = new VisualizerFragmentQuad();
+            ShaderPass.Visualizer.Initialize(null, ShaderPass.Shader);
+
+            ShaderPasses.Add(ShaderPass);
+        }
+    }
+
+    private void GetMultipassColumns(KeyValuePair<string, string> kvp)
     {
         column = kvp.Value.Split(' ', Const.SplitOptions);
         if (column.Length == 3)
@@ -108,7 +166,14 @@ public class MultipassParser
         }
     }
 
-    // column 0: draw buffer number
+    private void GetFXColumns(KeyValuePair<string, string> kvp)
+    {
+        column = kvp.Value.Split(' ', Const.SplitOptions);
+        if (column.Length != 3)
+            throw new ArgumentException($"{err} Invalid entry, 3 parameters required; content {kvp.Value}");
+    }
+
+    // MP and FX column 0: draw buffer number
     private void ParseDrawBuffer()
     {
         if (!int.TryParse(column[0], out var drawBuffer) || drawBuffer < 0) throw new ArgumentException($"{err} The draw buffer number is not valid; content {column[0]}");
@@ -117,43 +182,59 @@ public class MultipassParser
         ShaderPass.DrawbufferIndex = drawBuffer;
     }
 
-    // column 1: input buffer numbers and backbuffer letters, or * for no inputs
+    // MP and FX column 1: input buffer numbers and backbuffer letters, or * for no inputs
     private void ParseInputBuffers()
     {
         ShaderPass.InputFrontbufferResources = new();
         ShaderPass.InputBackbufferResources = new();
-        if (!column[1].Equals("*"))
+        if (column[1].Equals("*")) return;
+
+        var inputs = column[1].Split(',', Const.SplitOptions);
+        foreach (var i in inputs)
         {
-            var inputs = column[1].Split(',', Const.SplitOptions);
-            foreach (var i in inputs)
+            if (!int.TryParse(i, out var inputBuffer))
             {
-                if (!int.TryParse(i, out var inputBuffer))
-                {
-                    // previous-frame backbuffers are A-Z
-                    inputBuffer = i.IsAlpha() ? i.ToOrdinal() : -1;
-                    if (i.Length > 1 || inputBuffer < 0 || inputBuffer > 25) throw new ArgumentException($"{err} The input buffer number is not valid; content {column[1]}");
-                    var key = i.ToUpper();
-                    if (!BackbufferKeys.Contains(key)) BackbufferKeys += key;
-                    MaxBackbuffer = Math.Max(MaxBackbuffer, inputBuffer);
-                    // store the frontbuffer index, later this will be remapped to the actual resource list index
-                    ShaderPass.InputBackbufferResources.Add(inputBuffer);
-                }
-                else
-                {
-                    // current-frame frontbuffers are integers
-                    if (inputBuffer < 0 || inputBuffer > MaxDrawbuffer) throw new ArgumentException($"{err} The input buffer number is not valid; content {column[1]}");
-                    // for front buffers, there is a 1:1 match of frontbuffer and resource indexes
-                    ShaderPass.InputFrontbufferResources.Add(inputBuffer);
-                }
+                // previous-frame backbuffers are A-Z
+                inputBuffer = i.IsAlpha() ? i.ToOrdinal() : -1;
+                if (i.Length > 1 || inputBuffer < 0 || inputBuffer > 25) throw new ArgumentException($"{err} The input buffer number is not valid; content {column[1]}");
+                var key = i.ToUpper();
+                if (!BackbufferKeys.Contains(key)) BackbufferKeys += key;
+                MaxBackbuffer = Math.Max(MaxBackbuffer, inputBuffer);
+                // store the frontbuffer index, later this will be remapped to the actual resource list index
+                ShaderPass.InputBackbufferResources.Add(inputBuffer);
+            }
+            else
+            {
+                // current-frame frontbuffers are integers
+                if (inputBuffer < 0 || inputBuffer > MaxDrawbuffer) throw new ArgumentException($"{err} The input buffer number is not valid; content {column[1]}");
+                // for front buffers, there is a 1:1 match of frontbuffer and resource indexes
+                ShaderPass.InputFrontbufferResources.Add(inputBuffer);
             }
         }
     }
 
-    // column 2: visualizer.conf-based multipass (see mpvizconf.conf for docs)
+    // FX column 2: frag shader from FXPath
+    private void ParseFXFragShader()
+    {
+        var vertPathname = Path.Combine(ApplicationConfiguration.InternalShaderPath, "fx.vert");
+
+        var frag = column[2];
+        if (!frag.EndsWith(".frag", StringComparison.InvariantCultureIgnoreCase)) frag += ".frag";
+        var fragPathname = PathHelper.FindFile(Program.AppConfig.FXPath, frag);
+        if (fragPathname is null) throw new ArgumentException($"{err} Failed to find FX shader source file {frag}");
+
+        // when a --reload command is in effect, reload all shaders used by this renderer (save and restore the value)
+        var replaceCachedShader = RenderingHelper.ReplaceCachedShader;
+        ShaderPass.Shader = RenderingHelper.GetShader(OwningRenderer, vertPathname, fragPathname);
+        if (!OwningRenderer.IsValid) return;
+        RenderingHelper.ReplaceCachedShader = replaceCachedShader;
+    }
+
+    // MP column 2: visualizer.conf-based multipass (see mpvizconf.conf for docs)
     private void ParseVisualizerConf()
     {
         var vizPathname = (column[2].Equals("*"))
-            ? OwningRenderer.Config.ConfigSource.Pathname
+            ? configSource.Pathname
             : PathHelper.FindFile(Program.AppConfig.VisualizerPath, column[2]);
         if (vizPathname is null) throw new ArgumentException($"{err} Failed to find visualizer config {vizPathname}");
 
@@ -169,15 +250,15 @@ public class MultipassParser
         ShaderPass.Visualizer.Initialize(vizConfig, ShaderPass.Shader);
     }
 
-    // column 2 & 3: vertex and frag shader filenames
+    // MP column 2 & 3: vertex and frag shader filenames
     private void ParseShaders()
     {
-        var vert = (column[2].Equals("*")) ? Path.GetFileNameWithoutExtension(OwningRenderer.Config.VertexShaderPathname) : column[2];
+        var vert = (column[2].Equals("*")) ? Path.GetFileNameWithoutExtension(vizConfig.VertexShaderPathname) : column[2];
         if (!vert.EndsWith(".vert", StringComparison.InvariantCultureIgnoreCase)) vert += ".vert";
         var vertPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, vert);
         if (vertPathname is null) throw new ArgumentException($"{err} Failed to find vertex shader source file {vert}");
 
-        var frag = (column[3].Equals("*")) ? Path.GetFileNameWithoutExtension(OwningRenderer.Config.FragmentShaderPathname) : column[3];
+        var frag = (column[3].Equals("*")) ? Path.GetFileNameWithoutExtension(vizConfig.FragmentShaderPathname) : column[3];
         if (!frag.EndsWith(".frag", StringComparison.InvariantCultureIgnoreCase)) frag += ".frag";
         var fragPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, frag);
         if (fragPathname is null) throw new ArgumentException($"{err} Failed to find fragment shader source file {frag}");
@@ -189,15 +270,15 @@ public class MultipassParser
         RenderingHelper.ReplaceCachedShader = replaceCachedShader;
     }
 
-    // column 4+: not defined, default to same as renderer's visualizer.conf
+    // MP column 4+: not defined, default to same as renderer's visualizer.conf
     private void UseDefaultVisualizer()
     {
-        ShaderPass.Visualizer = RenderingHelper.GetVisualizer(OwningRenderer, OwningRenderer.Config);
+        ShaderPass.Visualizer = RenderingHelper.GetVisualizer(OwningRenderer, vizConfig);
         if (!OwningRenderer.IsValid) return;
-        ShaderPass.Visualizer.Initialize(OwningRenderer.Config, ShaderPass.Shader);
+        ShaderPass.Visualizer.Initialize(vizConfig, ShaderPass.Shader);
     }
 
-    // column 5: VisualizerVertexIntegerArray settings
+    // MP column 5: VisualizerVertexIntegerArray settings
     private void ParseVisualizerSettings()
     {
         var settings = column[5].Split(';', Const.SplitOptions);

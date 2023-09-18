@@ -31,6 +31,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent", "TestContent"
 		..\testcontent\playlist-test.conf = ..\testcontent\playlist-test.conf
 		..\testcontent\resolutionlimit.conf = ..\testcontent\resolutionlimit.conf
 		..\testcontent\resolutionlimit.frag = ..\testcontent\resolutionlimit.frag
+		..\testcontent\staticimage.conf = ..\testcontent\staticimage.conf
+		..\testcontent\staticimage.frag = ..\testcontent\staticimage.frag
 		..\testcontent\texture.conf = ..\testcontent\texture.conf
 		..\testcontent\texture.frag = ..\testcontent\texture.frag
 		..\testcontent\VisualizerFragmentQuad.vert = ..\testcontent\VisualizerFragmentQuad.vert
@@ -43,7 +45,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent", "TestContent"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-FX", "TestContent-FX", "{02F54773-6317-47B8-BFBA-82A5C7F1C72E}"
 	ProjectSection(SolutionItems) = preProject
-		..\testcontent\fx\passthrough.frag = ..\testcontent\fx\passthrough.frag
 		..\testcontent\fx\waterflow.conf = ..\testcontent\fx\waterflow.conf
 		..\testcontent\fx\waterflow.frag = ..\testcontent\fx\waterflow.frag
 	EndProjectSection

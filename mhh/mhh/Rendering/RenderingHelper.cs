@@ -68,15 +68,18 @@ public static class RenderingHelper
     /// </summary>
     public static void DisposeUncachedShader(CachedShader shader)
     {
-        LogHelper.Logger?.LogTrace("RenderingHelper.DisposeUncachedShader() ----------------------------");
-        if (shader is not null && !Caching.Shaders.ContainsKey(shader.Key))
+        if(shader is not null)
         {
-            LogHelper.Logger?.LogTrace($"  Disposed key {shader.Key}");
-            shader.Dispose();
-        }
-        else
-        {
-            LogHelper.Logger?.LogTrace($"  Did not dispose key {shader.Key}");
+            LogHelper.Logger?.LogTrace("RenderingHelper.DisposeUncachedShader() ----------------------------");
+            if (!Caching.Shaders.ContainsKey(shader.Key))
+            {
+                LogHelper.Logger?.LogTrace($"  Disposed key {shader.Key}");
+                shader.Dispose();
+            }
+            else
+            {
+                LogHelper.Logger?.LogTrace($"  Shader key is cached {shader.Key}");
+            }
         }
     }
 

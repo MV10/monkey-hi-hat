@@ -50,10 +50,24 @@ namespace mhh
         External = 2,
     }
 
+    /// <summary>
+    /// Requests resulting from command-line input (which is a separate thread).
+    /// </summary>
     public enum CommandRequest
     {
         None = 0,
         Quit = 1,
         ToggleFullscreen = 2,
+    }
+
+    /// <summary>
+    /// Rendering options when an FX configuration is applied.
+    /// </summary>
+    public enum FXPrimaryDrawMode
+    {
+        Random = 0,
+        Active = 1,
+        Snapshot = 2,
+        SnapClock = 3,
     }
 }

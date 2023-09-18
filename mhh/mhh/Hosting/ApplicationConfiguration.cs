@@ -3,10 +3,12 @@ using System.Runtime.InteropServices;
 
 namespace mhh
 {
-    public class ApplicationConfiguration
+    public class ApplicationConfiguration : IConfigSource
     {
         public static readonly string SectionOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux";
         public static readonly string InternalShaderPath = "./InternalShaders/";
+
+        public ConfigFile ConfigSource { get; private set; }
 
         public readonly string VisualizerPath = string.Empty;
         public readonly string PlaylistPath = string.Empty;
@@ -30,33 +32,31 @@ namespace mhh
         public readonly double DetectSilenceMaxRMS = 1.5d;
         public readonly SilenceAction DetectSilenceAction = SilenceAction.None;
 
-        public readonly ConfigFile Config;
-
         public ApplicationConfiguration(ConfigFile appConfigFile)
         {
-            Config = appConfigFile;
+            ConfigSource = appConfigFile;
 
-            StartFullScreen = Config.ReadValue("setup", "startfullscreen").ToBool(true);
-            SizeX = Config.ReadValue("setup", "sizex").ToInt32(960);
-            SizeY = Config.ReadValue("setup", "sizey").ToInt32(540);
-            RenderResolutionLimit = Config.ReadValue("setup", "renderresolutionlimit").ToInt32(0);
-            HideMousePointer = Config.ReadValue("setup", "hidemousepointer").ToBool(true);
-            ShaderCacheSize = Config.ReadValue("setup", "shadercachesize").ToInt32(50);
-            CrossfadeSeconds = Config.ReadValue("setup", "crossfadeseconds").ToInt32(2);
-            FrameRateLock = Config.ReadValue("setup", "frameratelock").ToInt32(0);
-            UnsecuredPort = Config.ReadValue("setup", "unsecuredport").ToInt32(0);
+            StartFullScreen = ConfigSource.ReadValue("setup", "startfullscreen").ToBool(true);
+            SizeX = ConfigSource.ReadValue("setup", "sizex").ToInt32(960);
+            SizeY = ConfigSource.ReadValue("setup", "sizey").ToInt32(540);
+            RenderResolutionLimit = ConfigSource.ReadValue("setup", "renderresolutionlimit").ToInt32(0);
+            HideMousePointer = ConfigSource.ReadValue("setup", "hidemousepointer").ToBool(true);
+            ShaderCacheSize = ConfigSource.ReadValue("setup", "shadercachesize").ToInt32(50);
+            CrossfadeSeconds = ConfigSource.ReadValue("setup", "crossfadeseconds").ToInt32(2);
+            FrameRateLock = ConfigSource.ReadValue("setup", "frameratelock").ToInt32(0);
+            UnsecuredPort = ConfigSource.ReadValue("setup", "unsecuredport").ToInt32(0);
 
-            VisualizerPath = Config.ReadValue(SectionOS, "visualizerpath");
-            PlaylistPath = Config.ReadValue(SectionOS, "playlistpath");
-            TexturePath = Config.ReadValue(SectionOS, "texturepath");
-            FXPath = Config.ReadValue(SectionOS, "fxpath");
+            VisualizerPath = ConfigSource.ReadValue(SectionOS, "visualizerpath");
+            PlaylistPath = ConfigSource.ReadValue(SectionOS, "playlistpath");
+            TexturePath = ConfigSource.ReadValue(SectionOS, "texturepath");
+            FXPath = ConfigSource.ReadValue(SectionOS, "fxpath");
 
-            DetectSilenceSeconds = Config.ReadValue("setup", "detectsilenceseconds").ToInt32(0);
-            DetectSilenceMaxRMS = Config.ReadValue("setup", "detectsilencemaxrms").ToDouble(1.5d);
-            DetectSilenceAction = Config.ReadValue("setup", "detectsilenceaction").ToEnum(SilenceAction.Blank);
+            DetectSilenceSeconds = ConfigSource.ReadValue("setup", "detectsilenceseconds").ToInt32(0);
+            DetectSilenceMaxRMS = ConfigSource.ReadValue("setup", "detectsilencemaxrms").ToDouble(1.5d);
+            DetectSilenceAction = ConfigSource.ReadValue("setup", "detectsilenceaction").ToEnum(SilenceAction.Blank);
 
-            CaptureDriverName = Config.ReadValue(SectionOS, "capturedrivername");
-            CaptureDeviceName = Config.ReadValue(SectionOS, "capturedevicename");
+            CaptureDriverName = ConfigSource.ReadValue(SectionOS, "capturedrivername");
+            CaptureDeviceName = ConfigSource.ReadValue(SectionOS, "capturedevicename");
 
             // validation
             if (RenderResolutionLimit < 256 && RenderResolutionLimit !=0) ConfError("RenderResolutionLimit must be 256 or greater (default is 0 to disable).");

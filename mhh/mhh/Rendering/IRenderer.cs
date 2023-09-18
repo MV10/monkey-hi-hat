@@ -3,7 +3,7 @@ using OpenTK.Mathematics;
 
 namespace mhh;
 
-public interface IRenderer : IDisposable
+public interface IRenderer : IConfigSource, IDisposable
 {
     /// <summary>
     /// Indicates initialization was successful.
