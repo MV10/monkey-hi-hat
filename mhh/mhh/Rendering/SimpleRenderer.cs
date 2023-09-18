@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace mhh;
 
-public class SingleVisualizerRenderer : IRenderer
+public class SimpleRenderer : IRenderer
 {
     public bool IsValid { get; set; } = true;
     public string InvalidReason { get; set; } = string.Empty;
@@ -30,7 +30,7 @@ public class SingleVisualizerRenderer : IRenderer
     private Stopwatch Clock = new();
     private float FrameCount = 0;
 
-    public SingleVisualizerRenderer(VisualizerConfig visualizerConfig)
+    public SimpleRenderer(VisualizerConfig visualizerConfig)
     {
         ViewportResolution = new(Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y);
 

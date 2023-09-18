@@ -12,7 +12,6 @@ namespace mhh
         public readonly string PlaylistPath = string.Empty;
         public readonly string TexturePath = string.Empty;
         public readonly string FXPath = string.Empty;
-        public readonly string PluginPath = string.Empty;
 
         public readonly bool StartFullScreen;
         public readonly int SizeX;
@@ -51,7 +50,6 @@ namespace mhh
             PlaylistPath = Config.ReadValue(SectionOS, "playlistpath");
             TexturePath = Config.ReadValue(SectionOS, "texturepath");
             FXPath = Config.ReadValue(SectionOS, "fxpath");
-            PluginPath = Config.ReadValue(SectionOS, "pluginpath");
 
             DetectSilenceSeconds = Config.ReadValue("setup", "detectsilenceseconds").ToInt32(0);
             DetectSilenceMaxRMS = Config.ReadValue("setup", "detectsilencemaxrms").ToDouble(1.5d);
@@ -74,7 +72,6 @@ namespace mhh
             PathValidation(PlaylistPath);
             PathValidation(TexturePath);
             PathValidation(FXPath);
-            PathValidation(PluginPath);
         }
 
         private void PathValidation(string pathspec)

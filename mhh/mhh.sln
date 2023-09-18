@@ -41,6 +41,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent", "TestContent"
 		..\testcontent\vizvertint.vert = ..\testcontent\vizvertint.vert
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-FX", "TestContent-FX", "{02F54773-6317-47B8-BFBA-82A5C7F1C72E}"
+	ProjectSection(SolutionItems) = preProject
+		..\testcontent\fx\passthrough.frag = ..\testcontent\fx\passthrough.frag
+		..\testcontent\fx\waterflow.conf = ..\testcontent\fx\waterflow.conf
+		..\testcontent\fx\waterflow.frag = ..\testcontent\fx\waterflow.frag
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Playlist", "TestContent-Playlist", "{76056212-75DC-4ACC-8E11-22E4EBFB74B4}"
+	ProjectSection(SolutionItems) = preProject
+		..\testcontent\playlist\test_playlist.conf = ..\testcontent\playlist\test_playlist.conf
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -54,6 +66,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{02F54773-6317-47B8-BFBA-82A5C7F1C72E} = {15B3A716-BDC6-4E8B-A455-F480A001FBBA}
+		{76056212-75DC-4ACC-8E11-22E4EBFB74B4} = {15B3A716-BDC6-4E8B-A455-F480A001FBBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6356A5F2-6986-4465-8D68-137F6B135DFD}

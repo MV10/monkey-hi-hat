@@ -61,7 +61,7 @@ public class RenderManager : IDisposable
         }
         else
         {
-            renderer = new SingleVisualizerRenderer(visualizerConfig);
+            renderer = new SimpleRenderer(visualizerConfig);
         }
 
         if (!renderer.IsValid)
