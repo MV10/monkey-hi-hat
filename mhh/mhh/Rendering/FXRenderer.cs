@@ -80,9 +80,24 @@ public class FXRenderer : IRenderer
         // pass 0 is special handling as either the primary renderer or a snapshot
         if(PrimaryRenderer is not null)
         {
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, ShaderPasses[0].Drawbuffers.FramebufferHandle);
+            // if the primary doesn't own framebuffers, use buffer 0 owned by FXRenderer
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            if(PrimaryRenderer.OutputBuffers is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, ShaderPasses[0].Drawbuffers.FramebufferHandle);
+            GL.Viewport(0, 0, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             PrimaryRenderer.RenderFrame();
+
+            // if the primary has framebuffers, copy results to FXRenderer buffer 0 since other passes need it as input
+            // and if the primary is switched to snapshot mode (rendering stops), that copy is read by future frames
+            if(PrimaryRenderer.OutputBuffers is not null)
+            {
+                GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, ShaderPasses[0].Drawbuffers.FramebufferHandle);
+                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, PrimaryRenderer.OutputBuffers.FramebufferHandle);
+                GL.BlitFramebuffer(
+                    0, 0, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y,
+                    0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y,
+                    ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
+            }
         }
 
         var timeUniform = ElapsedTime();
