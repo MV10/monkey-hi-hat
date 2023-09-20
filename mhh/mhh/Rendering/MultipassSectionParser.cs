@@ -216,7 +216,7 @@ public class MultipassSectionParser
     // FX column 2: frag shader from FXPath
     private void ParseFXFragShader()
     {
-        var vertPathname = Path.Combine(ApplicationConfiguration.InternalShaderPath, "fx.vert");
+        var vertPathname = Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.vert");
 
         var frag = column[2];
         if (!frag.EndsWith(".frag", StringComparison.InvariantCultureIgnoreCase)) frag += ".frag";
@@ -253,15 +253,23 @@ public class MultipassSectionParser
     // MP column 2 & 3: vertex and frag shader filenames
     private void ParseShaders()
     {
-        var vert = (column[2].Equals("*")) ? Path.GetFileNameWithoutExtension(vizConfig.VertexShaderPathname) : column[2];
-        if (!vert.EndsWith(".vert", StringComparison.InvariantCultureIgnoreCase)) vert += ".vert";
-        var vertPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, vert);
-        if (vertPathname is null) throw new ArgumentException($"{err} Failed to find vertex shader source file {vert}");
+        var file = column[2];
+        var vertPathname = vizConfig.VertexShaderPathname;
+        if (!file.Equals("*"))
+        {
+            file = (!file.EndsWith(".vert", StringComparison.InvariantCultureIgnoreCase)) ? file += ".vert" : file;
+            vertPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, file);
+            if (vertPathname is null) throw new ArgumentException($"{err} Failed to find vertex shader source file {file}");
+        }
 
-        var frag = (column[3].Equals("*")) ? Path.GetFileNameWithoutExtension(vizConfig.FragmentShaderPathname) : column[3];
-        if (!frag.EndsWith(".frag", StringComparison.InvariantCultureIgnoreCase)) frag += ".frag";
-        var fragPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, frag);
-        if (fragPathname is null) throw new ArgumentException($"{err} Failed to find fragment shader source file {frag}");
+        file = column[3];
+        var fragPathname = vizConfig.FragmentShaderPathname;
+        if (!file.Equals("*"))
+        {
+            file = (!file.EndsWith(".frag", StringComparison.InvariantCultureIgnoreCase)) ? file += ".frag" : file;
+            fragPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, file);
+            if (fragPathname is null) throw new ArgumentException($"{err} Failed to find fragment shader source file {file}");
+        }
 
         // when a --reload command is in effect, reload all shaders used by this renderer (save and restore the value)
         var replaceCachedShader = RenderingHelper.ReplaceCachedShader;

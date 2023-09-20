@@ -1,6 +1,8 @@
 ﻿#version 460
 precision highp float;
 
+// Generic pass-through fragment shader for vertex-oriented visualizations.
+
 in vec4 v_color;
 out vec4 fragColor;  
   

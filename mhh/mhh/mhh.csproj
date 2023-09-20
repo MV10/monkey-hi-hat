@@ -26,9 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="InternalShaders\crossfade.vert">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="InternalShaders\blank.conf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -41,13 +38,13 @@
     <None Update="InternalShaders\crossfade.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="InternalShaders\fx.vert">
+    <None Update="InternalShaders\passthrough.vert">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="InternalShaders\passthrough.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="InternalShaders\idle.conf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="InternalShaders\idle.frag">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="InternalShaders\idle.vert">

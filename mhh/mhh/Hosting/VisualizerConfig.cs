@@ -32,8 +32,16 @@ namespace mhh
             Description = ConfigSource.ReadValue("shader", "description");
 
             var configFileLocation = Path.GetDirectoryName(ConfigSource.Pathname);
-            VertexShaderPathname = Path.Combine(configFileLocation, ConfigSource.ReadValue("shader", "vertexshaderfilename"));
-            FragmentShaderPathname = Path.Combine(configFileLocation, ConfigSource.ReadValue("shader", "fragmentshaderfilename"));
+
+            var shader = ConfigSource.ReadValue("shader", "vertexshaderfilename").DefaultString("*");
+            VertexShaderPathname = shader.Equals("*")
+                ? Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.vert")
+                : Path.Combine(configFileLocation, shader);
+
+            shader = ConfigSource.ReadValue("shader", "fragmentshaderfilename").DefaultString("*");
+            FragmentShaderPathname = shader.Equals("*")
+                ? Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.frag")
+                : Path.Combine(configFileLocation, shader);
 
             var rgb = ConfigSource.ReadValue("shader", "backgroundfloatrgb").Split(",", Const.SplitOptions);
             if(rgb.Length == 3)

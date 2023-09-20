@@ -475,7 +475,7 @@ playlist   : {Playlist.GetInfo()}
             Caching.BlankVisualizer = new(Path.Combine(ApplicationConfiguration.InternalShaderPath, "blank.conf"));
 
             Caching.CrossfadeShader = new(
-                Path.Combine(ApplicationConfiguration.InternalShaderPath, "crossfade.vert"),
+                Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.vert"),
                 Path.Combine(ApplicationConfiguration.InternalShaderPath, "crossfade.frag"));
 
             if (!Caching.CrossfadeShader.IsValid)
