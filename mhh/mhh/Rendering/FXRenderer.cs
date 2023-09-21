@@ -52,16 +52,16 @@ public class FXRenderer : IRenderer
         try
         {
             var parser = new MultipassSectionParser(this, DrawbufferOwnerName, BackbufferOwnerName);
-            if (IsValid)
-            {
-                // copy references to the results
-                ShaderPasses = parser.ShaderPasses;
-                DrawbufferResources = parser.DrawbufferResources;
-                BackbufferResources = parser.BackbufferResources;
+            if (!IsValid) return;
 
-                // initialize the output buffer info
-                FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
-            }
+            // copy references to the results
+            ShaderPasses = parser.ShaderPasses;
+            DrawbufferResources = parser.DrawbufferResources;
+            BackbufferResources = parser.BackbufferResources;
+
+            // initialize the output buffer info
+            FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
+
             parser = null;
         }
         catch (ArgumentException ex)
@@ -77,8 +77,10 @@ public class FXRenderer : IRenderer
 
     public void RenderFrame()
     {
+        var timeUniform = ElapsedTime();
+
         // pass 0 is special handling as either the primary renderer or a snapshot
-        if(PrimaryRenderer is not null)
+        if (PrimaryRenderer is not null)
         {
             // if the primary doesn't own framebuffers, use buffer 0 owned by FXRenderer
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
@@ -100,8 +102,6 @@ public class FXRenderer : IRenderer
             }
         }
 
-        var timeUniform = ElapsedTime();
-
         // skip(1) because pass 0 is handled above
         foreach (var pass in ShaderPasses.Skip(1))
         {
@@ -109,20 +109,21 @@ public class FXRenderer : IRenderer
             pass.Shader.SetUniform("resolution", ViewportResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);
-            foreach (var index in pass.InputFrontbufferResources)
+            foreach (var index in pass.InputsDrawbuffers)
             {
-                var resource = DrawbufferResources[index];
+                var resource = ShaderPasses[index].Drawbuffers;
                 pass.Shader.SetTexture(resource.UniformName, resource.TextureHandle, resource.TextureUnit);
             }
-            foreach (var index in pass.InputBackbufferResources)
+            foreach (var index in pass.InputsBackbuffers)
             {
-                var resource = BackbufferResources[index];
+                var resource = ShaderPasses[index].Backbuffers;
                 pass.Shader.SetTexture(resource.UniformName, resource.TextureHandle, resource.TextureUnit);
             }
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, pass.Drawbuffers.FramebufferHandle);
             GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
+
             pass.Visualizer.RenderFrame(pass.Shader);
         }
 
@@ -133,7 +134,7 @@ public class FXRenderer : IRenderer
         // blit drawbuffer to OpenGL's backbuffer unless Crossfade is intercepting the final draw buffer
         if (!IsOutputIntercepted)
         {
-            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, FinalDrawbuffers.FramebufferHandle);
             GL.BlitFramebuffer(
                 0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y,
@@ -147,12 +148,15 @@ public class FXRenderer : IRenderer
         foreach (var pass in ShaderPasses)
         {
             if (pass.Backbuffers is not null)
+            {
                 (pass.Drawbuffers, pass.Backbuffers) = (pass.Backbuffers, pass.Drawbuffers);
+                (pass.Drawbuffers.UniformName, pass.Backbuffers.UniformName) = (pass.Backbuffers.UniformName, pass.Drawbuffers.UniformName);
+            }
         }
 
         // in SnapClock mode, each passing second adds another 10% chance to switch to Snapshot
         // mode and freeze the primary renderer (thus 11 seconds is 100%)
-        if(PrimaryRenderer is not null)
+        if (PrimaryRenderer is not null)
         {
             if(Config.PrimaryDrawMode == FXPrimaryDrawMode.SnapClock)
             {

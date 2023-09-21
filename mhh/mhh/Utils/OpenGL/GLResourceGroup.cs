@@ -19,10 +19,11 @@ public class GLResourceGroup
     /// remapped by the resource owner to match the correct frontbuffer
     /// index.
     /// </summary>
-    public int DrawbufferIndex;
+    public int DrawPassIndex;
 
     /// <summary>
-    /// The resource owner should set this.
+    /// The resource owner should set this. Note this can change when
+    /// the owner is swapping draw-buffers and back-buffers.
     /// </summary>
     public string UniformName;
 

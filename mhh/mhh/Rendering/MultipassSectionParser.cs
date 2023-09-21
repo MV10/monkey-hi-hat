@@ -123,8 +123,8 @@ public class MultipassSectionParser
         ShaderPass = new()
         {
             DrawbufferIndex = 0,
-            InputFrontbufferResources = new(),
-            InputBackbufferResources = new(),
+            InputsDrawbuffers = new(),
+            InputsBackbuffers = new(),
         };
         ShaderPasses.Add(ShaderPass);
 
@@ -185,30 +185,30 @@ public class MultipassSectionParser
     // MP and FX column 1: input buffer numbers and backbuffer letters, or * for no inputs
     private void ParseInputBuffers()
     {
-        ShaderPass.InputFrontbufferResources = new();
-        ShaderPass.InputBackbufferResources = new();
+        ShaderPass.InputsDrawbuffers = new();
+        ShaderPass.InputsBackbuffers = new();
         if (column[1].Equals("*")) return;
 
         var inputs = column[1].Split(',', Const.SplitOptions);
         foreach (var i in inputs)
         {
-            if (!int.TryParse(i, out var inputBuffer))
+            if (!int.TryParse(i, out var sourceBuffer))
             {
-                // previous-frame backbuffers are A-Z
-                inputBuffer = i.IsAlpha() ? i.ToOrdinal() : -1;
-                if (i.Length > 1 || inputBuffer < 0 || inputBuffer > 25) throw new ArgumentException($"{err} The input buffer number is not valid; content {column[1]}");
+                // TryParse failed, previous-frame backbuffers are A-Z
+                sourceBuffer = i.IsAlpha() ? i.ToOrdinal() : -1;
+                if (i.Length > 1 || sourceBuffer < 0 || sourceBuffer > 25) throw new ArgumentException($"{err} The input buffer number is not valid; content {column[1]}");
                 var key = i.ToUpper();
                 if (!BackbufferKeys.Contains(key)) BackbufferKeys += key;
-                MaxBackbuffer = Math.Max(MaxBackbuffer, inputBuffer);
+                MaxBackbuffer = Math.Max(MaxBackbuffer, sourceBuffer);
                 // store the frontbuffer index, later this will be remapped to the actual resource list index
-                ShaderPass.InputBackbufferResources.Add(inputBuffer);
+                ShaderPass.InputsBackbuffers.Add(sourceBuffer);
             }
             else
             {
                 // current-frame frontbuffers are integers
-                if (inputBuffer < 0 || inputBuffer > MaxDrawbuffer) throw new ArgumentException($"{err} The input buffer number is not valid; content {column[1]}");
+                if (sourceBuffer < 0 || sourceBuffer > MaxDrawbuffer) throw new ArgumentException($"{err} The input buffer number is not valid; content {column[1]}");
                 // for front buffers, there is a 1:1 match of frontbuffer and resource indexes
-                ShaderPass.InputFrontbufferResources.Add(inputBuffer);
+                ShaderPass.InputsDrawbuffers.Add(sourceBuffer);
             }
         }
     }
@@ -326,13 +326,13 @@ public class MultipassSectionParser
         DrawbufferResources = RenderManager.ResourceManager.CreateResourceGroups(DrawbufferOwnerName, MaxDrawbuffer + 1, OwningRenderer.Resolution);
         foreach (var resource in DrawbufferResources)
         {
-            resource.UniformName = $"input{resource.DrawbufferIndex}";
+            resource.UniformName = $"input{resource.DrawPassIndex}";
         }
 
         // allocate backbuffer resources
-        if (MaxBackbuffer > -1)
+        if (BackbufferKeys.Length > 0)
         {
-            BackbufferResources = RenderManager.ResourceManager.CreateResourceGroups(BackbufferOwnerName, MaxBackbuffer + 1, OwningRenderer.Resolution);
+            BackbufferResources = RenderManager.ResourceManager.CreateResourceGroups(BackbufferOwnerName, BackbufferKeys.Length, OwningRenderer.Resolution);
 
             // The DrawbufferIndex in the resource list is generated sequentially. This reassigns
             // them based on the order of first backbuffer usage in the multipass config section.
@@ -340,26 +340,8 @@ public class MultipassSectionParser
             foreach (var backbufferKey in BackbufferKeys)
             {
                 var resource = BackbufferResources[i++];
-                resource.DrawbufferIndex = backbufferKey.ToOrdinal();
+                resource.DrawPassIndex = backbufferKey.ToOrdinal();
                 resource.UniformName = $"input{backbufferKey}";
-            }
-
-            // At this stage the list of InputBackbufferResources points to the drawbuffer
-            // indexes (A = 0, B = 1, etc). This remaps them to the true backbuffer resource
-            // index based on order of first usage.
-            foreach (var pass in ShaderPasses)
-            {
-                if (pass.InputBackbufferResources.Count > 0)
-                {
-                    List<int> newList = new(pass.InputBackbufferResources.Count);
-                    foreach (var index in pass.InputBackbufferResources)
-                    {
-                        var backbufferKey = index.ToAlpha();
-                        var resourceIndex = BackbufferKeys.IndexOf(backbufferKey);
-                        newList.Add(resourceIndex);
-                    }
-                    pass.InputBackbufferResources = newList;
-                }
             }
         }
 

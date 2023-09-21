@@ -82,20 +82,23 @@ public class MultipassRenderer : IRenderer
             pass.Shader.SetUniform("resolution", ViewportResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);
-            foreach (var index in pass.InputFrontbufferResources)
+            foreach (var index in pass.InputsDrawbuffers)
             {
-                var resource = DrawbufferResources[index];
+                //var resource = DrawbufferResources[index];
+                var resource = ShaderPasses[index].Drawbuffers;
                 pass.Shader.SetTexture(resource.UniformName, resource.TextureHandle, resource.TextureUnit);
             }
-            foreach (var index in pass.InputBackbufferResources)
+            foreach (var index in pass.InputsBackbuffers)
             {
-                var resource = BackbufferResources[index];
+                //var resource = BackbufferResources[index];
+                var resource = ShaderPasses[index].Backbuffers;
                 pass.Shader.SetTexture(resource.UniformName, resource.TextureHandle, resource.TextureUnit);
             }
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, pass.Drawbuffers.FramebufferHandle);
             GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
+
             pass.Visualizer.RenderFrame(pass.Shader);
         }
 
@@ -106,7 +109,7 @@ public class MultipassRenderer : IRenderer
         // blit drawbuffer to OpenGL's backbuffer unless Crossfade or FXRenderer is intercepting the final draw buffer
         if (!IsOutputIntercepted)
         {
-            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, FinalDrawbuffers.FramebufferHandle);
             GL.BlitFramebuffer(
                 0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y,
@@ -120,7 +123,10 @@ public class MultipassRenderer : IRenderer
         foreach (var pass in ShaderPasses)
         {
             if (pass.Backbuffers is not null)
+            {
                 (pass.Drawbuffers, pass.Backbuffers) = (pass.Backbuffers, pass.Drawbuffers);
+                (pass.Drawbuffers.UniformName, pass.Backbuffers.UniformName) = (pass.Backbuffers.UniformName, pass.Drawbuffers.UniformName);
+            }
         }
 
         FrameCount++;

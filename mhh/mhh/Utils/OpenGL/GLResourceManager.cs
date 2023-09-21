@@ -74,7 +74,7 @@ public class GLResourceManager : IDisposable
             var info = new GLResourceGroup
             {
                 OwnerName = ownerName,
-                DrawbufferIndex = i,
+                DrawPassIndex = i,
                 TextureUnitOrdinal = AssignTextureUnit(),
             };
 

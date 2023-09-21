@@ -30,16 +30,16 @@ public class MultipassDrawCall
     /// <summary>
     /// Input-texture indexes rendered during earlier passes in the current frame. These
     /// have uniform names like "input0" and "input1" where the number corresponds to a
-    /// Buffer ID.
+    /// rendering pass.
     /// </summary>
-    public List<int> InputFrontbufferResources;
+    public List<int> InputsDrawbuffers;
 
     /// <summary>
     /// Input-texture indexes rendered in the previous frame. These have uniform names
     /// like "inputA" and "inputB" where the letter corresponds to the 0-25 / A-Z mapping
-    /// of a Buffer ID.
+    /// of a rendering pass number.
     /// </summary>
-    public List<int> InputBackbufferResources;
+    public List<int> InputsBackbuffers;
 
     /// <summary>
     /// The shader which will render this pass.

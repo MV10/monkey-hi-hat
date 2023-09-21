@@ -209,7 +209,7 @@ namespace mhh
                     
                     if (args.Length == 2 && args[1].ToLowerInvariant().Equals("viz"))
                     {
-                        if (string.IsNullOrEmpty(AppConfig.VisualizerPath)) return "ERR: ShaderPath not defined in mhh.conf.";
+                        if (string.IsNullOrEmpty(AppConfig.VisualizerPath)) return "ERR: VisualizerPath not defined in mhh.conf.";
                         return GetConfigFiles(AppConfig.VisualizerPath, separator);
                     }
 
@@ -217,6 +217,12 @@ namespace mhh
                     {
                         if (string.IsNullOrEmpty(AppConfig.PlaylistPath)) return "ERR: PlaylistPath not defined in mhh.conf.";
                         return GetConfigFiles(AppConfig.PlaylistPath, separator);
+                    }
+
+                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("fx"))
+                    {
+                        if (string.IsNullOrEmpty(AppConfig.FXPath)) return "ERR: FXPath not defined in mhh.conf.";
+                        return GetConfigFiles(AppConfig.FXPath, separator);
                     }
 
                     return readable ? ShowHelp() : string.Empty;
@@ -320,33 +326,34 @@ namespace mhh
 
         private static string ShowHelp()
             =>
-@"
+@$"
 
-mhh: monkey-hi-hat
+mhh: Monkey Hi Hat
 
-There are no startup switches, the application always loads with the default ""idle"" shader.
+There are no startup switches, and the application always loads with the default ""idle"" shader.
 All switches are passed to the already-running instance:
 
 --help                      shows help (surprise!)
 --quit                      ends the program
 
+--list [viz|playlists|fx]   shows config files (*.conf) from all defined paths for the requested file type
+
 --load [file]               loads [file].conf from VisualizationPath defined in mhh.conf
---load [path/file]          if present, loads [file].conf from requested path (use platform-specific separator)
---list [viz|playlists]      shows visualization confs or playlists in the default storage locations
---idle                      load the default/idle shader
---reload                    unloads and reloads the current shader
+--load [path{Path.DirectorySeparatorChar}file]          if present, loads [file].conf from requested path
+--idle                      loads the default startup shader
+--reload                    unloads and reloads the current shader (unavailable after an FX shader loads)
 
 --playlist [file]           loads [file].conf from PlaylistPath defined in mhh.conf
---playlist [path/file]      must use forward slash; if present, loads [file].conf from requested location
+--playlist [path{Path.DirectorySeparatorChar}file]      if present, loads [file].conf from requested path
 --next                      when a playlist is active, advances to the next shader (according to the Order)
 
 --fx [file]                 loads [file].conf from FXPath defined in mhh.conf
---fx [path/file]            if present, loads [file].conf from requested path (use platform-specific separator)
+--fx [path{Path.DirectorySeparatorChar}file]            if present, loads [file].conf from requested path
 
 --info                      writes shader and execution details to the console
 --fullscreen                toggle between windowed and full-screen state
 --fps                       returns instantaneous FPS and average FPS over past 10 seconds
---fps [0-9999]              sets a frame rate lock (FPS target), or 0 to disable (max possible FPS)
+--fps [0|1-9999]            sets a frame rate lock (FPS target), or 0 to disable (max possible FPS)
 
 --pause                     stops the current shader
 --run                       executes the current shader
