@@ -50,10 +50,10 @@
     <None Update="InternalShaders\idle.vert">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="mhh.debug.conf">
+    <None Update="ConfigFiles\mhh.debug.conf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="mhh.conf">
+    <None Update="ConfigFiles\mhh.conf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

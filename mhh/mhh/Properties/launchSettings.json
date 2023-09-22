@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "mhh": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "monkey-hi-hat-config": "C:\\Source\\monkey-hi-hat\\mhh\\mhh\\ConfigFiles\\mhh.debug.conf"
+      }
+    }
+  }
+}

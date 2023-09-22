@@ -38,6 +38,9 @@ namespace mhh
         static readonly string DebugConfigFilename = "mhh.debug.conf";
         static readonly string SwitchPipeName = "monkey-hi-hat";
 
+        // for dev and debug purposes, set this in the Debug Launch Profile dialog box
+        static readonly string ConfigPathnameEnvironmentVariable = "monkey-hi-hat-config";
+
         static readonly Version OpenGLVersion = new(4, 6);
 
         /// <summary>
@@ -57,10 +60,21 @@ namespace mhh
         static async Task Main(string[] args)
         {
             Console.Clear();
-            Console.WriteLine($"\nmonkey-hi-hat (PID {Environment.ProcessId})");
+            Console.WriteLine($"\nMonkey Hi Hat (PID {Environment.ProcessId})");
 
-            // Load the application configuration file (parsed later)
-            var appConfigFile = new ConfigFile(Debugger.IsAttached ? DebugConfigFilename : ConfigFilename);
+            // Find and load the application configuration file (parsed later)
+            var configPathname = Path.GetFullPath(Debugger.IsAttached ? DebugConfigFilename : ConfigFilename);
+            if (!File.Exists(configPathname))
+            {
+                configPathname = Environment.GetEnvironmentVariable(ConfigPathnameEnvironmentVariable);
+                if(configPathname is null || !File.Exists(configPathname))
+                {
+                    Console.WriteLine($"\n\nUnable to locate the configuration file.\n  The default is to read \"mhh.conf\" from the application directory.\n  When a debugger is attached, \"mhh.debug.conf\" is expected.\n  Alternately, a \"monkey-hi-hat-config\" environment variable can provide the full pathname.");
+                    Thread.Sleep(250); // slow-ass console
+                    Environment.Exit(-1);
+                }
+            }
+            var appConfigFile = new ConfigFile(configPathname);
 
             // Prepare logging and the switch server
             CommandLineSwitchServer.Options.PipeName = SwitchPipeName;
