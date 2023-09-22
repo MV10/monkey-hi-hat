@@ -40,7 +40,7 @@ public class FXRenderer : IRenderer
 
     public FXRenderer(FXConfig fxConfig, IRenderer primaryRenderer)
     {
-        ViewportResolution = new(Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y);
+        ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
 
         Config = fxConfig;
         Filename = Path.GetFileNameWithoutExtension(Config.ConfigSource.Pathname);
@@ -138,7 +138,7 @@ public class FXRenderer : IRenderer
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, FinalDrawbuffers.FramebufferHandle);
             GL.BlitFramebuffer(
                 0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y,
-                0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
+                0, 0, RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y,
                 ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
@@ -197,7 +197,7 @@ public class FXRenderer : IRenderer
 
         // resize draw buffers, and resize/copy back buffers
         RenderManager.ResourceManager.ResizeTextures(DrawbufferOwnerName, ViewportResolution);
-        if (BackbufferResources.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, oldResolution);
+        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, oldResolution);
 
         foreach (var pass in ShaderPasses)
         {

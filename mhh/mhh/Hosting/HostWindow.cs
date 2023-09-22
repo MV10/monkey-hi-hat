@@ -70,6 +70,7 @@ namespace mhh
         private CommandRequest CommandRequested = CommandRequest.None;
         private bool IsPaused = false;
 
+        private bool OnResizeFired = false;
         private bool TrackingSilentPeriod = false;
 
         private object QueuedConfigLock = new();
@@ -95,6 +96,7 @@ namespace mhh
             Eyecandy.Create<AudioTextureVolumeHistory>("eyecandyVolume", enabled: true);
             Eyecandy.EvaluateRequirements();
 
+            RenderingHelper.ClientSize = ClientSize;
             UniformRandomSeed = RNG.NextSingle();
 
             InitializeCache();
@@ -131,6 +133,10 @@ namespace mhh
 
             SwapBuffers();
             CalculateFPS();
+
+            // Starts hidden to avoid a white flicker before the first frame is rendered.
+            //  Unable to start NativeWindow hidden #1632 
+            //if (!IsVisible) IsVisible = true;
         }
 
         /// <summary>
@@ -141,7 +147,18 @@ namespace mhh
         {
             base.OnUpdateFrame(e);
 
-            switch(CommandRequested)
+            // TODO Verify OnUpdateFrame is suspended on Linux during OnResize event-storms
+
+            // When the user is resizing, OnUpdateFrame is suspended.
+            if (OnResizeFired)
+            {
+                OnResizeFired = false;
+                RenderingHelper.ClientSize = ClientSize;
+                Renderer.OnResize();
+                return;
+            }
+
+            switch (CommandRequested)
             {
                 case CommandRequest.Quit:
                 {
@@ -230,21 +247,14 @@ namespace mhh
         }
 
         /// <summary>
-        /// Resets framebuffers to match the new viewport size.
+        /// Only sets a flag, as this will fire continuously as the user drags the
+        /// window border. During resize, OnUpdateWindow is suspended, so the actual
+        /// resize response happens in that event when the flag is set.
         /// </summary>
         protected override void OnResize(ResizeEventArgs e)
         {
             base.OnResize(e);
-            Renderer.OnResize();
-        }
-
-        /// <summary>
-        /// Trace-logs the event
-        /// </summary>
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            base.OnClosing(e);
-            LogHelper.Logger?.LogTrace($"{GetType()}.OnClosing() ----------------------------");
+            OnResizeFired = true;
         }
 
         /// <summary>

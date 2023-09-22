@@ -17,6 +17,19 @@ public static class RenderingHelper
     public static bool ReplaceCachedShader = false;
 
     /// <summary>
+    /// Use this instead of the window object's ClientSize property. This will remain
+    /// stable during resize events (OnResize will fire many times as the user drags the
+    /// window border, the new size is assigned by OnWindowUpdate which is suspended
+    /// until resizing is completed).
+    /// </summary>
+    public static Vector2i ClientSize 
+    { 
+        get => StoredClientSize; 
+        set => StoredClientSize = new(value.X, value.Y); 
+    }
+    private static Vector2i StoredClientSize;
+
+    /// <summary>
     /// Retreives a shader from the cache, optionally replacing it with a newly loaded and
     /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader
     /// flag).
@@ -179,8 +192,8 @@ public static class RenderingHelper
     /// </summary>
     public static (Vector2 resolution, bool isFullResolution) CalculateViewportResolution(int renderResolutionLimit)
     {
-        var w = Program.AppWindow.ClientSize.X;
-        var h = Program.AppWindow.ClientSize.Y;
+        var w = ClientSize.X;
+        var h = ClientSize.Y;
 
         double larger = Math.Max(w, h);
         double smaller = Math.Min(w, h);

@@ -34,7 +34,7 @@ public class SimpleRenderer : IRenderer
 
     public SimpleRenderer(VisualizerConfig visualizerConfig)
     {
-        ViewportResolution = new(Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y);
+        ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
 
         Config = visualizerConfig;
         Filename = Path.GetFileNameWithoutExtension(Config.ConfigSource.Pathname);
@@ -70,7 +70,7 @@ public class SimpleRenderer : IRenderer
                 GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
                 GL.BlitFramebuffer(
                     0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y,
-                    0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y,
+                    0, 0, RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y,
                     ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             }

@@ -69,10 +69,11 @@ namespace mhh
                 configPathname = Environment.GetEnvironmentVariable(ConfigPathnameEnvironmentVariable);
                 if(configPathname is null || !File.Exists(configPathname))
                 {
-                    Console.WriteLine($"\n\nUnable to locate the configuration file.\n  The default is to read \"mhh.conf\" from the application directory.\n  When a debugger is attached, \"mhh.debug.conf\" is expected.\n  Alternately, a \"monkey-hi-hat-config\" environment variable can provide the full pathname.");
+                    Console.WriteLine($"\n\nUnable to locate the configuration file.\n  The default is to read \"{ConfigFilename}\" from the application directory.\n  When a debugger is attached, \"{DebugConfigFilename}\" is expected.\n  Alternately, a \"{ConfigPathnameEnvironmentVariable}\" environment variable can provide the full pathname.");
                     Thread.Sleep(250); // slow-ass console
                     Environment.Exit(-1);
                 }
+                Console.WriteLine($"Loading configuration via \"{ConfigPathnameEnvironmentVariable}\" environment variable:\n  {configPathname}");
             }
             var appConfigFile = new ConfigFile(configPathname);
 
@@ -115,7 +116,6 @@ namespace mhh
 
                 var AudioConfig = new EyeCandyCaptureConfig()
                 {
-                    //DriverName = AppConfig.CaptureDriverName, // unnecessary for capture as of eyecandy 1.0.81
                     CaptureDeviceName = AppConfig.CaptureDeviceName,
                     DetectSilence = true, // always detect, playlists may need it
                     MaximumSilenceRMS = AppConfig.DetectSilenceMaxRMS,

@@ -27,7 +27,7 @@ public class CrossfadeRenderer : IRenderer
 
     // not applicable to this renderer
     public GLResourceGroup OutputBuffers { get => null; }
-    public Vector2 Resolution { get => Program.AppWindow.ClientSize; }
+    public Vector2 Resolution { get => RenderingHelper.ClientSize; }
     public bool OutputIntercepted { set { } }
     public ConfigFile ConfigSource { get => null; }
 
@@ -96,7 +96,7 @@ public class CrossfadeRenderer : IRenderer
         var newResource = NewRenderer.OutputBuffers ?? NewResourceGroup;
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        GL.Viewport(0, 0, Program.AppWindow.ClientSize.X, Program.AppWindow.ClientSize.Y);
+        GL.Viewport(0, 0, RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         CrossfadeShader.Use();
         CrossfadeShader.SetUniform("fadeLevel", fadeLevel);
