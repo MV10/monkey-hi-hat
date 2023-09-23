@@ -22,7 +22,7 @@ namespace mhh
         public readonly bool HideMousePointer;
         public readonly int ShaderCacheSize;
         public readonly int CrossfadeSeconds;
-        public readonly int FrameRateLock;
+        public readonly int FrameRateLimit;
         public readonly int UnsecuredPort;
 
         public readonly string CaptureDriverName = string.Empty;
@@ -43,7 +43,7 @@ namespace mhh
             HideMousePointer = ConfigSource.ReadValue("setup", "hidemousepointer").ToBool(true);
             ShaderCacheSize = ConfigSource.ReadValue("setup", "shadercachesize").ToInt32(50);
             CrossfadeSeconds = ConfigSource.ReadValue("setup", "crossfadeseconds").ToInt32(2);
-            FrameRateLock = ConfigSource.ReadValue("setup", "frameratelock").ToInt32(0);
+            FrameRateLimit = ConfigSource.ReadValue("setup", "FrameRateLimit").ToInt32(60);
             UnsecuredPort = ConfigSource.ReadValue("setup", "unsecuredport").ToInt32(0);
 
             VisualizerPath = ConfigSource.ReadValue(SectionOS, "visualizerpath");
@@ -62,7 +62,7 @@ namespace mhh
             if (RenderResolutionLimit < 256 && RenderResolutionLimit !=0) ConfError("RenderResolutionLimit must be 256 or greater (default is 0 to disable).");
             if (ShaderCacheSize < 1) ConfError("ShaderCacheSize must be 1 or greater. Default is 50 when omitted.");
             if (CrossfadeSeconds < 0) ConfError("CrossfadeSeconds must be 0 or greater. Default is 2, use 0 to disable.");
-            if (FrameRateLock < 0 || FrameRateLock > 9999) ConfError("FrameRateLock must be 0 to 9999. Default is 0 which is disabled.");
+            if (FrameRateLimit < 0 || FrameRateLimit > 9999) ConfError("FrameRateLimit must be 0 to 9999. Default is 60. Set to 0 for no limit (may break some shaders).");
             if (UnsecuredPort < 0 || UnsecuredPort > 65534) ConfError("UnsecuredPort must be 0 to 65534, recommended range is 49152 or higher, use 0 to disable.");
             if (DetectSilenceSeconds < 0) ConfError("DetectSilenceSeconds must be 0 or greater.");
             if (DetectSilenceMaxRMS < 0) ConfError("DetectSilienceMaxRMS must be 0 or greater.");

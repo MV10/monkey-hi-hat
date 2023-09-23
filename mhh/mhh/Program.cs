@@ -137,7 +137,7 @@ namespace mhh
                 WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
                 WindowConfig.OpenTKNativeWindowSettings.Size = (AppConfig.SizeX, AppConfig.SizeY);
                 WindowConfig.OpenTKNativeWindowSettings.APIVersion = OpenGLVersion;
-                WindowConfig.OpenTKGameWindowSettings.UpdateFrequency = AppConfig.FrameRateLock;
+                WindowConfig.OpenTKGameWindowSettings.UpdateFrequency = AppConfig.FrameRateLimit;
                 // OpenTK 4.8 obsoleted the separate RenderFrequency setting :(
 
                 // Spin up the window and get the show started
