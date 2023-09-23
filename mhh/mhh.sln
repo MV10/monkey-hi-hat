@@ -23,6 +23,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-FX", "TestConte
 		..\testcontent\fx\doublebuffer2.frag = ..\testcontent\fx\doublebuffer2.frag
 		..\testcontent\fx\snapclock.conf = ..\testcontent\fx\snapclock.conf
 		..\testcontent\fx\snapclock.frag = ..\testcontent\fx\snapclock.frag
+		..\testcontent\fx\texture.conf = ..\testcontent\fx\texture.conf
+		..\testcontent\fx\texture1.frag = ..\testcontent\fx\texture1.frag
+		..\testcontent\fx\texture2.frag = ..\testcontent\fx\texture2.frag
+		..\testcontent\fx\texture3.frag = ..\testcontent\fx\texture3.frag
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Playlist", "TestContent-Playlist", "{76056212-75DC-4ACC-8E11-22E4EBFB74B4}"

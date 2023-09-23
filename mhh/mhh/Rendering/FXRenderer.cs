@@ -32,18 +32,19 @@ public class FXRenderer : IRenderer
     private IReadOnlyList<GLResourceGroup> DrawbufferResources;
     private IReadOnlyList<GLResourceGroup> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
-
-    private Stopwatch Clock = new();
-    private float FrameCount = 0;
-    private float snapClockNextSecond;
-    private int snapClockPercent = 0;
-    private Random RNG = new();
+    private IReadOnlyList<GLImageTexture> Textures;
 
     private Guid CrossfadeOwnerName = Guid.NewGuid();
     private GLResourceGroup CrossfadeResources;
     private Shader CrossfadeShader;
     private IVisualizer CrossfadeViz;
     private float DurationMS;
+
+    private Stopwatch Clock = new();
+    private float FrameCount = 0;
+    private float snapClockNextSecond;
+    private int snapClockPercent = 0;
+    private Random RNG = new();
 
     public FXRenderer(FXConfig fxConfig, IRenderer primaryRenderer)
     {
@@ -78,6 +79,8 @@ public class FXRenderer : IRenderer
                 CrossfadeResources = RenderManager.ResourceManager.CreateResourceGroups(CrossfadeOwnerName, 1, ViewportResolution)[0];
                 DurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
             }
+
+            Textures = RenderingHelper.GetTextures(DrawbufferOwnerName, Config.ConfigSource);
 
             parser = null;
         }
@@ -123,6 +126,8 @@ public class FXRenderer : IRenderer
         foreach (var pass in ShaderPasses.Skip(1))
         {
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
+            RenderingHelper.SetGlobalUniforms(pass.Shader);
+            RenderingHelper.SetTextureUniforms(Textures, pass.Shader);
             pass.Shader.SetUniform("resolution", ViewportResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);
@@ -206,7 +211,7 @@ public class FXRenderer : IRenderer
                 {
                     snapClockNextSecond = PrimaryRenderer.ElapsedTime() + 1f;
                     snapClockPercent += 10;
-                    if (RNG.Next(1, 100) <= snapClockPercent)
+                    if (RNG.Next(1, 101) <= snapClockPercent)
                     {
                         PrimaryRenderer.Dispose();
                         PrimaryRenderer = null;
@@ -245,7 +250,7 @@ public class FXRenderer : IRenderer
         // re-bind the visualizers
         foreach (var pass in ShaderPasses)
         {
-            pass.Visualizer.BindBuffers(pass.Shader);
+            pass.Visualizer?.BindBuffers(pass.Shader);
         }
         CrossfadeViz?.BindBuffers(CrossfadeShader);
     }
@@ -280,6 +285,7 @@ public class FXRenderer : IRenderer
             ShaderPasses = null;
         }
 
+        // this also deletes any allocated textures
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Drawbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(DrawbufferOwnerName);
 

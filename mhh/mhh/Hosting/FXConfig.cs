@@ -25,7 +25,7 @@ public class FXConfig : IConfigSource
         Description = ConfigSource.ReadValue("fx", "description");
 
         PrimaryDrawMode = ConfigSource.ReadValue("fx", "primarydrawmode").ToEnum(FXPrimaryDrawMode.Active);
-        if (PrimaryDrawMode == FXPrimaryDrawMode.Random) PrimaryDrawMode = (new Random().Next(100) < 50) ? FXPrimaryDrawMode.Active : FXPrimaryDrawMode.Snapshot;
+        if (PrimaryDrawMode == FXPrimaryDrawMode.Random) PrimaryDrawMode = (new Random().Next(101) < 50) ? FXPrimaryDrawMode.Active : FXPrimaryDrawMode.Snapshot;
 
         RenderResolutionLimit = ConfigSource.ReadValue("fx", "renderresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
         PrimaryResolutionLimit = ConfigSource.ReadValue("fx", "primaryresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);

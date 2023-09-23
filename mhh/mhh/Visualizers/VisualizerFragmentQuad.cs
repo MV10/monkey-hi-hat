@@ -50,7 +50,7 @@ public class VisualizerFragmentQuad : IVisualizer
         // Crossfade and FXRenderer initializes this with a null config
         if (config is null) return;
 
-        Textures = RenderingHelper.GetTextures(OwnerName, config);
+        Textures = RenderingHelper.GetTextures(OwnerName, config.ConfigSource);
     }
 
     public void BindBuffers(Shader shader)

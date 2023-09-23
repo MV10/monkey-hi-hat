@@ -124,11 +124,11 @@ public static class RenderingHelper
     /// Maps visualizer config [textures] data to GLImageTexture resource assignments and loads
     /// the indicated filenames.
     /// </summary>
-    public static IReadOnlyList<GLImageTexture> GetTextures(Guid ownerName, VisualizerConfig config)
+    public static IReadOnlyList<GLImageTexture> GetTextures(Guid ownerName, ConfigFile configSource)
     {
-        if (!config.ConfigSource.Content.ContainsKey("textures")) return null;
+        if (!configSource.Content.ContainsKey("textures")) return null;
 
-        var textureDefs = config.ConfigSource.Content["textures"];
+        var textureDefs = configSource.Content["textures"];
         var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, textureDefs.Count);
         int i = 0;
         foreach (var tex in textureDefs)

@@ -116,7 +116,7 @@ namespace mhh
                         var faves = new List<string>(Favorites);
                         while(viz.Count > 0 || faves.Count > 0)
                         {
-                            if(faves.Count == 0 || rand.Next(100) < 50)
+                            if(faves.Count == 0 || rand.Next(101) < 50)
                             {
                                 int v = rand.Next(viz.Count);
                                 Playlist[i++] = viz[v];

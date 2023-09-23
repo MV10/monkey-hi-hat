@@ -44,7 +44,7 @@ public class VisualizerVertexIntegerArray : IVisualizer
             .ReadValue("VisualizerVertexIntegerArray", "ArrayDrawingMode")
             .ToEnum(ArrayDrawingMode.Points);
 
-        Textures = RenderingHelper.GetTextures(OwnerName, config);
+        Textures = RenderingHelper.GetTextures(OwnerName, config.ConfigSource);
 
         Initialize(count, mode, shader);
     }

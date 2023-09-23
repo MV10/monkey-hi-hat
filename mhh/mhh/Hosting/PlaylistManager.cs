@@ -51,7 +51,7 @@ public class PlaylistManager
         {
             do
             {
-                if (RNG.Next(100) < 50 || RNG.Next(100) < ActivePlaylist.FavoritesPct)
+                if (RNG.Next(101) < 50 || RNG.Next(101) < ActivePlaylist.FavoritesPct)
                 {
                     filename = ActivePlaylist.Favorites[RNG.Next(ActivePlaylist.Favorites.Count)];
                 }
@@ -84,9 +84,9 @@ public class PlaylistManager
         var pathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, filename);
         if (pathname is null) return $"ERR - {filename} not found in shader path(s)";
 
-        if(ActivePlaylist.FXPercent > 0 && RNG.Next(1, 100) <= ActivePlaylist.FXPercent)
+        if(ActivePlaylist.FXPercent > 0 && RNG.Next(1, 101) <= ActivePlaylist.FXPercent)
         {
-            NextFXConfig = PathHelper.FindConfigFile(Program.AppConfig.FXPath, ActivePlaylist.FX[RNG.Next(0, ActivePlaylist.FX.Count - 1)]);
+            NextFXConfig = PathHelper.FindConfigFile(Program.AppConfig.FXPath, ActivePlaylist.FX[RNG.Next(0, ActivePlaylist.FX.Count)]);
             if(NextFXConfig is not null) FXStartTime = DateTime.Now.AddSeconds(ActivePlaylist.FXDelaySeconds + Program.AppConfig.CrossfadeSeconds);
         }
 
@@ -114,7 +114,7 @@ public class PlaylistManager
         }
 
         // apply FX?
-        if(DateTime.Now > FXStartTime && RNG.Next(1, 100) > 50)
+        if(DateTime.Now > FXStartTime && RNG.Next(1, 101) > 50)
         {
             Program.AppWindow.Command_ApplyFX(NextFXConfig);
             FXStartTime = DateTime.MaxValue;
