@@ -17,6 +17,7 @@ namespace mhh
 
         public readonly int FXPercent;
         public readonly int FXDelaySeconds;
+        public readonly IReadOnlyList<string> FX;
 
         /// <summary>
         /// Pre-sorted/randomized combination of Visualizations
@@ -27,7 +28,6 @@ namespace mhh
 
         public readonly IReadOnlyList<string> Visualizations;
         public readonly IReadOnlyList<string> Favorites;
-        public readonly IReadOnlyList<string> FX;
 
         private readonly Random rand = new();
 
@@ -57,7 +57,7 @@ namespace mhh
             {
                 if (string.IsNullOrWhiteSpace(Program.AppConfig.FXPath))
                 {
-                    Warning("FX settings ignored, mhh.conf does not define FXPath.");
+                    Warning("FX settings ignored, app configuration does not define FXPath.");
                     FXPercent = 0;
                 }
 

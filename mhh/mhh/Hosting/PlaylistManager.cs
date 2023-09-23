@@ -10,7 +10,10 @@ public class PlaylistManager
     private int PlaylistPointer = 0;
     private DateTime PlaylistAdvanceAt = DateTime.MaxValue;
     private DateTime PlaylistIgnoreSilenceUntil = DateTime.MinValue;
-    private Random rnd = new();
+    private Random RNG = new();
+
+    private string NextFXConfig = null;
+    private DateTime FXStartTime = DateTime.MaxValue;
 
     public string StartNewPlaylist(string playlistConfPathname)
     {
@@ -40,18 +43,21 @@ public class PlaylistManager
     {
         if (ActivePlaylist is null) return "ERR: No playlist is active";
 
+        NextFXConfig = null;
+        FXStartTime = DateTime.MaxValue;
+
         string filename;
         if (ActivePlaylist.Order == PlaylistOrder.RandomWeighted)
         {
             do
             {
-                if (rnd.Next(100) < 50 || rnd.Next(100) < ActivePlaylist.FavoritesPct)
+                if (RNG.Next(100) < 50 || RNG.Next(100) < ActivePlaylist.FavoritesPct)
                 {
-                    filename = ActivePlaylist.Favorites[rnd.Next(ActivePlaylist.Favorites.Count)];
+                    filename = ActivePlaylist.Favorites[RNG.Next(ActivePlaylist.Favorites.Count)];
                 }
                 else
                 {
-                    filename = ActivePlaylist.Visualizations[rnd.Next(ActivePlaylist.Visualizations.Count)];
+                    filename = ActivePlaylist.Visualizations[RNG.Next(ActivePlaylist.Visualizations.Count)];
                 }
             } while (filename.Equals(Program.AppWindow.Renderer.ActiveRenderer?.Filename ?? string.Empty));
         }
@@ -76,20 +82,23 @@ public class PlaylistManager
             : DateTime.MinValue;
 
         var pathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, filename);
-        if (pathname is not null)
+        if (pathname is null) return $"ERR - {filename} not found in shader path(s)";
+
+        if(ActivePlaylist.FXPercent > 0 && RNG.Next(1, 100) <= ActivePlaylist.FXPercent)
         {
-            var msg = Program.AppWindow.Command_Load(pathname, terminatesPlaylist: false);
-            // TODO handle ERR message
-            return msg;
+            NextFXConfig = PathHelper.FindConfigFile(Program.AppConfig.FXPath, ActivePlaylist.FX[RNG.Next(0, ActivePlaylist.FX.Count - 1)]);
+            if(NextFXConfig is not null) FXStartTime = DateTime.Now.AddSeconds(ActivePlaylist.FXDelaySeconds + Program.AppConfig.CrossfadeSeconds);
         }
 
-        return $"ERR - {filename} not found in shader path(s)";
+        var msg = Program.AppWindow.Command_Load(pathname, terminatesPlaylist: false);
+        return msg;
     }
 
     public void UpdateFrame(double silenceDuration)
     {
-        if (Program.AppWindow.Renderer.TimePaused) return;
+        if (ActivePlaylist is null || Program.AppWindow.Renderer.TimePaused) return;
 
+        // advance to next visualization?
         if (
             // short-duration silence for playlist track-change viz-advancement
             (ActivePlaylist?.SwitchMode == PlaylistSwitchModes.Silence 
@@ -99,7 +108,18 @@ public class PlaylistManager
             // playlist viz-advancement by time
             || DateTime.Now >= PlaylistAdvanceAt
             )
+        {
             Program.AppWindow.Command_PlaylistNext(temporarilyIgnoreSilence: true);
+            return;
+        }
+
+        // apply FX?
+        if(DateTime.Now > FXStartTime && RNG.Next(1, 100) > 50)
+        {
+            Program.AppWindow.Command_ApplyFX(NextFXConfig);
+            FXStartTime = DateTime.MaxValue;
+            NextFXConfig = null;
+        }
     }
 
     public string GetInfo()
