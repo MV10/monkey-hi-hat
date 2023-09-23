@@ -1,4 +1,5 @@
 ﻿
+using eyecandy;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -38,6 +39,12 @@ public class FXRenderer : IRenderer
     private int snapClockPercent = 0;
     private Random RNG = new();
 
+    private Guid CrossfadeOwnerName = Guid.NewGuid();
+    private GLResourceGroup CrossfadeResources;
+    private Shader CrossfadeShader;
+    private IVisualizer CrossfadeViz;
+    private float DurationMS;
+
     public FXRenderer(FXConfig fxConfig, IRenderer primaryRenderer)
     {
         ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
@@ -59,8 +66,18 @@ public class FXRenderer : IRenderer
             DrawbufferResources = parser.DrawbufferResources;
             BackbufferResources = parser.BackbufferResources;
 
-            // initialize the output buffer info
+            // initialize the output buffer
             FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
+
+            // prep for crossfade
+            if (Config.Crossfade)
+            {
+                CrossfadeShader = Caching.CrossfadeShader;
+                CrossfadeViz = new VisualizerFragmentQuad();
+                CrossfadeViz.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
+                CrossfadeResources = RenderManager.ResourceManager.CreateResourceGroups(CrossfadeOwnerName, 1, ViewportResolution)[0];
+                DurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
+            }
 
             parser = null;
         }
@@ -129,9 +146,34 @@ public class FXRenderer : IRenderer
 
         // store this now so that crossfade can find the output buffer (it may have
         // changed from the previous frame if that pass has a front/back buffer swap)
-        FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
+        var lastPass = ShaderPasses[ShaderPasses.Count - 1];
+        FinalDrawbuffers = lastPass.Drawbuffers;
 
-        // blit drawbuffer to OpenGL's backbuffer unless Crossfade is intercepting the final draw buffer
+        // is FX crossfade active?
+        float fadeLevel = (float)Clock.ElapsedMilliseconds / DurationMS;
+        if (Config.Crossfade && CrossfadeShader is not null)
+        {
+            // Cached, only HostWindow.Dispose releases this
+            if (fadeLevel >= 1f) CrossfadeShader = null;
+        }
+
+        // execute the FX crossfade
+        if (CrossfadeShader is not null)
+        {
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, CrossfadeResources.FramebufferHandle);
+            GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+            CrossfadeShader.Use();
+            CrossfadeShader.SetUniform("fadeLevel", fadeLevel);
+            CrossfadeShader.SetTexture("oldBuffer", ShaderPasses[0].Drawbuffers.TextureHandle, ShaderPasses[0].Drawbuffers.TextureUnit);
+            CrossfadeShader.SetTexture("newBuffer", FinalDrawbuffers.TextureHandle, FinalDrawbuffers.TextureUnit);
+            CrossfadeViz.RenderFrame(CrossfadeShader);
+
+            FinalDrawbuffers = CrossfadeResources;
+        }
+
+        // blit drawbuffer to OpenGL's backbuffer unless CrossfadeRenderer is intercepting
+        // the final draw buffer (not the same as internal FX crossfade support)
         if (!IsOutputIntercepted)
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
@@ -198,11 +240,14 @@ public class FXRenderer : IRenderer
         // resize draw buffers, and resize/copy back buffers
         RenderManager.ResourceManager.ResizeTextures(DrawbufferOwnerName, ViewportResolution);
         if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, oldResolution);
+        if (Config.Crossfade) RenderManager.ResourceManager.ResizeTextures(CrossfadeOwnerName, ViewportResolution);
 
+        // re-bind the visualizers
         foreach (var pass in ShaderPasses)
         {
             pass.Visualizer.BindBuffers(pass.Shader);
         }
+        CrossfadeViz?.BindBuffers(CrossfadeShader);
     }
 
     public void StartClock()
@@ -241,8 +286,18 @@ public class FXRenderer : IRenderer
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Backbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(BackbufferOwnerName);
 
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() crossfade Resources");
+        RenderManager.ResourceManager.DestroyAllResources(CrossfadeOwnerName);
+
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() crossfade Visualizer");
+        CrossfadeViz?.Dispose();
+
         DrawbufferResources = null;
         BackbufferResources = null;
+        CrossfadeResources = null;
+
+        // Cached, only HostWindow.Dispose() actually destroys this
+        CrossfadeShader = null;
 
         IsDisposed = true;
         GC.SuppressFinalize(this);

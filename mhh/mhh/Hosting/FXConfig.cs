@@ -12,6 +12,7 @@ public class FXConfig : IConfigSource
     public readonly FXPrimaryDrawMode PrimaryDrawMode;
     public readonly int RenderResolutionLimit;
     public readonly int PrimaryResolutionLimit;
+    public readonly bool Crossfade;
 
     public readonly List<string> AudioTextureUniformNames = new();
 
@@ -28,6 +29,8 @@ public class FXConfig : IConfigSource
 
         RenderResolutionLimit = ConfigSource.ReadValue("fx", "renderresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
         PrimaryResolutionLimit = ConfigSource.ReadValue("fx", "primaryresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
+
+        Crossfade = (Program.AppConfig.CrossfadeSeconds == 0) ? false : ConfigSource.ReadValue("fx", "crossfade").ToBool(true);
 
         if (ConfigSource.Content.ContainsKey("audiotextures"))
         {
