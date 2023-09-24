@@ -129,8 +129,8 @@ public class CrossfadeRenderer : IRenderer
         NewRenderer?.StopClock();
     }
 
-    public float ElapsedTime()
-        => OldRenderer?.ElapsedTime() ?? 0f;
+    public float TrueElapsedTime()
+        => OldRenderer?.TrueElapsedTime() ?? 0f;
 
     private void CreateResourceGroups()
     {

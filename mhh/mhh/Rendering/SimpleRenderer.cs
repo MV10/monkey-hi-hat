@@ -30,7 +30,9 @@ public class SimpleRenderer : IRenderer
 
     private bool FullResolutionViewport;
     private Stopwatch Clock = new();
+    private float ClockOffset = 0;
     private float FrameCount = 0;
+    private Random RNG = new();
 
     public SimpleRenderer(VisualizerConfig visualizerConfig)
     {
@@ -38,6 +40,7 @@ public class SimpleRenderer : IRenderer
 
         Config = visualizerConfig;
         Filename = Path.GetFileNameWithoutExtension(Config.ConfigSource.Pathname);
+        if (Config.RandomTimeOffset != 0) ClockOffset = RNG.Next(0, Math.Abs(Config.RandomTimeOffset) + 1) * Math.Sign(Config.RandomTimeOffset);
 
         Shader = RenderingHelper.GetShader(this, visualizerConfig);
         if (!IsValid) return;
@@ -51,9 +54,11 @@ public class SimpleRenderer : IRenderer
 
     public void RenderFrame()
     {
+        var timeUniform = TrueElapsedTime() + ClockOffset;
+
         Program.AppWindow.Eyecandy.SetTextureUniforms(Shader);
         Shader.SetUniform("resolution", ViewportResolution);
-        Shader.SetUniform("time", ElapsedTime());
+        Shader.SetUniform("time", timeUniform);
         Shader.SetUniform("frame", FrameCount);
 
         if(FinalDrawbuffers is not null)
@@ -122,7 +127,7 @@ public class SimpleRenderer : IRenderer
     public void StopClock()
         => Clock.Stop();
 
-    public float ElapsedTime()
+    public float TrueElapsedTime()
         => (float)Clock.Elapsed.TotalSeconds;
 
     public void Dispose()

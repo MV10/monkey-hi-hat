@@ -65,7 +65,8 @@ public interface IRenderer : IConfigSource, IDisposable
     public void StopClock();
 
     /// <summary>
-    /// Returns the total elapsed seconds used for the shader "time" uniform.
+    /// Returns the total elapsed seconds the renderer has been running. The "time"
+    /// uniform may be altered by a random offset if specified in the visualizer config.
     /// </summary>
-    public float ElapsedTime();
+    public float TrueElapsedTime();
 }

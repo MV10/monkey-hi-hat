@@ -49,7 +49,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "
 		..\testcontent\multipass2.frag = ..\testcontent\multipass2.frag
 		..\testcontent\multipass3.frag = ..\testcontent\multipass3.frag
 		..\testcontent\multipass4.frag = ..\testcontent\multipass4.frag
-		..\testcontent\playlist-test.conf = ..\testcontent\playlist-test.conf
 		..\testcontent\resolutionlimit.conf = ..\testcontent\resolutionlimit.conf
 		..\testcontent\resolutionlimit.frag = ..\testcontent\resolutionlimit.frag
 		..\testcontent\staticimage.conf = ..\testcontent\staticimage.conf

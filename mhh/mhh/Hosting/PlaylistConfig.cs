@@ -29,7 +29,7 @@ namespace mhh
         public readonly IReadOnlyList<string> Visualizations;
         public readonly IReadOnlyList<string> Favorites;
 
-        private readonly Random rand = new();
+        private readonly Random RNG = new();
 
         public PlaylistConfig(string pathname)
         {
@@ -116,9 +116,9 @@ namespace mhh
                         var faves = new List<string>(Favorites);
                         while(viz.Count > 0 || faves.Count > 0)
                         {
-                            if(faves.Count == 0 || rand.Next(101) < 50)
+                            if(faves.Count == 0 || RNG.Next(101) < 50)
                             {
-                                int v = rand.Next(viz.Count);
+                                int v = RNG.Next(viz.Count);
                                 Playlist[i++] = viz[v];
                                 viz.RemoveAt(v);
                                 if(viz.Count == 0)
@@ -129,7 +129,7 @@ namespace mhh
                             }
                             else
                             {
-                                int f = rand.Next(faves.Count);
+                                int f = RNG.Next(faves.Count);
                                 Playlist[i++] = faves[f];
                                 faves.RemoveAt(f);
                                 if(faves.Count == 0)

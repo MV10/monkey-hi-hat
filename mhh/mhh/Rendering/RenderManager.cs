@@ -150,7 +150,7 @@ public class RenderManager : IDisposable
     /// Visualization / renderer information for the --info command.
     /// </summary>
     public string GetInfo()
-        => $"elapsed sec: {ActiveRenderer?.ElapsedTime() ?? 0}\nvisualizer : {ActiveRenderer?.Filename ?? "(none)"}";
+        => $"elapsed sec: {ActiveRenderer?.TrueElapsedTime() ?? 0}\nvisualizer : {ActiveRenderer?.Filename ?? "(none)"}";
 
     private void CrossfadeCompleted()
     {

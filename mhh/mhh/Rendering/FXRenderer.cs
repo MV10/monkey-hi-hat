@@ -92,12 +92,12 @@ public class FXRenderer : IRenderer
         }
 
         PrimaryRenderer.OutputIntercepted = true;
-        snapClockNextSecond = PrimaryRenderer.ElapsedTime() + 1f;
+        snapClockNextSecond = PrimaryRenderer.TrueElapsedTime() + 1f;
     }
 
     public void RenderFrame()
     {
-        var timeUniform = ElapsedTime();
+        var timeUniform = TrueElapsedTime();
 
         // pass 0 is special handling as either the primary renderer or a snapshot
         if (PrimaryRenderer is not null)
@@ -207,9 +207,9 @@ public class FXRenderer : IRenderer
         {
             if(Config.PrimaryDrawMode == FXPrimaryDrawMode.SnapClock)
             {
-                if(PrimaryRenderer.ElapsedTime() >= snapClockNextSecond)
+                if(PrimaryRenderer.TrueElapsedTime() >= snapClockNextSecond)
                 {
-                    snapClockNextSecond = PrimaryRenderer.ElapsedTime() + 1f;
+                    snapClockNextSecond = PrimaryRenderer.TrueElapsedTime() + 1f;
                     snapClockPercent += 10;
                     if (RNG.Next(1, 101) <= snapClockPercent)
                     {
@@ -261,7 +261,7 @@ public class FXRenderer : IRenderer
     public void StopClock()
         => Clock.Stop();
 
-    public float ElapsedTime()
+    public float TrueElapsedTime()
         => (float)Clock.Elapsed.TotalSeconds;
 
     public void Dispose()

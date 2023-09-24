@@ -20,6 +20,7 @@ namespace mhh
 
         public readonly Color4 BackgroundColor;
         public readonly int RenderResolutionLimit;
+        public readonly int RandomTimeOffset;
 
         public readonly string VisualizerTypeName;
 
@@ -54,6 +55,8 @@ namespace mhh
             }
 
             RenderResolutionLimit = ConfigSource.ReadValue("shader", "renderresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
+
+            RandomTimeOffset = ConfigSource.ReadValue("shader", "randomtimeoffset").ToInt32(0);
 
             VisualizerTypeName = ConfigSource.ReadValue("shader", "visualizertypename");
 

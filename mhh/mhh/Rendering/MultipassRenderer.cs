@@ -38,7 +38,9 @@ public class MultipassRenderer : IRenderer
     private List<MultipassDrawCall> ShaderPasses;
 
     private Stopwatch Clock = new();
+    private float ClockOffset = 0;
     private float FrameCount = 0;
+    private Random RNG = new();
 
     public MultipassRenderer(VisualizerConfig visualizerConfig)
     {
@@ -46,6 +48,7 @@ public class MultipassRenderer : IRenderer
 
         Config = visualizerConfig;
         Filename = Path.GetFileNameWithoutExtension(Config.ConfigSource.Pathname);
+        if (Config.RandomTimeOffset != 0) ClockOffset = RNG.Next(0, Math.Abs(Config.RandomTimeOffset) + 1) * Math.Sign(Config.RandomTimeOffset);
 
         // only calculates ViewportResolution when called from the constructor
         OnResize();
@@ -74,7 +77,7 @@ public class MultipassRenderer : IRenderer
 
     public void RenderFrame()
     {
-        var timeUniform = ElapsedTime();
+        var timeUniform = TrueElapsedTime() + ClockOffset;
 
         foreach (var pass in ShaderPasses)
         {
@@ -156,7 +159,7 @@ public class MultipassRenderer : IRenderer
     public void StopClock()
         => Clock.Stop();
 
-    public float ElapsedTime()
+    public float TrueElapsedTime()
         => (float)Clock.Elapsed.TotalSeconds;
 
     public void Dispose()
