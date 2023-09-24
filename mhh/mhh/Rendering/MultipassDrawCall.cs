@@ -47,7 +47,7 @@ public class MultipassDrawCall
     public CachedShader Shader;
 
     /// <summary>
-    /// The visualizer providing content for this pass.
+    /// The object providing vertex data for this pass.
     /// </summary>
-    public IVisualizer Visualizer;
+    public IVertexSource VertexSource;
 }

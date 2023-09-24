@@ -40,7 +40,7 @@ public class CrossfadeRenderer : IRenderer
     private GLResourceGroup OldResourceGroup = null;
     private GLResourceGroup NewResourceGroup = null;
 
-    private IVisualizer FragQuadViz;
+    private IVertexSource VertQuad;
     private Shader CrossfadeShader;
     private Action CompletionCallback;
     private float DurationMS;
@@ -50,8 +50,8 @@ public class CrossfadeRenderer : IRenderer
     {
         CrossfadeShader = Caching.CrossfadeShader;
 
-        FragQuadViz = new VisualizerFragmentQuad(); 
-        FragQuadViz.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
+        VertQuad = new VertexQuad(); 
+        VertQuad.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
         
         OldRenderer = oldRenderer;
         NewRenderer = newRenderer;
@@ -103,7 +103,7 @@ public class CrossfadeRenderer : IRenderer
         CrossfadeShader.SetUniform("fadeLevel", fadeLevel);
         CrossfadeShader.SetTexture("oldBuffer", oldResource.TextureHandle, oldResource.TextureUnit);
         CrossfadeShader.SetTexture("newBuffer", newResource.TextureHandle, newResource.TextureUnit);
-        FragQuadViz.RenderFrame(CrossfadeShader);
+        VertQuad.RenderFrame(CrossfadeShader);
 
         //...and now AppWindow's OnRenderFrame swaps the back-buffer to the output
     }
@@ -146,7 +146,7 @@ public class CrossfadeRenderer : IRenderer
         LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Visualizer");
-        FragQuadViz?.Dispose();
+        VertQuad?.Dispose();
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() OldRenderer Resources");
         RenderManager.ResourceManager.DestroyAllResources(OldOwnerName);

@@ -102,7 +102,7 @@ public class MultipassRenderer : IRenderer
             GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            pass.Visualizer.RenderFrame(pass.Shader);
+            pass.VertexSource.RenderFrame(pass.Shader);
         }
 
         // store this now so that crossfade can find the output buffer (it may have
@@ -149,7 +149,7 @@ public class MultipassRenderer : IRenderer
 
         foreach (var pass in ShaderPasses)
         {
-            pass.Visualizer.BindBuffers(pass.Shader);
+            pass.VertexSource.BindBuffers(pass.Shader);
         }
     }
 
@@ -171,8 +171,8 @@ public class MultipassRenderer : IRenderer
         {
             foreach (var pass in ShaderPasses)
             {
-                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Visualizer");
-                pass.Visualizer?.Dispose();
+                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass VertexSource");
+                pass.VertexSource?.Dispose();
 
                 LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Uncached Shader");
                 RenderingHelper.DisposeUncachedShader(pass.Shader);

@@ -14,7 +14,7 @@ namespace mhh;
 /// are the two standard built-in uniforms "resolution" and "time". This
 /// visualizer always uses the Triangles drawing mode.
 /// </summary>
-public class VisualizerFragmentQuad : IVisualizer
+public class VertexQuad : IVertexSource
 {
     // defines two triangles that cover the whole display area
     float[] vertices =

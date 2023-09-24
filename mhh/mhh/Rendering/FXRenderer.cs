@@ -37,7 +37,7 @@ public class FXRenderer : IRenderer
     private string CrossfadeOwnerName = RenderingHelper.MakeOwnerName("Crossfading");
     private GLResourceGroup CrossfadeResources;
     private Shader CrossfadeShader;
-    private IVisualizer CrossfadeViz;
+    private IVertexSource CrossfadeVerts;
     private float DurationMS;
 
     private Stopwatch Clock = new();
@@ -74,8 +74,8 @@ public class FXRenderer : IRenderer
             if (Config.Crossfade)
             {
                 CrossfadeShader = Caching.CrossfadeShader;
-                CrossfadeViz = new VisualizerFragmentQuad();
-                CrossfadeViz.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
+                CrossfadeVerts = new VertexQuad();
+                CrossfadeVerts.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
                 CrossfadeResources = RenderManager.ResourceManager.CreateResourceGroups(CrossfadeOwnerName, 1, ViewportResolution)[0];
                 DurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
             }
@@ -146,7 +146,7 @@ public class FXRenderer : IRenderer
             GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            pass.Visualizer.RenderFrame(pass.Shader);
+            pass.VertexSource.RenderFrame(pass.Shader);
         }
 
         // store this now so that crossfade can find the output buffer (it may have
@@ -159,7 +159,12 @@ public class FXRenderer : IRenderer
         if (Config.Crossfade && CrossfadeShader is not null)
         {
             // Cached, only HostWindow.Dispose releases this
-            if (fadeLevel >= 1f) CrossfadeShader = null;
+            if (fadeLevel >= 1f)
+            {
+                CrossfadeShader = null;
+                CrossfadeVerts.Dispose();
+                CrossfadeVerts = null;
+            }
         }
 
         // execute the FX crossfade
@@ -172,7 +177,7 @@ public class FXRenderer : IRenderer
             CrossfadeShader.SetUniform("fadeLevel", fadeLevel);
             CrossfadeShader.SetTexture("oldBuffer", ShaderPasses[0].Drawbuffers.TextureHandle, ShaderPasses[0].Drawbuffers.TextureUnit);
             CrossfadeShader.SetTexture("newBuffer", FinalDrawbuffers.TextureHandle, FinalDrawbuffers.TextureUnit);
-            CrossfadeViz.RenderFrame(CrossfadeShader);
+            CrossfadeVerts.RenderFrame(CrossfadeShader);
 
             FinalDrawbuffers = CrossfadeResources;
         }
@@ -250,9 +255,9 @@ public class FXRenderer : IRenderer
         // re-bind the visualizers
         foreach (var pass in ShaderPasses)
         {
-            pass.Visualizer?.BindBuffers(pass.Shader);
+            pass.VertexSource?.BindBuffers(pass.Shader);
         }
-        CrossfadeViz?.BindBuffers(CrossfadeShader);
+        CrossfadeVerts?.BindBuffers(CrossfadeShader);
     }
 
     public void StartClock()
@@ -276,8 +281,8 @@ public class FXRenderer : IRenderer
         {
             foreach (var pass in ShaderPasses)
             {
-                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Visualizer");
-                pass.Visualizer?.Dispose();
+                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass VertexSource");
+                pass.VertexSource?.Dispose();
 
                 LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Uncached Shader");
                 RenderingHelper.DisposeUncachedShader(pass.Shader);
@@ -295,8 +300,8 @@ public class FXRenderer : IRenderer
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade Resources");
         RenderManager.ResourceManager.DestroyAllResources(CrossfadeOwnerName);
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade Visualizer");
-        CrossfadeViz?.Dispose();
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade VertexSource");
+        CrossfadeVerts?.Dispose();
 
         DrawbufferResources = null;
         BackbufferResources = null;

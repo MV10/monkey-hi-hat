@@ -25,7 +25,7 @@ public class SimpleRenderer : IRenderer
     public VisualizerConfig Config;
 
     public string OwnerName = RenderingHelper.MakeOwnerName("Drawbuffers");
-    public IVisualizer Visualizer;
+    public IVertexSource VertexSource;
     public CachedShader Shader;
 
     private bool FullResolutionViewport;
@@ -45,10 +45,10 @@ public class SimpleRenderer : IRenderer
         Shader = RenderingHelper.GetShader(this, visualizerConfig);
         if (!IsValid) return;
 
-        Visualizer = RenderingHelper.GetVisualizer(this, visualizerConfig);
+        VertexSource = RenderingHelper.GetVertexSource(this, visualizerConfig);
         if (!IsValid) return;
 
-        Visualizer.Initialize(Config, Shader);
+        VertexSource.Initialize(Config, Shader);
         OnResize();
     }
 
@@ -66,7 +66,7 @@ public class SimpleRenderer : IRenderer
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, FinalDrawbuffers.FramebufferHandle);
             GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
-            Visualizer.RenderFrame(Shader);
+            VertexSource.RenderFrame(Shader);
 
             // blit drawbuffer to OpenGL's backbuffer unless Crossfade or FXRenderer is intercepting the final draw buffer
             if (!IsOutputIntercepted)
@@ -84,7 +84,7 @@ public class SimpleRenderer : IRenderer
         {
             GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
-            Visualizer.RenderFrame(Shader);
+            VertexSource.RenderFrame(Shader);
         }
 
         FrameCount++;
@@ -118,7 +118,7 @@ public class SimpleRenderer : IRenderer
             }
         }
 
-        Visualizer.BindBuffers(Shader);
+        VertexSource.BindBuffers(Shader);
     }
 
     public void StartClock()
@@ -135,9 +135,9 @@ public class SimpleRenderer : IRenderer
         if (IsDisposed) return;
         LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Visualizer");
-        Visualizer?.Dispose();
-        Visualizer = null;
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VertexSource");
+        VertexSource?.Dispose();
+        VertexSource = null;
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Uncached Shader");
         RenderingHelper.DisposeUncachedShader(Shader);

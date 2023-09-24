@@ -22,7 +22,7 @@ namespace mhh
         public readonly int RenderResolutionLimit;
         public readonly int RandomTimeOffset;
 
-        public readonly string VisualizerTypeName;
+        public readonly string VertexSourceTypeName;
 
         public readonly List<string> AudioTextureUniformNames = new();
 
@@ -58,7 +58,7 @@ namespace mhh
 
             RandomTimeOffset = ConfigSource.ReadValue("shader", "randomtimeoffset").ToInt32(0);
 
-            VisualizerTypeName = ConfigSource.ReadValue("shader", "visualizertypename");
+            VertexSourceTypeName = ConfigSource.ReadValue("shader", "vertexsourcetypename");
 
             if(ConfigSource.Content.ContainsKey("audiotextures"))
             {
@@ -68,7 +68,8 @@ namespace mhh
                 }
             }
 
-            // shader pathnames and visualizer type names are validated in RenderingHelper
+            // shader pathnames and vertex source type names are validated in RenderingHelper
+
             var err = $"Error in {ConfigSource.Pathname}: ";
             if (RenderResolutionLimit < 256 && RenderResolutionLimit != 0) throw new ArgumentException($"{err} RenderResolutionLimit must be 256 or greater (default is 0 to disable)");
 

@@ -83,29 +83,29 @@ public class MultipassSectionParser
                 ParseShaders();
                 if (column.Length == 4)
                 {
-                    UseDefaultVisualizer();
+                    UseDefaultVertexSource();
                     if (!OwningRenderer.IsValid) return;
                 }
                 else
                 {
-                    // column 4: visualizer class
-                    ShaderPass.Visualizer = RenderingHelper.GetVisualizer(OwningRenderer, column[4]);
+                    // column 4: vertex source typename
+                    ShaderPass.VertexSource = RenderingHelper.GetVertexSource(OwningRenderer, column[4]);
                     if (!OwningRenderer.IsValid) return;
 
                     // validate columns 5 & 6
-                    bool isVertIntArray = (column[4].Equals(nameof(VisualizerVertexIntegerArray), StringComparison.InvariantCultureIgnoreCase));
-                    if (column.Length == 6 && !isVertIntArray) throw new ArgumentException($"{err} Visualizer type {column[4]} does not require settings");
-                    if (column.Length == 5 && isVertIntArray) throw new ArgumentException($"{err} Visualizer type {column[4]} is missing required settings");
+                    bool isVertIntArray = (column[4].Equals(nameof(VertexIntegerArray), StringComparison.InvariantCultureIgnoreCase));
+                    if (column.Length == 6 && !isVertIntArray) throw new ArgumentException($"{err} VertexSource type {column[4]} does not require settings");
+                    if (column.Length == 5 && isVertIntArray) throw new ArgumentException($"{err} VertexSource type {column[4]} is missing required settings");
 
                     if(column.Length == 6)
                     {
-                        // settings required for VisualizerVertexIntegerArray
-                        ParseVisualizerSettings();
+                        // settings required for VertexIntegerArray
+                        ParseVertexSourceSettings();
                     }
                     else
                     {
-                        // has to be VisualizerFragmentQuad
-                        ShaderPass.Visualizer.Initialize(vizConfig, ShaderPass.Shader);
+                        // has to be VertexQuad
+                        ShaderPass.VertexSource.Initialize(vizConfig, ShaderPass.Shader);
                     }
                 }
             }
@@ -143,9 +143,9 @@ public class MultipassSectionParser
             ParseFXFragShader();
             if (!OwningRenderer.IsValid) return;
 
-            // every FX pass uses a VisualizerFragmentQuad
-            ShaderPass.Visualizer = new VisualizerFragmentQuad();
-            ShaderPass.Visualizer.Initialize(null, ShaderPass.Shader);
+            // every FX pass uses a VertexQuad
+            ShaderPass.VertexSource = new VertexQuad();
+            ShaderPass.VertexSource.Initialize(null, ShaderPass.Shader);
 
             ShaderPasses.Add(ShaderPass);
         }
@@ -246,8 +246,8 @@ public class MultipassSectionParser
         if (!OwningRenderer.IsValid) return;
         RenderingHelper.ReplaceCachedShader = replaceCachedShader;
 
-        ShaderPass.Visualizer = RenderingHelper.GetVisualizer(OwningRenderer, vizConfig);
-        ShaderPass.Visualizer.Initialize(vizConfig, ShaderPass.Shader);
+        ShaderPass.VertexSource = RenderingHelper.GetVertexSource(OwningRenderer, vizConfig);
+        ShaderPass.VertexSource.Initialize(vizConfig, ShaderPass.Shader);
     }
 
     // MP column 2 & 3: vertex and frag shader filenames
@@ -279,21 +279,21 @@ public class MultipassSectionParser
     }
 
     // MP column 4+: not defined, default to same as renderer's visualizer.conf
-    private void UseDefaultVisualizer()
+    private void UseDefaultVertexSource()
     {
-        ShaderPass.Visualizer = RenderingHelper.GetVisualizer(OwningRenderer, vizConfig);
+        ShaderPass.VertexSource = RenderingHelper.GetVertexSource(OwningRenderer, vizConfig);
         if (!OwningRenderer.IsValid) return;
-        ShaderPass.Visualizer.Initialize(vizConfig, ShaderPass.Shader);
+        ShaderPass.VertexSource.Initialize(vizConfig, ShaderPass.Shader);
     }
 
     // MP column 5: VisualizerVertexIntegerArray settings
-    private void ParseVisualizerSettings()
+    private void ParseVertexSourceSettings()
     {
         var settings = column[5].Split(';', Const.SplitOptions);
-        if (settings.Length != 2) throw new ArgumentException($"{err} Visualizer type {column[4]} required settings are missing or invalid");
+        if (settings.Length != 2) throw new ArgumentException($"{err} VertexSource type {column[4]} required settings are missing or invalid");
         var s0 = settings[0].Split('=', Const.SplitOptions);
         var s1 = settings[1].Split('=', Const.SplitOptions);
-        if (s0.Length != 2 || s1.Length != 2) throw new ArgumentException($"{err} Visualizer type {column[4]}  required settings are missing or invalid");
+        if (s0.Length != 2 || s1.Length != 2) throw new ArgumentException($"{err} VertexSource type {column[4]}  required settings are missing or invalid");
 
         string sIntCount = s0[0].Equals("VertexIntegerCount", StringComparison.InvariantCultureIgnoreCase)
             ? s0[1]
@@ -307,12 +307,12 @@ public class MultipassSectionParser
             ? s1[1]
             : null;
 
-        if (sIntCount is null || sDrawMode is null) throw new ArgumentException($"{err} Visualizer type {column[4]}  required settings are missing or invalid");
+        if (sIntCount is null || sDrawMode is null) throw new ArgumentException($"{err} VertexSource type {column[4]}  required settings are missing or invalid");
 
         var intCount = sIntCount.ToInt32(1000);
         var drawMode = sDrawMode.ToEnum(ArrayDrawingMode.Points);
 
-        (ShaderPass.Visualizer as VisualizerVertexIntegerArray).Initialize(intCount, drawMode, ShaderPass.Shader);
+        (ShaderPass.VertexSource as VertexIntegerArray).Initialize(intCount, drawMode, ShaderPass.Shader);
     }
 
     private void AllocateResources()

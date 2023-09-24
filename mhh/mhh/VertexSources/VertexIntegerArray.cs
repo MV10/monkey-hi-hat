@@ -11,7 +11,7 @@ namespace mhh;
 /// and resolution inputs, and any optional audio textures, the only input
 /// is a single array of sequential integers of arbitrary length.
 /// </summary>
-public class VisualizerVertexIntegerArray : IVisualizer
+public class VertexIntegerArray : IVertexSource
 {
     private int VertexIntegerCount;
     private float[] VertexIds;
@@ -37,11 +37,11 @@ public class VisualizerVertexIntegerArray : IVisualizer
     public void Initialize(VisualizerConfig config, Shader shader)
     {
         var count = config.ConfigSource
-            .ReadValue("VisualizerVertexIntegerArray", "VertexIntegerCount")
+            .ReadValue(nameof(VertexIntegerArray), "VertexIntegerCount")
             .ToInt32(1000);
 
         var mode = config.ConfigSource
-            .ReadValue("VisualizerVertexIntegerArray", "ArrayDrawingMode")
+            .ReadValue(nameof(VertexIntegerArray), "ArrayDrawingMode")
             .ToEnum(ArrayDrawingMode.Points);
 
         Textures = RenderingHelper.GetTextures(OwnerName, config.ConfigSource);

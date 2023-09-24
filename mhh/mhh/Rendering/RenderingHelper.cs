@@ -101,24 +101,24 @@ public static class RenderingHelper
     /// Returns an IVisualizer matching the primary visualizer listed in the config file.
     /// The caller must invoke the Initialize method on the returned object instance.
     /// </summary>
-    public static IVisualizer GetVisualizer(IRenderer renderer, VisualizerConfig visualizerConfig)
-        => GetVisualizer(renderer, visualizerConfig.VisualizerTypeName);
+    public static IVertexSource GetVertexSource(IRenderer renderer, VisualizerConfig visualizerConfig)
+        => GetVertexSource(renderer, visualizerConfig.VertexSourceTypeName);
 
     /// <summary>
     /// Returns an IVisualizer matching the requested type name. The caller must invoke the
     /// Initialize method on the returned object instance.
     /// </summary>
-    public static IVisualizer GetVisualizer(IRenderer renderer, string visualizerTypeName)
+    public static IVertexSource GetVertexSource(IRenderer renderer, string vertexSourceTypeName)
     {
-        var vizType = Caching.KnownVisualizers.FindType(visualizerTypeName);
-        if (vizType is null)
+        var vsType = Caching.KnownVertexSources.FindType(vertexSourceTypeName);
+        if (vsType is null)
         {
-            LogInvalidReason($"Visualizer type not recognized: {visualizerTypeName}", renderer);
+            LogInvalidReason($"VertexSource type not recognized: {vertexSourceTypeName}", renderer);
             return null;
         }
 
-        var viz = Activator.CreateInstance(vizType) as IVisualizer;
-        return viz;
+        var vs = Activator.CreateInstance(vsType) as IVertexSource;
+        return vs;
     }
 
     /// <summary>
@@ -158,12 +158,11 @@ public static class RenderingHelper
             }
         }
 
-
         return resources;
     }
 
     /// <summary>
-    /// Called by visualizer RenderFrame to set any loaded image texture uniforms before drawing.
+    /// Called by VertexSource RenderFrame to set any loaded image texture uniforms before drawing.
     /// </summary>
     public static void SetTextureUniforms(IReadOnlyList<GLImageTexture> textures, Shader shader)
     {
@@ -175,7 +174,7 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Called by visualizer RenderFrame to set any globally-defined uniforms like randomseed and date.
+    /// Called by VertexSource RenderFrame to set any globally-defined uniforms like randomseed and date.
     /// </summary>
     public static void SetGlobalUniforms(Shader shader)
     {

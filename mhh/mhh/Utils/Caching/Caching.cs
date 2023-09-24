@@ -13,7 +13,7 @@ public static class Caching
     /// <summary>
     /// All built-in MHH IVisualizer implementations. Plugin DLLs may define others not listed here.
     /// </summary>
-    public static readonly IReadOnlyList<Type> KnownVisualizers = typeof(IVisualizer).GetAllDerivedTypes();
+    public static readonly IReadOnlyList<Type> KnownVertexSources = typeof(IVertexSource).GetAllDerivedTypes();
 
     /// <summary>
     /// Compiled shader programs. The key is a murmur3 hash of the combined vert and frag pathnames.

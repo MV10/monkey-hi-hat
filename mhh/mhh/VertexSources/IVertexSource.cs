@@ -3,7 +3,7 @@ using eyecandy;
 
 namespace mhh
 {
-    public interface IVisualizer : IDisposable
+    public interface IVertexSource : IDisposable
     {
         /// <summary>
         /// Called before the visualizer will be executed.
@@ -13,7 +13,6 @@ namespace mhh
         /// <summary>
         /// Called whenever the viewport changes via AppWindow.OnResize events.
         /// </summary>
-        /// <param name="shader"></param>
         public void BindBuffers(Shader shader);
 
         /// <summary>
