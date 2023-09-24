@@ -214,6 +214,9 @@ namespace mhh
                     return AppWindow.Command_ApplyFX(fxPathname);
 
                 case "--next":
+                    if (args.Length > 2) return ShowHelp();
+                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("fx")) return AppWindow.Command_PlaylistNextFX();
+                    if (args.Length == 2) return ShowHelp();
                     return AppWindow.Command_PlaylistNext();
 
                 case "--list":
@@ -356,13 +359,13 @@ All switches are passed to the already-running instance:
 --load [path{Path.DirectorySeparatorChar}file]          if present, loads [file].conf from requested path
 --idle                      loads the default startup shader
 --reload                    unloads and reloads the current shader (unavailable after an FX shader loads)
+--fx [file]                 loads [file].conf from FXPath defined in mhh.conf
+--fx [path{Path.DirectorySeparatorChar}file]            if present, loads [file].conf from requested path
 
 --playlist [file]           loads [file].conf from PlaylistPath defined in mhh.conf
 --playlist [path{Path.DirectorySeparatorChar}file]      if present, loads [file].conf from requested path
---next                      when a playlist is active, advances to the next shader (according to the Order)
-
---fx [file]                 loads [file].conf from FXPath defined in mhh.conf
---fx [path{Path.DirectorySeparatorChar}file]            if present, loads [file].conf from requested path
+--next                      when a playlist is active, advances to the next viz (according to the Order)
+--next fx                   when a playlist is active, applies a post-processing FX (if one isn't running)
 
 --info                      writes shader and execution details to the console
 --fullscreen                toggle between windowed and full-screen state

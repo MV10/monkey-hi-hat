@@ -6,6 +6,7 @@ namespace mhh;
 public class PlaylistManager
 {
     public PlaylistConfig ActivePlaylist;
+    public bool IsFXActive;
 
     private int PlaylistPointer = 0;
     private DateTime PlaylistAdvanceAt = DateTime.MaxValue;
@@ -14,6 +15,7 @@ public class PlaylistManager
 
     private string NextFXConfig = null;
     private DateTime FXStartTime = DateTime.MaxValue;
+    private bool ForceStartFX;
 
     public string StartNewPlaylist(string playlistConfPathname)
     {
@@ -45,6 +47,8 @@ public class PlaylistManager
 
         NextFXConfig = null;
         FXStartTime = DateTime.MaxValue;
+        IsFXActive = false;
+        ForceStartFX = false;
 
         string filename;
         if (ActivePlaylist.Order == PlaylistOrder.RandomWeighted)
@@ -82,16 +86,26 @@ public class PlaylistManager
             : DateTime.MinValue;
 
         var pathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, filename);
-        if (pathname is null) return $"ERR - {filename} not found in shader path(s)";
+        if (pathname is null) return $"ERR: {filename} not found in shader path(s)";
 
-        if(ActivePlaylist.FXPercent > 0 && RNG.Next(1, 101) <= ActivePlaylist.FXPercent)
-        {
-            NextFXConfig = PathHelper.FindConfigFile(Program.AppConfig.FXPath, ActivePlaylist.FX[RNG.Next(0, ActivePlaylist.FX.Count)]);
-            if(NextFXConfig is not null) FXStartTime = DateTime.Now.AddSeconds(ActivePlaylist.FXDelaySeconds + Program.AppConfig.CrossfadeSeconds);
-        }
+        if (ActivePlaylist.FXPercent > 0 && RNG.Next(1, 101) <= ActivePlaylist.FXPercent) ChooseNextFX();
 
         var msg = Program.AppWindow.Command_Load(pathname, terminatesPlaylist: false);
         return msg;
+    }
+
+    public string ApplyFX()
+    {
+        if (ActivePlaylist is null) return "ERR: No playlist is active";
+        if (IsFXActive) return "ERR: A post-processing FX is already active";
+        if (ActivePlaylist.FX.Count == 0) return "ERR: FX disabled or no configurations were found";
+
+        if (NextFXConfig is null) ChooseNextFX();
+        if (NextFXConfig is null) return "ERR: A selected FX config could not be found";
+
+        ForceStartFX = true;
+
+        return "ACK";
     }
 
     public void UpdateFrame(double silenceDuration)
@@ -101,8 +115,8 @@ public class PlaylistManager
         // advance to next visualization?
         if (
             // short-duration silence for playlist track-change viz-advancement
-            (ActivePlaylist?.SwitchMode == PlaylistSwitchModes.Silence 
-            && DateTime.Now >= PlaylistIgnoreSilenceUntil 
+            (ActivePlaylist?.SwitchMode == PlaylistSwitchModes.Silence
+            && DateTime.Now >= PlaylistIgnoreSilenceUntil
             && silenceDuration >= ActivePlaylist.SwitchSeconds)
 
             // playlist viz-advancement by time
@@ -114,14 +128,22 @@ public class PlaylistManager
         }
 
         // apply FX?
-        if(DateTime.Now > FXStartTime && RNG.Next(1, 101) > 50)
+        if (ForceStartFX || DateTime.Now > FXStartTime && RNG.Next(1, 101) > 50)
         {
-            Program.AppWindow.Command_ApplyFX(NextFXConfig);
             FXStartTime = DateTime.MaxValue;
+            IsFXActive = true;
+            ForceStartFX = false;
+            Program.AppWindow.Command_ApplyFX(NextFXConfig);
             NextFXConfig = null;
         }
     }
 
     public string GetInfo()
         => ActivePlaylist?.ConfigSource.Pathname ?? "(none)";
+
+    private void ChooseNextFX()
+    {
+        NextFXConfig = PathHelper.FindConfigFile(Program.AppConfig.FXPath, ActivePlaylist.FX[RNG.Next(0, ActivePlaylist.FX.Count)]);
+        if (NextFXConfig is not null) FXStartTime = DateTime.Now.AddSeconds(ActivePlaylist.FXDelaySeconds + Program.AppConfig.CrossfadeSeconds);
+    }
 }

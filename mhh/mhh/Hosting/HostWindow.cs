@@ -307,6 +307,12 @@ namespace mhh
             => Playlist.NextVisualization(temporarilyIgnoreSilence);
 
         /// <summary>
+        /// Applies a post-processing FX even if one wasn't planned.
+        /// </summary>
+        public string Command_PlaylistNextFX()
+            => Playlist.ApplyFX();
+
+        /// <summary>
         /// Handler for the --quit command-line switch.
         /// </summary>
         public string Command_Quit()
