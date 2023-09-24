@@ -22,6 +22,7 @@ public class CrossfadeRenderer : IRenderer
 
     // During crossfade, the Crossfade class becomes the RenderManager.ActiveRenderer.
     // Upon completion, RenderManager retrieves NewRenderer and makes it ActiveRenderer.
+    // Crossfade only temporarily owns these, it does not handle disposal of either one.
     public IRenderer OldRenderer;
     public IRenderer NewRenderer;
 
@@ -34,8 +35,8 @@ public class CrossfadeRenderer : IRenderer
     // Maintains a pair of output framebuffers in case the old and/or new renderers
     // are not multi-pass (meaning they are designed to target the default OpenGL
     // swap buffers if they run stand-alone).
-    private Guid OldOwnerName = Guid.NewGuid();
-    private Guid NewOwnerName = Guid.NewGuid();
+    private string OldOwnerName = RenderingHelper.MakeOwnerName("OldRenderer");
+    private string NewOwnerName = RenderingHelper.MakeOwnerName("NewRenderer");
     private GLResourceGroup OldResourceGroup = null;
     private GLResourceGroup NewResourceGroup = null;
 

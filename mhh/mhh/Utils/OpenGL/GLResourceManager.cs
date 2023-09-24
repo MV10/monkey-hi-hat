@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
+using System.Text;
 
 namespace mhh;
 
@@ -39,8 +41,8 @@ public class GLResourceManager : IDisposable
     }
     private static GLResourceManager Instance = null;
 
-    private Dictionary<Guid, IReadOnlyList<GLResourceGroup>> AllocatedResourceGroups = new();
-    private Dictionary<Guid, IReadOnlyList<GLImageTexture>> AllocatedImageTextures = new();
+    private Dictionary<string, IReadOnlyList<GLResourceGroup>> AllocatedResourceGroups = new();
+    private Dictionary<string, IReadOnlyList<GLImageTexture>> AllocatedImageTextures = new();
     private List<int> AvailableTextureUnits = new(Caching.MaxAvailableTextureUnit);
 
     private GLResourceManager()
@@ -55,17 +57,19 @@ public class GLResourceManager : IDisposable
     /// This request for new framebuffers returns a list collection of buffers. An exception
     /// is thrown if buffers are already allocated to the owner.
     /// </summary>
-    public IReadOnlyList<GLResourceGroup> CreateResourceGroups(Guid ownerName, int totalRequired, Vector2 viewportResolution)
+    public IReadOnlyList<GLResourceGroup> CreateResourceGroups(string ownerName, int totalRequired, Vector2 viewportResolution)
         => CreateResourceGroups(ownerName, totalRequired, (int)viewportResolution.X, (int)viewportResolution.Y);
 
     /// <summary>
     /// This request for new framebuffers returns a list collection of buffers. An exception
     /// is thrown if buffers are already allocated to the owner.
     /// </summary>
-    public IReadOnlyList<GLResourceGroup> CreateResourceGroups(Guid ownerName, int totalRequired, int viewportWidth, int viewportHeight)
+    public IReadOnlyList<GLResourceGroup> CreateResourceGroups(string ownerName, int totalRequired, int viewportWidth, int viewportHeight)
     {
         if (AllocatedResourceGroups.ContainsKey(ownerName)) throw new InvalidOperationException($"GL resources already allocated to owner name {ownerName}");
         if (totalRequired < 1) throw new ArgumentOutOfRangeException("GL resource allocation request must be 1 or greater");
+
+        LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} creating {totalRequired} resource groups for {ownerName}");
 
         List<GLResourceGroup> list = new(totalRequired);
 
@@ -95,10 +99,12 @@ public class GLResourceManager : IDisposable
         return list;
     }
 
-    public IReadOnlyList<GLImageTexture> CreateTextureResources(Guid ownerName, int totalRequired)
+    public IReadOnlyList<GLImageTexture> CreateTextureResources(string ownerName, int totalRequired)
     {
         if (AllocatedImageTextures.ContainsKey(ownerName)) throw new InvalidOperationException($"GL texture resources already allocated to owner name {ownerName}");
         if (totalRequired < 1) throw new ArgumentOutOfRangeException("GL texture resource allocation request must be 1 or greater");
+
+        LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} creating {totalRequired} texture resources for {ownerName}");
 
         List<GLImageTexture> list = new(totalRequired);
 
@@ -122,16 +128,18 @@ public class GLResourceManager : IDisposable
     /// Cleans up all framebuffers associated with the caller's owner identifier. The caller should
     /// destroy any local copy of the list object that was returned by the create method.
     /// </summary>
-    public void DestroyAllResources(Guid ownerName)
+    public void DestroyAllResources(string ownerName)
     {
         if (AllocatedResourceGroups.ContainsKey(ownerName))
         {
+            LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} destroying resource groups for {ownerName}");
             DestroyResourceGroupsInternal(AllocatedResourceGroups[ownerName]);
             AllocatedResourceGroups.Remove(ownerName);
         }
 
         if (AllocatedImageTextures.ContainsKey(ownerName))
         {
+            LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} destroying texture resources for {ownerName}");
             DestroyImageTexturesInternal(AllocatedImageTextures[ownerName]);
             AllocatedImageTextures.Remove(ownerName);
         }
@@ -142,7 +150,7 @@ public class GLResourceManager : IDisposable
     /// dimensions are provided, this is a signal to copy (scale) the old content, otherwise
     /// the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTextures(Guid ownerName, Vector2 viewportResolution, Vector2 oldResolution = default)
+    public void ResizeTextures(string ownerName, Vector2 viewportResolution, Vector2 oldResolution = default)
         => ResizeTextures(ownerName, (int)viewportResolution.X, (int)viewportResolution.Y, (int)oldResolution.X, (int)oldResolution.Y);
 
     /// <summary>
@@ -150,7 +158,7 @@ public class GLResourceManager : IDisposable
     /// dimensions are provided, this is a signal to copy (scale) the old content, otherwise
     /// the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTextures(Guid ownerName, int viewportWidth, int viewportHeight, int oldWidth = 0, int oldHeight = 0)
+    public void ResizeTextures(string ownerName, int viewportWidth, int viewportHeight, int oldWidth = 0, int oldHeight = 0)
     {
         if (!AllocatedResourceGroups.ContainsKey(ownerName)) return;
         var copyContent = oldWidth > 0 && oldHeight > 0;
@@ -209,7 +217,14 @@ public class GLResourceManager : IDisposable
 
     private int AssignTextureUnit()
     {
-        if(AvailableTextureUnits.Count == 0) throw new InvalidOperationException($"Avalable TextureUnit slots exhausted (from {Caching.MaxAvailableTextureUnit} available)");
+        if (AvailableTextureUnits.Count == 0)
+        {
+            throw new InvalidOperationException($"Avalable TextureUnit slots exhausted (from {Caching.MaxAvailableTextureUnit} available)");
+            //StringBuilder keys = new(AllocatedResourceGroups.Count + AllocatedImageTextures.Count);
+            //foreach (var kvp in AllocatedResourceGroups) keys.Append("  RG: ").AppendLine(kvp.Key);
+            //foreach (var kvp in AllocatedImageTextures) keys.Append("  TX: ").AppendLine(kvp.Key);
+            //throw new InvalidOperationException($"Avalable TextureUnit slots exhausted (from {Caching.MaxAvailableTextureUnit} available)\n  Allocations:\n{keys}");
+        }
         var tu = AvailableTextureUnits[0];
         AvailableTextureUnits.RemoveAt(0);
         return tu;
@@ -229,21 +244,28 @@ public class GLResourceManager : IDisposable
 
     private void DestroyResourceGroupsInternal(IReadOnlyList<GLResourceGroup> list)
     {
-        int[] handles = list.Select(i => i.FramebufferHandle).ToArray();
+        var handles = list.Select(i => i.FramebufferHandle).ToArray();
+        LogHelper.Logger?.LogTrace($"   Deleting {handles.Length} framebuffer handles");
         GL.DeleteFramebuffers(handles.Length, handles);
 
         handles = list.Select(i => i.TextureHandle).ToArray();
+        LogHelper.Logger?.LogTrace($"   Deleting {handles.Length} texture handles");
         GL.DeleteTextures(handles.Length, handles);
 
-        AvailableTextureUnits.AddRange(list.Select(i => i.TextureUnitOrdinal).ToList());
+        handles = list.Select(i => i.TextureUnitOrdinal).ToArray();
+        LogHelper.Logger?.LogTrace($"   Releasing {handles.Length} texture units");
+        AvailableTextureUnits.AddRange(handles.ToList());
     }
 
     private void DestroyImageTexturesInternal(IReadOnlyList<GLImageTexture> list)
     {
-        int[] handles = list.Select(i => i.TextureHandle).ToArray();
+        var handles = list.Select(i => i.TextureHandle).ToArray();
+        LogHelper.Logger?.LogTrace($"   Deleting {handles.Length} texture handles");
         GL.DeleteTextures(handles.Length, handles);
 
-        AvailableTextureUnits.AddRange(list.Select(i => i.TextureUnitOrdinal).ToList());
+        handles = list.Select(i => i.TextureUnitOrdinal).ToArray();
+        LogHelper.Logger?.LogTrace($"   Releasing {handles.Length} texture units");
+        AvailableTextureUnits.AddRange(handles.ToList());
     }
 
     public void Dispose()

@@ -43,6 +43,8 @@ namespace mhh
                 return;
             }
 
+            LogHelper.Logger?.LogTrace($"ConfigFile: {confPathname}");
+
             var section = string.Empty;
             int sectionID = 0;
             foreach (var line in File.ReadAllLines(Pathname))

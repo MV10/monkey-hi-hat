@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using StbImageSharp;
+using System.Runtime.CompilerServices;
 
 namespace mhh;
 
@@ -124,7 +125,7 @@ public static class RenderingHelper
     /// Maps visualizer config [textures] data to GLImageTexture resource assignments and loads
     /// the indicated filenames.
     /// </summary>
-    public static IReadOnlyList<GLImageTexture> GetTextures(Guid ownerName, ConfigFile configSource)
+    public static IReadOnlyList<GLImageTexture> GetTextures(string ownerName, ConfigFile configSource)
     {
         if (!configSource.Content.ContainsKey("textures")) return null;
 
@@ -213,6 +214,13 @@ public static class RenderingHelper
         }
         return (new(w, h), false);
     }
+
+    /// <summary>
+    /// Produces a timestamped GL resource owner name unique to the type and purpose.
+    /// Useful for debugging resource allocation leaks.
+    /// </summary>
+    public static string MakeOwnerName(string usage, [CallerFilePath] string owner = "")
+        => $"{Path.GetFileNameWithoutExtension(owner)} {usage} {DateTime.Now:yyyy-MM-dd HH:mm:ss.ffff}";
 
     private static void LogInvalidReason(string reason, IRenderer renderer)
     {

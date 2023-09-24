@@ -66,6 +66,7 @@ public class RenderManager : IDisposable
 
         if (!renderer.IsValid)
         {
+            renderer.Dispose();
             LogHelper.Logger?.LogError(renderer.InvalidReason);
             return;
         }
@@ -98,6 +99,7 @@ public class RenderManager : IDisposable
         var fxRenderer = new FXRenderer(fxConfig, ActiveRenderer);
         if (!fxRenderer.IsValid)
         {
+            fxRenderer.Dispose();
             LogHelper.Logger?.LogError(fxRenderer.InvalidReason);
             return false;
         }
@@ -152,9 +154,12 @@ public class RenderManager : IDisposable
 
     private void CrossfadeCompleted()
     {
-        // Upon completion, re-take control of the new one and make it active
-        var newRenderer = (ActiveRenderer as CrossfadeRenderer).NewRenderer;
-        ActiveRenderer.Dispose();
+        // Upon completion, re-take control of the new one, clean up the
+        // old one and the crossfader, and make the new one active
+        var crossfader = ActiveRenderer as CrossfadeRenderer;
+        var newRenderer = crossfader.NewRenderer;
+        crossfader.OldRenderer.Dispose();
+        crossfader.Dispose();
         ActiveRenderer = newRenderer;
     }
 

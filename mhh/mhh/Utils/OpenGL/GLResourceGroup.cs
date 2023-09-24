@@ -8,7 +8,7 @@ public class GLResourceGroup
     /// <summary>
     /// Identifies the object which requested the allocation.
     /// </summary>
-    public Guid OwnerName;
+    public string OwnerName;
 
     /// <summary>
     /// The 0-based index number the owner should use to find the right

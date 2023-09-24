@@ -16,8 +16,8 @@ public class MultipassSectionParser
 
     // References to the object requesting parsing
     private IRenderer OwningRenderer;
-    private Guid DrawbufferOwnerName = Guid.NewGuid();
-    private Guid BackbufferOwnerName = Guid.NewGuid();
+    private string DrawbufferOwnerName = RenderingHelper.MakeOwnerName("Drawbuffers");
+    private string BackbufferOwnerName = RenderingHelper.MakeOwnerName("Backbuffers");
     private ConfigFile configSource;
 
     // Type-specific configs from supported renderer types
@@ -34,7 +34,7 @@ public class MultipassSectionParser
     private string[] column;
     private string err;
 
-    public MultipassSectionParser(IRenderer forRenderer, Guid drawbufferOwnerName, Guid backbufferOwnerName)
+    public MultipassSectionParser(IRenderer forRenderer, string drawbufferOwnerName, string backbufferOwnerName)
     {
         OwningRenderer = forRenderer;
         DrawbufferOwnerName = drawbufferOwnerName;

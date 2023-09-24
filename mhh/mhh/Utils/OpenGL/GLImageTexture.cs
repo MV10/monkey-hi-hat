@@ -8,7 +8,7 @@ public class GLImageTexture
     /// <summary>
     /// Identifies the object which requested the allocation.
     /// </summary>
-    public Guid OwnerName;
+    public string OwnerName;
 
     /// <summary>
     /// The resource owner should set this.

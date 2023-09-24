@@ -37,7 +37,7 @@ public class VisualizerFragmentQuad : IVisualizer
     private int VertexBufferObject;
     private int VertexArrayObject;
 
-    private Guid OwnerName = Guid.NewGuid();
+    private string OwnerName = RenderingHelper.MakeOwnerName("Textures");
     private IReadOnlyList<GLImageTexture> Textures;
 
     public void Initialize(VisualizerConfig config, Shader shader)

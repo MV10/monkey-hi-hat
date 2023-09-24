@@ -27,14 +27,14 @@ public class FXRenderer : IRenderer
     public bool OutputIntercepted { set => IsOutputIntercepted = value; }
     private bool IsOutputIntercepted = false;
 
-    private Guid DrawbufferOwnerName = Guid.NewGuid();
-    private Guid BackbufferOwnerName = Guid.NewGuid();
+    private string DrawbufferOwnerName = RenderingHelper.MakeOwnerName("Drawbuffers");
+    private string BackbufferOwnerName = RenderingHelper.MakeOwnerName("Backbuffers");
     private IReadOnlyList<GLResourceGroup> DrawbufferResources;
     private IReadOnlyList<GLResourceGroup> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
     private IReadOnlyList<GLImageTexture> Textures;
 
-    private Guid CrossfadeOwnerName = Guid.NewGuid();
+    private string CrossfadeOwnerName = RenderingHelper.MakeOwnerName("Crossfading");
     private GLResourceGroup CrossfadeResources;
     private Shader CrossfadeShader;
     private IVisualizer CrossfadeViz;
@@ -286,16 +286,16 @@ public class FXRenderer : IRenderer
         }
 
         // this also deletes any allocated textures
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Drawbuffer Resources");
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Drawbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(DrawbufferOwnerName);
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Backbuffer Resources");
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Backbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(BackbufferOwnerName);
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() crossfade Resources");
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade Resources");
         RenderManager.ResourceManager.DestroyAllResources(CrossfadeOwnerName);
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() crossfade Visualizer");
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade Visualizer");
         CrossfadeViz?.Dispose();
 
         DrawbufferResources = null;

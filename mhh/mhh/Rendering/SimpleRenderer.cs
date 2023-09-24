@@ -24,7 +24,7 @@ public class SimpleRenderer : IRenderer
     public ConfigFile ConfigSource { get => Config.ConfigSource; }
     public VisualizerConfig Config;
 
-    public Guid OwnerName = Guid.NewGuid();
+    public string OwnerName = RenderingHelper.MakeOwnerName("Drawbuffers");
     public IVisualizer Visualizer;
     public CachedShader Shader;
 

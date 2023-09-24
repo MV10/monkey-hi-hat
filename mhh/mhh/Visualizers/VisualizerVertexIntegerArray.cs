@@ -30,7 +30,7 @@ public class VisualizerVertexIntegerArray : IVisualizer
         PrimitiveType.TriangleFan,
     };
 
-    private Guid OwnerName = Guid.NewGuid();
+    private string OwnerName = RenderingHelper.MakeOwnerName("Textures");
     private IReadOnlyList<GLImageTexture> Textures;
 
     // init from config via interface (only way to load textures)

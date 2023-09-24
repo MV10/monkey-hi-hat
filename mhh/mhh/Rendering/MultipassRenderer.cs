@@ -31,8 +31,8 @@ public class MultipassRenderer : IRenderer
     public ConfigFile ConfigSource { get => Config.ConfigSource; }
     public VisualizerConfig Config;
 
-    private Guid DrawbufferOwnerName = Guid.NewGuid();
-    private Guid BackbufferOwnerName = Guid.NewGuid();
+    private string DrawbufferOwnerName = RenderingHelper.MakeOwnerName("Drawbuffers");
+    private string BackbufferOwnerName = RenderingHelper.MakeOwnerName("Backbuffers");
     private IReadOnlyList<GLResourceGroup> DrawbufferResources;
     private IReadOnlyList<GLResourceGroup> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
@@ -53,16 +53,16 @@ public class MultipassRenderer : IRenderer
         try
         {
             var parser = new MultipassSectionParser(this, DrawbufferOwnerName, BackbufferOwnerName);
-            if(IsValid)
-            {
-                // copy references to the results
-                ShaderPasses = parser.ShaderPasses;
-                DrawbufferResources = parser.DrawbufferResources;
-                BackbufferResources = parser.BackbufferResources;
+            if (!IsValid) return;
 
-                // initialize the output buffer info
-                FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
-            }
+            // copy references to the results
+            ShaderPasses = parser.ShaderPasses;
+            DrawbufferResources = parser.DrawbufferResources;
+            BackbufferResources = parser.BackbufferResources;
+
+            // initialize the output buffer info
+            FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
+
             parser = null;
         }
         catch (ArgumentException ex)
