@@ -55,10 +55,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "
 		..\testcontent\staticimage.frag = ..\testcontent\staticimage.frag
 		..\testcontent\texture.conf = ..\testcontent\texture.conf
 		..\testcontent\texture.frag = ..\testcontent\texture.frag
-		..\testcontent\vizfragquad.conf = ..\testcontent\vizfragquad.conf
-		..\testcontent\vizfragquad.frag = ..\testcontent\vizfragquad.frag
-		..\testcontent\vizvertint.conf = ..\testcontent\vizvertint.conf
-		..\testcontent\vizvertint.vert = ..\testcontent\vizvertint.vert
+		..\testcontent\vertint.conf = ..\testcontent\vertint.conf
+		..\testcontent\vertint.vert = ..\testcontent\vertint.vert
+		..\testcontent\vertquad.conf = ..\testcontent\vertquad.conf
+		..\testcontent\vertquad.frag = ..\testcontent\vertquad.frag
 	EndProjectSection
 EndProject
 Global
