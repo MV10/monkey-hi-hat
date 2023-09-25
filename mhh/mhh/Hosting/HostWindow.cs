@@ -236,12 +236,14 @@ namespace mhh
                 {
                     Renderer.ApplyFX(QueuedFXConfig);
                     QueuedFXConfig = null;
+                    return;
                 }
 
                 if(QueuedVisualizerConfig is not null)
                 {
                     Renderer.PrepareNewRenderer(QueuedVisualizerConfig);
                     QueuedVisualizerConfig = null;
+                    return;
                 }
             }
         }

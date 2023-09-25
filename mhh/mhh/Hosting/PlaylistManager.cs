@@ -90,8 +90,47 @@ public class PlaylistManager
 
         if (ActivePlaylist.FXPercent > 0 && RNG.Next(1, 101) <= ActivePlaylist.FXPercent) ChooseNextFX();
 
+        LogHelper.Logger?.LogTrace($" Playlist queuing viz {Path.GetFileNameWithoutExtension(pathname)} with FX {NextFXConfig ?? "(none)"}");
+
         var msg = Program.AppWindow.Command_Load(pathname, terminatesPlaylist: false);
         return msg;
+    }
+
+    public void StartingNextVisualization(VisualizerConfig visualizerConfig)
+    {
+        // RenderManager calls this (whether a playlist is running or not) when a
+        // new visualizer is prepared for loading. Visualizer playlist settings can
+        // be applied here (in StartNewPlaylist, only the visualizer filename was
+        // known, the config was not loaded yet; similarly only a pending FX name
+        // is known here, if any; the FX config hasn't been loaded yet).
+
+        if (ActivePlaylist is null) return;
+
+        if(NextFXConfig is not null)
+        {
+            var fxFilename = Path.GetFileNameWithoutExtension(NextFXConfig);
+            if(visualizerConfig.FXBlacklist.Any(f => f.Equals(fxFilename, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                NextFXConfig = null;
+                FXStartTime = DateTime.MaxValue;
+            }
+        }
+
+        if(ActivePlaylist.SwitchMode == PlaylistSwitchModes.Time && visualizerConfig.SwitchTimeHint != VizPlaylistTimeHint.None)
+        {
+            if (visualizerConfig.SwitchTimeHint == VizPlaylistTimeHint.Half)
+            {
+                var seconds = PlaylistAdvanceAt.Subtract(DateTime.Now).TotalSeconds;
+                seconds = Math.Min(5, seconds * 0.5);
+                PlaylistAdvanceAt = DateTime.Now.AddSeconds(seconds);
+            }
+
+            if(visualizerConfig.SwitchTimeHint == VizPlaylistTimeHint.Double
+                || (visualizerConfig.SwitchTimeHint == VizPlaylistTimeHint.DoubleFX && NextFXConfig is not null))
+            {
+                PlaylistAdvanceAt.AddSeconds(ActivePlaylist.SwitchSeconds);
+            }
+        }
     }
 
     public string ApplyFX()

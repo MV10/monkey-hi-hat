@@ -70,4 +70,15 @@ namespace mhh
         Snapshot = 2,
         SnapClock = 3,
     }
+
+    /// <summary>
+    /// Controls visualizer playback time in a playlist.
+    /// </summary>
+    public enum VizPlaylistTimeHint
+    {
+        None = 0,
+        Half = 1,
+        Double = 2,
+        DoubleFX = 3,
+    }
 }

@@ -77,6 +77,8 @@ public class RenderManager : IDisposable
             ActiveRenderer = null;
         }
 
+        Program.AppWindow.Playlist?.StartingNextVisualization(visualizerConfig);
+
         if (ActiveRenderer is null)
         {
             ActiveRenderer = renderer;

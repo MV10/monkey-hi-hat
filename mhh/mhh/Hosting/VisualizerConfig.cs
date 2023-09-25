@@ -26,6 +26,10 @@ namespace mhh
 
         public readonly List<string> AudioTextureUniformNames = new();
 
+        public readonly VizPlaylistTimeHint SwitchTimeHint;
+        public readonly int ChangeFXPercentage;
+        public readonly List<string> FXBlacklist = new();
+
         public VisualizerConfig(string pathname)
         {
             ConfigSource = new ConfigFile(pathname);
@@ -65,6 +69,17 @@ namespace mhh
                 foreach(var tex in ConfigSource.Content["audiotextures"])
                 {
                     AudioTextureUniformNames.Add(tex.Value);
+                }
+            }
+
+            SwitchTimeHint = ConfigSource.ReadValue("playlist", "switchtimehint").ToEnum(VizPlaylistTimeHint.None);
+            ChangeFXPercentage = ConfigSource.ReadValue("playlist", "changefxpercentage").ToInt32(0);
+
+            if (ConfigSource.Content.ContainsKey("fx-blacklist"))
+            {
+                foreach (var fx in ConfigSource.Content["fx-blacklist"])
+                {
+                    FXBlacklist.Add(fx.Value);
                 }
             }
 
