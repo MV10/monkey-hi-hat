@@ -16,6 +16,7 @@ public class PlaylistManager
     private string NextFXConfig = null;
     private DateTime FXStartTime = DateTime.MaxValue;
     private bool ForceStartFX;
+    private int FXAddStartPercent;
 
     public string StartNewPlaylist(string playlistConfPathname)
     {
@@ -90,7 +91,7 @@ public class PlaylistManager
 
         if (ActivePlaylist.FXPercent > 0 && RNG.Next(1, 101) <= ActivePlaylist.FXPercent) ChooseNextFX();
 
-        LogHelper.Logger?.LogTrace($" Playlist queuing viz {Path.GetFileNameWithoutExtension(pathname)} with FX {NextFXConfig ?? "(none)"}");
+        LogHelper.Logger?.LogTrace($"Playlist queuing viz {Path.GetFileNameWithoutExtension(pathname)} with FX {NextFXConfig ?? "(none)"}");
 
         var msg = Program.AppWindow.Command_Load(pathname, terminatesPlaylist: false);
         return msg;
@@ -106,7 +107,9 @@ public class PlaylistManager
 
         if (ActivePlaylist is null) return;
 
-        if(NextFXConfig is not null)
+        FXAddStartPercent = visualizerConfig.FXAddStartPercent;
+
+        if (NextFXConfig is not null)
         {
             var fxFilename = Path.GetFileNameWithoutExtension(NextFXConfig);
             if(visualizerConfig.FXBlacklist.Any(f => f.Equals(fxFilename, StringComparison.InvariantCultureIgnoreCase)))
@@ -167,7 +170,7 @@ public class PlaylistManager
         }
 
         // apply FX?
-        if (ForceStartFX || DateTime.Now > FXStartTime && RNG.Next(1, 101) > 50)
+        if (ForceStartFX || DateTime.Now > FXStartTime && RNG.Next(1, 101) <= (50 + FXAddStartPercent))
         {
             FXStartTime = DateTime.MaxValue;
             IsFXActive = true;

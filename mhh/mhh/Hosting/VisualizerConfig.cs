@@ -27,7 +27,7 @@ namespace mhh
         public readonly List<string> AudioTextureUniformNames = new();
 
         public readonly VizPlaylistTimeHint SwitchTimeHint;
-        public readonly int ChangeFXPercentage;
+        public readonly int FXAddStartPercent;
         public readonly List<string> FXBlacklist = new();
 
         public VisualizerConfig(string pathname)
@@ -73,7 +73,7 @@ namespace mhh
             }
 
             SwitchTimeHint = ConfigSource.ReadValue("playlist", "switchtimehint").ToEnum(VizPlaylistTimeHint.None);
-            ChangeFXPercentage = ConfigSource.ReadValue("playlist", "changefxpercentage").ToInt32(0);
+            FXAddStartPercent = ConfigSource.ReadValue("playlist", "fxaddstartpercent").ToInt32(0);
 
             if (ConfigSource.Content.ContainsKey("fx-blacklist"))
             {
@@ -93,6 +93,8 @@ namespace mhh
                 LogHelper.Logger?.LogWarning($"Clamping visualizer to global RenderResolutionLimit {Program.AppConfig.RenderResolutionLimit} instead of {RenderResolutionLimit} in conf.");
                 RenderResolutionLimit = Program.AppConfig.RenderResolutionLimit;
             }
+
+            if (FXAddStartPercent < -50 || FXAddStartPercent > 50) throw new ArgumentException($"{err} FXAddStartPercent must be within -50 to +50 (default is 0)");
         }
     }
 }
