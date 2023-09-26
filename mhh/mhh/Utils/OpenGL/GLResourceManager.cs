@@ -161,43 +161,52 @@ public class GLResourceManager : IDisposable
     public void ResizeTextures(string ownerName, int viewportWidth, int viewportHeight, int oldWidth = 0, int oldHeight = 0)
     {
         if (!AllocatedResourceGroups.ContainsKey(ownerName)) return;
-        var copyContent = oldWidth > 0 && oldHeight > 0;
+        foreach (var resources in AllocatedResourceGroups[ownerName])
+        {
+            ResizeTexture(resources, viewportWidth, viewportHeight, oldWidth, oldHeight);
+        }
+    }
+
+    /// <summary>
+    /// Resize a specific framebuffer texture. If old viewport dimensions are provided, this is a 
+    /// signal to copy (scale) the old content, otherwise the new content is uninitialized (blank).
+    /// </summary>
+    public void ResizeTexture(GLResourceGroup resources, int viewportWidth, int viewportHeight, int oldWidth = 0, int oldHeight = 0)
+    {
+        bool copyContent = oldWidth > 0 && oldHeight > 0;
         int oldFramebufferHandle = 0;
         int oldTextureHandle = 0;
 
-        foreach (var info in AllocatedResourceGroups[ownerName])
+        // When copying, we store the old FBO and texture handles and the
+        // GLResourceGroup ends up with brand new ones. The old ones are used
+        // for the copy and are then released.
+        if (copyContent)
         {
-            // When copying, we store the old FBO and texture handles and the
-            // GLResourceGroup ends up with brand new ones. The old ones are used
-            // for the copy and are then released.
-            if(copyContent)
-            {
-                oldFramebufferHandle = info.FramebufferHandle;
-                oldTextureHandle = info.TextureHandle;
-                info.FramebufferHandle = GL.GenFramebuffer();
-                info.TextureHandle = GL.GenTexture();
-            }
+            oldFramebufferHandle = resources.FramebufferHandle;
+            oldTextureHandle = resources.TextureHandle;
+            resources.FramebufferHandle = GL.GenFramebuffer();
+            resources.TextureHandle = GL.GenTexture();
+        }
 
-            // Attach a new texture of a new size to the framebuffer
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, info.FramebufferHandle);
-            GL.BindTexture(TextureTarget.Texture2D, info.TextureHandle);
-            AllocateFramebufferTexture(info.TextureHandle, viewportWidth, viewportHeight);
-            ValidateFramebuffer();
+        // Attach a new texture of a new size to the framebuffer
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, resources.FramebufferHandle);
+        GL.BindTexture(TextureTarget.Texture2D, resources.TextureHandle);
+        AllocateFramebufferTexture(resources.TextureHandle, viewportWidth, viewportHeight);
+        ValidateFramebuffer();
 
-            // Do the copy, if requested, then delete the old buffers
-            if(copyContent)
-            {
-                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldFramebufferHandle);
-                GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, info.FramebufferHandle);
-                GL.BlitFramebuffer(
-                    0, 0, oldWidth, oldHeight,
-                    0, 0, viewportWidth, viewportHeight,
-                    ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
+        // Do the copy, if requested, then delete the old buffers
+        if (copyContent)
+        {
+            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldFramebufferHandle);
+            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, resources.FramebufferHandle);
+            GL.BlitFramebuffer(
+                0, 0, oldWidth, oldHeight,
+                0, 0, viewportWidth, viewportHeight,
+                ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
 
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-                GL.DeleteTexture(oldTextureHandle);
-                GL.DeleteFramebuffer(oldFramebufferHandle);
-            }
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            GL.DeleteTexture(oldTextureHandle);
+            GL.DeleteFramebuffer(oldFramebufferHandle);
         }
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);

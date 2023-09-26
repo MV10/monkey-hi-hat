@@ -67,6 +67,14 @@ public class FXRenderer : IRenderer
             DrawbufferResources = parser.DrawbufferResources;
             BackbufferResources = parser.BackbufferResources;
 
+            // if primary doesn't have buffers, ShaderPass[0] needs to match the primary's resolution (assuming it differs from the FX buffer resolution)
+            if (PrimaryRenderer is not null && PrimaryRenderer.OutputBuffers is null
+                && (PrimaryRenderer.Resolution.X != ViewportResolution.X || PrimaryRenderer.Resolution.Y != ViewportResolution.Y))
+            {
+                RenderManager.ResourceManager.ResizeTexture(ShaderPasses[0].Drawbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
+                if (ShaderPasses[0].Backbuffers is not null) RenderManager.ResourceManager.ResizeTexture(ShaderPasses[0].Backbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
+            }
+
             // initialize the output buffer
             FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
 
@@ -104,8 +112,15 @@ public class FXRenderer : IRenderer
         {
             // if the primary doesn't own framebuffers, use buffer 0 owned by FXRenderer
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            if(PrimaryRenderer.OutputBuffers is null) GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, ShaderPasses[0].Drawbuffers.FramebufferHandle);
-            GL.Viewport(0, 0, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
+            if (PrimaryRenderer.OutputBuffers is null)
+            {
+                GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, ShaderPasses[0].Drawbuffers.FramebufferHandle);
+                GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
+            }
+            else
+            {
+                GL.Viewport(0, 0, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
+            }
             GL.Clear(ClearBufferMask.ColorBufferBit);
             PrimaryRenderer.RenderFrame();
 
@@ -251,6 +266,14 @@ public class FXRenderer : IRenderer
         RenderManager.ResourceManager.ResizeTextures(DrawbufferOwnerName, ViewportResolution);
         if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, oldResolution);
         if (Config.Crossfade) RenderManager.ResourceManager.ResizeTextures(CrossfadeOwnerName, ViewportResolution);
+
+        // if primary doesn't have buffers, ShaderPass[0] needs to match the primary's resolution (assuming it differs from the FX buffer resolution)
+        if(PrimaryRenderer is not null && PrimaryRenderer.OutputBuffers is null
+            && (PrimaryRenderer.Resolution.X != ViewportResolution.X || PrimaryRenderer.Resolution.Y != ViewportResolution.Y))
+        {
+            RenderManager.ResourceManager.ResizeTexture(ShaderPasses[0].Drawbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
+            if (ShaderPasses[0].Backbuffers is not null) RenderManager.ResourceManager.ResizeTexture(ShaderPasses[0].Backbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y, (int)ViewportResolution.X, (int)ViewportResolution.Y);
+        }
 
         // re-bind the visualizers
         foreach (var pass in ShaderPasses)
