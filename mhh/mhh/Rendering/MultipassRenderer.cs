@@ -145,7 +145,7 @@ public class MultipassRenderer : IRenderer
 
         // resize draw buffers, and resize/copy back buffers
         RenderManager.ResourceManager.ResizeTextures(DrawbufferOwnerName, ViewportResolution);
-        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, oldResolution);
+        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, true);
 
         foreach (var pass in ShaderPasses)
         {

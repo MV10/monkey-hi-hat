@@ -150,20 +150,20 @@ public class GLResourceManager : IDisposable
     /// dimensions are provided, this is a signal to copy (scale) the old content, otherwise
     /// the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTextures(string ownerName, Vector2 viewportResolution, Vector2 oldResolution = default)
-        => ResizeTextures(ownerName, (int)viewportResolution.X, (int)viewportResolution.Y, (int)oldResolution.X, (int)oldResolution.Y);
+    public void ResizeTextures(string ownerName, Vector2 viewportResolution, bool copyContent = false)
+        => ResizeTextures(ownerName, (int)viewportResolution.X, (int)viewportResolution.Y, copyContent);
 
     /// <summary>
     /// Called by renderers whenever the viewport size has changed. If old viewport
     /// dimensions are provided, this is a signal to copy (scale) the old content, otherwise
     /// the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTextures(string ownerName, int viewportWidth, int viewportHeight, int oldWidth = 0, int oldHeight = 0)
+    public void ResizeTextures(string ownerName, int viewportWidth, int viewportHeight, bool copyContent = false)
     {
         if (!AllocatedResourceGroups.ContainsKey(ownerName)) return;
         foreach (var resources in AllocatedResourceGroups[ownerName])
         {
-            ResizeTexture(resources, viewportWidth, viewportHeight, oldWidth, oldHeight);
+            ResizeTexture(resources, viewportWidth, viewportHeight, copyContent);
         }
     }
 
@@ -171,9 +171,8 @@ public class GLResourceManager : IDisposable
     /// Resize a specific framebuffer texture. If old viewport dimensions are provided, this is a 
     /// signal to copy (scale) the old content, otherwise the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTexture(GLResourceGroup resources, int viewportWidth, int viewportHeight, int oldWidth = 0, int oldHeight = 0)
+    public void ResizeTexture(GLResourceGroup resources, int viewportWidth, int viewportHeight, bool copyContent = false)
     {
-        bool copyContent = oldWidth > 0 && oldHeight > 0;
         int oldFramebufferHandle = 0;
         int oldTextureHandle = 0;
 
@@ -198,6 +197,9 @@ public class GLResourceManager : IDisposable
         if (copyContent)
         {
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldFramebufferHandle);
+            GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureWidth, out int oldWidth);
+            GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureWidth, out int oldHeight);
+
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, resources.FramebufferHandle);
             GL.BlitFramebuffer(
                 0, 0, oldWidth, oldHeight,

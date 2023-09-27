@@ -60,7 +60,12 @@ public class FXRenderer : IRenderer
         try
         {
             var parser = new MultipassSectionParser(this, DrawbufferOwnerName, BackbufferOwnerName);
-            if (!IsValid) return;
+            if (!IsValid)
+            {
+                // don't dispose the currently active visualization if we can't use it here
+                PrimaryRenderer = null;
+                return;
+            }
 
             // copy references to the results
             ShaderPasses = parser.ShaderPasses;
@@ -96,6 +101,8 @@ public class FXRenderer : IRenderer
         {
             IsValid = false;
             InvalidReason = ex.Message;
+            // don't dispose the currently active visualization if we can't use it here
+            PrimaryRenderer = null;
             return;
         }
 
@@ -264,7 +271,7 @@ public class FXRenderer : IRenderer
 
         // resize draw buffers, and resize/copy back buffers
         RenderManager.ResourceManager.ResizeTextures(DrawbufferOwnerName, ViewportResolution);
-        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, oldResolution);
+        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, true);
         if (Config.Crossfade) RenderManager.ResourceManager.ResizeTextures(CrossfadeOwnerName, ViewportResolution);
 
         // if primary doesn't have buffers, ShaderPass[0] needs to match the primary's resolution (assuming it differs from the FX buffer resolution)
@@ -272,7 +279,7 @@ public class FXRenderer : IRenderer
             && (PrimaryRenderer.Resolution.X != ViewportResolution.X || PrimaryRenderer.Resolution.Y != ViewportResolution.Y))
         {
             RenderManager.ResourceManager.ResizeTexture(ShaderPasses[0].Drawbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
-            if (ShaderPasses[0].Backbuffers is not null) RenderManager.ResourceManager.ResizeTexture(ShaderPasses[0].Backbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y, (int)ViewportResolution.X, (int)ViewportResolution.Y);
+            if (ShaderPasses[0].Backbuffers is not null) RenderManager.ResourceManager.ResizeTexture(ShaderPasses[0].Backbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y, true);
         }
 
         // re-bind the visualizers

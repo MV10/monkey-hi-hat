@@ -5,7 +5,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace mhh
@@ -172,14 +172,13 @@ namespace mhh
                     switch(WindowState)
                     {
                         case WindowState.Fullscreen:
+                            //Debug.WriteLine($"OnUpdateFrame changing WindowState from {WindowState} to Normal");
                             WindowState = WindowState.Normal;
                             break;
 
-                        case WindowState.Normal:
-                            WindowState = WindowState.Fullscreen;
-                            break;
-
                         default:
+                            //Debug.WriteLine($"OnUpdateFrame changing WindowState from {WindowState} to Fullscreen");
+                            WindowState = WindowState.Fullscreen;
                             break;
                     }
                     CommandRequested = CommandRequest.None;
@@ -256,6 +255,8 @@ namespace mhh
         protected override void OnResize(ResizeEventArgs e)
         {
             base.OnResize(e);
+            // https://github.com/opentk/opentk/issues/1647
+            //Debug.WriteLine($"OnResize ClientSize {ClientSize.X},{ClientSize.Y}  WindowState {WindowState}");
             OnResizeFired = true;
         }
 
