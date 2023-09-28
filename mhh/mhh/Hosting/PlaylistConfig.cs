@@ -16,6 +16,7 @@ namespace mhh
         public readonly double MaxRunSeconds;
 
         public readonly int FXPercent;
+        public readonly int InstantFXPercent;
         public readonly int FXDelaySeconds;
         public readonly IReadOnlyList<string> FX;
 
@@ -48,6 +49,7 @@ namespace mhh
             FavoritesPct = ConfigSource.ReadValue("setup", "favoritespct").ToInt32(20);
 
             FXPercent = ConfigSource.ReadValue("setup", "fxpercent").ToInt32(0);
+            InstantFXPercent = ConfigSource.ReadValue("setup", "instantfxpercent").ToInt32(0);
             FXDelaySeconds = ConfigSource.ReadValue("setup", "fxdelayseconds").ToInt32(0);
 
             Visualizations = LoadNames("visualizations");
@@ -78,9 +80,9 @@ namespace mhh
 
             // TODO implement [Collections] section (reading from other playlists)
 
-            if (FXPercent < 0 || FXPercent > 100 || FXDelaySeconds < 0)
+            if (FXPercent < 0 || FXPercent > 100 || InstantFXPercent < 0 || InstantFXPercent > 100 || FXDelaySeconds < 0)
             {
-                Warning("FX settings are invalid and will be ignored.");
+                Warning("Some playlist FX settings are invalid, so FX usage is disabled.");
                 FXPercent = 0;
             }
 
