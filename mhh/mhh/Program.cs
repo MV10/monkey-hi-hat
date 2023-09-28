@@ -196,10 +196,13 @@ namespace mhh
             switch (args[0].ToLowerInvariant())
             {
                 case "--load":
-                    if (args.Length != 2) return ShowHelp();
-                    var shaderPathname = GetShaderPathname(args[1]);
-                    if (shaderPathname is null) return "ERR: Shader not found.";
-                    return AppWindow.Command_Load(shaderPathname);
+                    if (args.Length > 3) return ShowHelp();
+                    var vizPathname = GetVisualizerPathname(args[1]);
+                    if (vizPathname is null) return "ERR: Visualizer not found.";
+                    if (args.Length == 2) return AppWindow.Command_Load(vizPathname);
+                    var vizfxPathname = GetFxPathname(args[2]);
+                    if (vizfxPathname is null) return "ERR: FX not found.";
+                    return AppWindow.Command_Load(vizPathname, vizfxPathname);
 
                 case "--playlist":
                     if (args.Length != 2) return ShowHelp();
@@ -297,7 +300,7 @@ namespace mhh
 
                 case "--md.detail":
                     if (args.Length != 2) return "ERR: Visualizer name or pathname required.";
-                    return GetShaderDetail(GetShaderPathname(args[1]));
+                    return GetShaderDetail(GetVisualizerPathname(args[1]));
 
                 default:
                     return ShowHelp();
@@ -307,7 +310,7 @@ namespace mhh
         private static string GetPlaylistPathname(string fromArg)
             => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.PlaylistPath, fromArg);
 
-        private static string GetShaderPathname(string fromArg)
+        private static string GetVisualizerPathname(string fromArg)
             => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.VisualizerPath, fromArg);
 
         private static string GetFxPathname(string fromArg)
@@ -361,10 +364,11 @@ All switches are passed to the already-running instance:
 --reload                    unloads and reloads the current shader (unavailable after an FX shader loads)
 --fx [file]                 loads [file].conf from FXPath defined in mhh.conf
 --fx [path{Path.DirectorySeparatorChar}file]            if present, loads [file].conf from requested path
+--load [viz] [fx]           loads a visualization and immediately applies FX; must use search paths
 
 --playlist [file]           loads [file].conf from PlaylistPath defined in mhh.conf
 --playlist [path{Path.DirectorySeparatorChar}file]      if present, loads [file].conf from requested path
---next                      when a playlist is active, advances to the next viz (according to the Order)
+--next                      when a playlist is active, advances to the next viz (using the Order setting)
 --next fx                   when a playlist is active, applies a post-processing FX (if one isn't running)
 
 --info                      writes shader and execution details to the console

@@ -76,6 +76,7 @@ namespace mhh
         private object QueuedConfigLock = new();
         private VisualizerConfig QueuedVisualizerConfig = null;
         private FXConfig QueuedFXConfig = null;
+        private DateTime ApplyQueuedFXAt = DateTime.MinValue;
 
         private Random RNG = new();
 
@@ -231,17 +232,18 @@ namespace mhh
             // the GLFW thread won't be trying to use the Shader object
             lock (QueuedConfigLock)
             {
-                if(QueuedFXConfig is not null)
-                {
-                    Renderer.ApplyFX(QueuedFXConfig);
-                    QueuedFXConfig = null;
-                    return;
-                }
-
                 if(QueuedVisualizerConfig is not null)
                 {
                     Renderer.PrepareNewRenderer(QueuedVisualizerConfig);
                     QueuedVisualizerConfig = null;
+                    return;
+                }
+
+                if (QueuedFXConfig is not null && DateTime.Now >= ApplyQueuedFXAt)
+                {
+                    Renderer.ApplyFX(QueuedFXConfig);
+                    QueuedFXConfig = null;
+                    ApplyQueuedFXAt = DateTime.MinValue;
                     return;
                 }
             }
@@ -263,7 +265,7 @@ namespace mhh
         /// <summary>
         /// Handler for the --load command-line switch.
         /// </summary>
-        public string Command_Load(string visualizerConfPathname, bool terminatesPlaylist = true)
+        public string Command_Load(string visualizerConfPathname, string fxConfPathname = "", bool terminatesPlaylist = true)
         {
             var newViz = new VisualizerConfig(visualizerConfPathname);
             if (newViz.ConfigSource.Content.Count == 0)
@@ -272,9 +274,18 @@ namespace mhh
                 LogHelper.Logger?.LogError(err);
                 return $"ERR: {err}";
             }
+
             if (terminatesPlaylist) Playlist.TerminatePlaylist();
-            QueueNextConfig(newViz);
-            var msg = $"Requested visualizer {newViz.ConfigSource.Pathname}";
+
+            QueueVisualization(newViz);
+
+            if (!string.IsNullOrWhiteSpace(fxConfPathname))
+            {
+                var fx = Command_ApplyFX(fxConfPathname);
+                if (fx.StartsWith("ERR:")) fxConfPathname = null;
+            }
+
+            var msg = $"Requested visualizer {newViz.ConfigSource.Pathname}{(string.IsNullOrWhiteSpace(fxConfPathname) ? "" : $" with FX {fxConfPathname}")}";
             LogHelper.Logger?.LogInformation(msg);
             return msg;
         }
@@ -291,7 +302,7 @@ namespace mhh
                 LogHelper.Logger?.LogError(err);
                 return $"ERR: {err}";
             }
-            QueueNextConfig(fx);
+            QueueFX(fx);
             var msg = $"Requested FX {fx.ConfigSource.Pathname}";
             LogHelper.Logger?.LogInformation(msg);
             return msg;
@@ -355,7 +366,7 @@ playlist   : {Playlist.GetInfo()}
         public string Command_Idle()
         {
             Playlist.TerminatePlaylist();
-            QueueNextConfig(Caching.IdleVisualizer);
+            QueueVisualization(Caching.IdleVisualizer);
             return "ACK";
         }
 
@@ -400,7 +411,7 @@ playlist   : {Playlist.GetInfo()}
                 return $"ERR: {err}";
             }
 
-            QueueNextConfig(newViz, replaceCachedShader: true);
+            QueueVisualization(newViz, replaceCachedShader: true);
             var msg = $"Reloading {newViz.ConfigSource.Pathname}";
             LogHelper.Logger?.LogInformation(msg);
             return msg;
@@ -409,7 +420,7 @@ playlist   : {Playlist.GetInfo()}
         /// <summary>
         /// Queues a new visualizer to send to the RenderManager on the next OnUpdateFrame pass.
         /// </summary>
-        private void QueueNextConfig(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)
+        private void QueueVisualization(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)
         {
             lock (QueuedConfigLock)
             {
@@ -427,7 +438,7 @@ playlist   : {Playlist.GetInfo()}
         /// <summary>
         /// Queues a new FX to send to the RenderManager on the next OnUpdateFrame pass.
         /// </summary>
-        private void QueueNextConfig(FXConfig newVisualizerConfig)
+        private void QueueFX(FXConfig fxConfig)
         {
             lock (QueuedConfigLock)
             {
@@ -435,9 +446,14 @@ playlist   : {Playlist.GetInfo()}
                 // actual update occurs in OnUpdateFrame which is "safe"
                 // because it won't be busy doing things like using the
                 // current Shader object in an OnRenderFrame call.
-                QueuedFXConfig = newVisualizerConfig;
+                QueuedFXConfig = fxConfig;
 
-                // N
+                // allow time to crossfade a newly-loaded viz, or apply immediately
+                ApplyQueuedFXAt = (QueuedVisualizerConfig is not null)
+                    ? DateTime.Now.AddSeconds((double)Program.AppConfig.CrossfadeSeconds + 0.5)
+                    : DateTime.MinValue;
+
+                // This is never invoked with the --reload command.
                 RenderingHelper.ReplaceCachedShader = false;
             }
         }
