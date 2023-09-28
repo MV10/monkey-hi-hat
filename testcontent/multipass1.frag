@@ -6,8 +6,6 @@ uniform vec2 resolution;
 uniform sampler2D input0; // pass1-plasma
 out vec4 fragColor;
 
-// Derived from: https://www.shadertoy.com/view/lsdXDH
-
 #define fragCoord (fragCoord * resolution)
 #define iResolution resolution
 

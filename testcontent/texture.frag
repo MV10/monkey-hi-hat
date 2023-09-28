@@ -7,8 +7,6 @@ uniform float time;
 uniform sampler2D imageA;
 out vec4 fragColor;
 
-// Adapted from https://www.shadertoy.com/view/Xsl3zn
-
 void main()
 {
 	vec2 uv = fragCoord;

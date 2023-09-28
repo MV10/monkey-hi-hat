@@ -6,8 +6,6 @@ uniform vec2 resolution;
 uniform float time;
 out vec4 fragColor;
 
-// Derived from: https://www.shadertoy.com/view/XsVSzW
-
 #define fragCoord (fragCoord * resolution)
 #define iResolution resolution
 #define iTime time

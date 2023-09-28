@@ -7,8 +7,6 @@ uniform float time;
 uniform sampler2D input2; // pass3-sobel
 out vec4 fragColor;
 
-// Derived from: https://www.shadertoy.com/view/llcXW7
-
 #define fragCoord (fragCoord * resolution)
 #define iResolution resolution
 #define iTime time
