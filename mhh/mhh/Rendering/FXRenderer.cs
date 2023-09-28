@@ -291,10 +291,16 @@ public class FXRenderer : IRenderer
     }
 
     public void StartClock()
-        => Clock.Start();
+    {
+        Clock.Start();
+        PrimaryRenderer?.StartClock();
+    }
 
     public void StopClock()
-        => Clock.Stop();
+    {
+        Clock.Stop();
+        PrimaryRenderer?.StopClock();
+    }
 
     public float TrueElapsedTime()
         => (float)Clock.Elapsed.TotalSeconds;

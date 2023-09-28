@@ -76,7 +76,6 @@ namespace mhh
         private object QueuedConfigLock = new();
         private VisualizerConfig QueuedVisualizerConfig = null;
         private FXConfig QueuedFXConfig = null;
-        private DateTime ApplyQueuedFXAt = DateTime.MinValue;
 
         private Random RNG = new();
 
@@ -236,15 +235,11 @@ namespace mhh
                 {
                     Renderer.PrepareNewRenderer(QueuedVisualizerConfig);
                     QueuedVisualizerConfig = null;
-                    return;
                 }
 
-                if (QueuedFXConfig is not null && DateTime.Now >= ApplyQueuedFXAt)
+                if (QueuedFXConfig is not null && Renderer.ActiveRenderer is not CrossfadeRenderer)
                 {
-                    Renderer.ApplyFX(QueuedFXConfig);
-                    QueuedFXConfig = null;
-                    ApplyQueuedFXAt = DateTime.MinValue;
-                    return;
+                    if(Renderer.ApplyFX(QueuedFXConfig)) QueuedFXConfig = null;
                 }
             }
         }
@@ -432,6 +427,9 @@ playlist   : {Playlist.GetInfo()}
 
                 // When the --reload command has been issued we want to compile a fresh copy.
                 RenderingHelper.ReplaceCachedShader = replaceCachedShader;
+
+                // Wipe this out, although it may be set again for viz+fx scenarios
+                QueuedFXConfig = null;
             }
         }
 
@@ -447,11 +445,6 @@ playlist   : {Playlist.GetInfo()}
                 // because it won't be busy doing things like using the
                 // current Shader object in an OnRenderFrame call.
                 QueuedFXConfig = fxConfig;
-
-                // allow time to crossfade a newly-loaded viz, or apply immediately
-                ApplyQueuedFXAt = (QueuedVisualizerConfig is not null)
-                    ? DateTime.Now.AddSeconds((double)Program.AppConfig.CrossfadeSeconds + 0.5)
-                    : DateTime.MinValue;
 
                 // This is never invoked with the --reload command.
                 RenderingHelper.ReplaceCachedShader = false;
