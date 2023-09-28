@@ -51,24 +51,25 @@ public class PlaylistManager
         IsFXActive = false;
         ForceStartFX = false;
 
-        string filename;
+        string vizFile;
+        string fxFile;
         if (ActivePlaylist.Order == PlaylistOrder.RandomWeighted)
         {
             do
             {
                 if (RNG.Next(101) < 50 || RNG.Next(101) < ActivePlaylist.FavoritesPct)
                 {
-                    filename = ActivePlaylist.Favorites[RNG.Next(ActivePlaylist.Favorites.Count)];
+                    (vizFile, fxFile) = FilenameSplitter(ActivePlaylist.Favorites[RNG.Next(ActivePlaylist.Favorites.Count)]);
                 }
                 else
                 {
-                    filename = ActivePlaylist.Visualizations[RNG.Next(ActivePlaylist.Visualizations.Count)];
+                    (vizFile, fxFile) = FilenameSplitter(ActivePlaylist.Visualizations[RNG.Next(ActivePlaylist.Visualizations.Count)]);
                 }
-            } while (filename.Equals(Program.AppWindow.Renderer.ActiveRenderer?.Filename ?? string.Empty));
+            } while (vizFile.Equals(Program.AppWindow.Renderer.ActiveRenderer?.Filename ?? string.Empty));
         }
         else
         {
-            filename = ActivePlaylist.Playlist[PlaylistPointer++];
+            (vizFile, fxFile) = FilenameSplitter(ActivePlaylist.Playlist[PlaylistPointer++]);
             if (PlaylistPointer == ActivePlaylist.Playlist.Length)
             {
                 PlaylistPointer = 0;
@@ -86,14 +87,25 @@ public class PlaylistManager
             ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchCooldownSeconds)
             : DateTime.MinValue;
 
-        var pathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, filename);
-        if (pathname is null) return $"ERR: {filename} not found in shader path(s)";
+        var vizPathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, vizFile);
+        if (vizPathname is null) return $"ERR: {vizFile} not found in visualizer path(s)";
 
-        if (ActivePlaylist.FXPercent > 0 && RNG.Next(1, 101) <= ActivePlaylist.FXPercent) ChooseNextFX();
+        if (!string.IsNullOrWhiteSpace(fxFile))
+        {
+            var fxPathname = PathHelper.FindConfigFile(Program.AppConfig.FXPath, fxFile);
+            if (fxPathname is null) return $"ERR: {fxFile} not found in FX path(s)";
 
-        LogHelper.Logger?.LogTrace($"Playlist queuing viz {Path.GetFileNameWithoutExtension(pathname)} with FX {NextFXPathname ?? "(none)"}");
+            NextFXPathname = fxPathname;
+            ForceStartFX = true;
+        }
+        else
+        {
+            if (ActivePlaylist.FXPercent > 0 && RNG.Next(1, 101) <= ActivePlaylist.FXPercent) ChooseNextFX();
+        }
 
-        var msg = Program.AppWindow.Command_Load(pathname, terminatesPlaylist: false);
+        LogHelper.Logger?.LogTrace($"Playlist queuing viz {Path.GetFileNameWithoutExtension(vizPathname)} with FX {NextFXPathname ?? "(none)"}");
+
+        var msg = Program.AppWindow.Command_Load(vizPathname, terminatesPlaylist: false);
         return msg;
     }
 
@@ -190,5 +202,12 @@ public class PlaylistManager
 
         FXStartTime = DateTime.Now.AddSeconds(ActivePlaylist.FXDelaySeconds + Program.AppConfig.CrossfadeSeconds);
         ForceStartFX = (RNG.Next(1, 101) <= ActivePlaylist.InstantFXPercent);
+    }
+
+    private (string viz, string fx) FilenameSplitter(string entry)
+    {
+        var items = entry.Split(' ', Const.SplitOptions);
+        if (items.Length == 2) return (items[0], items[1]);
+        return (items[0], string.Empty);
     }
 }
