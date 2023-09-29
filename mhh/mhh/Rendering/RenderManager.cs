@@ -97,9 +97,14 @@ public class RenderManager : IDisposable
     /// </summary>
     public bool ApplyFX(FXConfig fxConfig)
     {
-        if (ActiveRenderer is null || ActiveRenderer is CrossfadeRenderer) return false;
-        var primaryRenderer = (NewRenderer is null) ? ActiveRenderer : NewRenderer;
+        if (ActiveRenderer is null) return false;
+
+        var primaryRenderer = 
+            (ActiveRenderer is CrossfadeRenderer)
+                ? (ActiveRenderer as CrossfadeRenderer).NewRenderer
+                : (NewRenderer is null) ? ActiveRenderer : NewRenderer;
         if (primaryRenderer is FXRenderer) return false;
+
         var fxRenderer = new FXRenderer(fxConfig, primaryRenderer);
         if (!fxRenderer.IsValid)
         {
@@ -107,15 +112,24 @@ public class RenderManager : IDisposable
             LogHelper.Logger?.LogError(fxRenderer.InvalidReason);
             return false;
         }
+
         if(NewRenderer is null)
         {
-            ActiveRenderer = fxRenderer;
-            if (!IsTimePaused) ActiveRenderer.StartClock();
+            if(ActiveRenderer is CrossfadeRenderer)
+            {
+                (ActiveRenderer as CrossfadeRenderer).NewRenderer = fxRenderer;
+            }
+            else
+            {
+                ActiveRenderer = fxRenderer;
+            }
+            if (!IsTimePaused) fxRenderer.StartClock();
         }
         else
         {
             NewRenderer = fxRenderer;
         }
+
         return true;
     }
 
