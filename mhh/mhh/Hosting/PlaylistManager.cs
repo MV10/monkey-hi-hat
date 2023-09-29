@@ -100,7 +100,6 @@ public class PlaylistManager
         }
         else
         {
-            if (ActivePlaylist.FXPercent > 0 && RNG.Next(1, 101) <= ActivePlaylist.FXPercent) ChooseNextFX();
         }
 
         LogHelper.Logger?.LogTrace($"Playlist queuing viz {Path.GetFileNameWithoutExtension(vizPathname)} with FX {NextFXPathname ?? "(none)"}");
@@ -121,13 +120,20 @@ public class PlaylistManager
 
         FXAddStartPercent = visualizerConfig.FXAddStartPercent;
 
+        if(NextFXPathname is null)
+        {
+            if (ActivePlaylist.FXPercent > 0 && RNG.Next(1, 101) <= ActivePlaylist.FXPercent) ChooseNextFX(visualizerConfig.ConfigSource);
+        }
+
         if (NextFXPathname is not null)
         {
             var fxFilename = Path.GetFileNameWithoutExtension(NextFXPathname);
+
             if(visualizerConfig.FXBlacklist.Any(f => f.Equals(fxFilename, StringComparison.InvariantCultureIgnoreCase)))
             {
                 NextFXPathname = null;
                 FXStartTime = DateTime.MaxValue;
+                ForceStartFX = false;
             }
         }
 
@@ -154,7 +160,7 @@ public class PlaylistManager
         if (IsFXActive) return "ERR: A post-processing FX is already active";
         if (ActivePlaylist.FX.Count == 0) return "ERR: FX disabled or no configurations were found";
 
-        if (NextFXPathname is null) ChooseNextFX();
+        if (NextFXPathname is null) ChooseNextFX(Program.AppWindow.Renderer.ActiveRenderer.ConfigSource);
         if (NextFXPathname is null) return "ERR: A selected FX config could not be found";
 
         ForceStartFX = true;
@@ -195,9 +201,22 @@ public class PlaylistManager
     public string GetInfo()
         => ActivePlaylist?.ConfigSource.Pathname ?? "(none)";
 
-    private void ChooseNextFX()
+    private void ChooseNextFX(ConfigFile visualizerConfig)
     {
-        NextFXPathname = PathHelper.FindConfigFile(Program.AppConfig.FXPath, ActivePlaylist.FX[RNG.Next(0, ActivePlaylist.FX.Count)]);
+        NextFXPathname = null;
+        FXStartTime = DateTime.MaxValue;
+        ForceStartFX = false;
+
+        var fxList = ActivePlaylist.FX;
+        if(visualizerConfig.Content.ContainsKey("fx-blacklist"))
+        {
+            var blacklist = visualizerConfig.Content["fx-blacklist"];
+            if (fxList.Count == blacklist.Count) return;
+            fxList = fxList.Where(fx => !blacklist.Any(bfx => bfx.Value.Equals(fx))).ToList();
+            if (fxList.Count == 0) return;
+        }
+
+        NextFXPathname = PathHelper.FindConfigFile(Program.AppConfig.FXPath, ActivePlaylist.FX[RNG.Next(0, fxList.Count)]);
         if (NextFXPathname is null) return;
 
         FXStartTime = DateTime.Now.AddSeconds(ActivePlaylist.FXDelaySeconds + Program.AppConfig.CrossfadeSeconds);
