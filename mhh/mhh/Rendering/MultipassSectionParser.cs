@@ -21,8 +21,8 @@ public class MultipassSectionParser
     private ConfigFile configSource;
 
     // Type-specific configs from supported renderer types
-    private VisualizerConfig vizConfig;
-    private FXConfig fxConfig;
+    private VisualizerConfig RendererVizConfig;
+    private FXConfig RendererFXConfig;
 
     // Indicates how many resources to request and simple validation
     private int MaxDrawbuffer = -1;
@@ -44,7 +44,7 @@ public class MultipassSectionParser
 
         if(OwningRenderer is MultipassRenderer)
         {
-            vizConfig = (OwningRenderer as MultipassRenderer).Config;
+            RendererVizConfig = (OwningRenderer as MultipassRenderer).Config;
             MultipassRendererParse();
             if (!OwningRenderer.IsValid) return;
             AllocateResources();
@@ -52,7 +52,7 @@ public class MultipassSectionParser
 
         if (OwningRenderer is FXRenderer)
         {
-            fxConfig = (OwningRenderer as FXRenderer).Config;
+            RendererFXConfig = (OwningRenderer as FXRenderer).Config;
             FXRendererParse();
             if (!OwningRenderer.IsValid) return;
             AllocateResources();
@@ -105,7 +105,7 @@ public class MultipassSectionParser
                     else
                     {
                         // has to be VertexQuad
-                        ShaderPass.VertexSource.Initialize(vizConfig, ShaderPass.Shader);
+                        ShaderPass.VertexSource.Initialize(RendererVizConfig, ShaderPass.Shader);
                     }
                 }
             }
@@ -228,6 +228,8 @@ public class MultipassSectionParser
         ShaderPass.Shader = RenderingHelper.GetShader(OwningRenderer, vertPathname, fragPathname);
         if (!OwningRenderer.IsValid) return;
         RenderingHelper.ReplaceCachedShader = replaceCachedShader;
+
+        // not necessary to set ShaderPass.Uniforms for FX, those are stored at the FXConfig level.
     }
 
     // MP column 2: visualizer.conf-based multipass (see mpvizconf.conf for docs)
@@ -246,6 +248,7 @@ public class MultipassSectionParser
         if (!OwningRenderer.IsValid) return;
         RenderingHelper.ReplaceCachedShader = replaceCachedShader;
 
+        ShaderPass.Uniforms = vizConfig.Uniforms;
         ShaderPass.VertexSource = RenderingHelper.GetVertexSource(OwningRenderer, vizConfig);
         ShaderPass.VertexSource.Initialize(vizConfig, ShaderPass.Shader);
     }
@@ -254,7 +257,7 @@ public class MultipassSectionParser
     private void ParseShaders()
     {
         var file = column[2];
-        var vertPathname = vizConfig.VertexShaderPathname;
+        var vertPathname = RendererVizConfig.VertexShaderPathname;
         if (!file.Equals("*"))
         {
             file = (!file.EndsWith(".vert", StringComparison.InvariantCultureIgnoreCase)) ? file += ".vert" : file;
@@ -263,7 +266,7 @@ public class MultipassSectionParser
         }
 
         file = column[3];
-        var fragPathname = vizConfig.FragmentShaderPathname;
+        var fragPathname = RendererVizConfig.FragmentShaderPathname;
         if (!file.Equals("*"))
         {
             file = (!file.EndsWith(".frag", StringComparison.InvariantCultureIgnoreCase)) ? file += ".frag" : file;
@@ -281,9 +284,11 @@ public class MultipassSectionParser
     // MP column 4+: not defined, default to same as renderer's visualizer.conf
     private void UseDefaultVertexSource()
     {
-        ShaderPass.VertexSource = RenderingHelper.GetVertexSource(OwningRenderer, vizConfig);
+        ShaderPass.VertexSource = RenderingHelper.GetVertexSource(OwningRenderer, RendererVizConfig);
         if (!OwningRenderer.IsValid) return;
-        ShaderPass.VertexSource.Initialize(vizConfig, ShaderPass.Shader);
+        ShaderPass.VertexSource.Initialize(RendererVizConfig, ShaderPass.Shader);
+
+        // no need to set ShaderPass.Uniforms, the renderer's viz config will supply them
     }
 
     // MP column 5: VisualizerVertexIntegerArray settings

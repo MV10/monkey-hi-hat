@@ -30,6 +30,8 @@ namespace mhh
         public readonly int FXAddStartPercent;
         public readonly List<string> FXBlacklist = new();
 
+        public readonly Dictionary<string, float> Uniforms;
+
         public VisualizerConfig(string pathname)
         {
             ConfigSource = new ConfigFile(pathname);
@@ -82,6 +84,8 @@ namespace mhh
                     FXBlacklist.Add(fx.Value);
                 }
             }
+
+            Uniforms = ConfigSource.ParseUniforms();
 
             // shader pathnames and vertex source type names are validated in RenderingHelper
 

@@ -45,6 +45,7 @@ public class FXRenderer : IRenderer
     private float snapClockNextSecond;
     private int snapClockPercent = 0;
     private Random RNG = new();
+    private float RandomRun;
 
     public FXRenderer(FXConfig fxConfig, IRenderer primaryRenderer)
     {
@@ -108,6 +109,7 @@ public class FXRenderer : IRenderer
 
         PrimaryRenderer.OutputIntercepted = true;
         snapClockNextSecond = PrimaryRenderer.TrueElapsedTime() + 1f;
+        RandomRun = (float)RNG.NextDouble();
     }
 
     public void RenderFrame()
@@ -148,16 +150,19 @@ public class FXRenderer : IRenderer
         foreach (var pass in ShaderPasses.Skip(1))
         {
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
-            RenderingHelper.SetGlobalUniforms(pass.Shader);
+            RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms);
             RenderingHelper.SetTextureUniforms(Textures, pass.Shader);
             pass.Shader.SetUniform("resolution", ViewportResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);
+            pass.Shader.SetUniform("randomrun", RandomRun);
+
             foreach (var index in pass.InputsDrawbuffers)
             {
                 var resource = ShaderPasses[index].Drawbuffers;
                 pass.Shader.SetTexture(resource.UniformName, resource.TextureHandle, resource.TextureUnit);
             }
+
             foreach (var index in pass.InputsBackbuffers)
             {
                 var resource = ShaderPasses[index].Backbuffers;

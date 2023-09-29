@@ -33,6 +33,7 @@ public class SimpleRenderer : IRenderer
     private float ClockOffset = 0;
     private float FrameCount = 0;
     private Random RNG = new();
+    private float RandomRun;
 
     public SimpleRenderer(VisualizerConfig visualizerConfig)
     {
@@ -50,6 +51,8 @@ public class SimpleRenderer : IRenderer
 
         VertexSource.Initialize(Config, Shader);
         OnResize();
+
+        RandomRun = (float)RNG.NextDouble();
     }
 
     public void RenderFrame()
@@ -57,11 +60,13 @@ public class SimpleRenderer : IRenderer
         var timeUniform = TrueElapsedTime() + ClockOffset;
 
         Program.AppWindow.Eyecandy.SetTextureUniforms(Shader);
+        RenderingHelper.SetGlobalUniforms(Shader, Config.Uniforms);
         Shader.SetUniform("resolution", ViewportResolution);
         Shader.SetUniform("time", timeUniform);
         Shader.SetUniform("frame", FrameCount);
+        Shader.SetUniform("randomrun", RandomRun);
 
-        if(FinalDrawbuffers is not null)
+        if (FinalDrawbuffers is not null)
         {
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, FinalDrawbuffers.FramebufferHandle);
             GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);

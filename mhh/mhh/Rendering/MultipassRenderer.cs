@@ -41,6 +41,7 @@ public class MultipassRenderer : IRenderer
     private float ClockOffset = 0;
     private float FrameCount = 0;
     private Random RNG = new();
+    private float RandomRun;
 
     public MultipassRenderer(VisualizerConfig visualizerConfig)
     {
@@ -73,6 +74,8 @@ public class MultipassRenderer : IRenderer
             IsValid = false;
             InvalidReason = ex.Message;
         }
+
+        RandomRun = (float)RNG.NextDouble();
     }
 
     public void RenderFrame()
@@ -82,15 +85,20 @@ public class MultipassRenderer : IRenderer
         foreach (var pass in ShaderPasses)
         {
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
+            RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms);
+            RenderingHelper.SetGlobalUniforms(pass.Shader, pass.Uniforms);
             pass.Shader.SetUniform("resolution", ViewportResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);
+            pass.Shader.SetUniform("randomrun", RandomRun);
+
             foreach (var index in pass.InputsDrawbuffers)
             {
                 //var resource = DrawbufferResources[index];
                 var resource = ShaderPasses[index].Drawbuffers;
                 pass.Shader.SetTexture(resource.UniformName, resource.TextureHandle, resource.TextureUnit);
             }
+
             foreach (var index in pass.InputsBackbuffers)
             {
                 //var resource = BackbufferResources[index];

@@ -25,6 +25,8 @@ namespace mhh
         /// </summary>
         public readonly Dictionary<string, Dictionary<string, string>> Content = new();
 
+        private Random RNG = new();
+
         public ConfigFile(string confPathname)
         {
             Pathname = Path.GetFullPath(confPathname);
@@ -73,6 +75,46 @@ namespace mhh
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Helper function for .conf files that support a [uniforms] section.
+        /// </summary>
+        public Dictionary<string, float> ParseUniforms()
+        {
+            var uniforms = new Dictionary<string, float>();
+
+            if (Content.ContainsKey("uniforms"))
+            {
+                foreach (var u in Content["uniforms"])
+                {
+                    if (uniforms.ContainsKey(u.Key)) continue;
+
+                    var range = u.Value.Split(':', Const.SplitOptions);
+                    if (range.Length == 1)
+                    {
+                        if (float.TryParse(range[0], out var f))
+                        {
+                            uniforms.Add(u.Key, f);
+                        }
+                    }
+                    else
+                    {
+                        if (float.TryParse(range[0], out var f0) && float.TryParse(range[1], out var f1))
+                        {
+                            var hi = Math.Max(f0, f1);
+                            var lo = Math.Min(f0, f1);
+                            var span = hi - lo;
+                            float val = (float)RNG.NextDouble() * span + lo;
+                            uniforms.Add(u.Key, val);
+                        }
+                    }
+
+                    if (!uniforms.ContainsKey(u.Key)) uniforms.Add(u.Key, 0f);
+                }
+            }
+
+            return uniforms;
         }
     }
 }

@@ -14,6 +14,8 @@ public class FXConfig : IConfigSource
     public readonly int PrimaryResolutionLimit;
     public readonly bool Crossfade;
 
+    public readonly Dictionary<string, float> Uniforms;
+
     public readonly List<string> AudioTextureUniformNames = new();
 
     public FXConfig(string pathname)
@@ -31,6 +33,8 @@ public class FXConfig : IConfigSource
         PrimaryResolutionLimit = ConfigSource.ReadValue("fx", "primaryresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
 
         Crossfade = (Program.AppConfig.CrossfadeSeconds == 0) ? false : ConfigSource.ReadValue("fx", "crossfade").ToBool(true);
+
+        Uniforms = ConfigSource.ParseUniforms();
 
         if (ConfigSource.Content.ContainsKey("audiotextures"))
         {

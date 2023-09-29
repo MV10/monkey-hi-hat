@@ -50,4 +50,10 @@ public class MultipassDrawCall
     /// The object providing vertex data for this pass.
     /// </summary>
     public IVertexSource VertexSource;
+
+    /// <summary>
+    /// If the pass references a stand-alone visualizer config, any uniforms defined
+    /// in that config will be stored here since the overall config is not stored.
+    /// </summary>
+    public Dictionary<string, float> Uniforms;
 }

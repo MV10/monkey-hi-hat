@@ -97,7 +97,7 @@ namespace mhh
             Eyecandy.EvaluateRequirements();
 
             RenderingHelper.ClientSize = ClientSize;
-            UniformRandomSeed = RNG.NextSingle();
+            UniformRandomSeed = (float)RNG.NextDouble();
 
             InitializeCache();
         }
@@ -125,7 +125,7 @@ namespace mhh
 
             Eyecandy.UpdateTextures();
 
-            UniformRandomNumber = RNG.NextSingle();
+            UniformRandomNumber = (float)RNG.NextDouble();
             UniformDate = new(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, (float)DateTime.Now.TimeOfDay.TotalSeconds);
             UniformClockTime = new(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTime.UtcNow.Hour);
 
