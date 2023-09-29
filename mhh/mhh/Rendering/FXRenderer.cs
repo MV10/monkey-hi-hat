@@ -84,8 +84,8 @@ public class FXRenderer : IRenderer
             // initialize the output buffer
             FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
 
-            // prep for crossfade
-            if (Config.Crossfade)
+            // prep for crossfade unless the program is doing a larger crossfade (typically happens on instant-apply FX)
+            if (Config.Crossfade && Program.AppWindow.Renderer.ActiveRenderer is not CrossfadeRenderer)
             {
                 CrossfadeShader = Caching.CrossfadeShader;
                 CrossfadeVerts = new VertexQuad();
