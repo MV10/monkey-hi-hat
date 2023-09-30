@@ -25,6 +25,11 @@ namespace mhh
         public readonly int FrameRateLimit;
         public readonly int UnsecuredPort;
 
+        public readonly bool StartInStandby;
+        public readonly bool CloseToStandby;
+        public readonly bool WindowsHideConsoleAtStartup;
+        public readonly bool WindowsHideConsoleInStandby;
+
         public readonly string CaptureDriverName = string.Empty;
         public readonly string CaptureDeviceName = string.Empty;
 
@@ -37,6 +42,10 @@ namespace mhh
             ConfigSource = appConfigFile;
 
             StartFullScreen = ConfigSource.ReadValue("setup", "startfullscreen").ToBool(true);
+            StartInStandby = ConfigSource.ReadValue("setup", "startinstandby").ToBool(false);
+            CloseToStandby = ConfigSource.ReadValue("setup", "closetostandby").ToBool(false);
+            WindowsHideConsoleAtStartup = ConfigSource.ReadValue("windows", "hideconsoleatstartup").ToBool(false);
+            WindowsHideConsoleInStandby = ConfigSource.ReadValue("windows", "hideconsoleinstandby").ToBool(true);
             SizeX = ConfigSource.ReadValue("setup", "sizex").ToInt32(960);
             SizeY = ConfigSource.ReadValue("setup", "sizey").ToInt32(540);
             RenderResolutionLimit = ConfigSource.ReadValue("setup", "renderresolutionlimit").ToInt32(0);

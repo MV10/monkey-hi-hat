@@ -6,6 +6,7 @@ using OpenTK.Windowing.Desktop;
 using Serilog;
 using Serilog.Extensions.Logging;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 /*
@@ -37,11 +38,8 @@ namespace mhh
         static readonly string ConfigFilename = "mhh.conf";
         static readonly string DebugConfigFilename = "mhh.debug.conf";
         static readonly string SwitchPipeName = "monkey-hi-hat";
-
-        // for dev and debug purposes, set this in the Debug Launch Profile dialog box
-        static readonly string ConfigPathnameEnvironmentVariable = "monkey-hi-hat-config";
-
         static readonly Version OpenGLVersion = new(4, 6);
+        static readonly string ConfigPathnameEnvironmentVariable = "monkey-hi-hat-config"; // set in Debug Launch Profile dialog
 
         /// <summary>
         /// Content parsed from the mhh.conf configuration file and the
@@ -57,7 +55,94 @@ namespace mhh
         // cancel this to terminate the switch server's named pipe.
         private static CancellationTokenSource ctsSwitchPipe;
 
+        [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
+        [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        static readonly int SW_HIDE = 0;
+        static readonly int SW_SHOW = 5;
+        private static bool ConsoleVisible = true;
+
+        // Currently Windows Terminal will only minimize, not hide. Microsoft
+        // is debating whether and how to fix that (not just about Powershell):
+        // https://github.com/microsoft/terminal/issues/12464
+        private static bool IsConsoleVisible
+        {
+            get => ConsoleVisible;
+            set
+            {
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) throw new InvalidOperationException("Console visibility can only be changed on Windows OS");
+                ConsoleVisible = value;
+                var hwnd = GetConsoleWindow();
+                var flag = ConsoleVisible ? SW_SHOW : SW_HIDE;
+                ShowWindow(hwnd, flag);
+            }
+        }
+
+        internal static bool AppRunning = true; // the window can change this
+        private static bool OnStandby = false;
+
         static async Task Main(string[] args)
+        {
+            try
+            {
+                if(await InitializeAndWait(args))
+                {
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        IsConsoleVisible = !AppConfig.WindowsHideConsoleAtStartup || (AppConfig.StartInStandby && AppConfig.WindowsHideConsoleInStandby);
+                    }
+
+                    AppRunning = true;
+                    OnStandby = AppConfig.StartInStandby;
+                    while (AppRunning)
+                    {
+                        if (OnStandby)
+                        {
+                            Thread.Yield();
+                        }
+                        else
+                        {
+                            RunWindow(); // blocks
+                            if (AppRunning && !OnStandby)
+                            {
+                                if(AppConfig.CloseToStandby)
+                                {
+                                    OnStandby = true;
+                                }
+                                else
+                                {
+                                    AppRunning = false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            { } // normal, disregard
+            catch (Exception ex)
+            {
+                var e = ex;
+                while (e != null)
+                {
+                    LogException($"{e.GetType().Name}: {e.Message}");
+                    e = e.InnerException;
+                }
+                LogException(ex.StackTrace);
+            }
+            finally
+            {
+                // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
+                ctsSwitchPipe?.Cancel();
+                AppWindow?.Dispose();
+                Log.CloseAndFlush();
+            }
+
+            // Give the sloooow console time to catch up...
+            await Task.Delay(250);
+        }
+
+        // Return "false" to tell main() to exit after init (another instance is running)
+        private static async Task<bool> InitializeAndWait(string[] args)
         {
             Console.Clear();
             Console.WriteLine($"\nMonkey Hi Hat (PID {Environment.ProcessId})");
@@ -67,11 +152,11 @@ namespace mhh
             if (!File.Exists(configPathname))
             {
                 configPathname = Environment.GetEnvironmentVariable(ConfigPathnameEnvironmentVariable);
-                if(configPathname is null || !File.Exists(configPathname))
+                if (configPathname is null || !File.Exists(configPathname))
                 {
                     Console.WriteLine($"\n\nUnable to locate the configuration file.\n  The default is to read \"{ConfigFilename}\" from the application directory.\n  When a debugger is attached, \"{DebugConfigFilename}\" is expected.\n  Alternately, a \"{ConfigPathnameEnvironmentVariable}\" environment variable can provide the full pathname.");
                     Thread.Sleep(250); // slow-ass console
-                    Environment.Exit(-1);
+                    return false;
                 }
                 Console.WriteLine($"Loading configuration via \"{ConfigPathnameEnvironmentVariable}\" environment variable:\n  {configPathname}");
             }
@@ -84,36 +169,41 @@ namespace mhh
             CommandLineSwitchServer.Options.Logger = LogHelper.Logger;
 
             // Show help if requested, or if it's already running but no args were provided
-            if((args.Length == 1 && args[0].ToLowerInvariant().Equals("--help"))
+            if ((args.Length == 1 && args[0].ToLowerInvariant().Equals("--help"))
                 || (args.Length == 0 && alreadyRunning))
             {
                 Console.WriteLine(ShowHelp());
-                Environment.Exit(0);
+                return false;
             }
 
+            LogHelper.Logger?.LogInformation($"Starting (PID {Environment.ProcessId})");
+
+            // Send args to an already-running instance?
+            if (await CommandLineSwitchServer.TrySendArgs().ConfigureAwait(false))
+            {
+                LogHelper.Logger?.LogDebug($"Sending switch: {args[0]}");
+                Console.WriteLine(CommandLineSwitchServer.QueryResponse);
+                return false; // end program
+            }
+            // ...or continue running since we're the first instance
+
+            // Parse the application configuration file and internal shaders
+            AppConfig = new ApplicationConfiguration(appConfigFile);
+
+            // Start listening for commands
+            ctsSwitchPipe = new();
+            _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessSwitches, ctsSwitchPipe.Token, AppConfig.UnsecuredPort));
+
+            // Prepare the eycandy library
+            ErrorLogging.Logger = LogHelper.Logger;
+
+            return true; // continue running
+        }
+
+        private static void RunWindow()
+        {
             try
             {
-                LogHelper.Logger?.LogInformation($"Starting (PID {Environment.ProcessId})");
-
-                // Send args to an already-running instance?
-                if (await CommandLineSwitchServer.TrySendArgs().ConfigureAwait(false))
-                {
-                    LogHelper.Logger?.LogDebug($"Sending switch: {args[0]}");
-                    Console.WriteLine(CommandLineSwitchServer.QueryResponse);
-                    return;
-                }
-                // ...or continue running since we're the first instance
-
-                // Parse the application configuration file and internal shaders
-                AppConfig = new ApplicationConfiguration(appConfigFile);
-
-                // Start listening for commands
-                ctsSwitchPipe = new();
-                _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessExecutionSwitches, ctsSwitchPipe.Token, AppConfig.UnsecuredPort));
-
-                // Prepare the eycandy library
-                ErrorLogging.Logger = LogHelper.Logger;
-
                 var AudioConfig = new EyeCandyCaptureConfig()
                 {
                     CaptureDeviceName = AppConfig.CaptureDeviceName,
@@ -144,35 +234,12 @@ namespace mhh
                 AppWindow = new(WindowConfig, AudioConfig);
                 AppWindow.Focus();
                 AppWindow.Run(); // blocks
-                LogHelper.Logger?.LogTrace("Program.Main AppWindow.Run has exited ----------------------------");
-            }
-            catch (OperationCanceledException)
-            { } // normal, disregard
-            catch (Exception ex)
-            {
-                var e = ex;
-                while(e != null)
-                {
-                    LogException($"{e.GetType().Name}: {e.Message}");
-                    e = e.InnerException;
-                }
-                LogException(ex.StackTrace);
             }
             finally
             {
-                // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
-                LogHelper.Logger?.LogTrace("  Program.Main cancelling CommandLineSwitchPipe token");
-                ctsSwitchPipe?.Cancel();
-
-                LogHelper.Logger?.LogTrace("  Program.Main disposing AppWindow");
                 AppWindow?.Dispose();
-
-                LogHelper.Logger?.LogInformation($"Exiting (PID {Environment.ProcessId})");
-                Log.CloseAndFlush();
+                AppWindow = null;
             }
-
-            // Give the sloooow console time to catch up...
-            await Task.Delay(250);
         }
 
         private static void LogException(string message)
@@ -187,7 +254,7 @@ namespace mhh
             }
         }
 
-        private static string ProcessExecutionSwitches(string[] args)
+        private static string ProcessSwitches(string[] args)
         {
             if (args.Length == 0) return ShowHelp();
 
@@ -196,6 +263,7 @@ namespace mhh
             switch (args[0].ToLowerInvariant())
             {
                 case "--load":
+                    if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length > 3) return ShowHelp();
                     var vizPathname = GetVisualizerPathname(args[1]);
                     if (vizPathname is null) return "ERR: Visualizer not found.";
@@ -208,15 +276,18 @@ namespace mhh
                     if (args.Length != 2) return ShowHelp();
                     var playlistPathname = GetPlaylistPathname(args[1]);
                     if (playlistPathname is null) return "ERR: Playlist not found.";
+                    if (OnStandby) return "ERR: Application is in standby";
                     return AppWindow.Command_Playlist(playlistPathname);
 
                 case "--fx":
                     if (args.Length != 2) return ShowHelp();
                     var fxPathname = GetFxPathname(args[1]);
                     if (fxPathname is null) return "ERR: FX not found.";
+                    if (OnStandby) return "ERR: Application is in standby";
                     return AppWindow.Command_ApplyFX(fxPathname);
 
                 case "--next":
+                    if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length > 2) return ShowHelp();
                     if (args.Length == 2 && args[1].ToLowerInvariant().Equals("fx")) return AppWindow.Command_PlaylistNextFX();
                     if (args.Length == 2) return ShowHelp();
@@ -247,15 +318,13 @@ namespace mhh
 
                     return readable ? ShowHelp() : string.Empty;
 
-                case "--quit":
-                    if (args.Length > 1) return ShowHelp();
-                    return AppWindow.Command_Quit();
-
                 case "--info":
+                    if (OnStandby) return "Application is in standby mode, use --standby command to toggle";
                     if (args.Length > 1) return ShowHelp();
                     return AppWindow.Command_Info();
 
                 case "--fps":
+                    if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length > 2) return ShowHelp();
                     if(args.Length == 2)
                     {
@@ -271,22 +340,27 @@ namespace mhh
                     }
 
                 case "--fullscreen":
+                    if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length > 1) return ShowHelp();
                     return AppWindow.Command_FullScreen();
 
                 case "--idle":
+                    if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length > 1) return ShowHelp();
                     return AppWindow.Command_Idle();
 
                 case "--pause":
+                    if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length > 1) return ShowHelp();
                     return AppWindow.Command_Pause();
 
                 case "--run":
+                    if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length > 1) return ShowHelp();
                     return AppWindow.Command_Run();
 
                 case "--reload":
+                    if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length > 1) return ShowHelp();
                     return AppWindow.Command_Reload();
 
@@ -302,6 +376,28 @@ namespace mhh
                     if (args.Length != 2) return "ERR: Visualizer name or pathname required.";
                     return GetShaderDetail(GetVisualizerPathname(args[1]));
 
+                case "--console":
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        IsConsoleVisible = !IsConsoleVisible;
+                        return "ACK";
+                    }
+                    else
+                    {
+                        return "ERR: Console visibility is only available on Windows OS";
+                    }
+
+                case "--quit":
+                    if (args.Length > 1) return ShowHelp();
+                    AppRunning = false;
+                    if (OnStandby) return "ACK";
+                    return AppWindow.Command_Quit();
+
+                case "--standby":
+                    AppWindow?.Command_Quit();
+                    OnStandby = !OnStandby;
+                    return "ACK";
+                
                 default:
                     return ShowHelp();
             }
@@ -376,8 +472,10 @@ All switches are passed to the already-running instance:
 --fps                       returns instantaneous FPS and average FPS over past 10 seconds
 --fps [0|1-9999]            sets a frame rate lock (FPS target), or 0 to disable (max possible FPS)
 
+--console                   toggles the visibility of the console window (Windows only)
+--standby                   toggles between standby mode and active mode
 --pause                     stops the current shader
---run                       executes the current shader
+--run                       resumse the current shader
 --pid                       shows the current Process ID
 --log [level]               shows or sets log-level (None, Trace, Debug, Information, Warning, Error, Critical)
 
