@@ -176,18 +176,21 @@ public static class RenderingHelper
     /// <summary>
     /// Called by VertexSource RenderFrame to set any globally-defined uniforms like randomseed and date.
     /// </summary>
-    public static void SetGlobalUniforms(Shader shader, Dictionary<string, float> uniforms = null)
+    public static void SetGlobalUniforms(Shader shader, params Dictionary<string, float>[] uniforms)
     {
         shader.SetUniform("randomseed", Program.AppWindow.UniformRandomSeed);
         shader.SetUniform("randomnumber", Program.AppWindow.UniformRandomNumber);
         shader.SetUniform("date", Program.AppWindow.UniformDate);
         shader.SetUniform("clocktime", Program.AppWindow.UniformClockTime);
 
-        if(uniforms?.Count > 0)
+        foreach(var list in uniforms)
         {
-            foreach (var u in uniforms)
+            if(list is not null)
             {
-                shader.SetUniform(u.Key, u.Value);
+                foreach (var uniform in list)
+                {
+                    shader.SetUniform(uniform.Key, uniform.Value);
+                }
             }
         }
     }

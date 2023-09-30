@@ -66,18 +66,9 @@ public class CrossfadeRenderer : IRenderer
 
     public void RenderFrame()
     {
-        float fadeLevel = (float)Clock.ElapsedMilliseconds / DurationMS;
+        if (CompletionCallback is null) return;
 
-        // after new renderer fade is 1.0, invoke the callback once, let the
-        // new renderer know the final output is no longer being intercepted,
-        // and stop rendering until the RenderManager takes over
-        if(fadeLevel > 1f)
-        {
-            CompletionCallback?.Invoke();
-            CompletionCallback = null;
-            NewRenderer.OutputIntercepted = false;
-            return;
-        }
+        float fadeLevel = (float)Clock.ElapsedMilliseconds / DurationMS;
 
         // the old renderer draws to its own framebuffer or buffer #0 provided here
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
@@ -108,6 +99,16 @@ public class CrossfadeRenderer : IRenderer
         VertQuad.RenderFrame(CrossfadeShader);
 
         //...and now AppWindow's OnRenderFrame swaps the back-buffer to the output
+
+        // after new renderer fade is 1.0, invoke the callback once, let the
+        // new renderer know the final output is no longer being intercepted,
+        // and stop rendering until the RenderManager takes over
+        if (fadeLevel >= 1f)
+        {
+            CompletionCallback?.Invoke();
+            CompletionCallback = null;
+            NewRenderer.OutputIntercepted = false;
+        }
     }
 
     public void OnResize()

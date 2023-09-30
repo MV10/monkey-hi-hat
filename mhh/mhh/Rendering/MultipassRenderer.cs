@@ -85,8 +85,7 @@ public class MultipassRenderer : IRenderer
         foreach (var pass in ShaderPasses)
         {
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
-            RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms);
-            RenderingHelper.SetGlobalUniforms(pass.Shader, pass.Uniforms);
+            RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms, pass.Uniforms);
             pass.Shader.SetUniform("resolution", ViewportResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);

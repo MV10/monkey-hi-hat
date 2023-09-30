@@ -22,6 +22,10 @@ Although YouTube _badly_ mangles the video quality (not sure why, it was recorde
 
 [![sample video](http://img.youtube.com/vi/YTmhQm-1bwU/0.jpg)](https://youtu.be/YTmhQm-1bwU)
 
+And now a look at some of the upcoming v3.0 post-processing FX shaders (2 minutes):
+
+[![sample video](http://img.youtube.com/vi/SKyd1-kmxn4/0.jpg)](https://youtu.be/SKyd1-kmxn4)
+
 ## Related Material
 
 As the computer will be stashed away behind the AV equipment, remote control was an essential feature. Windows or Android users can install the convenient [monkey-droid](https://github.com/MV10/monkey-droid) GUI (the installers are available from this repo's release page) -- these can control monkey-hi-hat running on a Linux host, but there is no Linux GUI. Alternately, basic command-line-style control is via SSH terminal connections, sending commands (like "refresh the playlist" or "switch to shader XYZ") via named-pipe using my [CommandLineSwitchPipe](https://github.com/MV10/CommandLineSwitchPipe) library. See the wiki for details about setting up and using SSH.
