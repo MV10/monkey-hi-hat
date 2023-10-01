@@ -83,38 +83,93 @@ namespace mhh
         public Dictionary<string, float> ParseUniforms()
         {
             var uniforms = new Dictionary<string, float>();
+            if (!Content.ContainsKey("uniforms")) return uniforms;
 
-            if (Content.ContainsKey("uniforms"))
+            foreach (var u in Content["uniforms"])
             {
-                foreach (var u in Content["uniforms"])
+                if (uniforms.ContainsKey(u.Key)) continue;
+
+                var range = u.Value.Split(':', Const.SplitOptions);
+                if (range.Length == 1)
                 {
-                    if (uniforms.ContainsKey(u.Key)) continue;
-
-                    var range = u.Value.Split(':', Const.SplitOptions);
-                    if (range.Length == 1)
+                    if (float.TryParse(range[0], out var f))
                     {
-                        if (float.TryParse(range[0], out var f))
-                        {
-                            uniforms.Add(u.Key, f);
-                        }
+                        uniforms.Add(u.Key, f);
                     }
-                    else
-                    {
-                        if (float.TryParse(range[0], out var f0) && float.TryParse(range[1], out var f1))
-                        {
-                            var hi = Math.Max(f0, f1);
-                            var lo = Math.Min(f0, f1);
-                            var span = hi - lo;
-                            float val = (float)RNG.NextDouble() * span + lo;
-                            uniforms.Add(u.Key, val);
-                        }
-                    }
-
-                    if (!uniforms.ContainsKey(u.Key)) uniforms.Add(u.Key, 0f);
                 }
+                else
+                {
+                    if (float.TryParse(range[0], out var f0) && float.TryParse(range[1], out var f1))
+                    {
+                        var hi = Math.Max(f0, f1);
+                        var lo = Math.Min(f0, f1);
+                        var span = hi - lo;
+                        float val = (float)RNG.NextDouble() * span + lo;
+                        uniforms.Add(u.Key, val);
+                    }
+                }
+
+                if (!uniforms.ContainsKey(u.Key)) uniforms.Add(u.Key, 0f);
             }
 
             return uniforms;
+        }
+
+        /// <summary>
+        /// Helper function for .conf files that support a [libraries] section. This validates
+        /// the files can be accessed and will throw an exception if the file isn't found.
+        /// </summary>
+        public List<string> ParseLibraryPathnames(string pathspec)
+        {
+            var libs = new List<string>();
+            if (!Content.ContainsKey("libraries")) return libs;
+
+            string pathname;
+            foreach(var lib in Content["libraries"])
+            {
+                if(PathHelper.HasPathSeparators(lib.Value))
+                {
+                    pathname = Path.GetFullPath(lib.Value);
+                    if (string.IsNullOrEmpty(pathname)) pathname = lib.Value;
+                    if (!File.Exists(pathname)) throw new ArgumentException($"Shader library file {pathname} could not be found");
+                    if (!libs.Contains(pathname)) libs.Add(pathname);
+                }
+                else
+                {
+                    var ext = Path.GetExtension(lib.Value);
+                    if(string.IsNullOrEmpty(ext))
+                    {
+                        var count = libs.Count;
+
+                        pathname = PathHelper.FindFile(pathspec, Path.ChangeExtension(lib.Value, "vert"));
+                        if (pathname is not null && File.Exists(pathname) && !libs.Contains(pathname)) libs.Add(pathname);
+
+                        pathname = PathHelper.FindFile(pathspec, Path.ChangeExtension(lib.Value, "frag"));
+                        if (pathname is not null && File.Exists(pathname) && !libs.Contains(pathname)) libs.Add(pathname);
+
+                        if(libs.Count == count) throw new ArgumentException($"Shader library files {lib.Value} could not be found with .vert or .frag extension");
+                    }
+                    else
+                    {
+                        if(!ext.Equals(".vert", StringComparison.InvariantCultureIgnoreCase) && !ext.Equals(".frag", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            throw new ArgumentException($"Shader library filename {lib.Value} is invalid; omit the extension, or use .vert or .frag");
+                        }
+
+                        pathname = FindFileOrThrow(pathspec, lib.Value);
+                        if (!libs.Contains(pathname)) libs.Add(pathname);
+                    }
+                }
+            }
+
+            return libs;
+        }
+
+        private string FindFileOrThrow(string pathspec, string filename)
+        {
+            var pathname = PathHelper.FindFile(pathspec, filename);
+            if (pathname is null || !File.Exists(pathname)) throw new ArgumentException($"Shader library file {filename} could not be found");
+            return pathname;
         }
     }
 }

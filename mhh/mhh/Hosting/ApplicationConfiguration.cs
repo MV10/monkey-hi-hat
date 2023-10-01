@@ -22,6 +22,7 @@ namespace mhh
         public readonly bool HideMousePointer;
         public readonly int ShaderCacheSize;
         public readonly int FXCacheSize;
+        public readonly int LibraryCacheSize;
         public readonly int CrossfadeSeconds;
         public readonly int FrameRateLimit;
         public readonly int UnsecuredPort;
@@ -53,6 +54,7 @@ namespace mhh
             HideMousePointer = ConfigSource.ReadValue("setup", "hidemousepointer").ToBool(true);
             ShaderCacheSize = ConfigSource.ReadValue("setup", "shadercachesize").ToInt32(150);
             FXCacheSize = ConfigSource.ReadValue("setup", "shadercachesize").ToInt32(50);
+            LibraryCacheSize = ConfigSource.ReadValue("setup", "librarycachesize").ToInt32(10);
             CrossfadeSeconds = ConfigSource.ReadValue("setup", "crossfadeseconds").ToInt32(2);
             FrameRateLimit = ConfigSource.ReadValue("setup", "FrameRateLimit").ToInt32(60);
             UnsecuredPort = ConfigSource.ReadValue("setup", "unsecuredport").ToInt32(0);

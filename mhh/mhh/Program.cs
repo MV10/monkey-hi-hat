@@ -404,16 +404,13 @@ namespace mhh
         }
 
         private static string GetPlaylistPathname(string fromArg)
-            => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.PlaylistPath, fromArg);
+            => PathHelper.HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.PlaylistPath, fromArg);
 
         private static string GetVisualizerPathname(string fromArg)
-            => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.VisualizerPath, fromArg);
+            => PathHelper.HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.VisualizerPath, fromArg);
 
         private static string GetFxPathname(string fromArg)
-            => HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.FXPath, fromArg);
-
-        private static bool HasPathSeparators(string fromArg)
-            => fromArg.Contains(Path.DirectorySeparatorChar) || fromArg.Contains(Path.AltDirectorySeparatorChar);
+            => PathHelper.HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.FXPath, fromArg);
 
         private static string GetShaderDetail(string pathname)
         {

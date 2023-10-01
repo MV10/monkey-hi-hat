@@ -32,6 +32,8 @@ namespace mhh
 
         public readonly Dictionary<string, float> Uniforms;
 
+        public readonly List<string> LibraryPathnames;
+
         public VisualizerConfig(string pathname)
         {
             ConfigSource = new ConfigFile(pathname);
@@ -86,6 +88,8 @@ namespace mhh
             }
 
             Uniforms = ConfigSource.ParseUniforms();
+
+            LibraryPathnames = ConfigSource.ParseLibraryPathnames(Program.AppConfig.VisualizerPath);
 
             // shader pathnames and vertex source type names are validated in RenderingHelper
 

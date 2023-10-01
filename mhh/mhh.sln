@@ -49,6 +49,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "
 		..\testcontent\multipass2.frag = ..\testcontent\multipass2.frag
 		..\testcontent\multipass3.frag = ..\testcontent\multipass3.frag
 		..\testcontent\multipass4.frag = ..\testcontent\multipass4.frag
+		..\testcontent\multipass_desaturate.frag = ..\testcontent\multipass_desaturate.frag
 		..\testcontent\playlistoptions.conf = ..\testcontent\playlistoptions.conf
 		..\testcontent\playlistoptions.frag = ..\testcontent\playlistoptions.frag
 		..\testcontent\resolutionlimit.conf = ..\testcontent\resolutionlimit.conf
@@ -61,6 +62,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "
 		..\testcontent\uniforms.frag = ..\testcontent\uniforms.frag
 		..\testcontent\vertint.conf = ..\testcontent\vertint.conf
 		..\testcontent\vertint.vert = ..\testcontent\vertint.vert
+		..\testcontent\vertint_library.vert = ..\testcontent\vertint_library.vert
 		..\testcontent\vertquad.conf = ..\testcontent\vertquad.conf
 		..\testcontent\vertquad.frag = ..\testcontent\vertquad.frag
 	EndProjectSection

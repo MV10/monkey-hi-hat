@@ -501,6 +501,7 @@ playlist   : {Playlist.GetInfo()}
         {
             Caching.VisualizerShaders = new(Program.AppConfig.ShaderCacheSize);
             Caching.FXShaders = new(Program.AppConfig.FXCacheSize);
+            Caching.LibraryShaders = new(Program.AppConfig.LibraryCacheSize);
 
             Caching.IdleVisualizer = new(Path.Combine(ApplicationConfiguration.InternalShaderPath, "idle.conf"));
             Caching.BlankVisualizer = new(Path.Combine(ApplicationConfiguration.InternalShaderPath, "blank.conf"));
@@ -530,18 +531,21 @@ playlist   : {Playlist.GetInfo()}
             base.Dispose();
 
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy.EndAudioProcessing()");
-            Eyecandy?.EndAudioProcessing_SynchronousHack();
+            Eyecandy?.EndAudioProcessing();
 
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy AudioTextureEngine");
             Eyecandy?.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Cached Visualizer Shaders");
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached visualizer shaders");
             Caching.VisualizerShaders.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Cached FX Shaders");
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached FX shaders");
             Caching.FXShaders.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Internal Crossfade Shader");
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached library shaders");
+            Caching.LibraryShaders.Dispose();
+
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade shader");
             Caching.CrossfadeShader.Dispose();
 
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Renderer / RenderManager");

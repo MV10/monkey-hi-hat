@@ -38,4 +38,7 @@ internal static class PathHelper
         }
         return list;
     }
+
+    public static bool HasPathSeparators(string argument)
+        => argument.Contains(Path.DirectorySeparatorChar) || argument.Contains(Path.AltDirectorySeparatorChar);
 }

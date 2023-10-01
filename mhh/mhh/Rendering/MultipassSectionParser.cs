@@ -225,7 +225,7 @@ public class MultipassSectionParser
 
         // when a --reload command is in effect, reload all shaders used by this renderer (save and restore the value)
         var replaceCachedShader = RenderingHelper.ReplaceCachedShader;
-        ShaderPass.Shader = RenderingHelper.GetFXShader(OwningRenderer, vertPathname, fragPathname);
+        ShaderPass.Shader = RenderingHelper.GetFXShader(OwningRenderer, vertPathname, fragPathname, RendererFXConfig.LibraryPathnames);
         if (!OwningRenderer.IsValid) return;
         RenderingHelper.ReplaceCachedShader = replaceCachedShader;
 
@@ -276,7 +276,7 @@ public class MultipassSectionParser
 
         // when a --reload command is in effect, reload all shaders used by this renderer (save and restore the value)
         var replaceCachedShader = RenderingHelper.ReplaceCachedShader;
-        ShaderPass.Shader = RenderingHelper.GetVisualizerShader(OwningRenderer, vertPathname, fragPathname);
+        ShaderPass.Shader = RenderingHelper.GetVisualizerShader(OwningRenderer, vertPathname, fragPathname, RendererVizConfig.LibraryPathnames);
         if (!OwningRenderer.IsValid) return;
         RenderingHelper.ReplaceCachedShader = replaceCachedShader;
     }

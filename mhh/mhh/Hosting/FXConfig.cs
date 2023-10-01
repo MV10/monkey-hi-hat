@@ -18,6 +18,8 @@ public class FXConfig : IConfigSource
 
     public readonly List<string> AudioTextureUniformNames = new();
 
+    public readonly List<string> LibraryPathnames;
+
     public FXConfig(string pathname)
     {
         // FXRenderer handles loading the [textures] section, if present
@@ -35,6 +37,8 @@ public class FXConfig : IConfigSource
         Crossfade = (Program.AppConfig.CrossfadeSeconds == 0) ? false : ConfigSource.ReadValue("fx", "crossfade").ToBool(true);
 
         Uniforms = ConfigSource.ParseUniforms();
+
+        LibraryPathnames = ConfigSource.ParseLibraryPathnames(Program.AppConfig.FXPath);
 
         if (ConfigSource.Content.ContainsKey("audiotextures"))
         {

@@ -16,8 +16,8 @@ public class CachedShader : Shader
     /// </summary>
     public readonly string Key;
 
-    public CachedShader(string vertexPathname, string fragmentPathname) 
-        : base(vertexPathname, fragmentPathname)
+    public CachedShader(string vertexPathname, string fragmentPathname, params ShaderLibrary[] libs) 
+        : base(vertexPathname, fragmentPathname, libs)
     {
         Key = KeyFrom(vertexPathname, fragmentPathname);
     }
