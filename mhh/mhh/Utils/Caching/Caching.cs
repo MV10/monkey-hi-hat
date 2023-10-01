@@ -16,9 +16,16 @@ public static class Caching
     public static readonly IReadOnlyList<Type> KnownVertexSources = typeof(IVertexSource).GetAllDerivedTypes();
 
     /// <summary>
-    /// Compiled shader programs. The key is a murmur3 hash of the combined vert and frag pathnames.
+    /// References to compiled visualizer shader programs (stored on the GPU). 
+    /// The key is the combined vert and frag pathnames.
     /// </summary>
-    public static CacheLRU<string, CachedShader> Shaders;
+    public static CacheLRU<string, CachedShader> VisualizerShaders;
+
+    /// <summary>
+    /// References to compiled FX shader programs (stored on the GPU). 
+    /// The key is the combined vert and frag pathnames.
+    /// </summary>
+    public static CacheLRU<string, CachedShader> FXShaders;
 
     /// <summary>
     /// The built-in default visualizer.

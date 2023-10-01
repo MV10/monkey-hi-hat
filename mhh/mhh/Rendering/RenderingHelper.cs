@@ -31,50 +31,25 @@ public static class RenderingHelper
     private static Vector2i StoredClientSize;
 
     /// <summary>
-    /// Retreives a shader from the cache, optionally replacing it with a newly loaded and
-    /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader
-    /// flag).
+    /// Retreives a visualizer shader from the cache, optionally replacing it with a newly loaded and
+    /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader flag).
     /// </summary>
-    public static CachedShader GetShader(IRenderer renderer, VisualizerConfig visualizerConfig)
-        => GetShader(renderer, visualizerConfig.VertexShaderPathname, visualizerConfig.FragmentShaderPathname);
+    public static CachedShader GetVisualizerShader(IRenderer renderer, VisualizerConfig visualizerConfig)
+        => GetVisualizerShader(renderer, visualizerConfig.VertexShaderPathname, visualizerConfig.FragmentShaderPathname);
 
     /// <summary>
-    /// Retreives a shader from the cache, optionally replacing it with a newly loaded and
-    /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader
-    /// flag).
+    /// Retreives a visualizer shader from the cache, optionally replacing it with a newly loaded and
+    /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader flag).
     /// </summary>
-    public static CachedShader GetShader(IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname)
-    {
-        if(string.IsNullOrWhiteSpace(vertexShaderPathname) 
-            || string.IsNullOrWhiteSpace(fragmentShaderPathname))
-        {
-            LogInvalidReason("Invalid shader pathname", renderer);
-            return null;
-        }
+    public static CachedShader GetVisualizerShader(IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname)
+        => GetCachedShader(Caching.VisualizerShaders, renderer, vertexShaderPathname, fragmentShaderPathname);
 
-        var shaderKey = CachedShader.KeyFrom(vertexShaderPathname, fragmentShaderPathname);
-
-        if (ReplaceCachedShader)
-        {
-            Caching.Shaders.Remove(shaderKey);
-            ReplaceCachedShader = false;
-        }
-
-        var shader = Caching.Shaders.Get(shaderKey);
-        if (shader is null)
-        {
-            shader = new(vertexShaderPathname, fragmentShaderPathname);
-            if (!shader.IsValid)
-            {
-                LogInvalidReason("Shader invalid", renderer);
-                return null;
-            }
-
-            var cached = Caching.Shaders.TryAdd(shaderKey, shader);
-            if (!cached) LogHelper.Logger.LogWarning($"Failed to cache shader for {vertexShaderPathname} and {fragmentShaderPathname}");
-        }
-        return shader;
-    }
+    /// <summary>
+    /// Retreives an FX shader from the cache, optionally replacing it with a newly loaded and
+    /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader flag).
+    /// </summary>
+    public static CachedShader GetFXShader(IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname)
+        => GetCachedShader(Caching.FXShaders, renderer, vertexShaderPathname, fragmentShaderPathname);
 
     /// <summary>
     /// If the shader isn't cached, it will be disposed. Otherwise, the cache will dispose of
@@ -82,18 +57,17 @@ public static class RenderingHelper
     /// </summary>
     public static void DisposeUncachedShader(CachedShader shader)
     {
-        if(shader is not null)
+        if (shader is null) return;
+        LogHelper.Logger?.LogTrace("RenderingHelper.DisposeUncachedShader() ----------------------------");
+
+        if (!Caching.VisualizerShaders.ContainsKey(shader.Key) && !Caching.FXShaders.ContainsKey(shader.Key))
         {
-            LogHelper.Logger?.LogTrace("RenderingHelper.DisposeUncachedShader() ----------------------------");
-            if (!Caching.Shaders.ContainsKey(shader.Key))
-            {
-                LogHelper.Logger?.LogTrace($"  Disposed key {shader.Key}");
-                shader.Dispose();
-            }
-            else
-            {
-                LogHelper.Logger?.LogTrace($"  Shader key is cached {shader.Key}");
-            }
+            LogHelper.Logger?.LogTrace($"  Disposed key {shader.Key}");
+            shader.Dispose();
+        }
+        else
+        {
+            LogHelper.Logger?.LogTrace($"  Shader key is cached {shader.Key}");
         }
     }
 
@@ -231,6 +205,39 @@ public static class RenderingHelper
     /// </summary>
     public static string MakeOwnerName(string usage, [CallerFilePath] string owner = "")
         => $"{Path.GetFileNameWithoutExtension(owner)} {usage} {DateTime.Now:yyyy-MM-dd HH:mm:ss.ffff}";
+
+    private static CachedShader GetCachedShader(CacheLRU<string, CachedShader> cache, IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname)
+    {
+        if (string.IsNullOrWhiteSpace(vertexShaderPathname)
+            || string.IsNullOrWhiteSpace(fragmentShaderPathname))
+        {
+            LogInvalidReason("Invalid shader pathname", renderer);
+            return null;
+        }
+
+        var shaderKey = CachedShader.KeyFrom(vertexShaderPathname, fragmentShaderPathname);
+
+        if (ReplaceCachedShader)
+        {
+            cache.Remove(shaderKey);
+            ReplaceCachedShader = false;
+        }
+
+        var shader = cache.Get(shaderKey);
+        if (shader is null)
+        {
+            shader = new(vertexShaderPathname, fragmentShaderPathname);
+            if (!shader.IsValid)
+            {
+                LogInvalidReason("Shader invalid", renderer);
+                return null;
+            }
+
+            var cached = cache.TryAdd(shaderKey, shader);
+            if (!cached) LogHelper.Logger.LogWarning($"{nameof(GetCachedShader)} failed for {vertexShaderPathname} and {fragmentShaderPathname}");
+        }
+        return shader;
+    }
 
     private static void LogInvalidReason(string reason, IRenderer renderer)
     {

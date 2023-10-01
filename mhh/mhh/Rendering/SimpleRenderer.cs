@@ -43,7 +43,7 @@ public class SimpleRenderer : IRenderer
         Filename = Path.GetFileNameWithoutExtension(Config.ConfigSource.Pathname);
         if (Config.RandomTimeOffset != 0) ClockOffset = RNG.Next(0, Math.Abs(Config.RandomTimeOffset) + 1) * Math.Sign(Config.RandomTimeOffset);
 
-        Shader = RenderingHelper.GetShader(this, visualizerConfig);
+        Shader = RenderingHelper.GetVisualizerShader(this, visualizerConfig);
         if (!IsValid) return;
 
         VertexSource = RenderingHelper.GetVertexSource(this, visualizerConfig);

@@ -499,7 +499,8 @@ playlist   : {Playlist.GetInfo()}
 
         private void InitializeCache()
         {
-            Caching.Shaders = new(Program.AppConfig.ShaderCacheSize);
+            Caching.VisualizerShaders = new(Program.AppConfig.ShaderCacheSize);
+            Caching.FXShaders = new(Program.AppConfig.FXCacheSize);
 
             Caching.IdleVisualizer = new(Path.Combine(ApplicationConfiguration.InternalShaderPath, "idle.conf"));
             Caching.BlankVisualizer = new(Path.Combine(ApplicationConfiguration.InternalShaderPath, "blank.conf"));
@@ -534,8 +535,11 @@ playlist   : {Playlist.GetInfo()}
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy AudioTextureEngine");
             Eyecandy?.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Cached Shaders");
-            Caching.Shaders.Dispose();
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Cached Visualizer Shaders");
+            Caching.VisualizerShaders.Dispose();
+
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Cached FX Shaders");
+            Caching.FXShaders.Dispose();
 
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Internal Crossfade Shader");
             Caching.CrossfadeShader.Dispose();
