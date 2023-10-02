@@ -231,12 +231,10 @@ namespace mhh
             // the GLFW thread won't be trying to use the Shader object
             lock (QueuedConfigLock)
             {
-                bool sameTime = false;
                 if(QueuedVisualizerConfig is not null)
                 {
                     Renderer.PrepareNewRenderer(QueuedVisualizerConfig);
                     QueuedVisualizerConfig = null;
-                    sameTime = true;
                 }
 
                 if (QueuedFXConfig is not null)
@@ -531,7 +529,9 @@ playlist   : {Playlist.GetInfo()}
             base.Dispose();
 
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy.EndAudioProcessing()");
-            Eyecandy?.EndAudioProcessing();
+            var success = Eyecandy?.EndAudioProcessing();
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy.EndAudioProcessing() success: {success}");
+
 
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy AudioTextureEngine");
             Eyecandy?.Dispose();
