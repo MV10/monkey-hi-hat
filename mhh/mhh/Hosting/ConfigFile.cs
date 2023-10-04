@@ -45,7 +45,7 @@ namespace mhh
                 return;
             }
 
-            LogHelper.Logger?.LogTrace($"ConfigFile: {confPathname}");
+            LogHelper.Logger?.LogTrace($"ConfigFile: {Pathname}");
 
             var section = string.Empty;
             int sectionID = 0;
@@ -68,8 +68,16 @@ namespace mhh
                             {
                                 if (!Content.ContainsKey(section)) Content.Add(section, new());
                                 var key = (kvp.Length == 2) ? kvp[0] : (sectionID++).ToString();
-                                var value = (kvp.Length == 2) ? kvp[1] : kvp[0];
-                                Content[section].Add(key.ToLowerInvariant(), value);
+                                var keylower = key.ToLowerInvariant();
+                                if (Content[section].ContainsKey(keylower))
+                                {
+                                    LogHelper.Logger?.LogWarning($"Config {Pathname} section [{section}] has multiple entries for setting {key}");
+                                }
+                                else
+                                {
+                                    var value = (kvp.Length == 2) ? kvp[1] : kvp[0];
+                                    Content[section].Add(keylower, value);
+                                }
                             }
                         }
                     }

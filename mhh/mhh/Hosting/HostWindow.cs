@@ -425,6 +425,17 @@ playlist   : {Playlist.GetInfo()}
         }
 
         /// <summary>
+        /// Handler for the --nocache command-line switch
+        /// </summary>
+        public string Command_DisableCaching()
+        {
+            Caching.VisualizerShaders.CachingDisabled = true;
+            Caching.FXShaders.CachingDisabled = true;
+            Caching.LibraryShaders.CachingDisabled = true;
+            return "ACK";
+        }
+
+        /// <summary>
         /// Queues a new visualizer to send to the RenderManager on the next OnUpdateFrame pass.
         /// </summary>
         private void QueueVisualization(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)

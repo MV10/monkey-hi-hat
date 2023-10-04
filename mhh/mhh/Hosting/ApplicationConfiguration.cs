@@ -53,7 +53,7 @@ namespace mhh
             RenderResolutionLimit = ConfigSource.ReadValue("setup", "renderresolutionlimit").ToInt32(0);
             HideMousePointer = ConfigSource.ReadValue("setup", "hidemousepointer").ToBool(true);
             ShaderCacheSize = ConfigSource.ReadValue("setup", "shadercachesize").ToInt32(150);
-            FXCacheSize = ConfigSource.ReadValue("setup", "shadercachesize").ToInt32(50);
+            FXCacheSize = ConfigSource.ReadValue("setup", "fxcachesize").ToInt32(50);
             LibraryCacheSize = ConfigSource.ReadValue("setup", "librarycachesize").ToInt32(10);
             CrossfadeSeconds = ConfigSource.ReadValue("setup", "crossfadeseconds").ToInt32(2);
             FrameRateLimit = ConfigSource.ReadValue("setup", "FrameRateLimit").ToInt32(60);
@@ -73,7 +73,9 @@ namespace mhh
 
             // validation
             if (RenderResolutionLimit < 256 && RenderResolutionLimit !=0) ConfError("RenderResolutionLimit must be 256 or greater (default is 0 to disable).");
-            if (ShaderCacheSize < 1) ConfError("ShaderCacheSize must be 1 or greater. Default is 50 when omitted.");
+            if (ShaderCacheSize < 0) ConfError("ShaderCacheSize must be 0 or greater. Default is 150 when omitted, 0 disables caching.");
+            if (FXCacheSize < 0) ConfError("FXCacheSize must be 0 or greater. Default is 50 when omitted, 0 disables caching.");
+            if (LibraryCacheSize < 0) ConfError("LibraryCacheSize must be 0 or greater. Default is 10 when omitted, 0 disables caching.");
             if (CrossfadeSeconds < 0) ConfError("CrossfadeSeconds must be 0 or greater. Default is 2, use 0 to disable.");
             if (FrameRateLimit < 0 || FrameRateLimit > 9999) ConfError("FrameRateLimit must be 0 to 9999. Default is 60. Set to 0 for no limit (may break some shaders).");
             if (UnsecuredPort < 0 || UnsecuredPort > 65534) ConfError("UnsecuredPort must be 0 to 65534, recommended range is 49152 or higher, use 0 to disable.");

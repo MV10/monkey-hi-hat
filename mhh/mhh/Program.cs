@@ -271,6 +271,11 @@ namespace mhh
                     if (args.Length != 2) return "ERR: Visualizer name or pathname required.";
                     return GetShaderDetail(GetVisualizerPathname(args[1]));
 
+                case "--nocache":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length > 1) return ShowHelp();
+                    return AppWindow.Command_DisableCaching();
+
                 case "--console":
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
@@ -483,6 +488,7 @@ All switches are passed to the already-running instance:
 --fullscreen                toggle between windowed and full-screen state
 --fps                       returns instantaneous FPS and average FPS over past 10 seconds
 --fps [0|1-9999]            sets a frame rate lock (FPS target), or 0 to disable (max possible FPS)
+--nocache                   disables caching for the remainder of the session (good for testing)
 
 --console                   toggles the visibility of the console window (Windows only)
 --standby                   toggles between standby mode and active mode

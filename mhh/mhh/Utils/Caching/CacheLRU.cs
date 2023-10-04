@@ -12,22 +12,27 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
 {
     private readonly record struct Entry(TKey Key, Lazy<TValue> Lazy);
 
-    private readonly Dictionary<TKey, LinkedListNode<Entry>> storage;
-    private readonly LinkedList<Entry> order;
-    private readonly int capacity;
-    private bool valueIsDisposable = false;
+    private readonly Dictionary<TKey, LinkedListNode<Entry>> Storage;
+    private readonly LinkedList<Entry> Sequence;
+    private readonly int Capacity;
+    private bool CachedValuesAreDisposable = false;
 
-    private object lockStorage = new();
+    private object LockStorage = new();
 
-    public int Count { get { lock (lockStorage) return storage.Count; } }
+    public int Count { get { lock (LockStorage) return Storage.Count; } }
+
+    // When caching is disabled, the cache is only purged as cache keys are
+    // accessed. Caching can be re-enabled at any time and the existing cached
+    // items should still be valid for re-use.
+    public bool CachingDisabled { get; set; }
 
     public CacheLRU(int maxSize, IEqualityComparer<TKey> comparer = default)
     {
         if (maxSize < 0) throw new ArgumentOutOfRangeException(nameof(maxSize));
-        storage = new(maxSize + 1, comparer);
-        order = new();
-        capacity = maxSize;
-        valueIsDisposable = typeof(TValue) is IDisposable;
+        Storage = new(maxSize + 1, comparer);
+        Sequence = new();
+        Capacity = maxSize;
+        CachedValuesAreDisposable = typeof(TValue) is IDisposable;
     }
 
     /// <summary>
@@ -36,15 +41,21 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
     public TValue Get(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        lock (lockStorage)
+        lock (LockStorage)
         {
-            if (storage.ContainsKey(key))
+            if (Storage.ContainsKey(key))
             {
-                ref LinkedListNode<Entry> refNode = ref CollectionsMarshal.GetValueRefOrAddDefault(storage, key, out bool exists);
-                if (!ReferenceEquals(refNode, order.Last))
+                if(CachingDisabled)
                 {
-                    order.Remove(refNode);
-                    order.AddLast(refNode);
+                    Remove(key);
+                    return default;
+                }
+
+                ref LinkedListNode<Entry> refNode = ref CollectionsMarshal.GetValueRefOrAddDefault(Storage, key, out bool exists);
+                if (!ReferenceEquals(refNode, Sequence.Last))
+                {
+                    Sequence.Remove(refNode);
+                    Sequence.AddLast(refNode);
                 }
                 return refNode.Value.Lazy.Value;
             }
@@ -58,22 +69,28 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
     public bool TryAdd(TKey key, TValue value)
     {
         ArgumentNullException.ThrowIfNull(key);
-        lock (lockStorage)
+        lock (LockStorage)
         {
-            ref LinkedListNode<Entry> refNode = ref CollectionsMarshal.GetValueRefOrAddDefault(storage, key, out bool exists);
+            if(CachingDisabled)
+            {
+                if (Storage.ContainsKey(key)) Remove(key);
+                return false;
+            }
+
+            ref LinkedListNode<Entry> refNode = ref CollectionsMarshal.GetValueRefOrAddDefault(Storage, key, out bool exists);
             if (exists) return false;
             var lazy = new Lazy<TValue>(value);
             refNode = new(new Entry(key, lazy));
-            order.AddLast(refNode);
-            if (storage.Count > capacity)
+            Sequence.AddLast(refNode);
+            if (Storage.Count > Capacity)
             {
-                var entry = order.First.Value;
-                if (valueIsDisposable)
+                var entry = Sequence.First.Value;
+                if (CachedValuesAreDisposable)
                 {
                     (entry.Lazy.Value as IDisposable).Dispose();
                 }
-                storage.Remove(entry.Key);
-                order.RemoveFirst();
+                Storage.Remove(entry.Key);
+                Sequence.RemoveFirst();
             }
         }
         return true;
@@ -85,9 +102,17 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
     public bool ContainsKey(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        lock (lockStorage)
+        lock (LockStorage)
         {
-            return storage.ContainsKey(key);
+            var found = Storage.ContainsKey(key);
+
+            if(CachingDisabled && found)
+            {
+                Remove(key);
+                return false;
+            }
+
+            return found;
         }
     }
 
@@ -97,17 +122,17 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
     public void Remove(TKey key)
     {
         ArgumentNullException.ThrowIfNull(key);
-        lock (lockStorage)
+        lock (LockStorage)
         {
-            if (storage.ContainsKey(key))
+            if (Storage.ContainsKey(key))
             {
-                ref LinkedListNode<Entry> refNode = ref CollectionsMarshal.GetValueRefOrAddDefault(storage, key, out bool exists);
-                if(valueIsDisposable)
+                ref LinkedListNode<Entry> refNode = ref CollectionsMarshal.GetValueRefOrAddDefault(Storage, key, out bool exists);
+                if(CachedValuesAreDisposable)
                 {
                     (refNode.Value.Lazy.Value as IDisposable).Dispose();
                 }
-                order.Remove(refNode);
-                storage.Remove(key);
+                Sequence.Remove(refNode);
+                Storage.Remove(key);
             }
         }
     }
@@ -117,9 +142,11 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
     /// </summary>
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {
-        lock (lockStorage)
+        lock (LockStorage)
         {
-            return order
+            if (CachingDisabled) return new KeyValuePair<TKey, TValue>[0].AsEnumerable().GetEnumerator();
+
+            return Sequence
                 .ToArray()
                 .Select((Entry e) => KeyValuePair.Create(e.Key, e.Lazy.Value))
                 .AsEnumerable()
@@ -134,18 +161,18 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
         if (IsDisposed) return;
         LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
 
-        lock (lockStorage)
+        lock (LockStorage)
         {
-            if (valueIsDisposable)
+            if (CachedValuesAreDisposable)
             {
-                foreach (var obj in order)
+                foreach (var obj in Sequence)
                 {
                     LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() key {obj.Key}");
                     (obj.Lazy.Value as IDisposable).Dispose();
                 }
             }
-            storage.Clear();
-            order.Clear();
+            Storage.Clear();
+            Sequence.Clear();
         }
 
         IsDisposed = true;
