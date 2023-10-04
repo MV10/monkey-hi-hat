@@ -52,6 +52,14 @@ namespace mhh
         /// </summary>
         public static HostWindow AppWindow;
 
+        /// <summary>
+        /// Allows a set of command-line arguments to be queued while another
+        /// set is being processed. This will be passed to ProcessSwitches by
+        /// HostWindow's OnWindowUpdate event. The primary use-case is to allow
+        /// the program to come out of standby then process a command like --load.
+        /// </summary>
+        public static string[] QueuedArgs;
+
         // cancel this to terminate the switch server's named pipe.
         private static CancellationTokenSource ctsSwitchPipe;
 
@@ -80,7 +88,7 @@ namespace mhh
         internal static bool AppRunning = true; // the window can change this
         private static bool OnStandby = false;
 
-        static async Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             try
             {
@@ -139,6 +147,155 @@ namespace mhh
 
             // Give the sloooow console time to catch up...
             await Task.Delay(250);
+        }
+
+        public static string ProcessSwitches(string[] args)
+        {
+            if (args.Length == 0) return ShowHelp();
+
+            LogHelper.Logger?.LogInformation($"Processing switches: {string.Join(" ", args)}");
+
+            switch (args[0].ToLowerInvariant())
+            {
+                case "--load":
+                    if (OnStandby) return QueueAndExitStandby(args);
+                    if (args.Length > 3) return ShowHelp();
+                    var vizPathname = GetVisualizerPathname(args[1]);
+                    if (vizPathname is null) return "ERR: Visualizer not found.";
+                    if (args.Length == 2) return AppWindow.Command_Load(vizPathname);
+                    var vizfxPathname = GetFxPathname(args[2]);
+                    if (vizfxPathname is null) return "ERR: FX not found.";
+                    return AppWindow.Command_Load(vizPathname, vizfxPathname);
+
+                case "--playlist":
+                    if (args.Length != 2) return ShowHelp();
+                    var playlistPathname = GetPlaylistPathname(args[1]);
+                    if (playlistPathname is null) return "ERR: Playlist not found.";
+                    if (OnStandby) return QueueAndExitStandby(args);
+                    return AppWindow.Command_Playlist(playlistPathname);
+
+                case "--fx":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length != 2) return ShowHelp();
+                    var fxPathname = GetFxPathname(args[1]);
+                    if (fxPathname is null) return "ERR: FX not found.";
+                    return AppWindow.Command_ApplyFX(fxPathname);
+
+                case "--next":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length > 2) return ShowHelp();
+                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("fx")) return AppWindow.Command_PlaylistNextFX();
+                    if (args.Length == 2) return ShowHelp();
+                    return AppWindow.Command_PlaylistNext();
+
+                case "--list":
+                case "--md.list":
+                    var readable = args[0].ToLowerInvariant().Equals("--list");
+                    var separator = readable ? "\n" : CommandLineSwitchServer.Options.Advanced.SeparatorControlCode;
+
+                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("viz"))
+                    {
+                        if (string.IsNullOrEmpty(AppConfig.VisualizerPath)) return "ERR: VisualizerPath not defined in mhh.conf.";
+                        return GetConfigFiles(AppConfig.VisualizerPath, separator);
+                    }
+
+                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("playlists"))
+                    {
+                        if (string.IsNullOrEmpty(AppConfig.PlaylistPath)) return "ERR: PlaylistPath not defined in mhh.conf.";
+                        return GetConfigFiles(AppConfig.PlaylistPath, separator);
+                    }
+
+                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("fx"))
+                    {
+                        if (string.IsNullOrEmpty(AppConfig.FXPath)) return "ERR: FXPath not defined in mhh.conf.";
+                        return GetConfigFiles(AppConfig.FXPath, separator);
+                    }
+
+                    return readable ? ShowHelp() : string.Empty;
+
+                case "--info":
+                    if (OnStandby) return "Application is in standby mode, use --standby command to toggle";
+                    if (args.Length > 1) return ShowHelp();
+                    return AppWindow.Command_Info();
+
+                case "--fps":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length > 2) return ShowHelp();
+                    if (args.Length == 2)
+                    {
+                        if (!int.TryParse(args[1], out var fpsTarget) || fpsTarget < 0 || fpsTarget > 9999) return ShowHelp();
+                        AppWindow.UpdateFrequency = fpsTarget;
+                        return (fpsTarget == 0) ? "FPS target disabled (max possible FPS)" : $"FPS target set to {fpsTarget}";
+                    }
+                    else
+                    {
+                        return $"{AppWindow.FramesPerSecond} FPS" +
+                            $"\n{AppWindow.AverageFramesPerSecond} average FPS over past {AppWindow.AverageFPSTimeframeSeconds} seconds" +
+                            $"\nFPS target is {(AppWindow.UpdateFrequency == 0 ? "not locked (max FPS)" : $"locked to {AppWindow.UpdateFrequency} FPS")}";
+                    }
+
+                case "--fullscreen":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length > 1) return ShowHelp();
+                    return AppWindow.Command_FullScreen();
+
+                case "--idle":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length > 1) return ShowHelp();
+                    return AppWindow.Command_Idle();
+
+                case "--pause":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length > 1) return ShowHelp();
+                    return AppWindow.Command_Pause();
+
+                case "--run":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length > 1) return ShowHelp();
+                    return AppWindow.Command_Run();
+
+                case "--reload":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length > 1) return ShowHelp();
+                    return AppWindow.Command_Reload();
+
+                case "--pid":
+                    if (args.Length > 1) return ShowHelp();
+                    return Environment.ProcessId.ToString();
+
+                case "--log":
+                    if (args.Length == 1) return $"Current log level {LevelConvert.ToExtensionsLevel(LogHelper.LevelSwitch.MinimumLevel).ToString()}";
+                    return $"Setting log level {LogHelper.SetLogLevel(args[1])}";
+
+                case "--md.detail":
+                    if (args.Length != 2) return "ERR: Visualizer name or pathname required.";
+                    return GetShaderDetail(GetVisualizerPathname(args[1]));
+
+                case "--console":
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        IsConsoleVisible = !IsConsoleVisible;
+                        return "ACK";
+                    }
+                    else
+                    {
+                        return "ERR: Console visibility is only available on Windows OS";
+                    }
+
+                case "--quit":
+                    if (args.Length > 1) return ShowHelp();
+                    AppRunning = false;
+                    if (OnStandby) return "ACK";
+                    return AppWindow.Command_Quit();
+
+                case "--standby":
+                    AppWindow?.Command_Quit();
+                    OnStandby = !OnStandby;
+                    return "ACK";
+
+                default:
+                    return ShowHelp();
+            }
         }
 
         // Return "false" to tell main() to exit after init (another instance is running)
@@ -254,155 +411,6 @@ namespace mhh
             }
         }
 
-        private static string ProcessSwitches(string[] args)
-        {
-            if (args.Length == 0) return ShowHelp();
-
-            LogHelper.Logger?.LogInformation($"Processing switches: {string.Join(" ", args)}");
-
-            switch (args[0].ToLowerInvariant())
-            {
-                case "--load":
-                    if (OnStandby) return "ERR: Application is in standby";
-                    if (args.Length > 3) return ShowHelp();
-                    var vizPathname = GetVisualizerPathname(args[1]);
-                    if (vizPathname is null) return "ERR: Visualizer not found.";
-                    if (args.Length == 2) return AppWindow.Command_Load(vizPathname);
-                    var vizfxPathname = GetFxPathname(args[2]);
-                    if (vizfxPathname is null) return "ERR: FX not found.";
-                    return AppWindow.Command_Load(vizPathname, vizfxPathname);
-
-                case "--playlist":
-                    if (args.Length != 2) return ShowHelp();
-                    var playlistPathname = GetPlaylistPathname(args[1]);
-                    if (playlistPathname is null) return "ERR: Playlist not found.";
-                    if (OnStandby) return "ERR: Application is in standby";
-                    return AppWindow.Command_Playlist(playlistPathname);
-
-                case "--fx":
-                    if (args.Length != 2) return ShowHelp();
-                    var fxPathname = GetFxPathname(args[1]);
-                    if (fxPathname is null) return "ERR: FX not found.";
-                    if (OnStandby) return "ERR: Application is in standby";
-                    return AppWindow.Command_ApplyFX(fxPathname);
-
-                case "--next":
-                    if (OnStandby) return "ERR: Application is in standby";
-                    if (args.Length > 2) return ShowHelp();
-                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("fx")) return AppWindow.Command_PlaylistNextFX();
-                    if (args.Length == 2) return ShowHelp();
-                    return AppWindow.Command_PlaylistNext();
-
-                case "--list":
-                case "--md.list":
-                    var readable = args[0].ToLowerInvariant().Equals("--list");
-                    var separator =  readable ? "\n" : CommandLineSwitchServer.Options.Advanced.SeparatorControlCode;
-                    
-                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("viz"))
-                    {
-                        if (string.IsNullOrEmpty(AppConfig.VisualizerPath)) return "ERR: VisualizerPath not defined in mhh.conf.";
-                        return GetConfigFiles(AppConfig.VisualizerPath, separator);
-                    }
-
-                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("playlists"))
-                    {
-                        if (string.IsNullOrEmpty(AppConfig.PlaylistPath)) return "ERR: PlaylistPath not defined in mhh.conf.";
-                        return GetConfigFiles(AppConfig.PlaylistPath, separator);
-                    }
-
-                    if (args.Length == 2 && args[1].ToLowerInvariant().Equals("fx"))
-                    {
-                        if (string.IsNullOrEmpty(AppConfig.FXPath)) return "ERR: FXPath not defined in mhh.conf.";
-                        return GetConfigFiles(AppConfig.FXPath, separator);
-                    }
-
-                    return readable ? ShowHelp() : string.Empty;
-
-                case "--info":
-                    if (OnStandby) return "Application is in standby mode, use --standby command to toggle";
-                    if (args.Length > 1) return ShowHelp();
-                    return AppWindow.Command_Info();
-
-                case "--fps":
-                    if (OnStandby) return "ERR: Application is in standby";
-                    if (args.Length > 2) return ShowHelp();
-                    if(args.Length == 2)
-                    {
-                        if (!int.TryParse(args[1], out var fpsTarget) || fpsTarget < 0 || fpsTarget > 9999) return ShowHelp();
-                        AppWindow.UpdateFrequency = fpsTarget;
-                        return (fpsTarget == 0) ? "FPS target disabled (max possible FPS)" : $"FPS target set to {fpsTarget}";
-                    }
-                    else
-                    {
-                        return $"{AppWindow.FramesPerSecond} FPS" +
-                            $"\n{AppWindow.AverageFramesPerSecond} average FPS over past {AppWindow.AverageFPSTimeframeSeconds} seconds" +
-                            $"\nFPS target is {(AppWindow.UpdateFrequency == 0 ? "not locked (max FPS)" : $"locked to {AppWindow.UpdateFrequency} FPS" )}";
-                    }
-
-                case "--fullscreen":
-                    if (OnStandby) return "ERR: Application is in standby";
-                    if (args.Length > 1) return ShowHelp();
-                    return AppWindow.Command_FullScreen();
-
-                case "--idle":
-                    if (OnStandby) return "ERR: Application is in standby";
-                    if (args.Length > 1) return ShowHelp();
-                    return AppWindow.Command_Idle();
-
-                case "--pause":
-                    if (OnStandby) return "ERR: Application is in standby";
-                    if (args.Length > 1) return ShowHelp();
-                    return AppWindow.Command_Pause();
-
-                case "--run":
-                    if (OnStandby) return "ERR: Application is in standby";
-                    if (args.Length > 1) return ShowHelp();
-                    return AppWindow.Command_Run();
-
-                case "--reload":
-                    if (OnStandby) return "ERR: Application is in standby";
-                    if (args.Length > 1) return ShowHelp();
-                    return AppWindow.Command_Reload();
-
-                case "--pid":
-                    if (args.Length > 1) return ShowHelp();
-                    return Environment.ProcessId.ToString();
-
-                case "--log":
-                    if (args.Length == 1) return $"Current log level {LevelConvert.ToExtensionsLevel(LogHelper.LevelSwitch.MinimumLevel).ToString()}";
-                    return $"Setting log level {LogHelper.SetLogLevel(args[1])}";
-
-                case "--md.detail":
-                    if (args.Length != 2) return "ERR: Visualizer name or pathname required.";
-                    return GetShaderDetail(GetVisualizerPathname(args[1]));
-
-                case "--console":
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        IsConsoleVisible = !IsConsoleVisible;
-                        return "ACK";
-                    }
-                    else
-                    {
-                        return "ERR: Console visibility is only available on Windows OS";
-                    }
-
-                case "--quit":
-                    if (args.Length > 1) return ShowHelp();
-                    AppRunning = false;
-                    if (OnStandby) return "ACK";
-                    return AppWindow.Command_Quit();
-
-                case "--standby":
-                    AppWindow?.Command_Quit();
-                    OnStandby = !OnStandby;
-                    return "ACK";
-                
-                default:
-                    return ShowHelp();
-            }
-        }
-
         private static string GetPlaylistPathname(string fromArg)
             => PathHelper.HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.PlaylistPath, fromArg);
 
@@ -435,6 +443,13 @@ namespace mhh
                 sb.Append(filename);
             }
             return (sb.Length > 0) ? sb.ToString() : "ERR: No conf files available.";
+        }
+
+        private static string QueueAndExitStandby(string[] args)
+        {
+            OnStandby = false;
+            QueuedArgs = args;
+            return "ACK (command queued, exiting standby)";
         }
 
         private static string ShowHelp()

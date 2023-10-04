@@ -231,16 +231,28 @@ namespace mhh
             // the GLFW thread won't be trying to use the Shader object
             lock (QueuedConfigLock)
             {
+                bool exit = false;
                 if(QueuedVisualizerConfig is not null)
                 {
                     Renderer.PrepareNewRenderer(QueuedVisualizerConfig);
                     QueuedVisualizerConfig = null;
+                    exit = true;
                 }
 
                 if (QueuedFXConfig is not null)
                 {
                     if(Renderer.ApplyFX(QueuedFXConfig)) QueuedFXConfig = null;
+                    exit = true;
                 }
+
+                if (exit) return;
+            }
+
+            // was a secondary command queued?
+            if(Program.QueuedArgs?.Length > 0)
+            {
+                Program.ProcessSwitches(Program.QueuedArgs);
+                Program.QueuedArgs = null;
             }
         }
 
