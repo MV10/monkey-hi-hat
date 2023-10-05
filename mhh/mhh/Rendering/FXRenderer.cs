@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace mhh;
 
@@ -112,7 +113,7 @@ public class FXRenderer : IRenderer
         RandomRun = (float)RNG.NextDouble();
     }
 
-    public void RenderFrame()
+    public void RenderFrame(ScreenshotWriter screenshotHandler = null)
     {
         var timeUniform = TrueElapsedTime();
 
@@ -180,6 +181,9 @@ public class FXRenderer : IRenderer
         // changed from the previous frame if that pass has a front/back buffer swap)
         var lastPass = ShaderPasses[ShaderPasses.Count - 1];
         FinalDrawbuffers = lastPass.Drawbuffers;
+
+        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
 
         // is FX crossfade active?
         float fadeLevel = (float)Clock.ElapsedMilliseconds / DurationMS;

@@ -64,7 +64,7 @@ public class CrossfadeRenderer : IRenderer
         DurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
     }
 
-    public void RenderFrame()
+    public void RenderFrame(ScreenshotWriter screenshotHandler = null)
     {
         if (CompletionCallback is null) return;
 

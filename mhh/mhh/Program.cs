@@ -234,6 +234,23 @@ namespace mhh
                             $"\nFPS target is {(AppWindow.UpdateFrequency == 0 ? "not locked (max FPS)" : $"locked to {AppWindow.UpdateFrequency} FPS")}";
                     }
 
+                case "--jpg":
+                case "--png":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length > 2 || args.Length == 2 && !args[1].Equals("wait", StringComparison.InvariantCultureIgnoreCase)) return ShowHelp();
+                    if(args.Length == 1)
+                    {
+                        return (args[0].Equals("--jpg"))
+                            ? AppWindow.Command_Screenshot(CommandRequest.SnapshotNowJpg)
+                            : AppWindow.Command_Screenshot(CommandRequest.SnapshotNowPng);
+                    }
+                    else
+                    {
+                        return (args[0].Equals("--jpg"))
+                            ? AppWindow.Command_Screenshot(CommandRequest.SnapshotSpacebarJpg)
+                            : AppWindow.Command_Screenshot(CommandRequest.SnapshotSpacebarPng);
+                    }
+
                 case "--fullscreen":
                     if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length > 1) return ShowHelp();
@@ -484,19 +501,22 @@ All switches are passed to the already-running instance:
 --next                      when a playlist is active, advances to the next viz (using the Order setting)
 --next fx                   when a playlist is active, applies a post-processing FX (if one isn't running)
 
+--jpg [wait]                JPG screenshot; Win: desktop, Linux: app path; ""wait"" watches for spacebar
+--png [wait]                PNG screenshot; Win: desktop, Linux: app path; ""wait"" watches for spacebar
+
 --info                      writes shader and execution details to the console
 --fullscreen                toggle between windowed and full-screen state
 --fps                       returns instantaneous FPS and average FPS over past 10 seconds
 --fps [0|1-9999]            sets a frame rate lock (FPS target), or 0 to disable (max possible FPS)
 --nocache                   disables caching for the remainder of the session (good for testing)
 
---console                   toggles the visibility of the console window (Windows only)
 --standby                   toggles between standby mode and active mode
 --pause                     stops the current shader
 --run                       resumse the current shader
 --pid                       shows the current Process ID
 --log [level]               shows or sets log-level (None, Trace, Debug, Information, Warning, Error, Critical)
 
+--console                   Windows: toggles the visibility of the console window (only minimizes Terminal)
 ";
     }
 }

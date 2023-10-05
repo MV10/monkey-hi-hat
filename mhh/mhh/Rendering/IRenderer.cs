@@ -22,10 +22,10 @@ public interface IRenderer : IConfigSource, IDisposable
     public string Filename { get; set; }
 
     /// <summary>
-    /// Called after audio textures are updated, uniforms are set, and any
-    /// framebuffers are prepared for drawing.
+    /// Called to produce a new frame of output. If a ScreenshotWriter is provided,
+    /// the output buffer should be provided to that object to generate a screenshot.
     /// </summary>
-    public void RenderFrame();
+    public void RenderFrame(ScreenshotWriter screenshotWriter = null);
 
     /// <summary>
     /// Called by RenderManager.OnResize in response to AppWindow.OnResize.

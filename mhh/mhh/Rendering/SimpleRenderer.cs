@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace mhh;
 
@@ -55,7 +56,7 @@ public class SimpleRenderer : IRenderer
         RandomRun = (float)RNG.NextDouble();
     }
 
-    public void RenderFrame()
+    public void RenderFrame(ScreenshotWriter screenshotHandler = null)
     {
         var timeUniform = TrueElapsedTime() + ClockOffset;
 
@@ -72,6 +73,9 @@ public class SimpleRenderer : IRenderer
             GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             VertexSource.RenderFrame(Shader);
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
 
             // blit drawbuffer to OpenGL's backbuffer unless Crossfade or FXRenderer is intercepting the final draw buffer
             if (!IsOutputIntercepted)
@@ -90,6 +94,9 @@ public class SimpleRenderer : IRenderer
             GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             VertexSource.RenderFrame(Shader);
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y);
         }
 
         FrameCount++;

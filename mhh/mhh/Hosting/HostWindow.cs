@@ -120,7 +120,7 @@ namespace mhh
         /// </summary>
         protected override void OnRenderFrame(FrameEventArgs e)
         {
-            if (CommandRequested != CommandRequest.None || Renderer.ActiveRenderer is null) return;
+            if (Renderer.ActiveRenderer is null) return;
             base.OnRenderFrame(e);
 
             Eyecandy.UpdateTextures();
@@ -158,6 +158,8 @@ namespace mhh
                 return;
             }
 
+            var input = KeyboardState;
+
             switch (CommandRequested)
             {
                 case CommandRequest.Quit:
@@ -185,12 +187,30 @@ namespace mhh
                     return;
                 }
 
+                case CommandRequest.SnapshotNowJpg:
+                case CommandRequest.SnapshotNowPng:
+                {
+                    Renderer.ScreenshotHandler = new(CommandRequested);
+                    CommandRequested = CommandRequest.None;
+                    return;
+                }
+
+                case CommandRequest.SnapshotSpacebarJpg:
+                case CommandRequest.SnapshotSpacebarPng:
+                {
+                    if(input.IsKeyReleased(Keys.Space))
+                    {
+                        Renderer.ScreenshotHandler = new(CommandRequested);
+                        CommandRequested = CommandRequest.None;
+                        return;
+                    }
+                    break;
+                }
+
                 default:
                     CommandRequested = CommandRequest.None;
                     break;
             }
-
-            var input = KeyboardState;
 
             // ESC to quit
             if (input.IsKeyReleased(Keys.Escape))
@@ -253,6 +273,7 @@ namespace mhh
             {
                 Program.ProcessSwitches(Program.QueuedArgs);
                 Program.QueuedArgs = null;
+                return;
             }
         }
 
@@ -365,6 +386,20 @@ playlist   : {Playlist.GetInfo()}
         {
             CommandRequested = CommandRequest.ToggleFullscreen;
             return "ACK";
+        }
+
+        /// <summary>
+        /// Handler for the --jpg and --png command-line switches.
+        /// </summary>
+        public string Command_Screenshot(CommandRequest commandRequest)
+        {
+            if (CommandRequested != CommandRequest.None) return "ERR: A command is already pending";
+
+            CommandRequested = commandRequest;
+
+            return (commandRequest == CommandRequest.SnapshotSpacebarJpg || commandRequest == CommandRequest.SnapshotSpacebarPng) 
+                ? "ACK - press spacebar to save image" 
+                : "ACK - saving image";
         }
 
         /// <summary>

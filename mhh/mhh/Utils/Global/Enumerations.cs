@@ -58,6 +58,10 @@ namespace mhh
         None = 0,
         Quit = 1,
         ToggleFullscreen = 2,
+        SnapshotNowJpg = 3,
+        SnapshotNowPng = 4,
+        SnapshotSpacebarJpg = 5,
+        SnapshotSpacebarPng = 6,
     }
 
     /// <summary>

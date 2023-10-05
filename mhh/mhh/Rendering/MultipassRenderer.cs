@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace mhh;
 
@@ -78,7 +79,7 @@ public class MultipassRenderer : IRenderer
         RandomRun = (float)RNG.NextDouble();
     }
 
-    public void RenderFrame()
+    public void RenderFrame(ScreenshotWriter screenshotHandler = null)
     {
         var timeUniform = TrueElapsedTime() + ClockOffset;
 
@@ -115,6 +116,9 @@ public class MultipassRenderer : IRenderer
         // store this now so that crossfade can find the output buffer (it may have
         // changed from the previous frame if that pass has a front/back buffer swap)
         FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
 
         // blit drawbuffer to OpenGL's backbuffer unless Crossfade or FXRenderer is intercepting the final draw buffer
         if (!IsOutputIntercepted)

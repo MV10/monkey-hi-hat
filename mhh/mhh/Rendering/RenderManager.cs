@@ -27,6 +27,12 @@ public class RenderManager : IDisposable
     public IRenderer NewRenderer { get; private set; }
 
     /// <summary>
+    /// When this is set, the final output buffer is handed off for saving, then
+    /// this reference is set to null again.
+    /// </summary>
+    public ScreenshotWriter ScreenshotHandler { get; set; } = null;
+
+    /// <summary>
     /// When true, any renderer clocks (which normally sets a "time" uniform) are stopped.
     /// The default value is false (clocks are running upon renderer initialization).
     /// </summary>
@@ -159,7 +165,15 @@ public class RenderManager : IDisposable
 
         }
 
-        ActiveRenderer?.RenderFrame();
+        if(ActiveRenderer is CrossfadeRenderer)
+        {
+            ActiveRenderer.RenderFrame(null);
+        }
+        else
+        {
+            ActiveRenderer?.RenderFrame(ScreenshotHandler);
+            ScreenshotHandler = null;
+        }
     }
 
     /// <summary>
