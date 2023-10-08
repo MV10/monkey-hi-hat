@@ -1,4 +1,5 @@
 ﻿
+using OpenTK.Windowing.Common;
 using System.Runtime.InteropServices;
 
 namespace mhh
@@ -25,6 +26,7 @@ namespace mhh
         public readonly int LibraryCacheSize;
         public readonly int CrossfadeSeconds;
         public readonly int FrameRateLimit;
+        public readonly VSyncMode VSync;
         public readonly int UnsecuredPort;
 
         public readonly bool StartInStandby;
@@ -57,6 +59,7 @@ namespace mhh
             LibraryCacheSize = ConfigSource.ReadValue("setup", "librarycachesize").ToInt32(10);
             CrossfadeSeconds = ConfigSource.ReadValue("setup", "crossfadeseconds").ToInt32(2);
             FrameRateLimit = ConfigSource.ReadValue("setup", "FrameRateLimit").ToInt32(60);
+            VSync = ConfigSource.ReadValue("setup", "vsync").ToEnum(VSyncMode.Off);
             UnsecuredPort = ConfigSource.ReadValue("setup", "unsecuredport").ToInt32(0);
 
             VisualizerPath = ConfigSource.ReadValue(SectionOS, "visualizerpath");

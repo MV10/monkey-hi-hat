@@ -408,6 +408,7 @@ namespace mhh
                 WindowConfig.OpenTKNativeWindowSettings.APIVersion = OpenGLVersion;
                 WindowConfig.OpenTKGameWindowSettings.UpdateFrequency = AppConfig.FrameRateLimit;
                 // OpenTK 4.8 obsoleted the separate RenderFrequency setting :(
+                WindowConfig.OpenTKNativeWindowSettings.Vsync = AppConfig.VSync;
 
                 // Spin up the window and get the show started
                 AppWindow = new(WindowConfig, AudioConfig);

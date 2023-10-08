@@ -228,6 +228,13 @@ namespace mhh
                 return;
             }
 
+            // Down-arrow for next FX during playlist
+            if (input.IsKeyReleased(Keys.Down))
+            {
+                Command_PlaylistNextFX();
+                return;
+            }
+
             // Spacebar to toggle full-screen mode
             if (input.IsKeyReleased(Keys.Space))
             {
