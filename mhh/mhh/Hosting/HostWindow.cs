@@ -379,8 +379,10 @@ namespace mhh
 frame rate : {FramesPerSecond}
 average fps: {AverageFramesPerSecond}
 avg fps sec: {AverageFPSTimeframeSeconds}
+target fps : {(UpdateFrequency == 0 ? "unlimited" : UpdateFrequency)}
 playlist   : {Playlist.GetInfo()}
 {Renderer.GetInfo()}
+display res: {ClientSize.X} x {ClientSize.Y}
 ";
             LogHelper.Logger?.LogInformation(msg);
             return msg;

@@ -189,7 +189,41 @@ public class RenderManager : IDisposable
     /// Visualization / renderer information for the --info command.
     /// </summary>
     public string GetInfo()
-        => $"elapsed sec: {ActiveRenderer?.TrueElapsedTime() ?? 0}\nvisualizer : {ActiveRenderer?.Filename ?? "(none)"}";
+    {
+        var viz = ActiveRenderer?.Filename ?? "(none)";
+        var rez = (ActiveRenderer is null ? "n/a" : $"{ActiveRenderer.Resolution.X} x {ActiveRenderer.Resolution.Y}");
+
+        if (ActiveRenderer is CrossfadeRenderer)
+        {
+            var cf = ActiveRenderer as CrossfadeRenderer;
+
+            var vo = cf.OldRenderer.Filename;
+            var vn = cf.NewRenderer.Filename;
+            
+            var ro = $"{cf.OldRenderer.Resolution.X} x {cf.OldRenderer.Resolution.Y}";
+            var rn = $"{cf.NewRenderer.Resolution.X} x {cf.NewRenderer.Resolution.Y}";
+
+            if (cf.OldRenderer is FXRenderer) (vo, ro) = GetFXInfo(cf.OldRenderer as FXRenderer);
+            if (cf.NewRenderer is FXRenderer) (vn, rn) = GetFXInfo(cf.NewRenderer as FXRenderer);
+
+            viz = $"Crossfade {vo} to {vn}";
+            rez = $"{ro} and {rn}";
+        }
+
+        if (ActiveRenderer is FXRenderer) (viz, rez) = GetFXInfo(ActiveRenderer as FXRenderer);
+
+        return
+$@"elapsed sec: {ActiveRenderer?.TrueElapsedTime() ?? 0}
+visualizer : {viz}
+render res : {rez}";
+    }
+
+    private (string viz, string rez) GetFXInfo(FXRenderer fx)
+    {
+        var viz = $"{fx.PrimaryRenderer.Filename} with FX {fx.Filename}";
+        var rez = $"{fx.PrimaryRenderer.Resolution.X} x {fx.PrimaryRenderer.Resolution.Y}";
+        return (viz, rez);
+    }
 
     private void CrossfadeCompleted()
     {
