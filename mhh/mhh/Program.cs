@@ -37,9 +37,10 @@ namespace mhh
     {
         static readonly string ConfigFilename = "mhh.conf";
         static readonly string DebugConfigFilename = "mhh.debug.conf";
+
         static readonly string SwitchPipeName = "monkey-hi-hat";
         static readonly Version OpenGLVersion = new(4, 6);
-        static readonly string ConfigPathnameEnvironmentVariable = "monkey-hi-hat-config"; // set in Debug Launch Profile dialog
+        static readonly string ConfigLocationEnvironmentVariable = "monkey-hi-hat-config"; // set in Debug Launch Profile dialog
 
         /// <summary>
         /// Content parsed from the mhh.conf configuration file and the
@@ -326,20 +327,13 @@ namespace mhh
             Console.Clear();
             Console.WriteLine($"\nMonkey Hi Hat (PID {Environment.ProcessId})");
 
-            // Find and load the application configuration file (parsed later)
-            var configPathname = Path.GetFullPath(Debugger.IsAttached ? DebugConfigFilename : ConfigFilename);
-            if (!File.Exists(configPathname))
+            var appConfigFile = FindAppConfig();
+            if(appConfigFile is null)
             {
-                configPathname = Environment.GetEnvironmentVariable(ConfigPathnameEnvironmentVariable);
-                if (configPathname is null || !File.Exists(configPathname))
-                {
-                    Console.WriteLine($"\n\nUnable to locate the configuration file.\n  The default is to read \"{ConfigFilename}\" from the application directory.\n  When a debugger is attached, \"{DebugConfigFilename}\" is expected.\n  Alternately, a \"{ConfigPathnameEnvironmentVariable}\" environment variable can provide the full pathname.");
-                    Thread.Sleep(250); // slow-ass console
-                    return false;
-                }
-                Console.WriteLine($"Loading configuration via \"{ConfigPathnameEnvironmentVariable}\" environment variable:\n  {configPathname}");
+                Console.WriteLine($"\n\nUnable to locate the \"{ConfigFilename}\" configuration file (or \"{DebugConfigFilename}\" if running with a debugger attached).\n Search sequence is the \"{ConfigLocationEnvironmentVariable}\" environment variable, if defined, then the app directory, then the \"ConfigFile\" app subdirectory.");
+                Thread.Sleep(250); // slow-ass console
+                return false;
             }
-            var appConfigFile = new ConfigFile(configPathname);
 
             // Prepare logging and the switch server
             CommandLineSwitchServer.Options.PipeName = SwitchPipeName;
@@ -475,6 +469,45 @@ namespace mhh
             return "ACK (command queued, exiting standby)";
         }
 
+        // Find and load (but don't parse) the application configuration file
+        private static ConfigFile FindAppConfig()
+        {
+            var filename = Debugger.IsAttached ? DebugConfigFilename : ConfigFilename;
+
+            // Path search sequence:
+            // 1. Environment variable (must be complete pathname)
+            // 2. App directory (preferred location)
+            // 3. ConfigFiles subdirectory (might be an invalid default config; ie. invalid pathspecs)
+
+            var pathname = Environment.GetEnvironmentVariable(ConfigLocationEnvironmentVariable);
+            if(!string.IsNullOrEmpty(pathname))
+            {
+                pathname = Path.GetFullPath(pathname);
+                if (!File.Exists(pathname) && Directory.Exists(pathname)) pathname = Path.Combine(pathname, filename);
+                if (File.Exists(pathname))
+                {
+                    Console.WriteLine($"Loading configuration via \"{ConfigLocationEnvironmentVariable}\" environment variable:\n  {pathname}");
+                    return new(pathname);
+                }
+            }
+
+            pathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}", filename));
+            if(File.Exists(pathname))
+            {
+                Console.WriteLine($"Loading configuration from application directory:\n  {pathname}");
+                return new(pathname);
+            }
+
+            pathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}ConfigFiles", filename));
+            if (File.Exists(pathname))
+            {
+                Console.WriteLine($"Loading configuration from ConfigFiles sub-directory:\n  {pathname}");
+                return new(pathname);
+            }
+
+            return null;
+        }
+
         private static string ShowHelp()
             =>
 @$"
@@ -508,12 +541,12 @@ All switches are passed to the already-running instance:
 --info                      writes shader and execution details to the console
 --fullscreen                toggle between windowed and full-screen state
 --fps                       returns instantaneous FPS and average FPS over past 10 seconds
---fps [0|1-9999]            sets a frame rate lock (FPS target), or 0 to disable (max possible FPS)
+--fps [0|1-9999]            sets a frame rate (FPS) target, or 0 to disable (some shaders may require 60 FPS)
 --nocache                   disables caching for the remainder of the session (good for testing)
 
 --standby                   toggles between standby mode and active mode
 --pause                     stops the current shader
---run                       resumse the current shader
+--run                       resumes the current shader
 --pid                       shows the current Process ID
 --log [level]               shows or sets log-level (None, Trace, Debug, Information, Warning, Error, Critical)
 
