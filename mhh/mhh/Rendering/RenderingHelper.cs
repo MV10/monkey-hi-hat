@@ -237,7 +237,7 @@ public static class RenderingHelper
             }
 
             var cached = cache.TryAdd(shaderKey, shader);
-            if (!cached) LogHelper.Logger.LogWarning($"{nameof(GetCachedShader)} failed for {vertexShaderPathname} and {fragmentShaderPathname}");
+            if (!cached && !cache.CachingDisabled) LogHelper.Logger.LogWarning($"{nameof(GetCachedShader)} TryAdd failed to store or find {vertexShaderPathname} and {fragmentShaderPathname}");
         }
         return shader;
     }
@@ -262,7 +262,7 @@ public static class RenderingHelper
                 }
 
                 var cached = Caching.LibraryShaders.TryAdd(pathname, shader);
-                if (!cached) LogHelper.Logger.LogWarning($"{nameof(GetCachedLibraryShaders)} failed for {pathname}");
+                if (!cached && !Caching.LibraryShaders.CachingDisabled) LogHelper.Logger.LogWarning($"{nameof(GetCachedLibraryShaders)} TryAdd failed to store or find {pathname}");
             }
             libs[i] = shader;
         }
