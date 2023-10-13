@@ -160,6 +160,7 @@ public class PlaylistManager
         if (ActivePlaylist is null) return "ERR: No playlist is active";
         if (IsFXActive) return "ERR: A post-processing FX is already active";
         if (ActivePlaylist.FX.Count == 0) return "ERR: FX disabled or no configurations were found";
+        if (Program.AppWindow.Renderer.ActiveRenderer is CrossfadeRenderer) return "ERR: FX can't be applied during crossfade";
 
         if (NextFXPathname is null) ChooseNextFX(Program.AppWindow.Renderer.ActiveRenderer.ConfigSource);
         if (NextFXPathname is null) return "ERR: A selected FX config could not be found";
