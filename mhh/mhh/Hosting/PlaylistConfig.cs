@@ -36,7 +36,7 @@ namespace mhh
         {
             ConfigSource = new ConfigFile(pathname);
 
-            Order = ConfigSource.ReadValue("setup", "order").ToEnum(PlaylistOrder.RandomWeighted);
+            Order = ConfigSource.ReadValue("setup", "order").ToEnum(PlaylistOrder.RandomFavorites);
             FavoritesPct = ConfigSource.ReadValue("setup", "favoritespct").ToInt32(20);
 
             SwitchMode = ConfigSource.ReadValue("setup", "switch").ToEnum(PlaylistSwitchModes.Time);
@@ -144,7 +144,7 @@ namespace mhh
                     }
                     break;
 
-                case PlaylistOrder.RandomWeighted:
+                case PlaylistOrder.RandomFavorites:
                     {
                         // fully random with weightning, no pre-defined list
                     }

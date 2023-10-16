@@ -26,7 +26,7 @@ public class PlaylistManager
         var cfg = new PlaylistConfig(playlistConfPathname);
         string err = null;
         if (cfg.Playlist.Length < 2) err = "Invalid playlist configuration file, one or zero visualizations loaded, aborted";
-        if (cfg.Order == PlaylistOrder.RandomWeighted && cfg.Favorites.Count == 0) err = "RandomWeighted playlist requires Favorites visualizations, aborted";
+        if (cfg.Order == PlaylistOrder.RandomFavorites && cfg.Favorites.Count == 0) err = "RandomWeighted playlist requires Favorites visualizations, aborted";
         if (err is not null)
         {
             LogHelper.Logger?.LogError(err);
@@ -54,7 +54,7 @@ public class PlaylistManager
 
         string vizFile;
         string fxFile;
-        if (ActivePlaylist.Order == PlaylistOrder.RandomWeighted)
+        if (ActivePlaylist.Order == PlaylistOrder.RandomFavorites)
         {
             do
             {

@@ -37,7 +37,7 @@ namespace mhh
         Sequential = 0,
         Alternating = 1,
         Random = 2,
-        RandomWeighted = 3,
+        RandomFavorites = 3,
     }
 
     /// <summary>
