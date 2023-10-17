@@ -1,19 +1,18 @@
 ﻿
 using eyecandy;
-using OpenTK.Graphics.OpenGL;
 
 namespace mhh;
 
 public class CachedLibraryShader : ShaderLibrary
 {
     /// <summary>
-    /// The unique key for this library shader (which is the pathname)
+    /// The unique key for this library shader (which is the pathname and type)
     /// </summary>
-    public readonly string Key;
+    public readonly LibraryShaderConfig Key;
 
-    public CachedLibraryShader(string pathname, ShaderType type = ShaderType.FragmentShader)
-        :base(pathname, type)
+    public CachedLibraryShader(LibraryShaderConfig libraryConfig)
+        :base(libraryConfig.Pathname, libraryConfig.Type)
     {
-        Key = pathname;
+        Key = libraryConfig;
     }
 }

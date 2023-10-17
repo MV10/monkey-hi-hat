@@ -7,6 +7,11 @@ uniform float time;
 uniform sampler2D eyecandyShadertoy;
 out vec4 fragColor;
 
+// These empty function declarations tell the compiler
+// the functions are defined in external shader files
+vec3 rgb2hsv(vec3 c);
+vec3 hsv2rgb(vec3 c);
+
 void main()
 {
  	vec2 uv = fragCoord - 0.5;
@@ -29,6 +34,13 @@ void main()
     fragColor.y += xygrid.x+xygrid.y;
     
     vec2 srd = vec2(ivec2(sin(rd.x*(1.0+float(int(mod(time*3.0,4.0)))))*3.14159*1.0+time*4.0));
-    fragColor.xyz += vec3(sin(srd.x),cos(srd.x),-sin(srd.x));
+    vec3 rgb = vec3(sin(srd.x),cos(srd.x),-sin(srd.x));
+
+    // This does nothing except ensure the library functions are used. While the compiler
+    // might be sophisticated enough to optimize these away, it's still enough to guarantee
+    // they get linked, which serves the purpose in this test shader.
+    vec3 hsv = rgb2hsv(rgb);
+    fragColor.xyz += hsv2rgb(hsv);
+
     fragColor.a = 0.0;
 }

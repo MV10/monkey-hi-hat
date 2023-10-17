@@ -62,9 +62,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "
 		..\testcontent\uniforms.frag = ..\testcontent\uniforms.frag
 		..\testcontent\vertint.conf = ..\testcontent\vertint.conf
 		..\testcontent\vertint.vert = ..\testcontent\vertint.vert
-		..\testcontent\vertint_library.vert = ..\testcontent\vertint_library.vert
 		..\testcontent\vertquad.conf = ..\testcontent\vertquad.conf
 		..\testcontent\vertquad.frag = ..\testcontent\vertquad.frag
+		..\testcontent\vert_library.glsl = ..\testcontent\vert_library.glsl
 	EndProjectSection
 EndProject
 Global

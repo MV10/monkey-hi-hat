@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.Extensions.Logging;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
 namespace mhh
@@ -32,7 +33,7 @@ namespace mhh
 
         public readonly Dictionary<string, float> Uniforms;
 
-        public readonly List<string> LibraryPathnames;
+        public readonly List<LibraryShaderConfig> LibraryConfigs;
 
         public VisualizerConfig(string pathname)
         {
@@ -89,7 +90,7 @@ namespace mhh
 
             Uniforms = ConfigSource.ParseUniforms();
 
-            LibraryPathnames = ConfigSource.ParseLibraryPathnames(Program.AppConfig.VisualizerPath);
+            LibraryConfigs = ConfigSource.ParseLibraryPathnames(Program.AppConfig.VisualizerPath);
 
             // shader pathnames and vertex source type names are validated in RenderingHelper
 

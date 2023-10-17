@@ -1,4 +1,6 @@
 ﻿
+using OpenTK.Graphics.OpenGL;
+
 namespace mhh;
 
 /// <summary>
@@ -18,7 +20,7 @@ public class FXConfig : IConfigSource
 
     public readonly List<string> AudioTextureUniformNames = new();
 
-    public readonly List<string> LibraryPathnames;
+    public readonly List<LibraryShaderConfig> LibraryConfigs;
 
     public FXConfig(string pathname)
     {
@@ -38,7 +40,7 @@ public class FXConfig : IConfigSource
 
         Uniforms = ConfigSource.ParseUniforms();
 
-        LibraryPathnames = ConfigSource.ParseLibraryPathnames(Program.AppConfig.FXPath);
+        LibraryConfigs = ConfigSource.ParseLibraryPathnames(Program.AppConfig.FXPath);
 
         if (ConfigSource.Content.ContainsKey("audiotextures"))
         {

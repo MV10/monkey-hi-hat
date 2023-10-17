@@ -29,9 +29,9 @@ public static class Caching
 
     /// <summary>
     /// References to compiled library shader objects, intended to be linked to full
-    /// FX or visualizer shader programs. The key is simply the pathname.
+    /// FX or visualizer shader programs. The key is a container for the pathname and type.
     /// </summary>
-    public static CacheLRU<string, CachedLibraryShader> LibraryShaders;
+    public static CacheLRU<LibraryShaderConfig, CachedLibraryShader> LibraryShaders;
 
     /// <summary>
     /// The built-in default visualizer.

@@ -35,21 +35,21 @@ public static class RenderingHelper
     /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader flag).
     /// </summary>
     public static CachedShader GetVisualizerShader(IRenderer renderer, VisualizerConfig visualizerConfig)
-        => GetVisualizerShader(renderer, visualizerConfig.VertexShaderPathname, visualizerConfig.FragmentShaderPathname, visualizerConfig.LibraryPathnames);
+        => GetVisualizerShader(renderer, visualizerConfig.VertexShaderPathname, visualizerConfig.FragmentShaderPathname, visualizerConfig.LibraryConfigs);
 
     /// <summary>
     /// Retreives a visualizer shader from the cache, optionally replacing it with a newly loaded and
     /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader flag).
     /// </summary>
-    public static CachedShader GetVisualizerShader(IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname, List<string> libraryShaderPathnames = null)
-        => GetCachedShader(Caching.VisualizerShaders, renderer, vertexShaderPathname, fragmentShaderPathname, libraryShaderPathnames);
+    public static CachedShader GetVisualizerShader(IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname, List<LibraryShaderConfig> libraryConfigs = null)
+        => GetCachedShader(Caching.VisualizerShaders, renderer, vertexShaderPathname, fragmentShaderPathname, libraryConfigs);
 
     /// <summary>
     /// Retreives an FX shader from the cache, optionally replacing it with a newly loaded and
     /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader flag).
     /// </summary>
-    public static CachedShader GetFXShader(IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname, List<string> libraryShaderPathnames = null)
-        => GetCachedShader(Caching.FXShaders, renderer, vertexShaderPathname, fragmentShaderPathname, libraryShaderPathnames);
+    public static CachedShader GetFXShader(IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname, List<LibraryShaderConfig> libraryConfigs = null)
+        => GetCachedShader(Caching.FXShaders, renderer, vertexShaderPathname, fragmentShaderPathname, libraryConfigs);
 
     /// <summary>
     /// If the shader isn't cached, it will be disposed. Otherwise, the cache will dispose of
@@ -206,7 +206,7 @@ public static class RenderingHelper
     public static string MakeOwnerName(string usage, [CallerFilePath] string owner = "")
         => $"{Path.GetFileNameWithoutExtension(owner)} {usage} {DateTime.Now:yyyy-MM-dd HH:mm:ss.ffff}";
 
-    private static CachedShader GetCachedShader(CacheLRU<string, CachedShader> cache, IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname, List<string> libraryShaderPathnames = null)
+    private static CachedShader GetCachedShader(CacheLRU<string, CachedShader> cache, IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname, List<LibraryShaderConfig> libraryConfigs = null)
     {
         if (string.IsNullOrWhiteSpace(vertexShaderPathname)
             || string.IsNullOrWhiteSpace(fragmentShaderPathname))
@@ -215,7 +215,7 @@ public static class RenderingHelper
             return null;
         }
 
-        var libraries = GetCachedLibraryShaders(renderer, libraryShaderPathnames);
+        var libraries = GetCachedLibraryShaders(renderer, libraryConfigs);
         if (!renderer.IsValid) return null;
 
         var shaderKey = CachedShader.KeyFrom(vertexShaderPathname, fragmentShaderPathname);
@@ -242,27 +242,25 @@ public static class RenderingHelper
         return shader;
     }
 
-    private static ShaderLibrary[] GetCachedLibraryShaders(IRenderer renderer, List<string> libraryShaderPathnames)
+    private static ShaderLibrary[] GetCachedLibraryShaders(IRenderer renderer, List<LibraryShaderConfig> libraryConfigs)
     {
-        if (libraryShaderPathnames is null) return new ShaderLibrary[0];
-        var libs = new ShaderLibrary[libraryShaderPathnames.Count];
+        if (libraryConfigs is null) return new ShaderLibrary[0];
+        var libs = new ShaderLibrary[libraryConfigs.Count];
 
-        for(int i = 0; i < libraryShaderPathnames.Count; i++)
+        for(int i = 0; i < libraryConfigs.Count; i++)
         {
-            var pathname = libraryShaderPathnames[i];
-            var shader = Caching.LibraryShaders.Get(pathname);
+            var shader = Caching.LibraryShaders.Get(libraryConfigs[i]);
             if(shader is null)
             {
-                var type = (Path.GetExtension(pathname).Equals(".vert", StringComparison.InvariantCultureIgnoreCase)) ? ShaderType.VertexShader : ShaderType.FragmentShader;
-                shader = new(pathname, type);
+                shader = new(libraryConfigs[i]);
                 if(!shader.IsValid)
                 {
-                    LogInvalidReason("Shader library invalid", renderer);
+                    LogInvalidReason($"Shader library {libraryConfigs[i].Pathname} invalid", renderer);
                     return null;
                 }
 
-                var cached = Caching.LibraryShaders.TryAdd(pathname, shader);
-                if (!cached && !Caching.LibraryShaders.CachingDisabled) LogHelper.Logger.LogWarning($"{nameof(GetCachedLibraryShaders)} TryAdd failed to store or find {pathname}");
+                var cached = Caching.LibraryShaders.TryAdd(libraryConfigs[i], shader);
+                if (!cached && !Caching.LibraryShaders.CachingDisabled) LogHelper.Logger.LogWarning($"{nameof(GetCachedLibraryShaders)} TryAdd failed to store or find {libraryConfigs[i].Pathname}");
             }
             libs[i] = shader;
         }

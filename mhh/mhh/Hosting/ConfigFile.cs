@@ -1,4 +1,5 @@
 ﻿
+using OpenTK.Graphics.OpenGL;
 using Microsoft.Extensions.Logging;
 
 namespace mhh
@@ -125,59 +126,137 @@ namespace mhh
 
         /// <summary>
         /// Helper function for .conf files that support a [libraries] section. This validates
-        /// the files can be accessed and will throw an exception if the file isn't found.
+        /// the files can be accessed and will throw an exception if the file isn't found. If the
+        /// ShaderType element is null, this indicates the file should be linked to both the
+        /// vertex and fragment program stages.
         /// </summary>
-        public List<string> ParseLibraryPathnames(string pathspec)
+        public List<LibraryShaderConfig> ParseLibraryPathnames(string pathspec)
         {
-            var libs = new List<string>();
+            /*
+            Supported patterns:
+
+            path\filename.ext           explicit location of any library file (.glsl links to both vert and frag stages)
+            vert:path\filename.glsl     explicit location of a library file to link to the vertex stage
+            frag:path\filename.glsl     explicit location of a library file to link to the fragment stage
+            filename                    extension determines handling, finds .glsl, .vert, or .frag extensions
+            filename.vert               library to link to the vertex stage only
+            filename.frag               library to link to the fragment stage only
+            filename.glsl               general library to link to both the vertex and fragment stages
+            vert:filename               general library to link to the vertex stage only, .glsl extension implied
+            frag:filename               general library to link to the fragment stage only, .glsl extension implied
+            vert:filename.glsl          general library to link to the vertex stage only
+            frag:filename.glsl          general library to link to the fragment stage only
+
+            Any path-filename combination is required to specify the extension.
+
+            For the filename-only pattern, it is valid to have both a .frag and .vert file with the same filename,
+            but if a .glsl filename exists, an exception is thrown if a .frag or .vert extension is also found.
+            */
+
+            var libs = new List<LibraryShaderConfig>();
             if (!Content.ContainsKey("libraries")) return libs;
 
             string pathname;
-            foreach(var lib in Content["libraries"])
+            ShaderType? type;
+            foreach(var lib_kvp in Content["libraries"])
             {
-                if(PathHelper.HasPathSeparators(lib.Value))
+                var lib = lib_kvp.Value;
+                LibraryShaderConfig value;
+
+                type = null;
+                if (lib.StartsWith("vert:")) type = ShaderType.VertexShader;
+                if (lib.StartsWith("frag:")) type = ShaderType.FragmentShader;
+                if (type is not null) lib = lib.Substring(5);
+
+                if (PathHelper.HasPathSeparators(lib))
                 {
-                    pathname = Path.GetFullPath(lib.Value);
-                    if (string.IsNullOrEmpty(pathname)) pathname = lib.Value;
-                    if (!File.Exists(pathname)) throw new ArgumentException($"Shader library file {pathname} could not be found");
-                    if (!libs.Contains(pathname)) libs.Add(pathname);
+                    // entries with path info must specify a full filename
+                    pathname = Path.GetFullPath(lib);
+                    if (string.IsNullOrEmpty(pathname)) pathname = lib;
+                    var ext = Path.GetExtension(lib);
+                    if (string.IsNullOrEmpty(ext)
+                        || !ext.Equals(".vert", StringComparison.InvariantCultureIgnoreCase) 
+                        && !ext.Equals(".frag", StringComparison.InvariantCultureIgnoreCase)
+                        && !ext.Equals(".glsl", StringComparison.InvariantCultureIgnoreCase)) throw new ArgumentException($"Path-based shader library entry {lib} must specify a .vert, .frag, or .glsl filename extension");
+                    if(type is not null && !ext.Equals(".glsl", StringComparison.InvariantCultureIgnoreCase)) throw new ArgumentException($"Shader library entry {lib} must specify a .glsl filename extension");
+                    if (!File.Exists(pathname)) throw new ArgumentException($"File not found for shader library entry {lib}");
+                    if (ext.Equals(".vert", StringComparison.InvariantCultureIgnoreCase)) type = ShaderType.VertexShader;
+                    if (ext.Equals(".frag", StringComparison.InvariantCultureIgnoreCase)) type = ShaderType.FragmentShader;
+                    AddToList(libs, pathname, type);
                 }
                 else
                 {
-                    var ext = Path.GetExtension(lib.Value);
-                    if(string.IsNullOrEmpty(ext))
+                    var ext = Path.GetExtension(lib);
+                    if(type is not null)
                     {
-                        var count = libs.Count;
-
-                        pathname = PathHelper.FindFile(pathspec, Path.ChangeExtension(lib.Value, "vert"));
-                        if (pathname is not null && File.Exists(pathname) && !libs.Contains(pathname)) libs.Add(pathname);
-
-                        pathname = PathHelper.FindFile(pathspec, Path.ChangeExtension(lib.Value, "frag"));
-                        if (pathname is not null && File.Exists(pathname) && !libs.Contains(pathname)) libs.Add(pathname);
-
-                        if(libs.Count == count) throw new ArgumentException($"Shader library files {lib.Value} could not be found with .vert or .frag extension");
+                        // entries prefixed by vert: or frag: must be .glsl files
+                        var filename = string.IsNullOrEmpty(ext) ? Path.ChangeExtension(lib, "glsl") : lib;
+                        pathname = PathHelper.FindFile(pathspec, filename);
+                        if(pathname is null) throw new ArgumentException($"Shader library entry {lib} must reference a valid .glsl file");
+                        AddToList(libs, pathname, type);
                     }
                     else
                     {
-                        if(!ext.Equals(".vert", StringComparison.InvariantCultureIgnoreCase) && !ext.Equals(".frag", StringComparison.InvariantCultureIgnoreCase))
+                        // check for different possible extensions
+                        if (string.IsNullOrEmpty(ext))
                         {
-                            throw new ArgumentException($"Shader library filename {lib.Value} is invalid; omit the extension, or use .vert or .frag");
-                        }
+                            var count1 = libs.Count; // store to check if any of these succeed
 
-                        pathname = FindFileOrThrow(pathspec, lib.Value);
-                        if (!libs.Contains(pathname)) libs.Add(pathname);
+                            pathname = PathHelper.FindFile(pathspec, Path.ChangeExtension(lib, "glsl"));
+                            if(pathname is not null) AddToList(libs, pathname, type);
+
+                            var count2 = libs.Count; // if .glsl exists, there shouldn't be .vert or .frag files of the same name
+
+                            pathname = PathHelper.FindFile(pathspec, Path.ChangeExtension(lib, "vert"));
+                            if (pathname is not null) AddToList(libs, pathname, ShaderType.VertexShader);
+
+                            pathname = PathHelper.FindFile(pathspec, Path.ChangeExtension(lib, "frag"));
+                            if (pathname is not null) AddToList(libs, pathname, ShaderType.FragmentShader);
+
+                            if (libs.Count == count1) throw new ArgumentException($"Shader library entry {lib} could not be found with .vert, .frag or .glsl extension");
+                            if (count2 > count1 + 1) throw new ArgumentException($"Shader library entry {lib} matching a .glsl file must not also match .vert or .frag files");
+                        }
+                        else
+                        {
+                            // the entry is a specific filename
+                            if (!ext.Equals(".glsl", StringComparison.InvariantCultureIgnoreCase)
+                                && !ext.Equals(".vert", StringComparison.InvariantCultureIgnoreCase) 
+                                && !ext.Equals(".frag", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                throw new ArgumentException($"Shader library entry {lib} is invalid; only .vert, .frag or .glsl files are accepted; omit extension for auto-discovery");
+                            }
+
+                            pathname = PathHelper.FindFile(pathspec, lib);
+                            if(pathname is null) throw new ArgumentException($"Shader library entry {lib} file not found");
+                            if (ext.Equals(".vert", StringComparison.InvariantCultureIgnoreCase)) type = ShaderType.VertexShader;
+                            if (ext.Equals(".frag", StringComparison.InvariantCultureIgnoreCase)) type = ShaderType.FragmentShader;
+                            AddToList(libs, pathname, type);
+                        }
                     }
                 }
+
             }
 
             return libs;
         }
 
-        private string FindFileOrThrow(string pathspec, string filename)
+        private void AddToList(List<LibraryShaderConfig> list, string pathname, ShaderType? type)
         {
-            var pathname = PathHelper.FindFile(pathspec, filename);
-            if (pathname is null || !File.Exists(pathname)) throw new ArgumentException($"Shader library file {filename} could not be found");
-            return pathname;
+            LibraryShaderConfig value;
+            if (type is not null)
+            {
+                value = new(pathname, type.Value);
+                if (!list.Contains(value)) list.Add(value);
+            }
+            else
+            {
+                value = new(pathname, ShaderType.VertexShader);
+                if (!list.Contains(value)) list.Add(value);
+
+                value = new(pathname, ShaderType.FragmentShader);
+                if (!list.Contains(value)) list.Add(value);
+            }
         }
+
     }
 }
