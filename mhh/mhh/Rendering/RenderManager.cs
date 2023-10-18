@@ -234,6 +234,9 @@ render res : {rez}";
         crossfader.OldRenderer.Dispose();
         crossfader.Dispose();
         ActiveRenderer = newRenderer;
+
+        // Undo any Crossfade-driven application of FXResolutionLimit
+        ActiveRenderer.OnResize();
     }
 
     /// <summary/>

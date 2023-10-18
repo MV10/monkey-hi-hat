@@ -149,7 +149,7 @@ public class MultipassRenderer : IRenderer
     public void OnResize()
     {
         var oldResolution = ViewportResolution;
-        (ViewportResolution, _) = RenderingHelper.CalculateViewportResolution(Config.RenderResolutionLimit);
+        (ViewportResolution, _) = RenderingHelper.CalculateViewportResolution(Config.RenderResolutionLimit, Config.FXResolutionLimit);
 
         // abort if the constructor called this, or if nothing changed
         if (ShaderPasses is null || oldResolution.X == ViewportResolution.X && oldResolution.Y == ViewportResolution.Y) return;

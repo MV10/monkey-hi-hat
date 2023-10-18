@@ -11,9 +11,8 @@ public class FXConfig : IConfigSource
     public ConfigFile ConfigSource { get; private set; }
 
     public readonly string Description;
-    public readonly FXPrimaryDrawMode PrimaryDrawMode;
     public readonly int RenderResolutionLimit;
-    public readonly int PrimaryResolutionLimit;
+    public readonly bool ApplyPrimaryResolutionLimit;
     public readonly bool Crossfade;
 
     public readonly Dictionary<string, float> Uniforms;
@@ -30,11 +29,8 @@ public class FXConfig : IConfigSource
 
         Description = ConfigSource.ReadValue("fx", "description");
 
-        PrimaryDrawMode = ConfigSource.ReadValue("fx", "primarydrawmode").ToEnum(FXPrimaryDrawMode.Active);
-        if (PrimaryDrawMode == FXPrimaryDrawMode.Random) PrimaryDrawMode = (new Random().Next(101) < 50) ? FXPrimaryDrawMode.Active : FXPrimaryDrawMode.Snapshot;
-
         RenderResolutionLimit = ConfigSource.ReadValue("fx", "renderresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
-        PrimaryResolutionLimit = ConfigSource.ReadValue("fx", "primaryresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
+        ApplyPrimaryResolutionLimit = ConfigSource.ReadValue("fx", "applyprimaryresolutionlimit").ToBool(false);
 
         Crossfade = (Program.AppConfig.CrossfadeSeconds == 0) ? false : ConfigSource.ReadValue("fx", "crossfade").ToBool(true);
 

@@ -51,6 +51,7 @@ public class SimpleRenderer : IRenderer
         if (!IsValid) return;
 
         VertexSource.Initialize(Config, Shader);
+
         OnResize();
 
         RandomRun = (float)RNG.NextDouble();
@@ -105,8 +106,11 @@ public class SimpleRenderer : IRenderer
     public void OnResize()
     {
         var oldResolution = ViewportResolution;
-        (ViewportResolution, FullResolutionViewport) = RenderingHelper.CalculateViewportResolution(Config.RenderResolutionLimit);
-        
+        (ViewportResolution, FullResolutionViewport) = RenderingHelper.CalculateViewportResolution(Config.RenderResolutionLimit, Config.FXResolutionLimit);
+
+        Console.WriteLine($"{Filename} ... ResLimit {Config.RenderResolutionLimit} ... FXLimit {Config.FXResolutionLimit}");
+        Console.WriteLine($"OnResize Old: {oldResolution.X},{oldResolution.Y} ... New {ViewportResolution.X},{ViewportResolution.Y}");
+
         // abort if nothing changed
         if (oldResolution.X == ViewportResolution.X && oldResolution.Y == ViewportResolution.Y) return;
 

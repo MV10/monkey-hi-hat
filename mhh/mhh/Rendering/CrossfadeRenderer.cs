@@ -62,6 +62,11 @@ public class CrossfadeRenderer : IRenderer
 
         CompletionCallback = completionCallback;
         DurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
+
+        // Force the application of any defined FXResolutionLimit
+        RenderingHelper.UseCrossfadeResolutionLimit = true;
+        OldRenderer.OnResize();
+        NewRenderer.OnResize();
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -105,6 +110,7 @@ public class CrossfadeRenderer : IRenderer
         // and stop rendering until the RenderManager takes over
         if (fadeLevel >= 1f)
         {
+            RenderingHelper.UseCrossfadeResolutionLimit = false;
             CompletionCallback?.Invoke();
             CompletionCallback = null;
             NewRenderer.OutputIntercepted = false;
@@ -147,6 +153,8 @@ public class CrossfadeRenderer : IRenderer
     {
         if (IsDisposed) return;
         LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+
+        RenderingHelper.UseCrossfadeResolutionLimit = false;
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Visualizer");
         VertQuad?.Dispose();

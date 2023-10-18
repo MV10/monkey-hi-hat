@@ -65,17 +65,6 @@ namespace mhh
     }
 
     /// <summary>
-    /// Rendering options when an FX configuration is applied.
-    /// </summary>
-    public enum FXPrimaryDrawMode
-    {
-        Random = 0,
-        Active = 1,
-        Snapshot = 2,
-        SnapClock = 3,
-    }
-
-    /// <summary>
     /// Controls visualizer playback time in a playlist.
     /// </summary>
     public enum VizPlaylistTimeHint

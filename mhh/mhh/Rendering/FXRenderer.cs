@@ -43,8 +43,6 @@ public class FXRenderer : IRenderer
 
     private Stopwatch Clock = new();
     private float FrameCount = 0;
-    private float snapClockNextSecond;
-    private int snapClockPercent = 0;
     private Random RNG = new();
     private float RandomRun;
 
@@ -57,6 +55,7 @@ public class FXRenderer : IRenderer
         PrimaryRenderer = primaryRenderer;
 
         // only calculates ViewportResolution when called from the constructor
+        RenderingHelper.UseFXResolutionLimit = Config.ApplyPrimaryResolutionLimit;
         OnResize();
 
         try
@@ -109,7 +108,6 @@ public class FXRenderer : IRenderer
         }
 
         PrimaryRenderer.OutputIntercepted = true;
-        snapClockNextSecond = PrimaryRenderer.TrueElapsedTime() + 1f;
         RandomRun = (float)RNG.NextDouble();
     }
 
@@ -237,33 +235,6 @@ public class FXRenderer : IRenderer
             }
         }
 
-        // in SnapClock mode, each passing second adds another 10% chance to switch to Snapshot
-        // mode and freeze the primary renderer (thus 11 seconds is 100%)
-        if (PrimaryRenderer is not null)
-        {
-            if(Config.PrimaryDrawMode == FXPrimaryDrawMode.SnapClock)
-            {
-                if(PrimaryRenderer.TrueElapsedTime() >= snapClockNextSecond)
-                {
-                    snapClockNextSecond = PrimaryRenderer.TrueElapsedTime() + 1f;
-                    snapClockPercent += 10;
-                    if (RNG.Next(1, 101) <= snapClockPercent)
-                    {
-                        PrimaryRenderer.Dispose();
-                        PrimaryRenderer = null;
-                    }
-                }
-            }
-
-            // if we're in Snapshot mode, the primary renderer stops running and the current
-            // buffer 0 (and backbuffer A) contents are frozen for the duration of execution
-            if (Config.PrimaryDrawMode == FXPrimaryDrawMode.Snapshot)
-            {
-                PrimaryRenderer.Dispose();
-                PrimaryRenderer = null;
-            }
-        }
-
         FrameCount++;
     }
 
@@ -272,11 +243,11 @@ public class FXRenderer : IRenderer
         var oldResolution = ViewportResolution;
         (ViewportResolution, _) = RenderingHelper.CalculateViewportResolution(Config.RenderResolutionLimit);
 
+        // we own the primary now, make sure it gets resized, and apply any defined FXResolutionLimit
+        PrimaryRenderer?.OnResize();
+
         // abort if the constructor called this, or if nothing changed
         if (ShaderPasses is null || oldResolution.X == ViewportResolution.X && oldResolution.Y == ViewportResolution.Y) return;
-
-        // we own the primary now, make sure it gets resized (if it still exists)
-        PrimaryRenderer?.OnResize();
 
         // resize draw buffers, and resize/copy back buffers
         RenderManager.ResourceManager.ResizeTextures(DrawbufferOwnerName, ViewportResolution);
@@ -318,6 +289,8 @@ public class FXRenderer : IRenderer
     {
         if (IsDisposed) return;
         LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+
+        RenderingHelper.UseFXResolutionLimit = false;
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() primary visualization renderer");
         PrimaryRenderer?.Dispose();

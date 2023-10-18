@@ -18,6 +18,16 @@ public static class RenderingHelper
     public static bool ReplaceCachedShader = false;
 
     /// <summary>
+    /// When true, CalculateViewportResolution will use fxResolutionLimit to restrict rendering size.
+    /// </summary>
+    public static bool UseFXResolutionLimit = false;
+
+    /// <summary>
+    /// When true, CalculateViewportResolution will use fxResolutionLimit to restrict rendering size.
+    /// </summary>
+    public static bool UseCrossfadeResolutionLimit = false;
+
+    /// <summary>
     /// Use this instead of the window object's ClientSize property. This will remain
     /// stable during resize events (OnResize will fire many times as the user drags the
     /// window border, the new size is assigned by OnWindowUpdate which is suspended
@@ -173,28 +183,36 @@ public static class RenderingHelper
     /// When a resize event occurs (or a renderer is starting for the first time), this
     /// determines whether the full display area (viewport) size should be used, or if
     /// the upper resolution limit (if specified in the viz.conf) should apply, and what
-    /// the resulting viewport/render-target resolution should be.
+    /// the resulting viewport/render-target resolution should be. Any FX limit is applied
+    /// if the active renderer is either the FXRenderer or Crossfade.
     /// </summary>
-    public static (Vector2 resolution, bool isFullResolution) CalculateViewportResolution(int renderResolutionLimit)
+    public static (Vector2 resolution, bool isFullResolution) CalculateViewportResolution(int renderResolutionLimit, int fxResolutionLimit = 0)
     {
+        Console.WriteLine($"\nHelper Res Limit {renderResolutionLimit} ... FX Limit {fxResolutionLimit}");
+        Console.WriteLine($"Active {Program.AppWindow.Renderer.ActiveRenderer?.GetType()}");
+
         var w = ClientSize.X;
         var h = ClientSize.Y;
 
+        var limit = (fxResolutionLimit == 0 || (!UseFXResolutionLimit && !UseCrossfadeResolutionLimit))
+            ? renderResolutionLimit
+            : fxResolutionLimit;
+
         double larger = Math.Max(w, h);
         double smaller = Math.Min(w, h);
-        if(renderResolutionLimit == 0 || larger <= renderResolutionLimit) return (new(w, h), true);
+        if(limit == 0 || larger <= limit) return (new(w, h), true);
 
         double aspect = smaller / larger;
-        var scaled = (int)(renderResolutionLimit * aspect);
+        var scaled = (int)(limit * aspect);
         if(w > h)
         {
-            w = renderResolutionLimit;
+            w = limit;
             h = scaled;
         }
         else
         {
             w = scaled;
-            h = renderResolutionLimit;
+            h = limit;
         }
         return (new(w, h), false);
     }
