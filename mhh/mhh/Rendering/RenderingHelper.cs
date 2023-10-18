@@ -188,9 +188,6 @@ public static class RenderingHelper
     /// </summary>
     public static (Vector2 resolution, bool isFullResolution) CalculateViewportResolution(int renderResolutionLimit, int fxResolutionLimit = 0)
     {
-        Console.WriteLine($"\nHelper Res Limit {renderResolutionLimit} ... FX Limit {fxResolutionLimit}");
-        Console.WriteLine($"Active {Program.AppWindow.Renderer.ActiveRenderer?.GetType()}");
-
         var w = ClientSize.X;
         var h = ClientSize.Y;
 

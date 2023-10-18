@@ -108,9 +108,6 @@ public class SimpleRenderer : IRenderer
         var oldResolution = ViewportResolution;
         (ViewportResolution, FullResolutionViewport) = RenderingHelper.CalculateViewportResolution(Config.RenderResolutionLimit, Config.FXResolutionLimit);
 
-        Console.WriteLine($"{Filename} ... ResLimit {Config.RenderResolutionLimit} ... FXLimit {Config.FXResolutionLimit}");
-        Console.WriteLine($"OnResize Old: {oldResolution.X},{oldResolution.Y} ... New {ViewportResolution.X},{ViewportResolution.Y}");
-
         // abort if nothing changed
         if (oldResolution.X == ViewportResolution.X && oldResolution.Y == ViewportResolution.Y) return;
 
