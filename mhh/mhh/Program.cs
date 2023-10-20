@@ -238,7 +238,7 @@ namespace mhh
                 case "--jpg":
                 case "--png":
                     if (OnStandby) return "ERR: Application is in standby";
-                    if (args.Length > 2 || args.Length == 2 && !args[1].Equals("wait", StringComparison.InvariantCultureIgnoreCase)) return ShowHelp();
+                    if (args.Length > 2 || args.Length == 2 && !args[1].Equals("wait", Const.CompareFlags)) return ShowHelp();
                     if(args.Length == 1)
                     {
                         return (args[0].Equals("--jpg"))

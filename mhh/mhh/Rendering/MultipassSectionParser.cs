@@ -93,7 +93,7 @@ public class MultipassSectionParser
                     if (!OwningRenderer.IsValid) return;
 
                     // validate columns 5 & 6
-                    bool isVertIntArray = (column[4].Equals(nameof(VertexIntegerArray), StringComparison.InvariantCultureIgnoreCase));
+                    bool isVertIntArray = (column[4].Equals(nameof(VertexIntegerArray), Const.CompareFlags));
                     if (column.Length == 6 && !isVertIntArray) throw new ArgumentException($"{err} VertexSource type {column[4]} does not require settings");
                     if (column.Length == 5 && isVertIntArray) throw new ArgumentException($"{err} VertexSource type {column[4]} is missing required settings");
 
@@ -156,7 +156,7 @@ public class MultipassSectionParser
         column = kvp.Value.Split(' ', Const.SplitOptions);
         if (column.Length == 3)
         {
-            if (!column[2].Equals("*") && !column[2].EndsWith(".conf", StringComparison.InvariantCultureIgnoreCase))
+            if (!column[2].Equals("*") && !column[2].EndsWith(".conf", Const.CompareFlags))
                 throw new ArgumentException($"{err} Invalid entry, 3 parameters must reference * or a visualizer .conf; content {kvp.Value}");
         }
         else
@@ -219,7 +219,7 @@ public class MultipassSectionParser
         var vertPathname = Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.vert");
 
         var frag = column[2];
-        if (!frag.EndsWith(".frag", StringComparison.InvariantCultureIgnoreCase)) frag += ".frag";
+        if (!frag.EndsWith(".frag", Const.CompareFlags)) frag += ".frag";
         var fragPathname = PathHelper.FindFile(Program.AppConfig.FXPath, frag);
         if (fragPathname is null) throw new ArgumentException($"{err} Failed to find FX shader source file {frag}");
 
@@ -260,7 +260,7 @@ public class MultipassSectionParser
         var vertPathname = RendererVizConfig.VertexShaderPathname;
         if (!file.Equals("*"))
         {
-            file = (!file.EndsWith(".vert", StringComparison.InvariantCultureIgnoreCase)) ? file += ".vert" : file;
+            file = (!file.EndsWith(".vert", Const.CompareFlags)) ? file += ".vert" : file;
             vertPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, file);
             if (vertPathname is null) throw new ArgumentException($"{err} Failed to find vertex shader source file {file}");
         }
@@ -269,7 +269,7 @@ public class MultipassSectionParser
         var fragPathname = RendererVizConfig.FragmentShaderPathname;
         if (!file.Equals("*"))
         {
-            file = (!file.EndsWith(".frag", StringComparison.InvariantCultureIgnoreCase)) ? file += ".frag" : file;
+            file = (!file.EndsWith(".frag", Const.CompareFlags)) ? file += ".frag" : file;
             fragPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, file);
             if (fragPathname is null) throw new ArgumentException($"{err} Failed to find fragment shader source file {file}");
         }
@@ -300,15 +300,15 @@ public class MultipassSectionParser
         var s1 = settings[1].Split('=', Const.SplitOptions);
         if (s0.Length != 2 || s1.Length != 2) throw new ArgumentException($"{err} VertexSource type {column[4]}  required settings are missing or invalid");
 
-        string sIntCount = s0[0].Equals("VertexIntegerCount", StringComparison.InvariantCultureIgnoreCase)
+        string sIntCount = s0[0].Equals("VertexIntegerCount", Const.CompareFlags)
             ? s0[1]
-            : s1[0].Equals("VertexIntegerCount", StringComparison.InvariantCultureIgnoreCase)
+            : s1[0].Equals("VertexIntegerCount", Const.CompareFlags)
             ? s1[1]
             : null;
 
-        string sDrawMode = s0[0].Equals("ArrayDrawingMode", StringComparison.InvariantCultureIgnoreCase)
+        string sDrawMode = s0[0].Equals("ArrayDrawingMode", Const.CompareFlags)
             ? s0[1]
-            : s1[0].Equals("ArrayDrawingMode", StringComparison.InvariantCultureIgnoreCase)
+            : s1[0].Equals("ArrayDrawingMode", Const.CompareFlags)
             ? s1[1]
             : null;
 

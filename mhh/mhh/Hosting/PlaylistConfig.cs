@@ -163,7 +163,7 @@ namespace mhh
 
             for(int i = 0; i < list.Count; i++)
             {
-                if (list[i].EndsWith(".conf", StringComparison.InvariantCultureIgnoreCase))
+                if (list[i].EndsWith(".conf", Const.CompareFlags))
                 {
                     list[i] = list[i].Substring(0, list[i].Length - 5);
                 }

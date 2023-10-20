@@ -31,7 +31,7 @@ namespace mhh
         public ConfigFile(string confPathname)
         {
             Pathname = Path.GetFullPath(confPathname);
-            if (!Pathname.EndsWith(".conf", StringComparison.InvariantCultureIgnoreCase)) Pathname += ".conf";
+            if (!Pathname.EndsWith(".conf", Const.CompareFlags)) Pathname += ".conf";
             if (!File.Exists(Pathname))
             {
                 var err = $"Configuration file not found: {Pathname}";
@@ -133,7 +133,7 @@ namespace mhh
             var uniforms = new Dictionary<string, Dictionary<string, float>>();
             foreach(var kvp in Content)
             {
-                if(kvp.Key.StartsWith("fx-uniforms:", Const.StringComp))
+                if(kvp.Key.StartsWith("fx-uniforms:", Const.CompareFlags))
                 {
                     var fxname = kvp.Key.Substring(12);
                     if(!uniforms.ContainsKey(fxname))
@@ -197,13 +197,13 @@ namespace mhh
                     if (string.IsNullOrEmpty(pathname)) pathname = lib;
                     var ext = Path.GetExtension(lib);
                     if (string.IsNullOrEmpty(ext)
-                        || !ext.Equals(".vert", StringComparison.InvariantCultureIgnoreCase) 
-                        && !ext.Equals(".frag", StringComparison.InvariantCultureIgnoreCase)
-                        && !ext.Equals(".glsl", StringComparison.InvariantCultureIgnoreCase)) throw new ArgumentException($"Path-based shader library entry {lib} must specify a .vert, .frag, or .glsl filename extension");
-                    if(type is not null && !ext.Equals(".glsl", StringComparison.InvariantCultureIgnoreCase)) throw new ArgumentException($"Shader library entry {lib} must specify a .glsl filename extension");
+                        || !ext.Equals(".vert", Const.CompareFlags) 
+                        && !ext.Equals(".frag", Const.CompareFlags)
+                        && !ext.Equals(".glsl", Const.CompareFlags)) throw new ArgumentException($"Path-based shader library entry {lib} must specify a .vert, .frag, or .glsl filename extension");
+                    if(type is not null && !ext.Equals(".glsl", Const.CompareFlags)) throw new ArgumentException($"Shader library entry {lib} must specify a .glsl filename extension");
                     if (!File.Exists(pathname)) throw new ArgumentException($"File not found for shader library entry {lib}");
-                    if (ext.Equals(".vert", StringComparison.InvariantCultureIgnoreCase)) type = ShaderType.VertexShader;
-                    if (ext.Equals(".frag", StringComparison.InvariantCultureIgnoreCase)) type = ShaderType.FragmentShader;
+                    if (ext.Equals(".vert", Const.CompareFlags)) type = ShaderType.VertexShader;
+                    if (ext.Equals(".frag", Const.CompareFlags)) type = ShaderType.FragmentShader;
                     AddToList(libs, pathname, type);
                 }
                 else
@@ -241,17 +241,17 @@ namespace mhh
                         else
                         {
                             // the entry is a specific filename
-                            if (!ext.Equals(".glsl", StringComparison.InvariantCultureIgnoreCase)
-                                && !ext.Equals(".vert", StringComparison.InvariantCultureIgnoreCase) 
-                                && !ext.Equals(".frag", StringComparison.InvariantCultureIgnoreCase))
+                            if (!ext.Equals(".glsl", Const.CompareFlags)
+                                && !ext.Equals(".vert", Const.CompareFlags) 
+                                && !ext.Equals(".frag", Const.CompareFlags))
                             {
                                 throw new ArgumentException($"Shader library entry {lib} is invalid; only .vert, .frag or .glsl files are accepted; omit extension for auto-discovery");
                             }
 
                             pathname = PathHelper.FindFile(pathspec, lib);
                             if(pathname is null) throw new ArgumentException($"Shader library entry {lib} file not found");
-                            if (ext.Equals(".vert", StringComparison.InvariantCultureIgnoreCase)) type = ShaderType.VertexShader;
-                            if (ext.Equals(".frag", StringComparison.InvariantCultureIgnoreCase)) type = ShaderType.FragmentShader;
+                            if (ext.Equals(".vert", Const.CompareFlags)) type = ShaderType.VertexShader;
+                            if (ext.Equals(".frag", Const.CompareFlags)) type = ShaderType.FragmentShader;
                             AddToList(libs, pathname, type);
                         }
                     }

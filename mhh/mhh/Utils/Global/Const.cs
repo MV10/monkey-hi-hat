@@ -11,5 +11,5 @@ public static class Const
     /// <summary>
     /// Shorter reference to StringComparison.InvariantCultureIgnoreCase
     /// </summary>
-    public static readonly StringComparison StringComp = StringComparison.InvariantCultureIgnoreCase;
+    public static readonly StringComparison CompareFlags = StringComparison.InvariantCultureIgnoreCase;
 }

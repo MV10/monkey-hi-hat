@@ -21,7 +21,7 @@ internal static class PathHelper
 
     public static string FindConfigFile(string pathspec, string filename)
     {
-        if (!filename.EndsWith(".conf", StringComparison.InvariantCultureIgnoreCase)) filename += ".conf";
+        if (!filename.EndsWith(".conf", Const.CompareFlags)) filename += ".conf";
         return FindFile(pathspec, filename);
     }
 

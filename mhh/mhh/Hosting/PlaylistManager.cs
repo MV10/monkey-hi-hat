@@ -130,7 +130,7 @@ public class PlaylistManager
         {
             var fxFilename = Path.GetFileNameWithoutExtension(NextFXPathname);
 
-            if(visualizerConfig.FXBlacklist.Any(f => f.Equals(fxFilename, StringComparison.InvariantCultureIgnoreCase)))
+            if(visualizerConfig.FXBlacklist.Any(f => f.Equals(fxFilename, Const.CompareFlags)))
             {
                 NextFXPathname = null;
                 FXStartTime = DateTime.MaxValue;
