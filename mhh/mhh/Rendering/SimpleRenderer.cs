@@ -143,6 +143,11 @@ public class SimpleRenderer : IRenderer
     public float TrueElapsedTime()
         => (float)Clock.Elapsed.TotalSeconds;
 
+    public Dictionary<string, float> GetFXUniforms(string fxFilename)
+        => Config.FXUniforms.ContainsKey(fxFilename)
+        ? Config.FXUniforms[fxFilename]
+        : new();
+
     public void Dispose()
     {
         if (IsDisposed) return;

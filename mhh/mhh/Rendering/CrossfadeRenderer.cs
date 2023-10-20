@@ -141,6 +141,9 @@ public class CrossfadeRenderer : IRenderer
     public float TrueElapsedTime()
         => OldRenderer?.TrueElapsedTime() ?? 0f;
 
+    public Dictionary<string, float> GetFXUniforms(string fxFilename)
+        => new();
+
     private void CreateResourceGroups()
     {
         RenderManager.ResourceManager.DestroyAllResources(OldOwnerName);

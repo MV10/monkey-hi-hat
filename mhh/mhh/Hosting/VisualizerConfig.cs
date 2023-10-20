@@ -33,6 +33,7 @@ namespace mhh
         public readonly List<string> FXBlacklist = new();
 
         public readonly Dictionary<string, float> Uniforms;
+        public readonly Dictionary<string, Dictionary<string, float>> FXUniforms;
 
         public readonly List<LibraryShaderConfig> LibraryConfigs;
 
@@ -91,6 +92,7 @@ namespace mhh
             }
 
             Uniforms = ConfigSource.ParseUniforms();
+            FXUniforms = ConfigSource.ParseFXUniforms();
 
             LibraryConfigs = ConfigSource.ParseLibraryPathnames(Program.AppConfig.VisualizerPath);
 

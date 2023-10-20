@@ -35,6 +35,8 @@ public class FXRenderer : IRenderer
     private List<MultipassDrawCall> ShaderPasses;
     private IReadOnlyList<GLImageTexture> Textures;
 
+    private Dictionary<string, float> PrimaryFXUniforms;
+
     private string CrossfadeOwnerName = RenderingHelper.MakeOwnerName("Crossfading");
     private GLResourceGroup CrossfadeResources;
     private Shader CrossfadeShader;
@@ -53,6 +55,7 @@ public class FXRenderer : IRenderer
         Config = fxConfig;
         Filename = Path.GetFileNameWithoutExtension(Config.ConfigSource.Pathname);
         PrimaryRenderer = primaryRenderer;
+        PrimaryFXUniforms = PrimaryRenderer.GetFXUniforms(Filename);
 
         // only calculates ViewportResolution when called from the constructor
         RenderingHelper.UseFXResolutionLimit = Config.ApplyPrimaryResolutionLimit;
@@ -115,7 +118,7 @@ public class FXRenderer : IRenderer
     {
         var timeUniform = TrueElapsedTime();
 
-        // pass 0 is special handling as either the primary renderer or a snapshot
+        // pass 0 is special handling for the primary renderer
         if (PrimaryRenderer is not null)
         {
             // if the primary doesn't own framebuffers, use buffer 0 owned by FXRenderer
@@ -149,7 +152,7 @@ public class FXRenderer : IRenderer
         foreach (var pass in ShaderPasses.Skip(1))
         {
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
-            RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms);
+            RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms, PrimaryFXUniforms);
             RenderingHelper.SetTextureUniforms(Textures, pass.Shader);
             pass.Shader.SetUniform("resolution", ViewportResolution);
             pass.Shader.SetUniform("time", timeUniform);
@@ -284,6 +287,9 @@ public class FXRenderer : IRenderer
 
     public float TrueElapsedTime()
         => (float)Clock.Elapsed.TotalSeconds;
+
+    public Dictionary<string, float> GetFXUniforms(string fxFilename)
+        => new();
 
     public void Dispose()
     {

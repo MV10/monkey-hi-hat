@@ -69,4 +69,10 @@ public interface IRenderer : IConfigSource, IDisposable
     /// uniform may be altered by a random offset if specified in the visualizer config.
     /// </summary>
     public float TrueElapsedTime();
+
+    /// <summary>
+    /// Returns a list of the visualizers option uniforms for the specified FX, if any.
+    /// Returns an empty collection if there aren't any matching the FX filename.
+    /// </summary>
+    public Dictionary<string, float> GetFXUniforms(string fxFilename);
 }

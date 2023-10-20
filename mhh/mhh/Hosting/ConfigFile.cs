@@ -87,14 +87,15 @@ namespace mhh
         }
 
         /// <summary>
-        /// Helper function for .conf files that support a [uniforms] section.
+        /// Helper function for .conf files that support a [uniforms] section. Also used to
+        /// parse FX options uniform lists the same way.
         /// </summary>
-        public Dictionary<string, float> ParseUniforms()
+        public Dictionary<string, float> ParseUniforms(string section_key = "uniforms")
         {
             var uniforms = new Dictionary<string, float>();
-            if (!Content.ContainsKey("uniforms")) return uniforms;
+            if (!Content.ContainsKey(section_key)) return uniforms;
 
-            foreach (var u in Content["uniforms"])
+            foreach (var u in Content[section_key])
             {
                 if (uniforms.ContainsKey(u.Key)) continue;
 
@@ -121,6 +122,27 @@ namespace mhh
                 if (!uniforms.ContainsKey(u.Key)) uniforms.Add(u.Key, 0f);
             }
 
+            return uniforms;
+        }
+
+        /// <summary>
+        /// Helper function for .conf files that support [fx-uniforms:filename} sections.
+        /// </summary>
+        public Dictionary<string, Dictionary<string, float>> ParseFXUniforms()
+        {
+            var uniforms = new Dictionary<string, Dictionary<string, float>>();
+            foreach(var kvp in Content)
+            {
+                if(kvp.Key.StartsWith("fx-uniforms:", Const.StringComp))
+                {
+                    var fxname = kvp.Key.Substring(12);
+                    if(!uniforms.ContainsKey(fxname))
+                    {
+                        var fxuniforms = ParseUniforms(kvp.Key);
+                        uniforms.Add(fxname, fxuniforms);
+                    }
+                }
+            }
             return uniforms;
         }
 
