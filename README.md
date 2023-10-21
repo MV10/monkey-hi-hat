@@ -26,7 +26,7 @@ Although YouTube _badly_ mangles the video quality (not sure why, it was recorde
 
 Here's a look at some of the v3.0 post-processing FX shaders (2 minutes):
 
-[![sample video](http://img.youtube.com/vi/SKyd1-kmxn4/0.jpg)](https://youtu.be/SKyd1-kmxn4)
+[![sample video](http://img.youtube.com/vi/z9536ebpJDs/0.jpg)](https://youtu.be/z9536ebpJDs)
 
 ## Related Material
 
