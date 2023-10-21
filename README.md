@@ -24,9 +24,9 @@ Although YouTube _badly_ mangles the video quality (not sure why, it was recorde
 
 [![sample video](http://img.youtube.com/vi/YTmhQm-1bwU/0.jpg)](https://youtu.be/YTmhQm-1bwU)
 
-Here's a look at some of the v3.0 post-processing FX shaders (2 minutes):
+Here's a look at some of the v3.0 post-processing FX shaders (2 minutes). This one is hosted on Bitchute because the compression artifacts are slightly-less-terrible:
 
-[![sample video](http://img.youtube.com/vi/z9536ebpJDs/0.jpg)](https://youtu.be/z9536ebpJDs)
+[![sample video](http://img.youtube.com/vi/z9536ebpJDs/0.jpg)](https://www.bitchute.com/video/2sIdHZxskwdN/)
 
 ## Related Material
 
