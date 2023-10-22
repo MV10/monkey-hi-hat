@@ -7,6 +7,8 @@ precision highp float;
 // will not be mixed at all. Mixing uses a perceptual color model so visually similar colors
 // can be excluded within the specified tolerance (similarity is 0-1, 0 means an exact match
 // to the requested color key RGB).
+//
+// For this solution's TestContent, load the vertint.conf visualization to see these at work.
 
 uniform float option_mix_frame = 4.;       // mix primary content every Nth frame
 uniform float option_mix_factor = 0.15;    // how much of the primary buffer gets mixed in
@@ -110,9 +112,9 @@ void main()
     {
         vec4 primary_buffer = texture(iChannel1, U*t);
         vec4 effect_buffer = texture(iChannel0, U*t);
-        vec3 key = rgb2oklab(vec3(option_key_r, option_key_g, option_key_b));
-        vec3 pixel = rgb2oklab(primary_buffer.rgb);
-        float diff = color_difference(key, pixel);
+        vec3 colorkey = vec3(option_key_r, option_key_g, option_key_b);
+        vec3 pixel = primary_buffer.rgb;
+        float diff = color_difference(colorkey, pixel);
         float mix_factor = (diff - option_key_tolerance <= 0.) ? 0.0 : option_mix_factor;
         O = mix(effect_buffer, primary_buffer, mix_factor);
     }
