@@ -4,5 +4,17 @@ https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack43.zip
 https://github.com/MV10/monkey-hi-hat/releases/download/3.0.0/mhh-win-x64-2.0.0.zip
 https://github.com/MV10/monkey-hi-hat/releases/download/3.0.0/content-3.0.0.zip
 https://shop.vb-audio.com/en/win-apps/11-vb-cable.html
+vbmmecable64
 C:\Program Files\mhh
 C:\ProgramData\mhh-content
+
+Everything from the blank line down is ignored. Comments:
+#    00 .NET major version (ex. "6")
+#    01 URL to download .NET installer
+#    02 URL to download VB-Cable installer
+#    03 URL to download MHH program archive
+#    04 URL to download MHH content archive
+#    05 URL to pay for VB-Cable
+#    06 VB-Cable driver filename fragment to search for
+#    07 default MHH program directory
+#    08 default MHH content directory
