@@ -3,6 +3,8 @@ https://download.visualstudio.microsoft.com/download/pr/96c98d76-1d86-4395-863b-
 https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack43.zip
 https://mcguirev10.com/assets/misc/mhh-app-3.0.0.bin
 https://mcguirev10.com/assets/misc/mhh-content-3.0.0.bin
+https://openal.org/downloads/oalinst.zip
+https://www.openal-soft.org/openal-binaries/openal-soft-1.23.1-bin.zip
 https://shop.vb-audio.com/en/win-apps/11-vb-cable.html
 vbmmecable64
 C:\Program Files\mhh
@@ -14,7 +16,9 @@ Everything from the blank line down is ignored. Comments:
 #    02 URL to download VB-Cable installer
 #    03 URL to download MHH program archive
 #    04 URL to download MHH content archive
-#    05 URL to pay for VB-Cable
-#    06 VB-Cable driver filename fragment to search for
-#    07 default MHH program directory
-#    08 default MHH content directory
+#    05 URL to download legacy OpenAL installer archive
+#    06 URL to download OpenAL Soft archive
+#    07 URL to pay for VB-Cable
+#    08 VB-Cable driver filename fragment to search for
+#    09 default MHH program directory
+#    10 default MHH content directory
