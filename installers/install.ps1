@@ -33,11 +33,11 @@ $unzipPath = [Path]::Combine($temp, "mhh-unzip")
 $dotnetVer = "6"
 $dotnetUrl = "https://download.visualstudio.microsoft.com/download/pr/62bf9f50-dcd9-4e4c-ac02-4d355efb914d/a56b37b98cb07899cd8c44fa7d50dff3/dotnet-runtime-6.0.24-win-x64.exe"
 $driverUrl = "https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack43.zip"
-$programUrl = "https://mcguirev10.com/assets/misc/mhh-app-3.0.0.bin"
-$contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-3.0.0.bin"
+$programUrl = "https://mcguirev10.com/assets/misc/mhh-app.bin"
+$contentUrl = "https://mcguirev10.com/assets/misc/mhh-content.bin"
 $openalLegacyUrl = "https://openal.org/downloads/oalinst.zip"
 $openalSoftUrl = "https://www.openal-soft.org/openal-binaries/openal-soft-1.23.1-bin.zip"
-$audioConfigUrl = "https://github.com/MV10/monkey-hi-hat/wiki/01.-Windows-Quick%E2%80%90Start#audio-loopback"
+$audioConfigUrl = "https://github.com/MV10/monkey-hi-hat/wiki/Post%E2%80%90Install%E2%80%90Instructions"
 $donationUrl = "https://shop.vb-audio.com/en/win-apps/11-vb-cable.html"
 $programPath = "C:\Program Files\mhh"
 $contentPath = "C:\ProgramData\mhh-content"
@@ -822,6 +822,34 @@ if($installProgram -or $installContent)
 
 
 ################################################################################
+# Set config file and content directory permissions
+
+# https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.filesystemrights?view=windowsdesktop-5.0
+# https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.inheritanceflags?view=windowsdesktop-5.0
+# https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.propagationflags?view=windowsdesktop-5.0
+
+if($installContent)
+{
+    Output "Setting write permissions for `"Users`" group on content directory..."
+    $acl = Get-Acl -Path $contentPath
+    $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Users", "Write", "3", "0", "Allow")
+    $acl.SetAccessRule($rule)
+    $acl | Set-Acl -Path $contentPath
+}
+
+if($mhhConfUpdated)
+{
+    Output "Setting write permissions for `"Users`" group on configuration file..."
+    $target = [Path]::Combine($programPath, "mhh.conf")
+    $acl = Get-Acl -Path $target
+    $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Users", "Write", "0", "0", "Allow")
+    $acl.SetAccessRule($rule)
+    $acl | Set-Acl -Path $target
+}
+
+
+
+################################################################################
 # Shortcut and startup options
 
 if($startMenu -or $startDesktop -or $startBootUp)
@@ -982,6 +1010,7 @@ if($installDriver)
 
 EndScript
 
+#
 # DEV / TEST NOTES
 #
 # Uninstall commands for the various products:
@@ -994,4 +1023,4 @@ EndScript
 #
 # C:\Users\glitch\AppData\Local\Temp
 # C:\ProgramData\Microsoft\Windows\Start Menu\Programs
-
+#
