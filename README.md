@@ -6,6 +6,8 @@
 
 Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC. The program and all content are 100% free, and I encourage the public to contribute new visualizations.
 
+**NEW:** Version 3.0 includes an easy-to-use install script.
+
 ## Basic Details
 
 All important documentation has been moved to the [wiki](https://github.com/MV10/monkey-hi-hat/wiki).
