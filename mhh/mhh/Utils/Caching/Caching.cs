@@ -45,9 +45,14 @@ public static class Caching
     public static VisualizerConfig BlankVisualizer;
 
     /// <summary>
-    /// This gets used often enough we just store a separate copy (never in the LRU cache).
+    /// Crossfade is used often enough we just store a separate copy (never in the LRU cache).
     /// </summary>
     public static Shader CrossfadeShader;
+
+    /// <summary>
+    /// TextManager potentially shows text every frame. Not stored in LRU cache.
+    /// </summary>
+    public static Shader TextShader;
 
     /// <summary>
     /// Indicates the highest 0-based TextureUnit which can be assigned by FramebufferManager.

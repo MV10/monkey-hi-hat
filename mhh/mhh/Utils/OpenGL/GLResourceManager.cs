@@ -35,7 +35,7 @@ public class GLResourceManager : IDisposable
     // Can we make it any more obvious?
     internal static GLResourceManager GetInstanceForRenderManager()
     {
-        if (Instance is not null) throw new InvalidOperationException("FramebufferManager should be accessed through RenderManager only");
+        if (Instance is not null) throw new InvalidOperationException($"{nameof(GLResourceManager)} should be accessed through {nameof(RenderManager)} only");
         Instance = new();
         return Instance;
     }

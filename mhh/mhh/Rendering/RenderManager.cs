@@ -15,6 +15,12 @@ public class RenderManager : IDisposable
     public static GLResourceManager ResourceManager = GLResourceManager.GetInstanceForRenderManager();
 
     /// <summary>
+    /// Handles all final-pass text overlay rendering and exposes utility functions for
+    /// manipulating the text buffer.
+    /// </summary>
+    public static TextManager TextManager = TextManager.GetInstanceForRenderManager();
+
+    /// <summary>
     /// The renderer currently generating output, or in a cross-fade scenario, the old
     /// visualizer that is becoming transparent.
     /// </summary>
@@ -53,6 +59,9 @@ public class RenderManager : IDisposable
         }
     }
     private bool IsTimePaused = false;
+
+    public RenderManager()
+    { }
 
     /// <summary>
     /// Queues up a renderer to run the visualization as the next active renderer. May
@@ -162,7 +171,6 @@ public class RenderManager : IDisposable
                 NewRenderer = null;
                 if (!IsTimePaused) ActiveRenderer.StartClock();
             }
-
         }
 
         if(ActiveRenderer is CrossfadeRenderer)
@@ -174,6 +182,8 @@ public class RenderManager : IDisposable
             ActiveRenderer?.RenderFrame(ScreenshotHandler);
             ScreenshotHandler = null;
         }
+
+        TextManager.Renderer.RenderFrame();
     }
 
     /// <summary>
@@ -183,6 +193,7 @@ public class RenderManager : IDisposable
     {
         ActiveRenderer?.OnResize();
         NewRenderer?.OnResize();
+        TextManager.Renderer.OnResize();
     }
 
     /// <summary>
@@ -255,6 +266,9 @@ render res : {rez}";
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ResourceManager");
         ResourceManager?.Dispose();
+
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() TextManager");
+        TextManager?.Dispose();
 
         IsDisposed = true;
         GC.SuppressFinalize(this);

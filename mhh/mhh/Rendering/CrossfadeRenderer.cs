@@ -7,13 +7,6 @@ using System.Diagnostics;
 
 namespace mhh;
 
-// Crossfade doesn't implement IFramebufferOwner because it isn't expected
-// to be "interrogated" by any other renderer, it should always be the last
-// in any rendering sequence. If another renderer doesn't implement the
-// IFramebufferOwner interface, it simply renders to whatever is bound before
-// RenderFrame is called, which means Crossfade can use an internally-owned
-// Framebuffer.
-
 public class CrossfadeRenderer : IRenderer
 {
     public bool IsValid { get; set; } = true;
@@ -26,7 +19,7 @@ public class CrossfadeRenderer : IRenderer
     public IRenderer OldRenderer;
     public IRenderer NewRenderer;
 
-    // not applicable to this renderer
+    // IRenderer requirements which are not applicable to this renderer.
     public GLResourceGroup OutputBuffers { get => null; }
     public Vector2 Resolution { get => RenderingHelper.ClientSize; }
     public bool OutputIntercepted { set { } }
@@ -159,7 +152,7 @@ public class CrossfadeRenderer : IRenderer
 
         RenderingHelper.UseCrossfadeResolutionLimit = false;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Visualizer");
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() IVertexSource");
         VertQuad?.Dispose();
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() OldRenderer Resources");

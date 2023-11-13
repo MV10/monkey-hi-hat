@@ -20,12 +20,12 @@ namespace mhh
         /// <summary>
         /// Handles all visualization rendering prep and execution.
         /// </summary>
-        public RenderManager Renderer = new();
+        public RenderManager Renderer;
 
         /// <summary>
         /// Handles playlist content.
         /// </summary>
-        public PlaylistManager Playlist = new();
+        public PlaylistManager Playlist;
 
         /// <summary>
         /// Audio and texture processing by the eyecandy library.
@@ -100,6 +100,9 @@ namespace mhh
             UniformRandomSeed = (float)RNG.NextDouble();
 
             InitializeCache();
+
+            Playlist = new();
+            Renderer = new();
         }
 
         /// <summary>
@@ -210,6 +213,14 @@ namespace mhh
                 default:
                     CommandRequested = CommandRequest.None;
                     break;
+            }
+
+            // I to show info
+            if (input.IsKeyReleased(Keys.I))
+            {
+                var info = Command_Info();
+                RenderManager.TextManager.Write(info);
+                return;
             }
 
             // ESC to quit
@@ -582,6 +593,17 @@ display res: {ClientSize.X} x {ClientSize.Y}
                 Environment.Exit(-1);
             }
 
+            Caching.TextShader = new(
+                Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.vert"),
+                Path.Combine(ApplicationConfiguration.InternalShaderPath, "text.frag"));
+
+            if (!Caching.TextShader.IsValid)
+            {
+                Console.WriteLine($"\n\nFATAL ERROR: Internal text shader was not found or failed to compile.\n\n");
+                Thread.Sleep(250);
+                Environment.Exit(-1);
+            }
+
             // see property comments for an explanation
             GL.GetInteger(GetPName.MaxCombinedTextureImageUnits, out var maxTU);
             Caching.MaxAvailableTextureUnit = maxTU - 1 - Caching.KnownAudioTextures.Count;
@@ -614,6 +636,9 @@ display res: {ClientSize.X} x {ClientSize.Y}
 
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade shader");
             Caching.CrossfadeShader.Dispose();
+
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal text shader");
+            Caching.TextShader.Dispose();
 
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Renderer / RenderManager");
             Renderer?.Dispose();

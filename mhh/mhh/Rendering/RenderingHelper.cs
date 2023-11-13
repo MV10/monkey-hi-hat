@@ -146,6 +146,34 @@ public static class RenderingHelper
     }
 
     /// <summary>
+    /// Prepares a texture resource with the file identified in GLImageTexture.
+    /// </summary>
+    public static bool LoadImageFile(GLImageTexture tex, TextureWrapMode wrapMode = TextureWrapMode.Repeat, string pathspec = "")
+    {
+        var paths = (pathspec == "") ? Program.AppConfig.TexturePath : pathspec;
+        var pathname = PathHelper.FindFile(paths, tex.Filename);
+        if (pathname is null) return false;
+
+        // OpenGL origin is bottom left instead of top left
+        StbImage.stbi_set_flip_vertically_on_load(1);
+
+        GL.ActiveTexture(tex.TextureUnit);
+        GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+
+        using var stream = File.OpenRead(pathname);
+        var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
+
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+
+        return true;
+    }
+
+    /// <summary>
     /// Called by VertexSource RenderFrame to set any loaded image texture uniforms before drawing.
     /// </summary>
     public static void SetTextureUniforms(IReadOnlyList<GLImageTexture> textures, Shader shader)
@@ -287,29 +315,5 @@ public static class RenderingHelper
         renderer.IsValid = false;
         renderer.InvalidReason = reason;
         LogHelper.Logger.LogError(reason);
-    }
-
-    private static bool LoadImageFile(GLImageTexture tex, TextureWrapMode wrapMode = TextureWrapMode.Repeat)
-    {
-        var pathname = PathHelper.FindFile(Program.AppConfig.TexturePath, tex.Filename);
-        if (pathname is null) return false;
-
-        // OpenGL origin is bottom left instead of top left
-        StbImage.stbi_set_flip_vertically_on_load(1);
-
-        GL.ActiveTexture(tex.TextureUnit);
-        GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-
-        using var stream = File.OpenRead(pathname);
-        var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
-
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
-
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-
-        return true;
     }
 }
