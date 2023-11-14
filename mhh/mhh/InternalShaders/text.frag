@@ -1,6 +1,7 @@
 ﻿#version 460
 
 // Adapted from foodini's "font renderer" at https://www.shadertoy.com/view/cdtBWl
+// And my own simple font outlining demo at https://www.shadertoy.com/view/mlyczD
 
 in vec2 fragCoord;
 out vec4 fragColor;
@@ -12,6 +13,7 @@ uniform sampler2D base_image;
 // Requires a font texture which matches the antialised X-channel dimensions, content,
 // and layout used by the Shadertoy font texture. See Volt's Laboratory for a copy.
 // Untested, but this might also work: https://evanw.github.io/font-texture-generator/
+// although it would lack the SDF data in the W-channel used to create an outline.
 uniform sampler2D font;
 
 // Characters in a flat row,col layout per text dimensions above. Values 32 (space)
@@ -34,7 +36,10 @@ uniform vec2 start_position;
 uniform float char_size;
 
 // For time-based crossfading of data like Spotify playlist track info.
-uniform float fade_level;
+uniform float fade_level = 1.0;
+
+// Optional, heavier borders can look better at lower resolutions
+uniform float outline_weight = 0.55;
 
 const float half_char_width = 1.0 / 32.0;
 const float char_width = 1.0 / 16.0;
@@ -42,15 +47,18 @@ const float char_width = 1.0 / 16.0;
 vec2 uv;
 vec2 position;
 
-vec4 print_char(int c) 
+void print_char(int c, out vec4 symbol, out vec4 border) 
 {
     vec2 font_uv_offset = (uv - position) / char_size;
     
+    symbol = vec4(0.0);
+    border = vec4(0.0);
+
     if(font_uv_offset.x < -1.0 ||
        font_uv_offset.x >  1.0 ||
        font_uv_offset.y < -1.0 ||
        font_uv_offset.y >  1.0) {
-        return vec4(0.0);
+        return;
     }
     
     float row = float(15 - c / 16);
@@ -59,7 +67,15 @@ vec4 print_char(int c)
     vec2 font_uv = vec2(half_char_width + char_width * col, half_char_width + char_width * row); 
     font_uv += font_uv_offset * half_char_width;
 
-    return texture(font, font_uv);
+    vec4 texel = texture(font, font_uv);
+
+    // add this to the base_image color
+    symbol = vec4(texel.x);
+
+    // subtract this from the base_image color
+    border = vec4(step(texel.w, outline_weight) * step(texel.x, 0.5));
+
+    return;
 }
 
 void main()
@@ -74,6 +90,9 @@ void main()
 
     fragColor = texture(base_image, fragCoord);
 
+    vec4 symbol = vec4(0.0);
+    vec4 border = vec4(0.0);
+
     for(int y = 0; y < dimensions.y; y++)
     {
         for(int x = 0; x < dimensions.x; x++)
@@ -82,7 +101,8 @@ void main()
 
             if(code == 0) break;
 
-            fragColor += print_char(code).xxxx;
+            print_char(code, symbol, border);
+            fragColor += symbol - border;
             position.x += char_size;
         }
 

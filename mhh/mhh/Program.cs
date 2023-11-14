@@ -219,6 +219,11 @@ namespace mhh
                     if (args.Length > 1) return ShowHelp();
                     return AppWindow.Command_Info();
 
+                case "--show":
+                    if (OnStandby) return "Application is in standby mode, use --standby command to toggle";
+                    if (args.Length != 2) return ShowHelp();
+                    return AppWindow.Command_Show(args[1]);
+
                 case "--fps":
                     if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length > 2) return ShowHelp();
@@ -537,6 +542,10 @@ All switches are passed to the already-running instance:
 
 --jpg [wait]                JPG screenshot; Win: desktop, Linux: app path; ""wait"" watches for spacebar
 --png [wait]                PNG screenshot; Win: desktop, Linux: app path; ""wait"" watches for spacebar
+
+--show [viz|stats]          Text overlay for 10 seconds (unless ""toggle"" command is used)
+--show [toggle|clear]       Switches text overlays from 10 seconds to permanent, ""clear"" removes overlay
+--show test                 Displays 100 x 10 characters for adjusting text settings
 
 --info                      writes shader and execution details to the console
 --fullscreen                toggle between windowed and full-screen state

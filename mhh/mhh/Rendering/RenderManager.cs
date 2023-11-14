@@ -153,6 +153,8 @@ public class RenderManager : IDisposable
     /// </summary>
     public void RenderFrame()
     {
+        TextManager.BeginningRenderFrame();
+
         if(NewRenderer is not null)
         {
             if(Program.AppConfig.CrossfadeSeconds == 0)

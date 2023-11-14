@@ -215,13 +215,12 @@ namespace mhh
                     break;
             }
 
-            // I to show info
-            if (input.IsKeyReleased(Keys.I))
-            {
-                var info = Command_Info();
-                RenderManager.TextManager.Write(info);
-                return;
-            }
+            // Overlay text commands
+            if (input.IsKeyReleased(Keys.V)) Command_Show("viz");
+            if (input.IsKeyReleased(Keys.S)) Command_Show("stats");
+            if (input.IsKeyReleased(Keys.D)) Command_Show("debug");
+            if (input.IsKeyReleased(Keys.Comma)) Command_Show("toggle");
+            if (input.IsKeyReleased(Keys.Period)) Command_Show("clear");
 
             // ESC to quit
             if (input.IsKeyReleased(Keys.Escape))
@@ -487,6 +486,39 @@ display res: {ClientSize.X} x {ClientSize.Y}
             Caching.VisualizerShaders.CachingDisabled = true;
             Caching.FXShaders.CachingDisabled = true;
             Caching.LibraryShaders.CachingDisabled = true;
+            return "ACK";
+        }
+
+        public string Command_Show(string flag)
+        {
+            switch(flag.ToLowerInvariant())
+            {
+                case "viz":
+                    RenderManager.TextManager.SetOverlayText(() => "(not implemented yet)");
+                    break;
+
+                case "stats":
+                    RenderManager.TextManager.SetOverlayText(Command_Info);
+                    break;
+
+                case "test":
+                    RenderManager.TextManager.SetOverlayText(() => "(not implemented yet)");
+                    break;
+
+                case "debug":
+                    RenderManager.TextManager.SetOverlayText(() => "(not implemented yet)");
+                    break;
+
+                case "toggle":
+                    return RenderManager.TextManager.TogglePermanence();
+
+                case "clear":
+                    RenderManager.TextManager.Reset();
+                    break;
+
+                default:
+                    return "ERR: Unrecognized argument.";
+            }
             return "ACK";
         }
 

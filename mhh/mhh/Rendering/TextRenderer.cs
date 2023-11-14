@@ -51,7 +51,7 @@ public class TextRenderer : IRenderer
 
     public void RenderFrame(ScreenshotWriter screenshotWriter = null)
     {
-        // TODO - fade modes
+        // TODO fade_level
         float fade_level = 1f;
 
         if (!RenderManager.TextManager.HasContent) return;
@@ -78,6 +78,7 @@ public class TextRenderer : IRenderer
         TextShader.SetUniform("dimensions", RenderManager.TextManager.Dimensions);
         TextShader.SetUniform("start_position", RenderManager.TextManager.StartPosition);
         TextShader.SetUniform("char_size", RenderManager.TextManager.CharSize);
+        TextShader.SetUniform("outline_weight", RenderManager.TextManager.OutlineWeight);
         TextShader.SetUniform("fade_level", fade_level);
 
         VertQuad.RenderFrame(TextShader);
