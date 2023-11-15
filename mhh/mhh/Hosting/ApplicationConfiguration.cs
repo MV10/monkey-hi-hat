@@ -41,6 +41,20 @@ namespace mhh
         public readonly double DetectSilenceMaxRMS = 1.5d;
         public readonly SilenceAction DetectSilenceAction = SilenceAction.None;
 
+        public readonly bool ShowPlaylistPopups;
+        public readonly int PopupVisibilitySeconds;
+        public readonly int PopupFadeMilliseconds;
+        public readonly bool OverlayPermanent;
+        public readonly int OverlayVisibilitySeconds;
+        public readonly int OverlayUpdateMilliseconds;
+        public readonly float OutlineWeight;
+        public readonly int TextBufferX;
+        public readonly int TextBufferY;
+        public readonly string FontAtlasFilename = string.Empty;
+        public readonly float CharacterSize;
+        public readonly float PositionX;
+        public readonly float PositionY;
+
         public ApplicationConfiguration(ConfigFile appConfigFile)
         {
             ConfigSource = appConfigFile;
@@ -74,7 +88,22 @@ namespace mhh
             CaptureDriverName = ConfigSource.ReadValue(SectionOS, "capturedrivername");
             CaptureDeviceName = ConfigSource.ReadValue(SectionOS, "capturedevicename");
 
+            ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
+            PopupVisibilitySeconds = ConfigSource.ReadValue("text", "PopupVisibilitySeconds").ToInt32(5);
+            PopupFadeMilliseconds = ConfigSource.ReadValue("text", "PopupFadeMilliseconds").ToInt32(1000);
+            OverlayPermanent = ConfigSource.ReadValue("text", "OverlayPermanent").ToBool(false);
+            OverlayVisibilitySeconds = ConfigSource.ReadValue("text", "OverlayVisibilitySeconds").ToInt32(10);
+            OverlayUpdateMilliseconds = ConfigSource.ReadValue("text", "OverlayUpdateMilliseconds").ToInt32(500);
+            OutlineWeight = ConfigSource.ReadValue("text", "OutlineWeight").ToFloat(0.55f);
+            TextBufferX = ConfigSource.ReadValue("text", "TextBufferX").ToInt32(100);
+            TextBufferY = ConfigSource.ReadValue("text", "TextBufferY").ToInt32(10);
+            FontAtlasFilename = ConfigSource.ReadValue("text", "FontAtlasFilename");
+            CharacterSize = ConfigSource.ReadValue("text", "CharacterSize").ToFloat(0.02f);
+            PositionX = ConfigSource.ReadValue("text", "PositionX").ToFloat(-0.96f);
+            PositionY = ConfigSource.ReadValue("text", "PositionY").ToFloat(0.52f);
+
             // validation
+            // TODO validate [text] section settings
             if (RenderResolutionLimit < 256 && RenderResolutionLimit !=0) ConfError("RenderResolutionLimit must be 256 or greater (default is 0 to disable).");
             if (ShaderCacheSize < 0) ConfError("ShaderCacheSize must be 0 or greater. Default is 150 when omitted, 0 disables caching.");
             if (FXCacheSize < 0) ConfError("FXCacheSize must be 0 or greater. Default is 50 when omitted, 0 disables caching.");

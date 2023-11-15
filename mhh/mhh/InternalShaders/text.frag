@@ -47,42 +47,33 @@ const float char_width = 1.0 / 16.0;
 vec2 uv;
 vec2 position;
 
-void print_char(int c, out vec4 symbol, out vec4 border) 
+vec4 print_char(int char_index, vec4 base_color) 
 {
     vec2 font_uv_offset = (uv - position) / char_size;
+    position.x += char_size;
     
-    symbol = vec4(0.0);
-    border = vec4(0.0);
-
     if(font_uv_offset.x < -1.0 ||
        font_uv_offset.x >  1.0 ||
        font_uv_offset.y < -1.0 ||
        font_uv_offset.y >  1.0) {
-        return;
+        return base_color;
     }
     
-    float row = float(15 - c / 16);
-    float col = float(c % 16);
+    float row = float(15 - char_index / 16);
+    float col = float(char_index % 16);
     
     vec2 font_uv = vec2(half_char_width + char_width * col, half_char_width + char_width * row); 
     font_uv += font_uv_offset * half_char_width;
 
     vec4 texel = texture(font, font_uv);
+    vec4 symbol = vec4(texel.x);
+    vec4 border = vec4(step(texel.w, outline_weight) * step(texel.x, 0.5));
 
-    // add this to the base_image color
-    symbol = vec4(texel.x);
-
-    // subtract this from the base_image color
-    border = vec4(step(texel.w, outline_weight) * step(texel.x, 0.5));
-
-    return;
+    return mix(base_color, base_color + symbol - border, fade_level);
 }
 
 void main()
 {
-    // in ShaderToy:
-    // vec2 uv = 2.0*fragCoord/iResolution.xy-1.0;
-    // uv.y *= iResolution.y/iResolution.x;
     uv = 2.0 * fragCoord - 1.0;
     uv.y *= resolution.y / resolution.x;
 
@@ -98,12 +89,8 @@ void main()
         for(int x = 0; x < dimensions.x; x++)
         {
             int code = int(texelFetch(text, ivec2(x, y), 0).r);
-
-            if(code == 0) break;
-
-            print_char(code, symbol, border);
-            fragColor += symbol - border;
-            position.x += char_size;
+            if(code < 1 || code > 255) break;
+            fragColor = print_char(code, fragColor);
         }
 
         position.x = start_position.x;

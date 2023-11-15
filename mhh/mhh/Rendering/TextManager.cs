@@ -21,23 +21,19 @@ public class TextManager : IDisposable
     }
     private static TextManager Instance = null;
 
-    private static readonly int BufferWidth = 64;
-    private static readonly int BufferHeight = 8;
-
     private static readonly int MinChar = ' ';
     private static readonly int MaxChar = '~';
     private static readonly int BadChar = '?';
     private static readonly int NewLineChar = "\n"[0];
     private static readonly int NewLineFlag = 0;
 
+    // Uniforms set by TextRenderer
     public int[] TextBuffer;
     public Vector2i Dimensions;
     public float CharSize;
     public Vector2 StartPosition;
     public float OutlineWeight;
-
-    public int OverlaySeconds = 10;
-    public int OverlayUpdateMS = 500;
+    public float FadeLevel;
 
     public TextRenderer Renderer { get; private set; }
     public bool HasContent { get; private set; }
@@ -59,19 +55,20 @@ public class TextManager : IDisposable
 
     private TextManager()
     {
-        Dimensions = new(BufferWidth, BufferHeight);
-        CharSize = 0.02f;
-        StartPosition = (-0.95f, 0.5f);
-        OutlineWeight = 0.55f;
+        Dimensions = new(Program.AppConfig.TextBufferX, Program.AppConfig.TextBufferY);
+        CharSize = Program.AppConfig.CharacterSize;
+        StartPosition = (Program.AppConfig.PositionX, Program.AppConfig.PositionY);
+        OutlineWeight = Program.AppConfig.OutlineWeight;
+        PermanentOverlays = Program.AppConfig.OverlayPermanent;
 
-        Clear();
+        Reset();
         Renderer = new();
     }
 
     /// <summary>
     /// Sets a string-returning function as the source for overlay text.
-    /// This function will be re-queried for information every 500ms. If
-    /// overlays are in timed mode, it will last for 10 seconds, otherwise
+    /// This function will be re-queried every OverlayUpdateMS millisec. If
+    /// overlays are in timed mode, it will last for OverlaySeconds, otherwise
     /// the user must dismiss the overlay. Popup content will also dismiss
     /// a timed overlay.
     /// </summary>
@@ -79,22 +76,26 @@ public class TextManager : IDisposable
     {
         if (forcePermanence) PermanentOverlays = true;
         Reset();
-        ClearOverlay = DateTime.Now.AddSeconds(OverlaySeconds);
-        UpdateOverlay = DateTime.Now.AddMilliseconds(OverlayUpdateMS);
+        ClearOverlay = DateTime.Now.AddSeconds(Program.AppConfig.OverlayVisibilitySeconds);
+        UpdateOverlay = DateTime.Now.AddMilliseconds(Program.AppConfig.OverlayUpdateMilliseconds);
         OverlayTextProvider = provider;
         Write(OverlayTextProvider.Invoke());
     }
 
     /// <summary>
-    /// Provides text that is faded in, displayed for two seconds, then
+    /// Provides text that is faded in, displayed for PopupSeconds, then
     /// faded out. If an overlay is already visible, in timed mode that
     /// overlay will be cleared. In permanent mode, the popup will be
-    /// ignored.
+    /// ignored. Fade in/out speed is based on PopupFadeMS.
     /// </summary>
     public void SetPopupText(string content)
     {
         if (PermanentOverlays && HasContent) return;
         Reset();
+        Write(content);
+        PopupStage = 1;
+        PopupStageStart = DateTime.Now;
+        PopupStageEnd = DateTime.Now.AddMilliseconds(Program.AppConfig.PopupFadeMilliseconds);
     }
 
     /// <summary>
@@ -113,7 +114,7 @@ public class TextManager : IDisposable
     /// going to be rendered. Nothing is actually rendered by this function.
     /// Used to update time-based content and variables.
     /// </summary>
-    public void BeginningRenderFrame()
+    public void BeforeRenderFrame()
     {
         if (!HasContent) return;
 
@@ -125,12 +126,33 @@ public class TextManager : IDisposable
 
         if(PopupStage > 0)
         {
+            if(DateTime.Now >= PopupStageEnd)
+            {
+                if(PopupStage == 3)
+                {
+                    Reset();
+                    return;
+                }
 
+                PopupStage++;
+                PopupStageStart = DateTime.Now;
+                PopupStageEnd = (PopupStage == 2) 
+                    ? DateTime.Now.AddSeconds(Program.AppConfig.PopupVisibilitySeconds) 
+                    : DateTime.Now.AddMilliseconds(Program.AppConfig.PopupFadeMilliseconds);
+
+            }
+
+            FadeLevel = PopupStage switch
+            {
+                1 => 1.0f - (float)PopupStageEnd.Subtract(DateTime.Now).TotalMilliseconds / (float)Program.AppConfig.PopupFadeMilliseconds,
+                3 => (float)PopupStageEnd.Subtract(DateTime.Now).TotalMilliseconds / (float)Program.AppConfig.PopupFadeMilliseconds,
+                _ => 1.0f
+            };
         }
 
-        if(DateTime.Now >= UpdateOverlay && OverlayTextProvider is not null)
+        if (DateTime.Now >= UpdateOverlay && OverlayTextProvider is not null)
         {
-            UpdateOverlay = DateTime.Now.AddMilliseconds(OverlayUpdateMS);
+            UpdateOverlay = DateTime.Now.AddMilliseconds(Program.AppConfig.OverlayUpdateMilliseconds);
             Write(OverlayTextProvider.Invoke(), clear: true);
         }
     }
@@ -140,7 +162,7 @@ public class TextManager : IDisposable
     /// </summary>
     public void Clear()
     {
-        TextBuffer = new int[BufferWidth * BufferHeight];
+        TextBuffer = new int[Dimensions.X * Dimensions.Y];
         HasContent = false;
         LastUpdate = DateTime.Now;
     }
@@ -155,6 +177,7 @@ public class TextManager : IDisposable
         UpdateOverlay = DateTime.MaxValue;
         OverlayTextProvider = null;
         PopupStage = 0;
+        FadeLevel = 1f;
     }
 
     /// <summary>

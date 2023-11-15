@@ -201,7 +201,10 @@ public class PlaylistManager
     }
 
     public string GetInfo()
-        => ActivePlaylist?.ConfigSource.Pathname ?? "(none)";
+    {
+        if (ActivePlaylist is null) return "(none)";
+        return Path.GetFileNameWithoutExtension(ActivePlaylist.ConfigSource.Pathname).Replace("_", " ");
+    }
 
     private void ChooseNextFX(ConfigFile visualizerConfig)
     {

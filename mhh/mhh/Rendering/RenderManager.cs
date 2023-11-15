@@ -153,7 +153,7 @@ public class RenderManager : IDisposable
     /// </summary>
     public void RenderFrame()
     {
-        TextManager.BeginningRenderFrame();
+        TextManager.BeforeRenderFrame();
 
         if(NewRenderer is not null)
         {
@@ -203,23 +203,17 @@ public class RenderManager : IDisposable
     /// </summary>
     public string GetInfo()
     {
-        var viz = ActiveRenderer?.Filename ?? "(none)";
+        var viz = ActiveRenderer?.Filename.Replace("_", " ") ?? "(none)";
         var rez = (ActiveRenderer is null ? "n/a" : $"{ActiveRenderer.Resolution.X} x {ActiveRenderer.Resolution.Y}");
 
         if (ActiveRenderer is CrossfadeRenderer)
         {
             var cf = ActiveRenderer as CrossfadeRenderer;
-
-            var vo = cf.OldRenderer.Filename;
-            var vn = cf.NewRenderer.Filename;
-            
             var ro = $"{cf.OldRenderer.Resolution.X} x {cf.OldRenderer.Resolution.Y}";
             var rn = $"{cf.NewRenderer.Resolution.X} x {cf.NewRenderer.Resolution.Y}";
-
-            if (cf.OldRenderer is FXRenderer) (vo, ro) = GetFXInfo(cf.OldRenderer as FXRenderer);
-            if (cf.NewRenderer is FXRenderer) (vn, rn) = GetFXInfo(cf.NewRenderer as FXRenderer);
-
-            viz = $"Crossfade {vo} to {vn}";
+            if (cf.OldRenderer is FXRenderer) (_, ro) = GetFXInfo(cf.OldRenderer as FXRenderer);
+            if (cf.NewRenderer is FXRenderer) (_, rn) = GetFXInfo(cf.NewRenderer as FXRenderer);
+            viz = "Crossfading...";
             rez = $"{ro} and {rn}";
         }
 
@@ -233,9 +227,29 @@ render res : {rez}";
 
     private (string viz, string rez) GetFXInfo(FXRenderer fx)
     {
-        var viz = $"{fx.PrimaryRenderer.Filename} with FX {fx.Filename}";
+        var viz = $"{fx.PrimaryRenderer.Filename.Replace("_", " ")} with FX {fx.Filename.Replace("_", " ")}";
         var rez = $"{fx.PrimaryRenderer.Resolution.X} x {fx.PrimaryRenderer.Resolution.Y}";
         return (viz, rez);
+    }
+
+    public string GetPopupText()
+    {
+        if (ActiveRenderer is CrossfadeRenderer) return "Crossfading...";
+
+        if (ActiveRenderer is FXRenderer)
+        {
+            var fx = ActiveRenderer as FXRenderer;
+            return
+$@"{fx.PrimaryRenderer.Filename.Replace("_", " ")}
+{fx.PrimaryRenderer.Description}
+
+FX {fx.Filename.Replace("_", " ")}
+{fx.Description}";
+        }
+
+        return
+$@"{ActiveRenderer.Filename.Replace("_", " ")}
+{ActiveRenderer.Description}";
     }
 
     private void CrossfadeCompleted()

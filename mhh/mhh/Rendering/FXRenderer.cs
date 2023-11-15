@@ -12,7 +12,8 @@ public class FXRenderer : IRenderer
 {
     public bool IsValid { get; set; } = true;
     public string InvalidReason { get; set; } = string.Empty;
-    public string Filename { get; set; }
+    public string Filename { get; private set; }
+    public string Description { get; private set; }
 
     public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
     private GLResourceGroup FinalDrawbuffers;
@@ -54,6 +55,7 @@ public class FXRenderer : IRenderer
 
         Config = fxConfig;
         Filename = Path.GetFileNameWithoutExtension(Config.ConfigSource.Pathname);
+        Description = fxConfig.Description;
         PrimaryRenderer = primaryRenderer;
         PrimaryFXUniforms = PrimaryRenderer.GetFXUniforms(Filename);
 

@@ -221,6 +221,7 @@ namespace mhh
             if (input.IsKeyReleased(Keys.D)) Command_Show("debug");
             if (input.IsKeyReleased(Keys.Comma)) Command_Show("toggle");
             if (input.IsKeyReleased(Keys.Period)) Command_Show("clear");
+            if (input.IsKeyReleased(Keys.T)) Command_Show("grid");
 
             // ESC to quit
             if (input.IsKeyReleased(Keys.Escape))
@@ -385,15 +386,11 @@ namespace mhh
         /// </summary>
         public string Command_Info()
         {
-            var msg = $@"
-frame rate : {FramesPerSecond}
-average fps: {AverageFramesPerSecond}
-avg fps sec: {AverageFPSTimeframeSeconds}
-target fps : {(UpdateFrequency == 0 ? "unlimited" : UpdateFrequency)}
-playlist   : {Playlist.GetInfo()}
+            var msg =
+$@"{GetStatistics()}
 {Renderer.GetInfo()}
-display res: {ClientSize.X} x {ClientSize.Y}
-";
+playlist   : {Playlist.GetInfo()}";
+
             LogHelper.Logger?.LogInformation(msg);
             return msg;
         }
@@ -494,19 +491,34 @@ display res: {ClientSize.X} x {ClientSize.Y}
             switch(flag.ToLowerInvariant())
             {
                 case "viz":
-                    RenderManager.TextManager.SetOverlayText(() => "(not implemented yet)");
+                    RenderManager.TextManager.SetOverlayText(Renderer.GetPopupText);
                     break;
 
                 case "stats":
-                    RenderManager.TextManager.SetOverlayText(Command_Info);
+                    RenderManager.TextManager.SetOverlayText(GetStatistics);
                     break;
 
-                case "test":
-                    RenderManager.TextManager.SetOverlayText(() => "(not implemented yet)");
+                case "grid":
+                    RenderManager.TextManager.SetOverlayText(() =>
+@"LINE 01---20xxx5xxxx30xxx5xxxx40xxx5xxxx50xxx5xxxx60xxx5xxxx70xxx5xxxx80xxx5xxxx90xxx5xxxx
+LINE 02
+LINE 03
+LINE 04
+LINE 05
+LINE 06
+LINE 07
+LINE 08
+LINE 09
+LINE 10
+LINE 11
+LINE 12
+LINE 13
+LINE 14
+LINE 15");
                     break;
 
                 case "debug":
-                    RenderManager.TextManager.SetOverlayText(() => "(not implemented yet)");
+                    RenderManager.TextManager.SetPopupText(Renderer.GetPopupText());
                     break;
 
                 case "toggle":
@@ -641,6 +653,12 @@ display res: {ClientSize.X} x {ClientSize.Y}
             Caching.MaxAvailableTextureUnit = maxTU - 1 - Caching.KnownAudioTextures.Count;
             LogHelper.Logger?.LogInformation($"This GPU supports a combined maximum of {maxTU} TextureUnits.");
         }
+
+        private string GetStatistics() =>
+$@"frame rate : {FramesPerSecond}
+average fps: {AverageFramesPerSecond} (past {AverageFPSTimeframeSeconds} sec)
+target fps : {(UpdateFrequency == 0 ? "unlimited" : UpdateFrequency)}
+display res: {ClientSize.X} x {ClientSize.Y}";
 
         public new void Dispose()
         {

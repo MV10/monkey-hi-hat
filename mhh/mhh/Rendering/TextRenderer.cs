@@ -15,11 +15,13 @@ namespace mhh;
 
 public class TextRenderer : IRenderer
 {
+    // Most IRenderer requirements are not applicable to this renderer.
+
     public bool IsValid { get; set; } = true;
     public string InvalidReason { get; set; } = string.Empty;
-    public string Filename { get; set; } = string.Empty;
+    public string Filename { get; } = string.Empty;
+    public string Description { get; } = string.Empty;
 
-    // IRenderer requirements which are not applicable to this renderer.
     public GLResourceGroup OutputBuffers { get => null; }
     public Vector2 Resolution { get => RenderingHelper.ClientSize; }
     public bool OutputIntercepted { set { } }
@@ -51,9 +53,6 @@ public class TextRenderer : IRenderer
 
     public void RenderFrame(ScreenshotWriter screenshotWriter = null)
     {
-        // TODO fade_level
-        float fade_level = 1f;
-
         if (!RenderManager.TextManager.HasContent) return;
         CopyTextBufferToTexture();
 
@@ -79,7 +78,7 @@ public class TextRenderer : IRenderer
         TextShader.SetUniform("start_position", RenderManager.TextManager.StartPosition);
         TextShader.SetUniform("char_size", RenderManager.TextManager.CharSize);
         TextShader.SetUniform("outline_weight", RenderManager.TextManager.OutlineWeight);
-        TextShader.SetUniform("fade_level", fade_level);
+        TextShader.SetUniform("fade_level", RenderManager.TextManager.FadeLevel);
 
         VertQuad.RenderFrame(TextShader);
 

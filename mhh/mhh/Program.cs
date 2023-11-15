@@ -545,7 +545,7 @@ All switches are passed to the already-running instance:
 
 --show [viz|stats]          Text overlay for 10 seconds (unless ""toggle"" command is used)
 --show [toggle|clear]       Switches text overlays from 10 seconds to permanent, ""clear"" removes overlay
---show test                 Displays 100 x 10 characters for adjusting text settings
+--show grid                 Displays a 100 x 15 character grid for adjusting text settings
 
 --info                      writes shader and execution details to the console
 --fullscreen                toggle between windowed and full-screen state

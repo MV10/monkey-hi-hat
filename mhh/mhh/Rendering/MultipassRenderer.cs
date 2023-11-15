@@ -18,7 +18,8 @@ public class MultipassRenderer : IRenderer
 {
     public bool IsValid { get; set; } = true;
     public string InvalidReason { get; set; } = string.Empty;
-    public string Filename { get; set; }
+    public string Filename { get; private set; }
+    public string Description { get; private set; }
 
     public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
     private GLResourceGroup FinalDrawbuffers;
@@ -50,6 +51,7 @@ public class MultipassRenderer : IRenderer
 
         Config = visualizerConfig;
         Filename = Path.GetFileNameWithoutExtension(Config.ConfigSource.Pathname);
+        Description = visualizerConfig.Description;
         if (Config.RandomTimeOffset != 0) ClockOffset = RNG.Next(0, Math.Abs(Config.RandomTimeOffset) + 1) * Math.Sign(Config.RandomTimeOffset);
 
         // only calculates ViewportResolution when called from the constructor

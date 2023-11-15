@@ -16,10 +16,17 @@ public interface IRenderer : IConfigSource, IDisposable
     public string InvalidReason { get; set; }
 
     /// <summary>
-    /// The original visualizer filename. Used by the PlaylistManager. Set this
+    /// The original visualizer or FX filename. Used by the PlaylistManager and shown
+    /// in --info command output and with some text overlays and popups. Set this
     /// via Path.GetFilenameWithoutExtension against the ConfigSource.Pathname.
     /// </summary>
-    public string Filename { get; set; }
+    public string Filename { get; }
+
+    /// <summary>
+    /// If available, the long-form description of the visualizer or FX shader. Used
+    /// for text popups when new content is being loaded from a playlist.
+    /// </summary>
+    public string Description { get; }
 
     /// <summary>
     /// Called to produce a new frame of output. If a ScreenshotWriter is provided,
