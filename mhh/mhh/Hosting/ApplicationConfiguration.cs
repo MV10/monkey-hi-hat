@@ -41,7 +41,7 @@ namespace mhh
         public readonly double DetectSilenceMaxRMS = 1.5d;
         public readonly SilenceAction DetectSilenceAction = SilenceAction.None;
 
-        public readonly bool ShowPlaylistPopups;
+        public bool ShowPlaylistPopups; // not readonly, can be toggled at runtime
         public readonly int PopupVisibilitySeconds;
         public readonly int PopupFadeMilliseconds;
         public readonly bool OverlayPermanent;

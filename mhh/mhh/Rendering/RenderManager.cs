@@ -234,11 +234,13 @@ render res : {rez}";
 
     public string GetPopupText()
     {
-        if (ActiveRenderer is CrossfadeRenderer) return "Crossfading...";
+        var primary = (ActiveRenderer is CrossfadeRenderer)
+            ? (ActiveRenderer as CrossfadeRenderer).NewRenderer
+            : (NewRenderer is null) ? ActiveRenderer : NewRenderer;
 
-        if (ActiveRenderer is FXRenderer)
+        if (primary is FXRenderer)
         {
-            var fx = ActiveRenderer as FXRenderer;
+            var fx = primary as FXRenderer;
             return
 $@"{fx.PrimaryRenderer.Filename.Replace("_", " ")}
 {fx.PrimaryRenderer.Description}
@@ -248,8 +250,8 @@ FX {fx.Filename.Replace("_", " ")}
         }
 
         return
-$@"{ActiveRenderer.Filename.Replace("_", " ")}
-{ActiveRenderer.Description}";
+$@"{primary.Filename.Replace("_", " ")}
+{primary.Description}";
     }
 
     private void CrossfadeCompleted()

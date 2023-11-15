@@ -99,12 +99,11 @@ public class PlaylistManager
             NextFXPathname = fxPathname;
             ForceStartFX = true;
         }
-        else
-        {
-        }
 
         LogHelper.Logger?.LogTrace($"Playlist queuing viz {Path.GetFileNameWithoutExtension(vizPathname)} with FX {NextFXPathname ?? "(none)"}");
 
+
+        // TODO playlist can specify fxPathname here too if immediately known
         var msg = Program.AppWindow.Command_Load(vizPathname, terminatesPlaylist: false);
         return msg;
     }

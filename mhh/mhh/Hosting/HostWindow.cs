@@ -222,6 +222,8 @@ namespace mhh
             if (input.IsKeyReleased(Keys.Comma)) Command_Show("toggle");
             if (input.IsKeyReleased(Keys.Period)) Command_Show("clear");
             if (input.IsKeyReleased(Keys.T)) Command_Show("grid");
+            if (input.IsKeyReleased(Keys.P)) Command_Show("popups");
+            if (input.IsKeyReleased(Keys.W)) Command_Show("what");
 
             // ESC to quit
             if (input.IsKeyReleased(Keys.Escape))
@@ -275,12 +277,21 @@ namespace mhh
                     Renderer.PrepareNewRenderer(QueuedVisualizerConfig);
                     QueuedVisualizerConfig = null;
                     exit = true;
+
+                    if (Program.AppConfig.ShowPlaylistPopups 
+                        && Playlist?.ActivePlaylist is not null
+                        && QueuedFXConfig is null) 
+                        RenderManager.TextManager.SetPopupText(Renderer.GetPopupText());
                 }
 
-                if (QueuedFXConfig is not null)
+                if (QueuedFXConfig is not null && Renderer.ApplyFX(QueuedFXConfig))
                 {
-                    if(Renderer.ApplyFX(QueuedFXConfig)) QueuedFXConfig = null;
+                    QueuedFXConfig = null;
                     exit = true;
+
+                    if (Program.AppConfig.ShowPlaylistPopups
+                        && Playlist?.ActivePlaylist is not null)
+                        RenderManager.TextManager.SetPopupText(Renderer.GetPopupText());
                 }
 
                 if (exit) return;
@@ -486,6 +497,9 @@ playlist   : {Playlist.GetInfo()}";
             return "ACK";
         }
 
+        /// <summary>
+        /// Handler for the --show command-line switches
+        /// </summary>
         public string Command_Show(string flag)
         {
             switch(flag.ToLowerInvariant())
@@ -515,6 +529,14 @@ LINE 12
 LINE 13
 LINE 14
 LINE 15");
+                    break;
+
+                case "popups":
+                    Program.AppConfig.ShowPlaylistPopups = !Program.AppConfig.ShowPlaylistPopups;
+                    return $"ACK (popups {(Program.AppConfig.ShowPlaylistPopups ? "will be shown" : "are disabled")})";
+
+                case "what":
+                    RenderManager.TextManager.SetPopupText(Renderer.GetPopupText());
                     break;
 
                 case "debug":
