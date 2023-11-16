@@ -12,13 +12,13 @@ public class RenderManager : IDisposable
     /// <summary>
     /// Multi-pass renderers use this to create and destroy framebuffers.
     /// </summary>
-    public static GLResourceManager ResourceManager = GLResourceManager.GetInstanceForRenderManager();
+    public static GLResourceManager ResourceManager;
 
     /// <summary>
     /// Handles all final-pass text overlay rendering and exposes utility functions for
     /// manipulating the text buffer.
     /// </summary>
-    public static TextManager TextManager = TextManager.GetInstanceForRenderManager();
+    public static TextManager TextManager;
 
     /// <summary>
     /// The renderer currently generating output, or in a cross-fade scenario, the old
@@ -61,7 +61,10 @@ public class RenderManager : IDisposable
     private bool IsTimePaused = false;
 
     public RenderManager()
-    { }
+    {
+        ResourceManager = new();
+        TextManager = new();
+    }
 
     /// <summary>
     /// Queues up a renderer to run the visualization as the next active renderer. May

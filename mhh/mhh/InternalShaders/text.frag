@@ -67,7 +67,7 @@ vec4 print_char(int char_index, vec4 base_color)
 
     vec4 texel = texture(font, font_uv);
     vec4 symbol = vec4(texel.x);
-    vec4 border = vec4(step(texel.w, outline_weight) * step(texel.x, 0.5));
+    vec4 border = vec4(texel.w * step(texel.w, outline_weight) * step(texel.x, 0.5));
 
     return mix(base_color, base_color + symbol - border, fade_level);
 }

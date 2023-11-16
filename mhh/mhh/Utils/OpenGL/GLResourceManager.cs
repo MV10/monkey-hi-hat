@@ -32,20 +32,11 @@ namespace mhh;
 /// </summary>
 public class GLResourceManager : IDisposable
 {
-    // Can we make it any more obvious?
-    internal static GLResourceManager GetInstanceForRenderManager()
-    {
-        if (Instance is not null) throw new InvalidOperationException($"{nameof(GLResourceManager)} should be accessed through {nameof(RenderManager)} only");
-        Instance = new();
-        return Instance;
-    }
-    private static GLResourceManager Instance = null;
-
     private Dictionary<string, IReadOnlyList<GLResourceGroup>> AllocatedResourceGroups = new();
     private Dictionary<string, IReadOnlyList<GLImageTexture>> AllocatedImageTextures = new();
     private List<int> AvailableTextureUnits = new(Caching.MaxAvailableTextureUnit);
 
-    private GLResourceManager()
+    public GLResourceManager()
     {
         for(int i = 0; i <= Caching.MaxAvailableTextureUnit; i++)
         {

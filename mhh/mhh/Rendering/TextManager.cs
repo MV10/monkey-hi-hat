@@ -12,15 +12,6 @@ namespace mhh;
 
 public class TextManager : IDisposable
 {
-    // Can we make it any more obvious?
-    internal static TextManager GetInstanceForRenderManager()
-    {
-        if (Instance is not null) throw new InvalidOperationException($"{nameof(TextManager)} should be accessed through {nameof(RenderManager)} only");
-        Instance = new();
-        return Instance;
-    }
-    private static TextManager Instance = null;
-
     private static readonly int MinChar = ' ';
     private static readonly int MaxChar = '~';
     private static readonly int BadChar = '?';
@@ -53,7 +44,7 @@ public class TextManager : IDisposable
     private DateTime PopupStageStart;
     private DateTime PopupStageEnd;
 
-    private TextManager()
+    public TextManager()
     {
         Dimensions = new(Program.AppConfig.TextBufferX, Program.AppConfig.TextBufferY);
         CharSize = Program.AppConfig.CharacterSize;
@@ -90,7 +81,7 @@ public class TextManager : IDisposable
     /// </summary>
     public void SetPopupText(string content)
     {
-        if (PermanentOverlays && HasContent) return;
+        if (PermanentOverlays && HasContent && PopupStage == 0) return;
         Reset();
         Write(content);
         PopupStage = 1;
