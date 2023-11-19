@@ -12,8 +12,8 @@ namespace mhh;
 
 public class TextManager : IDisposable
 {
-    private static readonly int MinChar = ' ';
-    private static readonly int MaxChar = '~';
+    private static readonly int MinChar = 0;
+    private static readonly int MaxChar = 255;
     private static readonly int BadChar = '?';
     private static readonly int NewLineChar = "\n"[0];
     private static readonly int NewLineFlag = 0;

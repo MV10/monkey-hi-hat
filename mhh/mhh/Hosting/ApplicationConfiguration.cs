@@ -55,6 +55,8 @@ namespace mhh
         public readonly float PositionX;
         public readonly float PositionY;
 
+        public readonly bool ShowSpotifyTrackPopups;
+
         public ApplicationConfiguration(ConfigFile appConfigFile)
         {
             ConfigSource = appConfigFile;
@@ -101,6 +103,8 @@ namespace mhh
             CharacterSize = ConfigSource.ReadValue("text", "CharacterSize").ToFloat(0.02f);
             PositionX = ConfigSource.ReadValue("text", "PositionX").ToFloat(-0.96f);
             PositionY = ConfigSource.ReadValue("text", "PositionY").ToFloat(0.52f);
+
+            ShowSpotifyTrackPopups = ConfigSource.ReadValue(SectionOS, "showspotifytrackpopups").ToBool(false);
 
             // validation
             // TODO validate [text] section settings

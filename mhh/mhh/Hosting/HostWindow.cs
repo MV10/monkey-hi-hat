@@ -79,6 +79,13 @@ namespace mhh
 
         private Random RNG = new();
 
+        private const int SpotifyCheckMillisec = 500;
+        private const string SpotifyProcessName = "SPOTIFY";
+        private const string SpotifyUnavailableMessage = "Spotify information is not available";
+        private const char MusicNote = (char)11;
+        private DateTime NextSpotifyCheck = DateTime.MaxValue;
+        private string SpotifyTrackInfo = SpotifyUnavailableMessage;
+
         public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
             : base(windowConfig, createShaderFromConfig: false)
         {
@@ -114,6 +121,8 @@ namespace mhh
             GL.Enable(EnableCap.ProgramPointSize);
             Renderer.PrepareNewRenderer(Caching.IdleVisualizer);
             Eyecandy.BeginAudioProcessing();
+
+            if (Program.AppConfig.ShowSpotifyTrackPopups) NextSpotifyCheck = DateTime.Now.AddMilliseconds(SpotifyCheckMillisec);
         }
 
         /// <summary>
@@ -231,9 +240,10 @@ namespace mhh
             if (input.IsKeyReleased(Keys.D)) Command_Show("debug");
             if (input.IsKeyReleased(Keys.Comma)) Command_Show("toggle");
             if (input.IsKeyReleased(Keys.Period)) Command_Show("clear");
-            if (input.IsKeyReleased(Keys.T)) Command_Show("grid");
+            if (input.IsKeyReleased(Keys.G)) Command_Show("grid");
             if (input.IsKeyReleased(Keys.P)) Command_Show("popups");
             if (input.IsKeyReleased(Keys.W)) Command_Show("what");
+            if (input.IsKeyReleased(Keys.T)) Command_Show("track");
 
             // Backspace for immediate JPG screenshot
             if (input.IsKeyReleased(Keys.Backspace))
@@ -311,6 +321,31 @@ namespace mhh
                 Program.ProcessSwitches(Program.QueuedArgs);
                 Program.QueuedArgs = null;
                 return;
+            }
+
+            if(Program.AppConfig.ShowSpotifyTrackPopups && DateTime.Now >= NextSpotifyCheck)
+            {
+                var p = Process.GetProcessesByName(SpotifyProcessName);
+                if(p.Length > 0)
+                {
+                    if (p[0].MainWindowTitle != SpotifyTrackInfo)
+                    {
+                        SpotifyTrackInfo = p[0].MainWindowTitle;
+                        if (SpotifyTrackInfo.StartsWith("Spotify"))
+                        {
+                            SpotifyTrackInfo = SpotifyUnavailableMessage;
+                        }
+                        else
+                        {
+                            RenderManager.TextManager.SetPopupText(GetTrackForDisplay());
+                        }
+                    }
+                }
+                else
+                {
+                    SpotifyTrackInfo = SpotifyUnavailableMessage;
+                }
+                NextSpotifyCheck = DateTime.Now.AddMilliseconds(SpotifyCheckMillisec);
             }
         }
 
@@ -539,6 +574,10 @@ LINE 14
 LINE 15");
                     break;
 
+                case "track":
+                    RenderManager.TextManager.SetPopupText(GetTrackForDisplay());
+                    break;
+
                 case "popups":
                     Program.AppConfig.ShowPlaylistPopups = !Program.AppConfig.ShowPlaylistPopups;
                     return $"ACK (popups {(Program.AppConfig.ShowPlaylistPopups ? "will be shown" : "are disabled")})";
@@ -689,6 +728,9 @@ $@"frame rate : {FramesPerSecond}
 average fps: {AverageFramesPerSecond} (past {AverageFPSTimeframeSeconds} sec)
 target fps : {(UpdateFrequency == 0 ? "unlimited" : UpdateFrequency)}
 display res: {ClientSize.X} x {ClientSize.Y}";
+
+        private string GetTrackForDisplay()
+            => $"{MusicNote} {SpotifyTrackInfo.Replace(" - ", $"\n{MusicNote} ")}";
 
         public new void Dispose()
         {
