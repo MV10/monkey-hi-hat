@@ -150,7 +150,7 @@ namespace mhh
         {
             base.OnUpdateFrame(e);
 
-            // TODO Verify OnUpdateFrame is suspended on Linux during OnResize event-storms
+            // TODO Verify OnUpdateFrame is NOT suspended on Linux during OnResize event-storms
 
             // On Windows, Update/Render events are suspended during resize operations.
             if (OnResizeFired)
@@ -163,6 +163,16 @@ namespace mhh
 
             var input = KeyboardState;
 
+            // ESC to quit
+            if (input.IsKeyReleased(Keys.Escape))
+            {
+                // set the flag to ensure the render callback starts
+                // short-circuiting before we start releasing stuff
+                CommandRequested = CommandRequest.Quit;
+                return;
+            }
+
+            // process pending command
             switch (CommandRequested)
             {
                 case CommandRequest.Quit:
@@ -215,7 +225,7 @@ namespace mhh
                     break;
             }
 
-            // Overlay text commands
+            // Text overlay text commands
             if (input.IsKeyReleased(Keys.V)) Command_Show("viz");
             if (input.IsKeyReleased(Keys.S)) Command_Show("stats");
             if (input.IsKeyReleased(Keys.D)) Command_Show("debug");
@@ -225,12 +235,10 @@ namespace mhh
             if (input.IsKeyReleased(Keys.P)) Command_Show("popups");
             if (input.IsKeyReleased(Keys.W)) Command_Show("what");
 
-            // ESC to quit
-            if (input.IsKeyReleased(Keys.Escape))
+            // Backspace for immediate JPG screenshot
+            if (input.IsKeyReleased(Keys.Backspace))
             {
-                // set the flag to ensure the render callback starts
-                // short-circuiting before we start releasing stuff
-                CommandRequested = CommandRequest.Quit;
+                CommandRequested = CommandRequest.SnapshotNowJpg;
                 return;
             }
 
