@@ -25,7 +25,7 @@ namespace mhh
         /// and Favorites entries. Call GeneratePlaylist to update
         /// (ie. randomize again at end of playlist).
         /// </summary>
-        public readonly string[] Playlist;
+        public string[] Playlist;
 
         public readonly IReadOnlyList<string> Visualizations;
         public readonly IReadOnlyList<string> Favorites;
@@ -114,32 +114,15 @@ namespace mhh
 
                 case PlaylistOrder.Random:
                     {
+                        Console.WriteLine("\n--------------------------------------------------");
                         var viz = new List<string>(Visualizations);
-                        var faves = new List<string>(Favorites);
-                        while(viz.Count > 0 || faves.Count > 0)
+                        viz.AddRange(Favorites);
+                        while(viz.Count > 0)
                         {
-                            if(faves.Count == 0 || RNG.Next(101) < 50)
-                            {
-                                int v = RNG.Next(viz.Count);
-                                Playlist[i++] = viz[v];
-                                viz.RemoveAt(v);
-                                if(viz.Count == 0)
-                                {
-                                    foreach (var x in faves) Playlist[i++] = x;
-                                    faves.Clear();
-                                }
-                            }
-                            else
-                            {
-                                int f = RNG.Next(faves.Count);
-                                Playlist[i++] = faves[f];
-                                faves.RemoveAt(f);
-                                if(faves.Count == 0)
-                                {
-                                    foreach (var x in viz) Playlist[i++] = x;
-                                    viz.Clear();
-                                }
-                            }
+                            int v = RNG.Next(viz.Count);
+                            Playlist[i++] = viz[v];
+                            Console.WriteLine(viz[v]);
+                            viz.RemoveAt(v);
                         }
                     }
                     break;
