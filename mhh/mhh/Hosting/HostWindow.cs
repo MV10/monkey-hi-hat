@@ -152,8 +152,8 @@ namespace mhh
         }
 
         /// <summary>
-        /// Processes the ESC key to exit the program, or invokes the active visualizer if
-        /// ESC has not been pressed.
+        /// Processes keystrokes, pending requested commands, queued viz/fx configs, and
+        /// polls for Spotify track changes.
         /// </summary>
         protected override void OnUpdateFrame(FrameEventArgs e)
         {

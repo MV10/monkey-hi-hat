@@ -28,6 +28,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="ConfigFiles\version.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="InternalShaders\blank.conf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

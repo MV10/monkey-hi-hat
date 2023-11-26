@@ -71,6 +71,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Installers", "Installers", "{1AB2FA4A-1ACF-46DB-810E-EF120BE4AF91}"
 	ProjectSection(SolutionItems) = preProject
 		..\installers\install.ps1 = ..\installers\install.ps1
+		uninstall.ps1 = uninstall.ps1
+		update.ps1 = update.ps1
 	EndProjectSection
 EndProject
 Global

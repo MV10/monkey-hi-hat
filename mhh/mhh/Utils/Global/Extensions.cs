@@ -12,24 +12,23 @@ namespace mhh
         //-----------------------------------------------------------------------------------------------
         // Temporary
         //-----------------------------------------------------------------------------------------------
-
-        /// <summary>
-        /// TODO: Move the Vector4 implementation into the eyecandy.Shader class
-        /// </summary>
-        public static void SetUniform(this Shader shader, string name, Vector4 data)
-        {
-            if (!shader.UniformLocations.ContainsKey(name)) return;
-            //{
-            //    if (!IgnoredUniformNames.Contains(name))
-            //    {
-            //        ErrorLogging.LibraryError($"{nameof(SetUniform)}", $"No uniform named \"{name}\"; ignoring request.", LogLevel.Information);
-            //        IgnoredUniformNames.Add(name);
-            //    }
-            //    return;
-            //}
-            shader.Use();
-            GL.Uniform4(shader.UniformLocations[name], data);
-        }
+        ///// <summary>
+        ///// TODO: Move the Vector4 implementation into the eyecandy.Shader class
+        ///// </summary>
+        //public static void SetUniform(this Shader shader, string name, Vector4 data)
+        //{
+        //    if (!shader.UniformLocations.ContainsKey(name)) return;
+        //    //{
+        //    //    if (!IgnoredUniformNames.Contains(name))
+        //    //    {
+        //    //        ErrorLogging.LibraryError($"{nameof(SetUniform)}", $"No uniform named \"{name}\"; ignoring request.", LogLevel.Information);
+        //    //        IgnoredUniformNames.Add(name);
+        //    //    }
+        //    //    return;
+        //    //}
+        //    shader.Use();
+        //    GL.Uniform4(shader.UniformLocations[name], data);
+        //}
 
         //-----------------------------------------------------------------------------------------------
         // Caching support

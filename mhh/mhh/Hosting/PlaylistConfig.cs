@@ -114,14 +114,12 @@ namespace mhh
 
                 case PlaylistOrder.Random:
                     {
-                        Console.WriteLine("\n--------------------------------------------------");
                         var viz = new List<string>(Visualizations);
                         viz.AddRange(Favorites);
                         while(viz.Count > 0)
                         {
                             int v = RNG.Next(viz.Count);
                             Playlist[i++] = viz[v];
-                            Console.WriteLine(viz[v]);
                             viz.RemoveAt(v);
                         }
                     }
