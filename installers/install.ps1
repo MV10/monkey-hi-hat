@@ -1,14 +1,23 @@
+################################################################################
 #
-# Monkey-Hi-Hat Windows Install Script
+# Monkey-Hi-Hat Windows Install / Uninstall Script
 # https://github.com/MV10/monkey-hi-hat
 #
-# Requires Internet access and administrator rights.
-# All output is logged to mhh-install.log in user's temp directory.
+# Requires Internet access and administrator rights (it will re-launch itself
+# requesting admin rights via UAC pop-up if not provided at startup).
 #
-# TODO list (possibly):
+# All output is logged to install-monkey-hi-hat.log in user's temp directory.
 #
-# Create uninstall script. (Register with Windows app list?)
+# Run with "u" to uninstall. This is version-specific. The 3.0.0 script can't
+# identify the app version, but 3.1.0 and later can (and won't run against the
+# wrong version). Get the correct version from the repository's Releases page.
+# The user will be prompted about each installed component (mostly because
+# it isn't possible to determine whether other .NET dependencies exist).
 #
+# TODO:
+# Possibly use SVV to auto-configure the audio loopback driver?
+#
+# TODO:
 # Figure out how to detect Microsoft's ludicrous "Ransomware Protection" system
 # and get the script whitelisted, which appears to only be possible by triggering
 # the *silent* "warning" (utterly dumb-ass design) then walking the user through
@@ -18,13 +27,24 @@
 # (which, stupidly, must install into the users "protected" Documents directory)
 # to analyze and configure the Sound settings after VB-Audio Cable is installed.
 #
-# Provide a separate script to read/log/fix Sound settings on demand.
-#
+# TODO:
 # Offer Virtual Audio Cable (https://vac.muzychenko.net/en/index.htm) as a paid
-# alternative to VB-Audio Cable?
+# alternative to VB-Audio Cable? Is this even legal right now with the bullshit
+# Russia-Russia-Russia Ukraine-grifter-war sanctions, etc?
 #
+################################################################################
+#
+# DEV / TEST NOTES
+#
+# C:\Users\glitch\AppData\Local\Temp
+# C:\ProgramData\Microsoft\Windows\Start Menu\Programs
+#
+################################################################################
 
 using namespace System.IO
+
+# Mode "u" is uninstall
+param($mode="i")
 
 $temp = [Path]::GetTempPath()
 $log = [Path]::Combine($temp, "install-monkey-hi-hat.log")
@@ -53,7 +73,6 @@ $openalSoftTemp = [Path]::Combine($temp, "mhh-openalsoft.zip")
 ################################################################################
 # OPERATIONS AND STATIC FUNCTIONS
 ################################################################################
-
 
 # Necessary because a non-interactive session may have been launched
 function PauseExit
@@ -108,9 +127,9 @@ function EndScript
     Output-Log "`nRemoving temp directory."
     Remove-Item -Path $unzipPath -Recurse -Force
 
-    Output-Log "`nInstallation ended: $([DateTime]::Now)"
+    Output-Log "`nJob ended: $([DateTime]::Now)"
 
-    Write-Host "Install log can be reviewed at:`n$log"
+    Write-Host "Log can be reviewed at:`n$log"
     PauseExit
 }
 
@@ -128,19 +147,74 @@ class Installer
     }
 }
 
+function DownloadDotnet
+{
+    Output ".NET runtime installer..."
+    Output-Log "  From: $dotnetUrl"
+    Output-Log "  Save: $dotnetTemp"
+    try
+    {
+        Invoke-WebRequest -Uri $dotnetUrl -OutFile $dotnetTemp
+    }
+    catch
+    {
+        Output "Fatal error, download failed:`n$($PSItem.ToString())"
+        EndScript
+    }
+}
+
+function DownloadVBCable
+{
+    Output "VB-Cable audio loopback driver installer..."
+    Output-Log "  From: $driverUrl"
+    Output-Log "  Save: $driverTemp"
+    try
+    {
+        Invoke-WebRequest -Uri $driverUrl -OutFile $driverTemp
+    }
+    catch
+    {
+        Output "Fatal error, download failed:`n$($PSItem.ToString())"
+        EndScript
+    }
+}
+
+function DownloadLegacyOpenAL
+{
+    Output "Legacy OpenAL router installer archive..."
+    Output-Log "  From: $openalLegacyUrl"
+    Output-Log "  Save: $openalLegacyTemp"
+    try
+    {
+        Invoke-WebRequest -Uri $openalLegacyUrl -OutFile $openalLegacyTemp
+    }
+    catch
+    {
+        Output "Fatal error, download failed:`n$($PSItem.ToString())"
+        EndScript
+    }
+}
+
 
 ################################################################################
 # ANALYZE SYSTEM STATUS
 ################################################################################
 
+################################################################################
+# Ensure we have a valid install / uninstall mode
+if($mode -ne "i" -and $mode -ne "u")
+{
+    "The only available command-line switch is 'u' to uninstall."
+    PauseExit
+}
 
 ################################################################################
 # Restart as admin (with UAC prompt) if needed
 
 if (-not (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) 
 {
-	$args = "& '" + $myInvocation.MyCommand.Definition + "'"
-	Start-Process powershell -Verb runAs -ArgumentList $args
+	$processArgs = "& '$($myInvocation.MyCommand.Definition)' $mode"
+	Start-Process powershell -Verb runAs -ArgumentList $processArgs
 	exit
 }
 
@@ -153,20 +227,17 @@ if(([System.Environment]::OSVersion.Version.Major -ne "10") -or -not([Environmen
     PauseExit
 }
 
-
 ################################################################################
 # No fatal errors, start logging
 
 Output-Log "`n------------------------------------------------"
-Output-Log "Installation started: $([DateTime]::Now)"
+Output-Log "$(if($mode -eq "i") {"I"} else {"Uni"})nstallation started: $([DateTime]::Now)"
 Output "`n`nCollecting system information:"
-
 
 ################################################################################
 # Create temp unzip directory
 
 [void][Directory]::CreateDirectory($unzipPath)
-
 
 ################################################################################
 # Check .NET runtime installation
@@ -187,7 +258,6 @@ else
     $dotnetOk = $false
 }
 
-
 ################################################################################
 # Check VB-Audio Cable installation
 
@@ -207,7 +277,6 @@ else
     $audioDriverOk = $false
 }
 
-
 ################################################################################
 # Check for OpenAL installations
 
@@ -223,7 +292,6 @@ $openalSoftOk = Test-Path($target);
 $target = [Path]::Combine($env:windir, "SysWOW64", "soft_oal.dll")
 $openalSoftOk = ($openalSoftOk -and (Test-Path($target)))
 
-
 ################################################################################
 # Check for existing MHH installation at default path
 
@@ -231,7 +299,6 @@ Output "Checking for existing application."
 $target = [Path]::Combine($programPath, "mhh.exe")
 Output-Log "Target $target"
 $programExists = Test-Path($target)
-
 
 ################################################################################
 # Check for MHH content at default path
@@ -243,11 +310,10 @@ $contentExists = Test-Path($target)
 
 
 ################################################################################
-# REPORT PRE-INSTALL STATUS
+# REPORT EXISTING SYSTEM STATUS
 ################################################################################
 
-
-Output "`n`nPre-install status:"
+Output "`n`nExisting system status:"
 Output ".NET runtime version $dotnetVer installed? $dotnetOk"
 Output "VB-Audio Cable loopback driver installed? $audioDriverOk"
 Output "OpenAL legacy router installed? $openalLegacyOk"
@@ -255,11 +321,249 @@ Output "OpenAL-Soft library installed? $openalSoftOk"
 Output "Installation found at default location? $programExists"
 Output "Content found at default location? $contentExists"
 
+$options = New-Object System.Collections.Generic.List[string]
+
+
+################################################################################
+################################################################################
+################################################################################
+# BEGIN UNINSTALL (IN A BIG-ASS "IF" BLOCK BECAUSE PS LACKS A FRIGGING "GOTO")
+################################################################################
+################################################################################
+################################################################################
+if($mode -eq "u")
+{
+
+
+################################################################################
+# UNINSTALL: OPTION PROMPTS
+################################################################################
+
+$removeProgram = $programExists -or $contentExists
+$removeDotnet = $dotnetOk
+$removeAudio = $audioDriverOk -or $openalLegacyOk -or $openalSoftOk
+
+Output "`n`nUninstall options:"
+
+################################################################################
+# Remove the application and content?
+
+if($removeProgram)
+{
+    Output "`nThe program and/or visualizer content was found. Removing this"
+    Output "will also remove installer-generated app launch options as well as"
+    Output "the program configuration file."
+    Output "Remove the program and associated content?"
+    if(-not [Installer]::YesNo())
+    {
+        $removeProgram = $false
+        $options.Add("The program and/or content will NOT be removed.")
+        $options.Add("If the .NET $dotnetVer runtime or audio drivers are removed, the app will not work.")
+    }
+    else
+    {
+        $options.Add("The program, config, content, and app launch options will be removed.")
+    }
+}
+
+################################################################################
+# Remove the .NET runtime?
+
+if($removeDotnet)
+{
+    Output "`nThe .NET $dotnetVer runtime is installed. It is not possible to determine"
+    Output "if other applications depend upon this runtime. It is safe to leave it"
+    Output "installed unless you know this program is the only thing that uses it. If"
+    Output "you remove it now, then later discover it was needed, you can download the"
+    Output "installer from Microsoft (check the app Wiki QuickStart for help)."
+    Output "Remove the .NET $dotnetVer runtime?"
+    if(-not [Installer]::YesNo())
+    {
+        $removeDotnet = $false
+        $options.Add("The .NET $dotnetVer runtime will NOT be removed.")
+    }
+    else
+    {
+        $options.Add("The .NET $dotnetVer runtime will be removed.")
+    }
+}
+
+################################################################################
+# Remove audio support?
+
+if($removeAudio)
+{
+    Output "`nThe loopback audio driver and/or OpenAL libraries are installed."
+    Output "Remove audio support?"
+    if(-not [Installer]::YesNo())
+    {
+        $removeAudio = $false
+        $options.Add("Audio driver/library support will NOT be removed.")
+    }
+    else
+    {
+        $options.Add("Audio driver/libraries will be removed.")
+    }
+}
+
+################################################################################
+# Summarize options
+
+Output "`n`nSummary of uninstall tasks:`n"
+Output ($options -join "`n")
+
+if(-not $removeProgram -and -not $removeDotnet -and -not $removeAudio)
+{
+    Output "`n`nNo uninstall tasks were requested. Aborting uninstall."
+    EndScript
+}
+
+
+################################################################################
+# UNINSTALL: DOWNLOADS
+################################################################################
+
+Output "`n`nDownloading files:`n"
+
+if($removeDotnet) { DownloadDotnet }
+if($removeAudio -and $audioDriverOk) { DownloadVBCable }
+if($removeAudio -and $openalLegacyOk) { DownloadLegacyOpenAL }
+
+
+################################################################################
+# UNINSTALL: PROCESSING
+################################################################################
+
+Output "`n`nUninstalling requested items:"
+
+################################################################################
+# Remove .NET runtime
+
+if($removeDotnet)
+{
+    Output "`nRemoving .NET runtime..."
+    $Error.Clear()
+    try
+    {
+        Output-Log "Invoking command:`n$dotnetTemp /uninstall /quiet /norestart"
+        Start-Process -FilePath $dotnetTemp -ArgumentList "/uninstall", "/quiet", "/norestart" -WorkingDirectory $temp -Wait -Verb RunAs
+    } 
+    catch { }
+
+    if($Error.Count -gt 0)
+    {
+        Output "Aborting, error uninstalling .NET runtime."
+        Output-List "dotnet runtime uninstall" $Error
+        EndScript
+    }
+}
+
+################################################################################
+# Uninstall VB-Cable
+
+if($removeAudio -and -$audioDriverOk)
+{
+    Output "`nRemoving audio loopback driver..."
+    $Error.Clear()
+    try
+    {
+        Unzip($driverTemp)
+        $cmd = [Path]::Combine($unzipPath, "VBCABLE_Setup_x64.exe")
+        Output-Log "Invoking command:`n$cmd -u -h"
+        Start-Process -FilePath $cmd -ArgumentList "-u", "-h" -WorkingDirectory $unzipPath -Wait -Verb RunAs
+    } 
+    catch { }
+
+    if($Error.Count -gt 0)
+    {
+        Output "Aborting, error uninstalling VB-Audio Cable loopback driver."
+        Output-List "loopback driver uninstall" $Error
+        EndScript
+    }
+}
+
+################################################################################
+# Uninstall legacy OpenAL router library
+
+if($removeAudio -and $openalLegacyOk)
+{
+    Output "`nRemoving OpenAL legacy router..."
+    $Error.Clear()
+    try
+    {
+        Unzip($openalLegacyTemp)
+        $cmd = [Path]::Combine($unzipPath, "oalinst.exe")
+        Output-Log "Invoking command:`n$cmd /u /s"
+        Start-Process -FilePath $cmd -ArgumentList "/u", "/s" -WorkingDirectory $unzipPath -Wait -Verb RunAs
+    }
+    catch { }
+
+    if($Error.Count -gt 0)
+    {
+        Output "Aborting, error uninstalling OpenAL legacy router."
+        Output-List "OpenAL router uninstall" $Error
+        EndScript
+    }
+}
+
+################################################################################
+# Simple file deletions (program, content, shortcuts, OpenAL-Soft)
+
+if($removeAudio -and $openalSoftOk)
+{
+    Output "`nRemoving OpenAL-Soft libraries..."
+
+    $target = [Path]::Combine($env:windir, "System32", "soft_oal.dll")
+    Remove-Item -Path $target -ErrorAction Ignore
+
+    $target = [Path]::Combine($env:windir, "SysWOW64", "soft_oal.dll")
+    Remove-Item -Path $target -ErrorAction Ignore
+}
+
+if($removeProgram -and $programExists)
+{
+    Output "`nRemoving program, shortcuts, and startup settings..."
+    Remove-Item -Path $programPath -Recurse -ErrorAction Ignore
+
+    $target = [System.Environment]::GetFolderPath("CommonStartMenu")
+    $target = [Path]::Combine($target, "Programs", "Monkey-Hi-Hat")
+    Remove-Item -Path $target -ErrorAction Ignore
+
+    $target = [Path]::Combine($env:USERPROFILE, "Desktop", "Monkey Hi Hat.lnk")
+    Remove-Item -Path $target -ErrorAction Ignore
+
+    $target = [System.Environment]::GetFolderPath("CommonStartMenu")
+    $target = [Path]::Combine($target, "Programs", "Startup", "Monkey Hi Hat.lnk")
+    Remove-Item -Path $target -ErrorAction Ignore
+}
+
+if($removeProgram -and $contentExists)
+{
+    Output "`nRemoving content directories..."
+    Remove-Item -Path $contentPath -Recurse -ErrorAction Ignore
+}
+
+
+################################################################################
+# UNINSTALL: EXIT
+################################################################################
+
+Output "`n`nUninstall has been completed."
+EndScript
+
+}
+################################################################################
+################################################################################
+################################################################################
+# INSTALLATION CONTINUES BELOW (END OF UNINSTALL "IF" BLOCK)
+################################################################################
+################################################################################
+################################################################################
+
 
 ################################################################################
 # OPTION PROMPTS
 ################################################################################
-
 
 $installDotnet = -not $dotnetOk
 $installDriver = -not $audioDriverOk
@@ -272,9 +576,6 @@ $startHotkey = $false
 $startBootUp = $false
 
 Output "`n`nInstallation options:"
-
-$options = New-Object System.Collections.Generic.List[string]
-
 
 ################################################################################
 # Install .NET runtime?
@@ -289,7 +590,6 @@ if($installDotnet)
     }
     $options.Add("The .NET $dotnetVer runtime will be installed")
 }
-
 
 ################################################################################
 # Install VB-Audio Cable driver?
@@ -311,7 +611,6 @@ if($installDriver)
     }
 }
 
-
 ################################################################################
 # Install OpenAL libraries?
 
@@ -330,7 +629,6 @@ if($installOpenAL)
         $options.Add("The OpenAL and/or OpenAL-Soft libraries will be installed.")
     }
 }
-
 
 ################################################################################
 # Install or overwrite program?
@@ -354,7 +652,6 @@ else
 {
     $options.Insert(0, "The Monkey-Hi_hat program will be installed to $programPath")
 }
-
 
 ################################################################################
 # Install or overwrite content?
@@ -386,7 +683,6 @@ else
         $options.Insert(2, "The program will be configured to use this content location.")
     }
 }
-
 
 ################################################################################
 # App launch options
@@ -432,7 +728,6 @@ else
     $options.Add("The application isn't being installed and wasn't found, so shortcut/startup options aren't available.")
 }
 
-
 ################################################################################
 # Summarize options
 
@@ -444,68 +739,14 @@ Output ($options -join "`n")
 # DOWNLOADS
 ################################################################################
 
-
 Output "`n`nDownloading files:`n"
 
-
 ################################################################################
-# Download .NET runtime installer
+# Invoke downloaders shared by install and uninstall processes
 
-if($installDotnet)
-{
-    Output ".NET runtime installer..."
-    Output-Log "  From: $dotnetUrl"
-    Output-Log "  Save: $dotnetTemp"
-    try
-    {
-        Invoke-WebRequest -Uri $dotnetUrl -OutFile $dotnetTemp
-    }
-    catch
-    {
-        Output "Fatal error, download failed:`n$($PSItem.ToString())"
-        EndScript
-    }
-}
-
-
-################################################################################
-# Download VB-Cable installer archive
-
-if($installDriver)
-{
-    Output "VB-Cable audio loopback driver installer..."
-    Output-Log "  From: $driverUrl"
-    Output-Log "  Save: $driverTemp"
-    try
-    {
-        Invoke-WebRequest -Uri $driverUrl -OutFile $driverTemp
-    }
-    catch
-    {
-        Output "Fatal error, download failed:`n$($PSItem.ToString())"
-        EndScript
-    }
-}
-
-
-################################################################################
-# Download OpenAL legacy installer archive
-
-if(-not $openalLegacyOk -and $installOpenAL)
-{
-    Output "Legacy OpenAL router installer archive..."
-    Output-Log "  From: $openalLegacyUrl"
-    Output-Log "  Save: $openalLegacyTemp"
-    try
-    {
-        Invoke-WebRequest -Uri $openalLegacyUrl -OutFile $openalLegacyTemp
-    }
-    catch
-    {
-        Output "Fatal error, download failed:`n$($PSItem.ToString())"
-        EndScript
-    }
-}
+if($installDotnet) { DownloadDotnet }
+if($installDriver) { DownloadVBCable }
+if(-not $openalLegacyOk -and $installOpenAL) { DownloadLegacyOpenAL }
 
 
 ################################################################################
@@ -527,7 +768,6 @@ if(-not $openalSoftOk -and $installOpenAL)
     }
 }
 
-
 ################################################################################
 # Download MHH application archive
 
@@ -546,7 +786,6 @@ if($installProgram)
         EndScript
     }
 }
-
 
 ################################################################################
 # Download MHH content archive
@@ -568,14 +807,11 @@ if($installContent)
 }
 
 
-
-
 ################################################################################
 # PROCESSING
 ################################################################################
 
 Output "`n`nInstalling requested items:"
-
 
 ################################################################################
 # Run .NET installer
@@ -599,7 +835,6 @@ if($installDotnet)
         EndScript
     }
 }
-
 
 ################################################################################
 # Run VB-Cable installation
@@ -625,7 +860,6 @@ if($installDriver)
     }
 }
 
-
 ################################################################################
 # Unzip and run OpenAL legacy installer
 
@@ -638,7 +872,7 @@ if(-not $openalLegacyOk -and $installOpenAL)
         Unzip($openalLegacyTemp)
         $cmd = [Path]::Combine($unzipPath, "oalinst.exe")
         Output-Log "Invoking command:`n$cmd /s"
-        Start-Process -FilePath $cmd -ArgumentList "/s", "-h" -WorkingDirectory $unzipPath -Wait -Verb RunAs
+        Start-Process -FilePath $cmd -ArgumentList "/s" -WorkingDirectory $unzipPath -Wait -Verb RunAs
     }
     catch { }
 
@@ -649,7 +883,6 @@ if(-not $openalLegacyOk -and $installOpenAL)
         EndScript
     }
 }
-
 
 ################################################################################
 # Unzip and copy OpenAL-Soft files
@@ -684,7 +917,6 @@ if(-not $openalSoftOk -and $installOpenAL)
     }
 }
 
-
 ################################################################################
 # Unzip application over any existing install
 
@@ -713,7 +945,6 @@ if($installProgram)
     }
 }
 
-
 ################################################################################
 # Remove existing content directories
 
@@ -727,7 +958,6 @@ if($installContent)
     Remove-Item -Path $([Path]::Combine($contentPath, "templates")) -Recurse -ErrorAction Ignore
     Remove-Item -Path $([Path]::Combine($contentPath, "textures")) -Recurse -ErrorAction Ignore
 }
-
 
 ################################################################################
 # Unzip MHH content
@@ -756,7 +986,6 @@ if($installContent)
         EndScript
     }
 }
-
 
 ################################################################################
 # If mhh.config doesn't exist, copy and update it
@@ -820,13 +1049,34 @@ if($installProgram -or $installContent)
     }
 }
 
-
 ################################################################################
-# Set config file and content directory permissions
+# Set directory permissions
 
 # https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.filesystemrights?view=windowsdesktop-5.0
 # https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.inheritanceflags?view=windowsdesktop-5.0
 # https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.propagationflags?view=windowsdesktop-5.0
+
+# While setting mhh.conf permissions is technically "more correct" ... it's easier to
+# simply open up access to the entire application directory (above) -- users can create backup
+# configurations, alternate configurations, etc.
+#if($mhhConfUpdated)
+#{
+#    Output "Setting write permissions for `"Users`" group on configuration file..."
+#    $target = [Path]::Combine($programPath, "mhh.conf")
+#    $acl = Get-Acl -Path $target
+#    $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Users", "Write", "0", "0", "Allow")
+#    $acl.SetAccessRule($rule)
+#    $acl | Set-Acl -Path $target
+#}
+
+if($installProgram)
+{
+    Output "Setting write permissions for `"Users`" group on application directory..."
+    $acl = Get-Acl -Path $programPath
+    $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Users", "Write", "3", "0", "Allow")
+    $acl.SetAccessRule($rule)
+    $acl | Set-Acl -Path $programPath
+}
 
 if($installContent)
 {
@@ -837,25 +1087,13 @@ if($installContent)
     $acl | Set-Acl -Path $contentPath
 }
 
-if($mhhConfUpdated)
-{
-    Output "Setting write permissions for `"Users`" group on configuration file..."
-    $target = [Path]::Combine($programPath, "mhh.conf")
-    $acl = Get-Acl -Path $target
-    $rule = New-Object System.Security.AccessControl.FileSystemAccessRule("Users", "Write", "0", "0", "Allow")
-    $acl.SetAccessRule($rule)
-    $acl | Set-Acl -Path $target
-}
-
-
-
 ################################################################################
 # Shortcut and startup options
 
 if($startMenu -or $startDesktop -or $startBootUp)
 {
     Output "`nCreating shortcuts and startup settings..."
-    $shell = New-Object -ComObject WScript.Shell
+    $shell = New-Object -ComObject "WScript.Shell"
     # https://ss64.com/vb/shortcut.html
 
     if($startMenu)
@@ -905,7 +1143,6 @@ if($startMenu -or $startDesktop -or $startBootUp)
         }
     }
 
-
     if($startBootUp)
     {
         $path = [System.Environment]::GetFolderPath("CommonStartMenu")
@@ -929,13 +1166,11 @@ if($startMenu -or $startDesktop -or $startBootUp)
 }
 
 
-
 ################################################################################
 # PREPARE TO EXIT
 ################################################################################
 
 Output "`n`nInstallation has been completed."
-
 
 ################################################################################
 # Offer step-by-step help for VB-Audio Cable configuration
@@ -978,7 +1213,6 @@ if($installDriver)
     }
 }
 
-
 ################################################################################
 # Offer to open browser to VB-Audio Cable configuration help
 
@@ -992,7 +1226,6 @@ if($installDriver)
         Start-Process $audioConfigUrl
     }
 }
-
 
 ################################################################################
 # Remind user to register Cable, offer to open browser to the VB-Audio store
@@ -1009,18 +1242,3 @@ if($installDriver)
 }
 
 EndScript
-
-#
-# DEV / TEST NOTES
-#
-# Uninstall commands for the various products:
-#
-# dotnet     installer /uninstall /quiet
-# vbcable    vbcable_setup_x64 -u -h
-# openal     oalinst /u /s
-#
-# Directories:
-#
-# C:\Users\glitch\AppData\Local\Temp
-# C:\ProgramData\Microsoft\Windows\Start Menu\Programs
-#
