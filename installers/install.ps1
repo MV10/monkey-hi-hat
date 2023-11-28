@@ -50,11 +50,12 @@ $temp = [Path]::GetTempPath()
 $log = [Path]::Combine($temp, "install-monkey-hi-hat.log")
 $unzipPath = [Path]::Combine($temp, "mhh-unzip")
 
-$dotnetVer = "6"
-$dotnetUrl = "https://download.visualstudio.microsoft.com/download/pr/62bf9f50-dcd9-4e4c-ac02-4d355efb914d/a56b37b98cb07899cd8c44fa7d50dff3/dotnet-runtime-6.0.24-win-x64.exe"
+$programVer = "3.1.0"
+$dotnetVer = "8"
+$dotnetUrl = "https://download.visualstudio.microsoft.com/download/pr/7f4d5cbc-4449-4ea5-9578-c467821f251f/b9b19f89d0642bf78f4b612c6a741637/dotnet-runtime-8.0.0-win-x64.exe"
 $driverUrl = "https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack43.zip"
-$programUrl = "https://mcguirev10.com/assets/misc/mhh-app.bin"
-$contentUrl = "https://mcguirev10.com/assets/misc/mhh-content.bin"
+$programUrl = "https://mcguirev10.com/assets/misc/mhh-app-3-1-0.bin"
+$contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-3-1-0.bin"
 $openalLegacyUrl = "https://openal.org/downloads/oalinst.zip"
 $openalSoftUrl = "https://www.openal-soft.org/openal-binaries/openal-soft-1.23.1-bin.zip"
 $audioConfigUrl = "https://github.com/MV10/monkey-hi-hat/wiki/Post%E2%80%90Install%E2%80%90Instructions"
@@ -129,7 +130,7 @@ function EndScript
 
     Output-Log "`nJob ended: $([DateTime]::Now)"
 
-    Write-Host "Log can be reviewed at:`n$log"
+    Write-Host "`n`nLog can be reviewed at:`n$log"
     PauseExit
 }
 
@@ -231,7 +232,7 @@ if(([System.Environment]::OSVersion.Version.Major -ne "10") -or -not([Environmen
 # No fatal errors, start logging
 
 Output-Log "`n------------------------------------------------"
-Output-Log "$(if($mode -eq "i") {"I"} else {"Uni"})nstallation started: $([DateTime]::Now)"
+Output-Log "$(if($mode -eq "i") {"I"} else {"Uni"})nstallation for version $programVer started: $([DateTime]::Now)"
 Output "`n`nCollecting system information:"
 
 ################################################################################
@@ -333,6 +334,31 @@ $options = New-Object System.Collections.Generic.List[string]
 ################################################################################
 if($mode -eq "u")
 {
+
+
+################################################################################
+# UNINSTALL: VERSION CHECK
+################################################################################
+
+if($programExists)
+{
+    $path = [Path]::Combine($programPath, "ConfigFiles", "version.txt")
+    if(TestPath($path))
+    {
+        $ver = Get-Content $path -First 1
+        if($ver -ne $programVer)
+        {
+            Output "`n`nVersion $ver is installed"
+            Output "Aborting, this script can only uninstall version $programVer"
+            EndScript
+        }
+    }
+    else
+    {
+        Output "`n`nAborting, this script can only uninstall version $programVer"
+        EndScript
+    }
+}
 
 
 ################################################################################
@@ -1233,7 +1259,7 @@ if($installDriver)
 if($installDriver)
 {
     "`nThe VB-Audio Cable loopback driver is shareware. It is not free. If you"
-    "continue using this driver, please send $5 to the author to support his work."
+    "continue using this driver, please send `$5 to the author to support his work."
     "Would you like to view the payment page in your default browser now?"
     if([Installer]::YesNo())
     {
