@@ -2,17 +2,17 @@
 
 ## **Streaming Music Visualizer**
 
-> Version 3.0.0 has been [released](https://github.com/MV10/monkey-hi-hat/releases)!
+> Version 3.1.0 has been [released](https://github.com/MV10/monkey-hi-hat/releases)!
 
 Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC. The program and all content are 100% free, and I encourage the public to contribute new visualizations.
 
-**NEW:** Version 3.0 includes an easy-to-use install script.
+**NEW:** Version 3 releases include an easy-to-use install script.
 
 ## Basic Details
 
 All important documentation has been moved to the [wiki](https://github.com/MV10/monkey-hi-hat/wiki).
 
-It requires .NET 6, an OpenGL 4.6 GPU and drivers, and it runs under Windows 10, and Windows 11. It should run under Linux, too, although I haven't done extensive testing recently. Setup details are covered in the _Quick Start_ sections of the Wiki.
+It requires .NET 8, an OpenGL 4.6 GPU and drivers, and it runs under Windows 10, and Windows 11. Linux support was temporarily removed, but a bug has been fixed and Linux x64 testing will begin shortly. A tar.gz archive will be added to the release page once everything is verified working. Setup details are covered in the _Quick Start_ sections of the Wiki.
 
 The program intercepts audio using OpenAL and my [eyecandy](https://github.com/MV10/eyecandy) audio-to-texture library, allowing the creation of various audio-reactive OpenGL shaders as interesting visualizations to accompany the music. Playlists of these visualizations can be created with various criteria for rotating among the listed shaders.
 
