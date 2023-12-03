@@ -147,8 +147,7 @@ namespace mhh
             CalculateFPS();
 
             // Starts hidden to avoid a white flicker before the first frame is rendered.
-            //  Unable to start NativeWindow hidden #1632 
-            //if (!IsVisible) IsVisible = true;
+            if (!IsVisible) IsVisible = true;
         }
 
         /// <summary>

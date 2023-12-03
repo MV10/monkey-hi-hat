@@ -403,11 +403,15 @@ namespace mhh
                     HideMousePointer = AppConfig.HideMousePointer,
                 };
                 WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
-                WindowConfig.OpenTKNativeWindowSettings.Size = (AppConfig.SizeX, AppConfig.SizeY);
+                WindowConfig.OpenTKNativeWindowSettings.ClientSize = (AppConfig.SizeX, AppConfig.SizeY);
                 WindowConfig.OpenTKNativeWindowSettings.APIVersion = OpenGLVersion;
                 WindowConfig.OpenTKGameWindowSettings.UpdateFrequency = AppConfig.FrameRateLimit;
-                // OpenTK 4.8 obsoleted the separate RenderFrequency setting :(
                 WindowConfig.OpenTKNativeWindowSettings.Vsync = AppConfig.VSync;
+                WindowConfig.OpenTKNativeWindowSettings.AutoIconify = AppConfig.FullscreenMinimizeOnFocusChange;
+
+                // Starts hidden to avoid a white flicker before the first frame is rendered.
+                // Window is made visible by OnRenderFrame.
+                WindowConfig.OpenTKNativeWindowSettings.StartVisible = false;
 
                 // Spin up the window and get the show started
                 AppWindow = new(WindowConfig, AudioConfig);
