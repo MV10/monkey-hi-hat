@@ -70,6 +70,7 @@ public class TextRenderer : IRenderer
         GL.Clear(ClearBufferMask.ColorBufferBit);
 
         TextShader.Use();
+        TextShader.ResetUniforms();
         TextShader.SetUniform("resolution", Resolution);
         TextShader.SetTexture("base_image", BaseImage.TextureHandle, BaseImage.TextureUnit);
         TextShader.SetTexture("text", TextData.TextureHandle, TextData.TextureUnit);

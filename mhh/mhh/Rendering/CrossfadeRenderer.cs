@@ -92,6 +92,7 @@ public class CrossfadeRenderer : IRenderer
         GL.Viewport(0, 0, RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         CrossfadeShader.Use();
+        CrossfadeShader.ResetUniforms();
         CrossfadeShader.SetUniform("fadeLevel", fadeLevel);
         CrossfadeShader.SetTexture("oldBuffer", oldResource.TextureHandle, oldResource.TextureUnit);
         CrossfadeShader.SetTexture("newBuffer", newResource.TextureHandle, newResource.TextureUnit);

@@ -63,6 +63,8 @@ public class SimpleRenderer : IRenderer
     {
         var timeUniform = TrueElapsedTime() + ClockOffset;
 
+        Shader.Use();
+        Shader.ResetUniforms();
         Program.AppWindow.Eyecandy.SetTextureUniforms(Shader);
         RenderingHelper.SetGlobalUniforms(Shader, Config.Uniforms);
         Shader.SetUniform("resolution", ViewportResolution);

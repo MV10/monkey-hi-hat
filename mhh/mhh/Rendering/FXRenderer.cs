@@ -153,6 +153,8 @@ public class FXRenderer : IRenderer
         // skip(1) because pass 0 is handled above
         foreach (var pass in ShaderPasses.Skip(1))
         {
+            pass.Shader.Use();
+            pass.Shader.ResetUniforms();
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
             RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms, PrimaryFXUniforms);
             RenderingHelper.SetTextureUniforms(Textures, pass.Shader);
@@ -208,6 +210,7 @@ public class FXRenderer : IRenderer
             GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             CrossfadeShader.Use();
+            CrossfadeShader.ResetUniforms();
             CrossfadeShader.SetUniform("fadeLevel", fadeLevel);
             CrossfadeShader.SetTexture("oldBuffer", ShaderPasses[0].Drawbuffers.TextureHandle, ShaderPasses[0].Drawbuffers.TextureUnit);
             CrossfadeShader.SetTexture("newBuffer", FinalDrawbuffers.TextureHandle, FinalDrawbuffers.TextureUnit);
