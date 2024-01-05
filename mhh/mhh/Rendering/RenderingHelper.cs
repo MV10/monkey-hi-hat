@@ -113,32 +113,40 @@ public static class RenderingHelper
     {
         if (!configSource.Content.ContainsKey("textures")) return null;
 
-        var textureDefs = configSource.Content["textures"];
+        var rand = new Random();
+
+        // key is uniform name, List is filenames (>1 means choose one at random)
+        Dictionary<string, List<string>> textureDefs = new();
+        foreach(var tex in configSource.Content["textures"])
+        {
+            var parts = tex.Value.Split(':', Const.SplitOptions);
+            if (parts.Length == 2)
+            {
+                var uniform = parts[0];
+                var filename = parts[1];
+                if (!textureDefs.ContainsKey(uniform)) textureDefs.Add(uniform, new());
+                if (!textureDefs[uniform].Contains(filename)) textureDefs[uniform].Add(filename);
+            }
+        }
+
         var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, textureDefs.Count);
         int i = 0;
         foreach (var tex in textureDefs)
         {
             var res = resources[i++];
 
-            var parts = tex.Value.Split(':', Const.SplitOptions);
-            if(parts.Length == 2)
+            res.Filename = tex.Value[rand.Next(tex.Value.Count)];
+            
+            var uniformName = tex.Key;
+            if (uniformName.EndsWith("!"))
             {
-                res.Filename = parts[1];
-
-                if (parts[0].EndsWith("!"))
-                {
-                    res.UniformName = parts[0].Substring(0, tex.Key.Length - 1);
-                    res.ImageLoaded = LoadImageFile(res, TextureWrapMode.ClampToEdge);
-                }
-                else
-                {
-                    res.UniformName = parts[0];
-                    res.ImageLoaded = LoadImageFile(res);
-                }
+                res.UniformName = uniformName.Substring(0, uniformName.Length - 1);
+                res.ImageLoaded = LoadImageFile(res, TextureWrapMode.ClampToEdge);
             }
             else
             {
-                res.ImageLoaded = false;
+                res.UniformName = uniformName;
+                res.ImageLoaded = LoadImageFile(res);
             }
         }
 
