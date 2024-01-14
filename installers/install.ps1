@@ -1,10 +1,23 @@
 ################################################################################
 #
+# IF THIS FILE OPENS IN AN EDITOR INSTEAD OF RUNNING:
+#
+#   1. From your Start menu, run "powershell" to load the scripting console
+#   2. Run this command:  Set-ExecutionPolicy Unrestricted -Scope CurrentUser
+#   3. Right-click the ps1 file again and choose "Run with PowerShell"
+#
+# To re-enable Microsoft's short-sighted and unhelpful restrictions:
+#
+#   1. From your Start menu, run "powershell" to load the scripting console
+#   2. Run this command:  Set-ExecutionPolicy Undefined -Scope CurrentUser
+#
+################################################################################
+#
 # Monkey-Hi-Hat Windows Install / Uninstall Script
 # https://github.com/MV10/monkey-hi-hat
 #
-# Requires Internet access and administrator rights (it will re-launch itself
-# requesting admin rights via UAC pop-up if not provided at startup).
+# Requires Internet access and administrator rights, but it will relaunch itself
+# requesting admin rights via UAC pop-up if not provided at startup.
 #
 # All output is logged to install-monkey-hi-hat.log in user's temp directory.
 #
