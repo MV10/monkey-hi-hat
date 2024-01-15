@@ -26,14 +26,24 @@ internal static class PathHelper
     }
 
     public static IReadOnlyList<string> GetConfigFiles(string pathspec)
+        => GetWildcardFiles(pathspec, "*.conf");
+
+    public static IReadOnlyList<string> GetWildcardFiles(string pathspec, string filespec, bool returnFullPathname = false)
     {
         List<string> list = new();
         var paths = pathspec.Split(';', Const.SplitOptions);
         foreach (var path in paths)
         {
-            foreach (var filename in Directory.EnumerateFiles(path, "*.conf"))
+            foreach (var filename in Directory.EnumerateFiles(path, filespec))
             {
-                list.Add(Path.GetFileNameWithoutExtension(filename));
+                if(returnFullPathname)
+                {
+                    list.Add(filename);
+                }
+                else
+                {
+                    list.Add(Path.GetFileNameWithoutExtension(filename));
+                }
             }
         }
         return list;

@@ -716,6 +716,26 @@ LINE 15");
                 Environment.Exit(-1);
             }
 
+            if(Program.AppConfig.RandomizeCrossfade)
+            {
+                var files = PathHelper.GetWildcardFiles(Program.AppConfig.VisualizerPath, "crossfade_*.frag", returnFullPathname: true);
+                if(files.Count > 0)
+                {
+                    Caching.CrossfadeShaders = new(files.Count);
+                    foreach(var pathname in files)
+                    {
+                        var shader = new CachedShader(Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.vert"), pathname);
+                        if (shader.IsValid) Caching.CrossfadeShaders.Add(shader);
+                    }
+                }
+
+                if(files.Count == 0 || Caching.CrossfadeShaders?.Count == 0)
+                {
+                    LogHelper.Logger?.LogWarning("No crossfade shaders found, or none compiled successfully; disabling RandomizeCrossfade setting.");
+                    Program.AppConfig.RandomizeCrossfade = false;
+                }
+            }
+
             // see property comments for an explanation
             GL.GetInteger(GetPName.MaxCombinedTextureImageUnits, out var maxTU);
             Caching.MaxAvailableTextureUnit = maxTU - 1 - Caching.KnownAudioTextures.Count;

@@ -9,6 +9,8 @@ namespace mhh;
 
 public class CrossfadeRenderer : IRenderer
 {
+    private static Random RNG = new();
+
     public bool IsValid { get; set; } = true;
     public string InvalidReason { get; set; } = string.Empty;
     public string Filename { get; } = string.Empty;
@@ -40,9 +42,21 @@ public class CrossfadeRenderer : IRenderer
     private float DurationMS;
     private Stopwatch Clock = new();
 
+    private float FrameCount = 0;
+    private float RandomRun;
+
     public CrossfadeRenderer(IRenderer oldRenderer, IRenderer newRenderer, Action completionCallback)
     {
-        CrossfadeShader = Caching.CrossfadeShader;
+        if(Program.AppConfig.RandomizeCrossfade)
+        {
+            int i = RNG.Next(Caching.CrossfadeShaders.Count);
+            CrossfadeShader = Caching.CrossfadeShaders[i];
+            LogHelper.Logger?.LogDebug($"Crossfade shader {((CachedShader)CrossfadeShader).Key}");
+        }
+        else
+        {
+            CrossfadeShader = Caching.CrossfadeShader;
+        }
 
         VertQuad = new VertexQuad(); 
         VertQuad.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
@@ -61,6 +75,8 @@ public class CrossfadeRenderer : IRenderer
         RenderingHelper.UseCrossfadeResolutionLimit = true;
         OldRenderer.OnResize();
         NewRenderer.OnResize();
+
+        RandomRun = (float)RNG.NextDouble();
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -93,9 +109,15 @@ public class CrossfadeRenderer : IRenderer
         GL.Clear(ClearBufferMask.ColorBufferBit);
         CrossfadeShader.Use();
         CrossfadeShader.ResetUniforms();
+        RenderingHelper.SetGlobalUniforms(CrossfadeShader);
         CrossfadeShader.SetUniform("fadeLevel", fadeLevel);
+        CrossfadeShader.SetUniform("fadeDuration", (float)Program.AppConfig.CrossfadeSeconds);
         CrossfadeShader.SetTexture("oldBuffer", oldResource.TextureHandle, oldResource.TextureUnit);
         CrossfadeShader.SetTexture("newBuffer", newResource.TextureHandle, newResource.TextureUnit);
+        CrossfadeShader.SetUniform("resolution", Resolution);
+        CrossfadeShader.SetUniform("time", TrueElapsedTime());
+        CrossfadeShader.SetUniform("frame", FrameCount);
+        CrossfadeShader.SetUniform("randomrun", RandomRun);
         VertQuad.RenderFrame(CrossfadeShader);
 
         //...and now AppWindow's OnRenderFrame swaps the back-buffer to the output
@@ -110,6 +132,8 @@ public class CrossfadeRenderer : IRenderer
             CompletionCallback = null;
             NewRenderer.OutputIntercepted = false;
         }
+
+        FrameCount++;
     }
 
     public void OnResize()
@@ -134,7 +158,7 @@ public class CrossfadeRenderer : IRenderer
     }
 
     public float TrueElapsedTime()
-        => OldRenderer?.TrueElapsedTime() ?? 0f;
+        => (float)Clock.Elapsed.TotalSeconds;
 
     public Dictionary<string, float> GetFXUniforms(string fxFilename)
         => new();

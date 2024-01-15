@@ -194,7 +194,7 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Called by VertexSource RenderFrame to set any globally-defined uniforms like randomseed and date.
+    /// Called by Renderer implementations' RenderFrame to set any globally-defined uniforms like randomseed and date.
     /// </summary>
     public static void SetGlobalUniforms(Shader shader, params Dictionary<string, float>[] uniforms)
     {

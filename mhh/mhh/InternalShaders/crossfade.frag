@@ -1,6 +1,11 @@
 ﻿#version 460
 precision highp float;
 
+// This is used when mhh.conf specifies RandomizeCrossfade=false.
+// When enabled, crossfade shaders are loaded from the viz/library
+// paths. See comments in Volt's Laboratory's libraries directory
+// in crossfade_simple.frag for more details.
+
 in vec2 fragCoord;
 uniform float fadeLevel;
 uniform sampler2D oldBuffer;

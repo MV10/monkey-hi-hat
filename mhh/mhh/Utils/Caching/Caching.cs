@@ -28,6 +28,13 @@ public static class Caching
     public static CacheLRU<string, CachedShader> FXShaders;
 
     /// <summary>
+    /// References to compiled crossfade shader programs (stored on the GPU). 
+    /// The key is the combined vert and frag pathnames. Only used when RandomizeCrossfade
+    /// is true, otherwise the internal CrossfadeShader is used.
+    /// </summary>
+    public static List<CachedShader> CrossfadeShaders;
+
+    /// <summary>
     /// References to compiled library shader objects, intended to be linked to full
     /// FX or visualizer shader programs. The key is a container for the pathname and type.
     /// </summary>

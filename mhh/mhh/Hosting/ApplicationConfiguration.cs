@@ -25,6 +25,7 @@ namespace mhh
         public readonly int ShaderCacheSize;
         public readonly int FXCacheSize;
         public readonly int LibraryCacheSize;
+        public bool RandomizeCrossfade; // not readonly, can be disabled during initialization
         public readonly int CrossfadeSeconds;
         public readonly int FrameRateLimit;
         public readonly VSyncMode VSync;
@@ -75,6 +76,7 @@ namespace mhh
             ShaderCacheSize = ConfigSource.ReadValue("setup", "shadercachesize").ToInt32(150);
             FXCacheSize = ConfigSource.ReadValue("setup", "fxcachesize").ToInt32(50);
             LibraryCacheSize = ConfigSource.ReadValue("setup", "librarycachesize").ToInt32(10);
+            RandomizeCrossfade = ConfigSource.ReadValue("setup", "randomizecrossfade").ToBool(false);
             CrossfadeSeconds = ConfigSource.ReadValue("setup", "crossfadeseconds").ToInt32(2);
             FrameRateLimit = ConfigSource.ReadValue("setup", "FrameRateLimit").ToInt32(60);
             VSync = ConfigSource.ReadValue("setup", "vsync").ToEnum(VSyncMode.Off);
