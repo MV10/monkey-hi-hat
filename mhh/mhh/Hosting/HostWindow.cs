@@ -817,6 +817,16 @@ display res: {ClientSize.X} x {ClientSize.Y}";
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade shader");
             Caching.CrossfadeShader.Dispose();
 
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached crossfade shaders");
+            if (Caching.CrossfadeShaders?.Count > 0)
+            {
+                foreach(var s in Caching.CrossfadeShaders)
+                {
+                    s.Dispose();
+                }
+                Caching.CrossfadeShaders = null;
+            }
+
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal text shader");
             Caching.TextShader.Dispose();
 

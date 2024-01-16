@@ -222,7 +222,7 @@ public class TestModeManager : IDisposable
     public void Dispose()
     {
         if (IsDisposed) return;
-        IsDisposed = true;
+
         Mode = TestMode.None;
         ContentIndex = -1;
         TestContent = null;
@@ -234,6 +234,9 @@ public class TestModeManager : IDisposable
         Caching.VisualizerShaders.CachingDisabled = VizCacheSetting;
         Caching.FXShaders.CachingDisabled = FxCacheSetting;
         Caching.LibraryShaders.CachingDisabled = LibCacheSetting;
+
+        IsDisposed = true;
+        GC.SuppressFinalize(true);
     }
     private bool IsDisposed = false;
 }
