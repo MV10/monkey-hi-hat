@@ -30,6 +30,8 @@ namespace mhh
         public readonly int FrameRateLimit;
         public readonly VSyncMode VSync;
         public readonly int UnsecuredPort;
+        public readonly int TestingSkipVizCount;
+        public readonly int TestingSkipFXCount;
 
         public readonly bool StartInStandby;
         public readonly bool CloseToStandby;
@@ -81,6 +83,8 @@ namespace mhh
             FrameRateLimit = ConfigSource.ReadValue("setup", "FrameRateLimit").ToInt32(60);
             VSync = ConfigSource.ReadValue("setup", "vsync").ToEnum(VSyncMode.Off);
             UnsecuredPort = ConfigSource.ReadValue("setup", "unsecuredport").ToInt32(0);
+            TestingSkipVizCount = ConfigSource.ReadValue("setup", "testingskipvizcount").ToInt32(0);
+            TestingSkipFXCount = ConfigSource.ReadValue("setup", "testingskipfxcount").ToInt32(0);
 
             VisualizerPath = ConfigSource.ReadValue(SectionOS, "visualizerpath");
             PlaylistPath = ConfigSource.ReadValue(SectionOS, "playlistpath");

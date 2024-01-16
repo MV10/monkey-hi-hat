@@ -74,4 +74,15 @@ namespace mhh
         Double = 2,
         DoubleFX = 3,
     }
+
+    /// <summary>
+    /// Determines the type of content being handled by TestModeManager.
+    /// </summary>
+    public enum TestMode
+    {
+        None = 0,
+        Viz = 1,
+        FX = 2,
+        Fade = 3,
+    }
 }

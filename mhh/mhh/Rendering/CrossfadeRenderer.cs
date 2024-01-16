@@ -47,15 +47,22 @@ public class CrossfadeRenderer : IRenderer
 
     public CrossfadeRenderer(IRenderer oldRenderer, IRenderer newRenderer, Action completionCallback)
     {
-        if(Program.AppConfig.RandomizeCrossfade)
+        if(Program.AppWindow.Tester is not null && Program.AppWindow.Tester.Mode == TestMode.Fade)
         {
-            int i = RNG.Next(Caching.CrossfadeShaders.Count);
-            CrossfadeShader = Caching.CrossfadeShaders[i];
-            LogHelper.Logger?.LogDebug($"Crossfade shader {((CachedShader)CrossfadeShader).Key}");
+            CrossfadeShader = Program.AppWindow.Tester.CrossfadeShader;
         }
         else
         {
-            CrossfadeShader = Caching.CrossfadeShader;
+            if (Program.AppConfig.RandomizeCrossfade)
+            {
+                int i = RNG.Next(Caching.CrossfadeShaders.Count);
+                CrossfadeShader = Caching.CrossfadeShaders[i];
+                LogHelper.Logger?.LogDebug($"Crossfade shader {((CachedShader)CrossfadeShader).Key}");
+            }
+            else
+            {
+                CrossfadeShader = Caching.CrossfadeShader;
+            }
         }
 
         VertQuad = new VertexQuad(); 

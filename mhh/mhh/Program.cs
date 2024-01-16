@@ -299,6 +299,16 @@ namespace mhh
                     if (args.Length > 1) return ShowHelp();
                     return AppWindow.Command_DisableCaching();
 
+                case "--test":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length != 3) return ShowHelp();
+                    if (!Enum.TryParse<TestMode>(args[1], ignoreCase: true, out var testmode)) return "ERR: Must specify viz, fx, or fade mode";
+                    if (testmode == TestMode.None) return "ERR: Test mode None doesn't accept a filename";
+                    return AppWindow.Command_Test(testmode, args[2]);
+
+                case "--endtest":
+                    return AppWindow.Command_Test(TestMode.None);
+
                 case "--console":
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
@@ -558,6 +568,9 @@ All switches are passed to the already-running instance:
 --fps                       returns instantaneous FPS and average FPS over past 10 seconds
 --fps [0|1-9999]            sets a frame rate (FPS) target, or 0 to disable (some shaders may require 60 FPS)
 --nocache                   disables caching for the remainder of the session (good for testing)
+
+--test [viz|fx|fade] [file] Enters test mode, use +/- to cycle through content
+--endtest                   Exits test mode (loads the idle visualizer)
 
 --standby                   toggles between standby mode and active mode
 --pause                     stops the current shader

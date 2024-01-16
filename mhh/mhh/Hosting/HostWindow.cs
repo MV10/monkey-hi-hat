@@ -28,6 +28,11 @@ namespace mhh
         public PlaylistManager Playlist;
 
         /// <summary>
+        /// Handles test-mode content.
+        /// </summary>
+        public TestModeManager Tester;
+
+        /// <summary>
         /// Audio and texture processing by the eyecandy library.
         /// </summary>
         public AudioTextureEngine Eyecandy;
@@ -231,6 +236,14 @@ namespace mhh
                 default:
                     CommandRequested = CommandRequest.None;
                     break;
+            }
+
+            // Test-mode advance / reverse
+            if(Tester is not null && Tester.Mode != TestMode.None)
+            {
+                if (input.IsKeyReleased(Keys.KeyPadAdd)) Tester.Next();
+                if (input.IsKeyReleased(Keys.KeyPadSubtract)) Tester.Previous();
+                if (input.IsKeyReleased(Keys.KeyPadAdd) || input.IsKeyReleased(Keys.KeyPadSubtract)) return;
             }
 
             // Text overlay text commands
@@ -603,6 +616,30 @@ LINE 15");
         }
 
         /// <summary>
+        /// Handler for the --test and --endtest command-line switches
+        /// </summary>
+        public string Command_Test(TestMode mode, string filename = "")
+        {
+            if(Tester is not null)
+            {
+                Tester.EndTest();
+                Tester.Dispose();
+                Tester = null;
+            }
+            if (mode == TestMode.None) return "ACK";
+            var validation = TestModeManager.Validate(mode, filename);
+            if (!string.IsNullOrEmpty(validation)) return validation;
+            Tester = new TestModeManager(mode, filename);
+            if(Tester.Mode == TestMode.None)
+            {
+                Tester.Dispose();
+                Tester = null;
+                return "ERR: TestModeManager did not start correctly";
+            }
+            return "ACK";
+        }
+
+        /// <summary>
         /// Queues a new visualizer to send to the RenderManager on the next OnUpdateFrame pass.
         /// </summary>
         private void QueueVisualization(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)
@@ -762,6 +799,8 @@ display res: {ClientSize.X} x {ClientSize.Y}";
             var success = Eyecandy?.EndAudioProcessing();
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy.EndAudioProcessing() success: {success}");
 
+            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal TestModeManager");
+            Tester?.Dispose();
 
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy AudioTextureEngine");
             Eyecandy?.Dispose();
