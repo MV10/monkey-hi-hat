@@ -9,8 +9,6 @@ namespace mhh;
 
 public class CrossfadeRenderer : IRenderer
 {
-    private static Random RNG = new();
-
     public bool IsValid { get; set; } = true;
     public string InvalidReason { get; set; } = string.Empty;
     public string Filename { get; } = string.Empty;
@@ -45,6 +43,10 @@ public class CrossfadeRenderer : IRenderer
     private float FrameCount = 0;
     private float RandomRun;
 
+    // Used to randomize cached shaders while avoiding repetition
+    private static Random RNG = new();
+    private static List<int> CacheIndexes;
+
     public CrossfadeRenderer(IRenderer oldRenderer, IRenderer newRenderer, Action completionCallback)
     {
         if(Program.AppWindow.Tester is not null && Program.AppWindow.Tester.Mode == TestMode.Fade)
@@ -55,7 +57,15 @@ public class CrossfadeRenderer : IRenderer
         {
             if (Program.AppConfig.RandomizeCrossfade)
             {
-                int i = RNG.Next(Caching.CrossfadeShaders.Count);
+                if (CacheIndexes is null || CacheIndexes.Count == 0)
+                {
+                    var list = new int[Caching.CrossfadeShaders.Count];
+                    for (int j = 0; j < list.Length; j++) list[j] = j;
+                    RNG.Shuffle(list);
+                    CacheIndexes = list.ToList();
+                }
+                int i = CacheIndexes[0];
+                CacheIndexes.RemoveAt(0);
                 CrossfadeShader = Caching.CrossfadeShaders[i];
                 LogHelper.Logger?.LogDebug($"Crossfade shader {((CachedShader)CrossfadeShader).Key}");
             }
