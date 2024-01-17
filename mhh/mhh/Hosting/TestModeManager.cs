@@ -184,7 +184,7 @@ public class TestModeManager : IDisposable
     {
         if (Mode == TestMode.None || TestContent?.Count == 0) return;
         ContentIndex--;
-        if (ContentIndex == -1) ContentIndex = TestContent.Count - 1;
+        if (ContentIndex < 0) ContentIndex = TestContent.Count - 1;
         QueueTestContent();
     }
 
