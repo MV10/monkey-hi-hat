@@ -101,7 +101,6 @@ public class TestModeManager : IDisposable
 
                 var key = CachedShader.KeyFrom(vertPathname, fragPathname);
                 CrossfadeShader = Caching.CrossfadeShaders.FirstOrDefault(s => s.Key.Equals(key)) ?? new(vertPathname, fragPathname); ;
-
                 if (!CrossfadeShader.IsValid)
                 {
                     mode = TestMode.None;
@@ -109,6 +108,7 @@ public class TestModeManager : IDisposable
                     CrossfadeShader = null;
                     break;
                 }
+
                 TestContent = PathHelper.GetConfigFiles(Program.AppConfig.VisualizerPath).Skip(Program.AppConfig.TestingSkipVizCount).ToList();
                 break;
             }
@@ -119,6 +119,8 @@ public class TestModeManager : IDisposable
         Caching.LibraryShaders.CachingDisabled = true;
 
         RenderManager.TextManager.SetOverlayText(OverlayText, forcePermanence: true);
+
+        Program.AppWindow.Focus();
     }
 
     /// <summary>
@@ -227,7 +229,7 @@ public class TestModeManager : IDisposable
         ContentIndex = -1;
         TestContent = null;
         Filename = null;
-        CrossfadeShader?.Dispose();
+        if(CrossfadeShader is not CachedShader) CrossfadeShader?.Dispose();
         CrossfadeShader = null;
         RenderManager.TextManager.Clear();
         RenderManager.TextManager.TogglePermanence();
