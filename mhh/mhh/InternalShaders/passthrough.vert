@@ -1,4 +1,4 @@
-#version 460
+#version 450
 
 // Generic pass-through vertex shader for fragment-oriented visualizations.
 

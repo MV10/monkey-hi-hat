@@ -1,4 +1,4 @@
-#version 460
+#version 450
 precision highp float;
 
 // This produces a melting or smearing effect. Every few frames, the primary shader is

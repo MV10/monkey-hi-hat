@@ -1,4 +1,4 @@
-﻿#version 460
+﻿#version 450
 
 layout (location = 0) in float vertexId;
 out vec4 v_color;

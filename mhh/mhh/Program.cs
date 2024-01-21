@@ -39,7 +39,13 @@ namespace mhh
         static readonly string DebugConfigFilename = "mhh.debug.conf";
 
         static readonly string SwitchPipeName = "monkey-hi-hat";
-        static readonly Version OpenGLVersion = new(4, 6);
+
+        // Previously MHH only supported core API v4.6, the "final" OpenGL, but Linux MESA
+        // drivers apparently only support v4.5 (according to "glxinfo -B" from mesa-utils)
+        // and 4.6 features aren't important to MHH, so post-3.1 will be reverted to v4.5.
+        // https://www.khronos.org/opengl/wiki/History_of_OpenGL#OpenGL_4.6_(2017)
+        static readonly Version OpenGLVersion = new(4, 5);
+        
         static readonly string ConfigLocationEnvironmentVariable = "monkey-hi-hat-config"; // set in Debug Launch Profile dialog
 
         /// <summary>

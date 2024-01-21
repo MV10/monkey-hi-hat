@@ -1,4 +1,4 @@
-﻿#version 460
+﻿#version 450
 precision highp float;
 
 // Generic pass-through fragment shader for vertex-oriented visualizations.

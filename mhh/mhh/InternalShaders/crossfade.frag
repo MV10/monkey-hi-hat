@@ -1,4 +1,4 @@
-﻿#version 460
+﻿#version 450
 precision highp float;
 
 // This is used when mhh.conf specifies RandomizeCrossfade=false.

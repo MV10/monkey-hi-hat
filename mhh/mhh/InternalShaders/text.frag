@@ -1,4 +1,4 @@
-﻿#version 460
+﻿#version 450
 
 // Adapted from foodini's "font renderer" at https://www.shadertoy.com/view/cdtBWl
 // And my own simple font outlining demo at https://www.shadertoy.com/view/mlyczD
