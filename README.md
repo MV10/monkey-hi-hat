@@ -8,6 +8,8 @@ Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-r
 
 **NEW:** Version 3 releases include an easy-to-use install script.
 
+Check out my Jan-2024 blog article [Getting Started Tutorial](https://mcguirev10.com/2024/01/20/monkey-hi-hat-getting-started-tutorial.html).
+
 ## Basic Details
 
 All important documentation has been moved to the [wiki](https://github.com/MV10/monkey-hi-hat/wiki).

@@ -31,7 +31,7 @@ internal static class PathHelper
     public static IReadOnlyList<string> GetWildcardFiles(string pathspec, string filespec, bool returnFullPathname = false)
     {
         List<string> list = new();
-        var paths = pathspec.Split(';', Const.SplitOptions);
+        var paths = pathspec.Split(Path.PathSeparator, Const.SplitOptions);
         foreach (var path in paths)
         {
             foreach (var filename in Directory.EnumerateFiles(path, filespec))
