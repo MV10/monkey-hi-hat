@@ -400,6 +400,7 @@ namespace mhh
             {
                 var AudioConfig = new EyeCandyCaptureConfig()
                 {
+                    LoopbackApi = AppConfig.LoopbackApi,
                     CaptureDeviceName = AppConfig.CaptureDeviceName,
                     DetectSilence = true, // always detect, playlists may need it
                     MaximumSilenceRMS = AppConfig.DetectSilenceMaxRMS,

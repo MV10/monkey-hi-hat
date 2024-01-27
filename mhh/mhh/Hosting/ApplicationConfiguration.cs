@@ -1,4 +1,5 @@
 ﻿
+using eyecandy;
 using OpenTK.Windowing.Common;
 using System.Runtime.InteropServices;
 
@@ -40,6 +41,7 @@ namespace mhh
 
         public readonly string CaptureDriverName = string.Empty;
         public readonly string CaptureDeviceName = string.Empty;
+        public readonly LoopbackApi LoopbackApi;
 
         public readonly int DetectSilenceSeconds = 0;
         public readonly double DetectSilenceMaxRMS = 1.5d;
@@ -97,6 +99,15 @@ namespace mhh
 
             CaptureDriverName = ConfigSource.ReadValue(SectionOS, "capturedrivername");
             CaptureDeviceName = ConfigSource.ReadValue(SectionOS, "capturedevicename");
+
+            if (SectionOS == "linux")
+            {
+                LoopbackApi = LoopbackApi.OpenALSoft;
+            }
+            else
+            {
+                LoopbackApi = ConfigSource.ReadValue("windows", "loopbackapi").ToEnum(LoopbackApi.WindowsInternal);
+            }
 
             ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
             PopupVisibilitySeconds = ConfigSource.ReadValue("text", "PopupVisibilitySeconds").ToInt32(5);

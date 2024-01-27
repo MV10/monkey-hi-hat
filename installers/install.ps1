@@ -1,3 +1,9 @@
+
+# TODO for v4 release:
+# Default to internal WASAPI audio capture.
+# Offer to uninstall VB-Audio CABLE and OpenAL / OpenAL-Soft.
+# Add switch to install using OpenAL-Soft/Cable (advanced; config change required)
+
 ################################################################################
 #
 # IF THIS FILE OPENS IN AN EDITOR INSTEAD OF RUNNING:
@@ -27,24 +33,6 @@
 # The user will be prompted about each installed component (mostly because
 # it isn't possible to determine whether other .NET dependencies exist).
 #
-# TODO:
-# Possibly use SVV to auto-configure the audio loopback driver?
-#
-# TODO:
-# Figure out how to detect Microsoft's ludicrous "Ransomware Protection" system
-# and get the script whitelisted, which appears to only be possible by triggering
-# the *silent* "warning" (utterly dumb-ass design) then walking the user through
-# the god-awful "modern" Settings UI to allow the script to run.
-#
-# Once the script is whitelisted, possibly use a third-party PowerShell module
-# (which, stupidly, must install into the users "protected" Documents directory)
-# to analyze and configure the Sound settings after VB-Audio Cable is installed.
-#
-# TODO:
-# Offer Virtual Audio Cable (https://vac.muzychenko.net/en/index.htm) as a paid
-# alternative to VB-Audio Cable? Is this even legal right now with the bullshit
-# Russia-Russia-Russia Ukraine-grifter-war sanctions, etc?
-#
 ################################################################################
 #
 # DEV / TEST NOTES
@@ -63,7 +51,7 @@ $temp = [Path]::GetTempPath()
 $log = [Path]::Combine($temp, "install-monkey-hi-hat.log")
 $unzipPath = [Path]::Combine($temp, "mhh-unzip")
 
-$programVer = "3.1.0"
+$programVer = "4.0.0"
 $dotnetVer = "8"
 $dotnetUrl = "https://download.visualstudio.microsoft.com/download/pr/7f4d5cbc-4449-4ea5-9578-c467821f251f/b9b19f89d0642bf78f4b612c6a741637/dotnet-runtime-8.0.0-win-x64.exe"
 $driverUrl = "https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack43.zip"
