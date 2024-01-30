@@ -1,0 +1,16 @@
+﻿using System;
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+// The program is not currently installed. Dotnet and/or content might be.
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+namespace mhhinstall
+{
+    public static class AppInstall
+    {
+        public static void Execute()
+        {
+            Console.Clear();
+            Output.Write("TODO - FreshInstall");
+        }
+    }
+}

@@ -1,8 +1,9 @@
 
+# POWERSHELL OPTION IS DEPRECATED IN v4.0.0 RELEASE
+
 # TODO for v4 release:
 # Default to internal WASAPI audio capture.
-# Offer to uninstall VB-Audio CABLE and OpenAL / OpenAL-Soft.
-# Add switch to install using OpenAL-Soft/Cable (advanced; config change required)
+# Offer to uninstall VB-Audio CABLE driver and OpenAL libraries.
 
 ################################################################################
 #
