@@ -2,6 +2,7 @@
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.AccessControl;
 
 namespace mhhinstall
 {
@@ -18,12 +19,16 @@ namespace mhhinstall
         public static readonly string tempContentZip = Path.Combine(temp, "mhh-content.zip");
 
         public static readonly string dotnetUrl = "https://download.visualstudio.microsoft.com/download/pr/7f4d5cbc-4449-4ea5-9578-c467821f251f/b9b19f89d0642bf78f4b612c6a741637/dotnet-runtime-8.0.0-win-x64.exe";
-        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-3-1-0.bin";
-        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-3-1-0.bin";
+        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-4-0-0.bin";
+        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-4-0-0.bin";
+        
+        // Any download smaller than 500K is assumed to be bad content (404 HTML page etc)
+        public static readonly long minDownloadSize = 500 * 1024;
 
         public static readonly string programPath = "C:\\Program Files\\mhh";
         public static readonly string contentPath = "C:\\ProgramData\\mhh-content";
         public static readonly string postInstallUrl = "https://github.com/MV10/monkey-hi-hat/wiki/Post%E2%80%90Install%E2%80%90Instructions";
+        public static readonly string troubleshootingUrl = "https://github.com/MV10/monkey-hi-hat/wiki/Troubleshooting";
 
         public static readonly string shortcutDesktopLink = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Monkey Hi Hat.lnk");
         public static readonly string shortcutStartMenu = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Monkey-Hi-Hat");
@@ -75,16 +80,16 @@ namespace mhhinstall
                     }
                     else
                     {
-                        Output.Write("Do you want to upgrade this older installation?\n[Y]  Yes (upgrade)\n[N]  No (quit)\n[U]  Uninstall only");
-                        var doupgrade = Output.Prompt("YNU");
-                        if(doupgrade == "N")
+                        Output.Write("Do you want to update this older installation?\n[Y]  Yes (update)\n[N]  No (quit)\n[U]  No - Uninstall");
+                        var doupdate = Output.Prompt("YNU");
+                        if(doupdate == "N")
                         {
                             Output.Write("Canceled at user's request.");
                             PauseExit();
                         }
-                        if(doupgrade == "Y")
+                        if(doupdate == "Y")
                         {
-                            AppUpgrade.Execute();
+                            AppUpdate.Execute();
                         }
                         else
                         {
@@ -95,22 +100,23 @@ namespace mhhinstall
             }
             catch(Exception ex)
             {
-                Output.LogOnly($"\nException:\n{ex.GetType()}\n{ex.Message}");
+                Output.Write($"\nException:\n{ex.GetType()}\n{ex.Message}");
+                Output.Write($"\nFor support links and/or manual setup, see the wiki Troubleshooting page:\n{troubleshootingUrl}");
             }
 
             PauseExit();
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Create the log and temp directories, collect and display system info.
+        // Create the log and temp directories, collect and display system info, and cleanup / exit.
         /////////////////////////////////////////////////////////////////////////////////////////////////////
+
         static void Init()
         {
             File.WriteAllText(log, $"INSTALLATION STARTED {DateTime.Now}\n");
             Console.Clear();
 
-            Output.LogOnly($"Creating temp unzip path: {tempUnzipDir}");
-            Directory.CreateDirectory(tempUnzipDir);
+            DeleteUnzipDir(recreate: true);
 
             // Under .NET Framework, for some reason Environment.OSVersion.Version.Major doesn't work right. Sigh.
             if (!Environment.Is64BitOperatingSystem)
@@ -121,8 +127,28 @@ namespace mhhinstall
 
             Output.Write($"Monkey Hi Hat v{appVersion} Installer");
             Output.Separator();
-            Output.Write("Collecting system information:\n");
-            
+            Output.Write("\nCollecting system information:\n");
+
+            // check for MHH
+            if (File.Exists(Path.Combine(programPath, "mhh.exe")))
+            {
+                versionFound = new Version(1, 0, 0); // version unknown
+                var vtxt = Path.Combine(programPath, "ConfigFiles", "version.txt");
+                if (File.Exists(vtxt))
+                {
+                    vtxt = File.ReadLines(vtxt).FirstOrDefault() ?? "1.0.0";
+                    try { versionFound = new Version(vtxt); } catch { }
+                }
+            }
+            programFound = versionFound.Major > 0;
+            Output.LogOnly($"Existing version number (v1 = unknown): {versionFound.Major}.{versionFound.Minor}.{versionFound.Build}");
+
+            // check for content
+            contentFound = File.Exists(Path.Combine(contentPath, "libraries", "color_conversions.glsl"));
+
+            // check for relay service
+            msmdRunning = External.FindString("RUNNING", "sc query \"Monkey Hi Hat TCP Relay (msmd)\"");
+
             // check for dotnet
             dotnetOk = External.FindString($"Microsoft.NETCore.App {dotnetVer}.", "dotnet --list-runtimes");
 
@@ -137,25 +163,6 @@ namespace mhhinstall
             var t4 = Path.Combine(win, "SysWOW64", "soft_oal.dll");
             openALFound = File.Exists(t1) || File.Exists(t2) || File.Exists(t3) || File.Exists(t4);
 
-            // check for MHH
-            if(File.Exists(Path.Combine(programPath, "mhh.exe")))
-            {
-                versionFound = new Version(1, 0, 0); // version unknown
-                var vtxt = Path.Combine(programPath, "ConfigFiles", "version.txt");
-                if (File.Exists(vtxt))
-                {
-                    vtxt = File.ReadLines(vtxt).FirstOrDefault() ?? "1.0.0";
-                    try { versionFound = new Version(vtxt); } catch { }
-                }
-            }
-            programFound = versionFound.Major > 0;
-
-            // check for content
-            contentFound = File.Exists(Path.Combine(contentPath, "libraries", "color_conversions.glsl"));
-
-            // check for relay service
-            msmdRunning = External.FindString("RUNNING", "sc query \"Monkey Hi Hat TCP Relay (msmd)\"");
-
             // display results
             Output.Write($"Monkey Hi Hat already installed at default location? {programFound}");
             Output.Write($"Visualizer content installed at default location? {contentFound}");
@@ -163,11 +170,8 @@ namespace mhhinstall
             Output.Write($"TCP relay service running? {msmdRunning}");
             Output.Write($"Legacy audio loopback support installed? {audioDriverFound || openALFound}");
             Output.Separator();
+            Output.Write("");
         }
-
-        /////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Reusable utility stuff below
-        /////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public static void PauseExit()
         {
@@ -183,18 +187,61 @@ namespace mhhinstall
             DeleteUnzipDir();
 
             Output.LogOnly($"\nINSTALLATION ENDED {DateTime.Now}");
-            Console.WriteLine($"\nInstallation log: {log}");
+            Console.WriteLine($"\nLog can be viewed at:\n{log}");
             Console.WriteLine("\nPress any key to exit.");
             Console.ReadKey(true);
             Environment.Exit(0);
         }
 
-        public static void DeleteUnzipDir(bool recreate = false)
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Small tasks needed by multiple processes (install, uninstall, update)
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>
+        /// Creates the directory if necessary and unzips the content (with overwrite)
+        /// </summary>
+        public static void UnzipApp()
         {
-            SilentDeleteDir(tempUnzipDir);
-            if (recreate) Directory.CreateDirectory(tempUnzipDir);
+            if(!Directory.Exists(programPath))
+            {
+                Output.Write($"Creating directory {programPath}");
+                Directory.CreateDirectory(programPath);
+            }
+            Output.Write("Application-archive extraction");
+            ZipExtensions.ExtractWithOverwrite(tempProgramZip, programPath);
         }
 
+        /// <summary>
+        /// Removes and re-creates the directory, then unzips the content
+        /// </summary>
+        public static void UnzipContent()
+        {
+            if (Directory.Exists(contentPath))
+            {
+                Output.Write($"Clearing directory {contentPath}");
+                Directory.Delete(contentPath, recursive: true);
+            }
+            Output.Write($"Creating directory {contentPath}");
+            Directory.CreateDirectory(contentPath);
+            Output.Write("Content-archive extraction");
+            ZipExtensions.ExtractWithOverwrite(tempContentZip, contentPath);
+        }
+
+        /// <summary>
+        /// Gives Users group write permissions to app and content directories
+        /// </summary>
+        public static void SetDirectoryPermissions()
+        {
+            Output.Write("Setting write permissions for \"Users\" group on application directory...");
+            MakeDirectoryWriteable("Users", programPath);
+
+            Output.Write("Setting write permissions for \"Users\" group on content directory...");
+            MakeDirectoryWriteable("Users", contentPath);
+        }
+
+        /// <summary>
+        /// Unzips VB-Audio CABLE installer and runs silent uninstall
+        /// </summary>
         public static void RemoveLoopbackDriver()
         {
             Output.Write("Removing legacy audio loopback driver...");
@@ -204,7 +251,10 @@ namespace mhhinstall
             External.ExecuteCmd($"{exe} -u -h");
         }
 
-        public static void DeleteOpenAL()
+        /// <summary>
+        /// Deletes OpenAL and OpenAL-Soft DLLs from Windows system dirs
+        /// </summary>
+        public static void RemoveOpenAL()
         {
             Output.Write("Removing legacy audio libraries...");
             var win = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
@@ -212,6 +262,34 @@ namespace mhhinstall
             SilentDeleteFile(Path.Combine(win, "SysWOW64", "OpenAL32.dll"));
             SilentDeleteFile(Path.Combine(win, "System32", "soft_oal.dll"));
             SilentDeleteFile(Path.Combine(win, "SysWOW64", "soft_oal.dll"));
+        }
+
+        /// <summary>
+        /// Terminates TCP listener service and unregisters it
+        /// </summary>
+        public static void StopMSMD()
+        {
+            External.ExecuteCmd($"\"{Path.Combine(programPath, "WinServiceStop.cmd")}\"");
+            External.ExecuteCmd($"\"{Path.Combine(programPath, "WinServiceDelete.cmd")}\"");
+        }
+
+        /// <summary>
+        /// Registers TCP listener service for auto-start and starts it
+        /// </summary>
+        public static void StartMSMD()
+        {
+            External.ExecuteCmd($"\"{Path.Combine(programPath, "WinServiceCreate.cmd")}\"");
+            External.ExecuteCmd($"\"{Path.Combine(programPath, "WinServiceRun.cmd")}\"");
+        }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+        // General utility functions
+        /////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        public static void DeleteUnzipDir(bool recreate = false)
+        {
+            SilentDeleteDir(tempUnzipDir);
+            if (recreate) Directory.CreateDirectory(tempUnzipDir);
         }
 
         public static void SilentDeleteDir(string path)
@@ -224,16 +302,27 @@ namespace mhhinstall
             try { if (File.Exists(pathname)) File.Delete(pathname); } catch { }
         }
 
-        public static void StopMSMD()
+        public static void MakeDirectoryWriteable(string identity, string path)
         {
-            External.ExecuteCmd($"\"{Path.Combine(programPath, "WinServiceStop.cmd")}\"");
-            External.ExecuteCmd($"\"{Path.Combine(programPath, "WinServiceDelete.cmd")}\"");
-        }
+            // https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.filesystemrights?view=windowsdesktop-5.0
+            // https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.inheritanceflags?view=windowsdesktop-5.0
+            // https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.propagationflags?view=windowsdesktop-5.0
+            // While setting mhh.conf permissions is technically "more correct" ... it's easier to
+            // simply open up access to the entire application directory (above) -- users can create backup
+            // configurations, alternate configurations, etc.
 
-        public static void StartMSMD()
-        {
-            External.ExecuteCmd($"\"{Path.Combine(programPath, "WinServiceCreate.cmd")}\"");
-            External.ExecuteCmd($"\"{Path.Combine(programPath, "WinServiceRun.cmd")}\"");
+            var acl = Directory.GetAccessControl(path);
+
+            var rule = new FileSystemAccessRule(
+                identity, 
+                FileSystemRights.Write, 
+                InheritanceFlags.ContainerInherit & InheritanceFlags.ObjectInherit, 
+                PropagationFlags.None, 
+                AccessControlType.Allow);
+
+            acl.SetAccessRule(rule);
+
+            Directory.SetAccessControl(path, acl);
         }
     }
 }

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 
 namespace mhhinstall
 {
@@ -37,6 +34,12 @@ namespace mhhinstall
             // https://superuser.com/a/755581/143047
             // curl.exe --output index.html --url https://foobar.com
             External.ExecuteCmd($"curl.exe --output {destPathname} --url {srcURL}");
+
+            // if file exists but is small, it's probably a 404 HTML page
+            if (!File.Exists(destPathname) || new FileInfo(destPathname).Length < Installer.minDownloadSize)
+            {
+                throw new InvalidOperationException($"Failed to download {srcURL}");
+            }
         }
     }
 }

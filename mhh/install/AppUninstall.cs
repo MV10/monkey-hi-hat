@@ -10,7 +10,7 @@ namespace mhhinstall
         public static void Execute()
         {
             Console.Clear();
-            Output.Write("Uninstalling Monkey Hi Hat");
+            Output.Write("Uninstalling Monkey Hi Hat - Options");
             Output.Separator();
 
             bool removeDotNet = false;
@@ -69,7 +69,7 @@ namespace mhhinstall
             Installer.SilentDeleteDir(Installer.shortcutStartMenu);
 
             // clean up legacy audio support
-            if (Installer.openALFound && removeAudio) Installer.DeleteOpenAL();
+            if (Installer.openALFound && removeAudio) Installer.RemoveOpenAL();
             if (Installer.audioDriverFound && removeAudio) Installer.RemoveLoopbackDriver();
 
             // remove dotnet
@@ -79,7 +79,9 @@ namespace mhhinstall
                 External.ExecuteCmd($"{Installer.tempDotnetExe} /uninstall /quiet /norestart");
             }
 
-            Console.Write("\nUninstall completed.");
+            Output.Write("");
+            Output.Separator();
+            Output.Write("Uninstall completed.");
         }
 
     }
