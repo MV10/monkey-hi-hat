@@ -68,11 +68,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "
 		..\testcontent\vert_library.glsl = ..\testcontent\vert_library.glsl
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Installers", "Installers", "{1AB2FA4A-1ACF-46DB-810E-EF120BE4AF91}"
-	ProjectSection(SolutionItems) = preProject
-		..\installers\install.ps1 = ..\installers\install.ps1
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "install", "install\install.csproj", "{53C2DBDC-AEE2-457C-8B4F-8E46BC1CA8DF}"
 EndProject
 Global
