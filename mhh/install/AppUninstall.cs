@@ -64,9 +64,10 @@ namespace mhhinstall
             Output.Write("Removing program, shortcuts, content, and startup settings...");
             Installer.SilentDeleteDir(Installer.programPath);
             Installer.SilentDeleteDir(Installer.contentPath);
-            Installer.SilentDeleteFile(Installer.shortcutDesktopLink);
+            Installer.SilentDeleteDir(Installer.shortcutStartMenuFolder);
+            Installer.SilentDeleteFile(Installer.shortcutDesktopAppLink);
+            Installer.SilentDeleteFile(Installer.shortcutDesktopCmdLink);
             Installer.SilentDeleteFile(Installer.shortcutStartupLink);
-            Installer.SilentDeleteDir(Installer.shortcutStartMenu);
 
             // clean up legacy audio support
             if (Installer.openALFound && removeAudio) Installer.RemoveOpenAL();

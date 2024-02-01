@@ -17,7 +17,7 @@ using System.Linq;
 
 namespace mhhinstall
 {
-    public static class ConfUpdate
+    public static class ConfigHelper
     {
         static readonly string confPathname = Path.Combine(Installer.programPath, "mhh.conf");
 
@@ -27,7 +27,34 @@ namespace mhhinstall
         // outer key is section, inner key is match target, value is (name, content)
         static Dictionary<string, Dictionary<string, (string, string)>> NewSettings;
 
-        public static void Execute()
+        // outer key is section, inner key is StartsWith match target, value is (name, content)
+        static Dictionary<string, Dictionary<string, (string, string)>> LineReplacements;
+
+        public static void NewInstall()
+        {
+            Output.Write($"Creating application config file...");
+
+            Output.Write("-- Copying default config to app directory");
+            var src = Path.Combine(Installer.programPath, "ConfigFiles", "mhh.conf");
+            File.Copy(src, confPathname);
+
+            Output.Write("-- Adding references to viz content directories");
+
+            var vizPath = Path.Combine(Installer.contentPath, "shaders");
+            var fxPath = Path.Combine(Installer.contentPath, "fx");
+            var libPath = Path.Combine(Installer.contentPath, "libraries");
+            var playlistPath = Path.Combine(Installer.contentPath, "playlists");
+            var texturePath = Path.Combine(Installer.contentPath, "textures");
+
+            AddReplacement("windows", "#VisualizerPath=", "Visualizer Paths", $"VisualizerPath={vizPath};{libPath}");
+            AddReplacement("windows", "#PlaylistPath=", "Playlist Path", $"PlaylistPath={playlistPath}");
+            AddReplacement("windows", "#TexturePath=", "Texture Path", $"TexturePath={texturePath}");
+            AddReplacement("windows", "#FXPath=", "FX Paths", $"FXPath={fxPath};{libPath}");
+
+            ApplyChanges();
+        }
+        
+        public static void Update()
         {
             Output.Write($"Updating application config file...");
 
@@ -98,6 +125,7 @@ namespace mhhinstall
         {
             NewSettings = new Dictionary<string, Dictionary<string, (string, string)>>();
             NewSections = new Dictionary<string, List<(string, string)>>();
+            LineReplacements = new Dictionary<string, Dictionary<string, (string, string)>>();
         }
 
         static void AddSetting(string section, string afterMatching, string newContentName, string newContent)
@@ -120,6 +148,17 @@ namespace mhhinstall
             Output.LogOnly($"-- Registered section [{newSectionName}] to insert after section [{afterSection}]");
         }
 
+        // lineStartsWith is case-sensitive!
+        static void AddReplacement(string section, string lineStartsWith, string newContentName, string newContent)
+        {
+            if (LineReplacements is null) ResetContentCaches();
+            var sec = section.ToLowerInvariant();
+            if (!LineReplacements.ContainsKey(sec)) LineReplacements.Add(sec, new Dictionary<string, (string, string)>());
+            LineReplacements[sec].Add(lineStartsWith, (newContentName, newContent));
+
+            Output.LogOnly($"-- Registered {newContentName} to replace line starting with \"{lineStartsWith}\" in [{section}]");
+        }
+
         static void ApplyChanges()
         {
             // Two types of lines are counted as "tokens" ... a [section] entry or a key=value entry.
@@ -136,8 +175,25 @@ namespace mhhinstall
             var nonToken = new List<string>();
             var section = "";
 
-            foreach(var line in oldConf)
+            foreach(var oldLine in oldConf)
             {
+                // Test line-replacement
+                string line = oldLine;
+                if (LineReplacements.ContainsKey(section))
+                {
+                    foreach(var newline in LineReplacements[section])
+                    {
+                        // when a starts-with match is identified, the
+                        // ENTIRE line is replaced with the new content
+                        if(line.Trim().StartsWith(newline.Key))
+                        {
+                            Output.LogOnly($"-- Replacing {newline.Value.Item1} in [{section}]");
+                            line = newline.Value.Item2;
+                            break;
+                        }
+                    }
+                }
+
                 // Accumulate non-token line
                 if(string.IsNullOrWhiteSpace(line) || line.Trim().StartsWith("#"))
                 {
@@ -153,7 +209,6 @@ namespace mhhinstall
                     // insert after the section we're leaving?
                     if(NewSections.ContainsKey(section))
                     {
-                        Output.LogOnly($"-- Exiting old config section [{section}]");
                         foreach(var newSec in NewSections[section])
                         {
                             Output.Write($"-- Adding section [{newSec.Item1}] after section [{section}]");
@@ -170,7 +225,7 @@ namespace mhhinstall
                     var start = line.IndexOf("[");
                     var length = line.IndexOf("]") - start - 1;
                     section = line.Substring(start + 1, length).ToLowerInvariant();
-                    Output.LogOnly($"-- Entering old config section [{section}]");
+                    Output.LogOnly($"-- Entering config section [{section}]");
                 }
                 
                 // Key=Value token
@@ -216,6 +271,7 @@ namespace mhhinstall
 
             NewSettings = null;
             NewSections = null;
+            LineReplacements = null;
         }
     }
 }

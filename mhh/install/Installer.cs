@@ -27,12 +27,17 @@ namespace mhhinstall
 
         public static readonly string programPath = "C:\\Program Files\\mhh";
         public static readonly string contentPath = "C:\\ProgramData\\mhh-content";
+
+        public static readonly string wikiUrl = "https://github.com/MV10/monkey-hi-hat/wiki/";
         public static readonly string postInstallUrl = "https://github.com/MV10/monkey-hi-hat/wiki/Post%E2%80%90Install%E2%80%90Instructions";
         public static readonly string troubleshootingUrl = "https://github.com/MV10/monkey-hi-hat/wiki/Troubleshooting";
 
-        public static readonly string shortcutDesktopLink = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Monkey Hi Hat.lnk");
-        public static readonly string shortcutStartMenu = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Monkey-Hi-Hat");
-        public static readonly string shortcutStartupLink = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Startup", "Monkey Hi Hat.lnk");
+        public static readonly string shortcutStartMenuFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Programs", "Monkey-Hi-Hat");
+        public static readonly string shortcutStartMenuAppLink = Path.Combine(shortcutStartMenuFolder, "Monkey Hi Hat.lnk");
+        public static readonly string shortcutStartMenuCmdLink = Path.Combine(shortcutStartMenuFolder, "Monkey Hi Hat Console.lnk");
+        public static readonly string shortcutDesktopAppLink = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Monkey Hi Hat.lnk");
+        public static readonly string shortcutDesktopCmdLink = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Monkey Hi Hat Console.lnk");
+        public static readonly string shortcutStartupLink = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Programs", "Startup", "Monkey Hi Hat.lnk");
 
         // Only used to remove unneeded components installed with prior releases.
         public static readonly string driverUrl = "https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack43.zip";
@@ -233,10 +238,10 @@ namespace mhhinstall
         public static void SetDirectoryPermissions()
         {
             Output.Write("Setting write permissions for \"Users\" group on application directory...");
-            MakeDirectoryWriteable("Users", programPath);
+            SetACL("Users", programPath);
 
             Output.Write("Setting write permissions for \"Users\" group on content directory...");
-            MakeDirectoryWriteable("Users", contentPath);
+            SetACL("Users", contentPath);
         }
 
         /// <summary>
@@ -302,22 +307,23 @@ namespace mhhinstall
             try { if (File.Exists(pathname)) File.Delete(pathname); } catch { }
         }
 
-        public static void MakeDirectoryWriteable(string identity, string path)
+        public static void SetACL(string identity, string path)
         {
             // https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.filesystemrights?view=windowsdesktop-5.0
             // https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.inheritanceflags?view=windowsdesktop-5.0
             // https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.propagationflags?view=windowsdesktop-5.0
-            // While setting mhh.conf permissions is technically "more correct" ... it's easier to
-            // simply open up access to the entire application directory (above) -- users can create backup
-            // configurations, alternate configurations, etc.
+
+            // While setting mhh.conf permissions is technically "more correct" ... it's easier to simply
+            // remove all restrictions the entire directory structure and contents; users can create backup
+            // configurations, alternate configurations, change the built-in playlist, etc.
 
             var acl = Directory.GetAccessControl(path);
 
             var rule = new FileSystemAccessRule(
                 identity, 
-                FileSystemRights.Write, 
-                InheritanceFlags.ContainerInherit & InheritanceFlags.ObjectInherit, 
-                PropagationFlags.None, 
+                FileSystemRights.FullControl, 
+                InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, 
+                PropagationFlags.None,
                 AccessControlType.Allow);
 
             acl.SetAccessRule(rule);

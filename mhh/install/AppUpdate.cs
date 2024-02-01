@@ -87,7 +87,7 @@ namespace mhhinstall
             }
 
             // update mhh.conf
-            ConfUpdate.Execute();
+            ConfigHelper.Update();
 
             Output.Write("");
             Output.Separator();

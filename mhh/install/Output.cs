@@ -23,7 +23,7 @@ namespace mhhinstall
 
         public static string Prompt(string keys)
         {
-            Output.Write($"[{keys.ToUpper()}]? ");
+            Console.Write($"[{keys.ToUpper()}]? ");
             while(true)
             {
                 if(Console.KeyAvailable)
@@ -31,6 +31,8 @@ namespace mhhinstall
                     var k = Console.ReadKey(true).KeyChar.ToString().ToUpper();
                     if (keys.Contains(k))
                     {
+                        Console.WriteLine(k);
+                        LogOnly($"[{keys.ToUpper()}]? {k}");
                         return k;
                     }
                 }
