@@ -189,7 +189,15 @@ public class TestModeManager : IDisposable
     }
 
     /// <summary>
-    /// Terminates testing.
+    /// Forces current combination to reload.
+    /// </summary>
+    public void Reload()
+    {
+        QueueTestContent();
+    }
+
+    /// <summary>
+    /// Terminates testing. Only Command_Test should call this.
     /// </summary>
     public void EndTest()
     {

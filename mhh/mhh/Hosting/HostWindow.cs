@@ -238,12 +238,21 @@ namespace mhh
                     break;
             }
 
-            // Test-mode advance / reverse
+            // Test-mode
             if(Tester is not null && Tester.Mode != TestMode.None)
             {
-                if (input.IsKeyReleased(Keys.KeyPadAdd)) Tester.Next();
-                if (input.IsKeyReleased(Keys.KeyPadSubtract)) Tester.Previous();
-                if (input.IsKeyReleased(Keys.KeyPadAdd) || input.IsKeyReleased(Keys.KeyPadSubtract)) return;
+                if (input.IsKeyReleased(Keys.Q)) Command_Test(TestMode.None);
+                if (input.IsKeyReleased(Keys.R)) Tester.Reload();
+                if (input.IsKeyReleased(Keys.KeyPadAdd) || input.IsKeyReleased(Keys.Equal)) Tester.Next();
+                if (input.IsKeyReleased(Keys.KeyPadSubtract) || input.IsKeyReleased(Keys.Minus)) Tester.Previous();
+
+                if (input.IsKeyReleased(Keys.Q)
+                    || input.IsKeyReleased(Keys.R)
+                    || input.IsKeyReleased(Keys.KeyPadAdd) 
+                    || input.IsKeyReleased(Keys.Equal)
+                    || input.IsKeyReleased(Keys.KeyPadSubtract)
+                    || input.IsKeyReleased(Keys.Minus))
+                    return;
             }
 
             // Text overlay text commands
