@@ -1,4 +1,6 @@
 ﻿
+using Microsoft.Extensions.Logging;
+
 namespace mhh;
 
 /// <summary>
@@ -61,15 +63,20 @@ public class MultipassSectionParser
 
     private void MultipassRendererParse()
     {
+        LogHelper.Logger?.LogTrace($"BEGIN {nameof(MultipassRendererParse)}");
+
         ShaderPasses = new(configSource.SequentialSection("multipass").Count);
 
         int passline = 0;
         foreach (var kvp in configSource.Content["multipass"])
         {
-            err = $"Error in {OwningRenderer.Filename} [multipass] pass {passline++}: ";
+            err = $"Error in {OwningRenderer.Filename} [multipass] pass {passline}: ";
+            LogHelper.Logger?.LogTrace($"PARSING pass #{passline}");
+            passline++;
             ShaderPass = new();
 
             GetMultipassColumns(kvp);
+            LogHelper.Logger?.LogTrace($"  found {column.Length} columns");
 
             // all decisions based on column.Length should be made here
             ParseDrawBuffer();
@@ -89,6 +96,7 @@ public class MultipassSectionParser
                 else
                 {
                     // column 4: vertex source typename
+                    LogHelper.Logger?.LogDebug($"  using vertex source {column[4]}");
                     ShaderPass.VertexSource = RenderingHelper.GetVertexSource(OwningRenderer, column[4]);
                     if (!OwningRenderer.IsValid) return;
 
@@ -112,6 +120,8 @@ public class MultipassSectionParser
 
             ShaderPasses.Add(ShaderPass);
         }
+
+        LogHelper.Logger?.LogTrace($"END {nameof(MultipassRendererParse)}");
     }
 
     private void FXRendererParse()
@@ -180,6 +190,7 @@ public class MultipassSectionParser
         if (drawBuffer > MaxDrawbuffer + 1) throw new ArgumentException($"{err} Each new draw buffer number can only increment by 1 at most; content {column[0]}");
         MaxDrawbuffer = Math.Max(MaxDrawbuffer, drawBuffer);
         ShaderPass.DrawbufferIndex = drawBuffer;
+        LogHelper.Logger?.LogTrace($"  draw buffer {drawBuffer}");
     }
 
     // MP and FX column 1: input buffer numbers and backbuffer letters, or * for no inputs
@@ -192,6 +203,7 @@ public class MultipassSectionParser
         var inputs = column[1].Split(',', Const.SplitOptions);
         foreach (var i in inputs)
         {
+            LogHelper.Logger?.LogTrace($"  input buffer {i}");
             if (!int.TryParse(i, out var sourceBuffer))
             {
                 // TryParse failed, previous-frame backbuffers are A-Z
@@ -240,6 +252,7 @@ public class MultipassSectionParser
             : PathHelper.FindFile(Program.AppConfig.VisualizerPath, column[2]);
         if (vizPathname is null) throw new ArgumentException($"{err} Failed to find visualizer config {vizPathname}");
 
+        LogHelper.Logger?.LogDebug($"  load viz.conf {vizPathname}");
         var vizConfig = new VisualizerConfig(vizPathname);
 
         // when a --reload command is in effect, reload all shaders used by this renderer (save and restore the value)
@@ -263,6 +276,7 @@ public class MultipassSectionParser
             file = (!file.EndsWith(".vert", Const.CompareFlags)) ? file += ".vert" : file;
             vertPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, file);
             if (vertPathname is null) throw new ArgumentException($"{err} Failed to find vertex shader source file {file}");
+            LogHelper.Logger?.LogDebug($"  using vertex shader {file}");
         }
 
         file = column[3];
@@ -272,6 +286,7 @@ public class MultipassSectionParser
             file = (!file.EndsWith(".frag", Const.CompareFlags)) ? file += ".frag" : file;
             fragPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, file);
             if (fragPathname is null) throw new ArgumentException($"{err} Failed to find fragment shader source file {file}");
+            LogHelper.Logger?.LogDebug($"  using fragment shader {file}");
         }
 
         // when a --reload command is in effect, reload all shaders used by this renderer (save and restore the value)
@@ -284,6 +299,7 @@ public class MultipassSectionParser
     // MP column 4+: not defined, default to same as renderer's visualizer.conf
     private void UseDefaultVertexSource()
     {
+        LogHelper.Logger?.LogDebug($"  using default vertex source");
         ShaderPass.VertexSource = RenderingHelper.GetVertexSource(OwningRenderer, RendererVizConfig);
         if (!OwningRenderer.IsValid) return;
         ShaderPass.VertexSource.Initialize(RendererVizConfig, ShaderPass.Shader);
@@ -294,11 +310,12 @@ public class MultipassSectionParser
     // MP column 5: VisualizerVertexIntegerArray settings
     private void ParseVertexSourceSettings()
     {
+        LogHelper.Logger?.LogDebug($"  parsing vertex source settings");
         var settings = column[5].Split(';', Const.SplitOptions);
         if (settings.Length != 2) throw new ArgumentException($"{err} VertexSource type {column[4]} required settings are missing or invalid");
-        var s0 = settings[0].Split('=', Const.SplitOptions);
-        var s1 = settings[1].Split('=', Const.SplitOptions);
-        if (s0.Length != 2 || s1.Length != 2) throw new ArgumentException($"{err} VertexSource type {column[4]}  required settings are missing or invalid");
+        var s0 = settings[0].Split(':', Const.SplitOptions);
+        var s1 = settings[1].Split(':', Const.SplitOptions);
+        if (s0.Length != 2 || s1.Length != 2) throw new ArgumentException($"{err} VertexSource type {column[4]} required settings are missing or invalid");
 
         string sIntCount = s0[0].Equals("VertexIntegerCount", Const.CompareFlags)
             ? s0[1]
@@ -312,10 +329,13 @@ public class MultipassSectionParser
             ? s1[1]
             : null;
 
-        if (sIntCount is null || sDrawMode is null) throw new ArgumentException($"{err} VertexSource type {column[4]}  required settings are missing or invalid");
+        if (sIntCount is null || sDrawMode is null) throw new ArgumentException($"{err} VertexSource type {column[4]} required settings are missing or invalid");
 
         var intCount = sIntCount.ToInt32(1000);
         var drawMode = sDrawMode.ToEnum(ArrayDrawingMode.Points);
+
+        LogHelper.Logger?.LogDebug($"  parsed VertexIntegerCount {intCount}");
+        LogHelper.Logger?.LogDebug($"  parsed ArrayDrawingMode {drawMode}");
 
         (ShaderPass.VertexSource as VertexIntegerArray).Initialize(intCount, drawMode, ShaderPass.Shader);
     }

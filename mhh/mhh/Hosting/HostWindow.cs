@@ -640,6 +640,15 @@ LINE 15");
         }
 
         /// <summary>
+        /// Clears the running-instance console.
+        /// </summary>
+        public string Command_CLS()
+        {
+            Console.Clear();
+            return "ACK";
+        }
+
+        /// <summary>
         /// Queues a new visualizer to send to the RenderManager on the next OnUpdateFrame pass.
         /// </summary>
         private void QueueVisualization(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)

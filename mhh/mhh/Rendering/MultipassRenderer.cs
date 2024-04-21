@@ -98,14 +98,12 @@ public class MultipassRenderer : IRenderer
 
             foreach (var index in pass.InputsDrawbuffers)
             {
-                //var resource = DrawbufferResources[index];
                 var resource = ShaderPasses[index].Drawbuffers;
                 pass.Shader.SetTexture(resource.UniformName, resource.TextureHandle, resource.TextureUnit);
             }
 
             foreach (var index in pass.InputsBackbuffers)
             {
-                //var resource = BackbufferResources[index];
                 var resource = ShaderPasses[index].Backbuffers;
                 pass.Shader.SetTexture(resource.UniformName, resource.TextureHandle, resource.TextureUnit);
             }

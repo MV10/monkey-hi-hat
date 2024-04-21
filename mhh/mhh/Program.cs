@@ -326,6 +326,9 @@ namespace mhh
                         return "ERR: Console visibility is only available on Windows OS";
                     }
 
+                case "--cls":
+                    return AppWindow.Command_CLS();
+
                 case "--quit":
                     if (args.Length > 1) return ShowHelp();
                     AppRunning = false;
@@ -586,6 +589,7 @@ All switches are passed to the already-running instance:
 --log [level]               shows or sets log-level (None, Trace, Debug, Information, Warning, Error, Critical)
 
 --console                   Windows: toggles the visibility of the console window (only minimizes Terminal)
+--cls                       clears the console window of the running instance (useful during debug)
 ";
     }
 }
