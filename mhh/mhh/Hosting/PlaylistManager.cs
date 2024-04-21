@@ -84,7 +84,7 @@ public class PlaylistManager
         }
 
         PlaylistAdvanceAt = (ActivePlaylist.SwitchMode == PlaylistSwitchModes.Time)
-            ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchSeconds)
+            ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchSeconds + Program.AppConfig.CrossfadeSeconds)
             : (ActivePlaylist.SwitchMode == PlaylistSwitchModes.Silence)
                 ? DateTime.Now.AddSeconds(ActivePlaylist.MaxRunSeconds)
                 : DateTime.MaxValue;
