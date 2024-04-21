@@ -44,6 +44,7 @@ public class MultipassRenderer : IRenderer
     private float FrameCount = 0;
     private Random RNG = new();
     private float RandomRun;
+    private Vector4 RandomRun4;
 
     public MultipassRenderer(VisualizerConfig visualizerConfig)
     {
@@ -79,6 +80,7 @@ public class MultipassRenderer : IRenderer
         }
 
         RandomRun = (float)RNG.NextDouble();
+        RandomRun4 = new((float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble());
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -95,6 +97,7 @@ public class MultipassRenderer : IRenderer
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);
             pass.Shader.SetUniform("randomrun", RandomRun);
+            pass.Shader.SetUniform("randomrun4", RandomRun4);
 
             foreach (var index in pass.InputsDrawbuffers)
             {

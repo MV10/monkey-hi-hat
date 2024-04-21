@@ -42,6 +42,7 @@ public class CrossfadeRenderer : IRenderer
 
     private float FrameCount = 0;
     private float RandomRun;
+    private Vector4 RandomRun4;
 
     // Used to randomize cached shaders while avoiding repetition
     private static Random RNG = new();
@@ -94,6 +95,7 @@ public class CrossfadeRenderer : IRenderer
         NewRenderer.OnResize();
 
         RandomRun = (float)RNG.NextDouble();
+        RandomRun4 = new((float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble());
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -135,6 +137,7 @@ public class CrossfadeRenderer : IRenderer
         CrossfadeShader.SetUniform("time", TrueElapsedTime());
         CrossfadeShader.SetUniform("frame", FrameCount);
         CrossfadeShader.SetUniform("randomrun", RandomRun);
+        CrossfadeShader.SetUniform("randomrun4", RandomRun4);
         VertQuad.RenderFrame(CrossfadeShader);
 
         //...and now AppWindow's OnRenderFrame swaps the back-buffer to the output

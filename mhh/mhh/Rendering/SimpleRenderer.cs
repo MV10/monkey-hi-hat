@@ -36,6 +36,7 @@ public class SimpleRenderer : IRenderer
     private float FrameCount = 0;
     private Random RNG = new();
     private float RandomRun;
+    private Vector4 RandomRun4;
 
     public SimpleRenderer(VisualizerConfig visualizerConfig)
     {
@@ -57,6 +58,7 @@ public class SimpleRenderer : IRenderer
         OnResize();
 
         RandomRun = (float)RNG.NextDouble();
+        RandomRun4 = new((float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble());
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -71,6 +73,7 @@ public class SimpleRenderer : IRenderer
         Shader.SetUniform("time", timeUniform);
         Shader.SetUniform("frame", FrameCount);
         Shader.SetUniform("randomrun", RandomRun);
+        Shader.SetUniform("randomrun4", RandomRun4);
 
         if (FinalDrawbuffers is not null)
         {
