@@ -24,15 +24,15 @@ The music reactivity responds to _anything_ your PC is playing from _any_ source
 
 ## Sample Videos
 
-Although YouTube's compression _badly_ mangles the video quality (even though it was recorded at 720P and 60FPS), click this for a quick 3 minute video which cycles through a few of the visualizers -- but seriously, the real thing looks fantastic by comparison:
+This very small video still has compression artifacts due to Github's file-size limits. This is from v2, which only had basic visualizations.
 
-[![sample video](http://img.youtube.com/vi/YTmhQm-1bwU/0.jpg)](https://youtu.be/YTmhQm-1bwU)
+https://github.com/MV10/monkey-hi-hat/assets/794270/9e33ab83-2b93-48f2-8833-6b1c09eb6494
 
-The video above was from v2, which only had basic visualizers. Here's a 2 minute look at some of the v3 post-processing effects and a different series of visualizers. This one is hosted on Bitchute because the compression artifacts are slightly less terrible (but still far worse than how it looks in real life):
+Here's a 2 minute look at some of the v3 post-processing effects and a different series of visualizers. Like the video above, the real thing looks about a million times better, but this will give you a good idea of what's possible.
 
-[![sample video](http://img.youtube.com/vi/z9536ebpJDs/0.jpg)](https://www.bitchute.com/video/2sIdHZxskwdN/)
+https://github.com/MV10/monkey-hi-hat/assets/794270/6705bbe7-e558-4753-b57d-c90b4a07cb89
 
-Soon I will add a v4 video which shows crossfade transition effects, text overlays, and even more cool visualizers and effects (all undoubtedly mangled by YouTube's talking-head-oriented compression algorithms).
+Soon I will add a v4 video which shows crossfade transition effects, text overlays, and even more cool visualizers and effects.
 
 ## Related Material
 
