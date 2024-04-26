@@ -61,7 +61,7 @@ I have been asked about music reactivity for DJ usage. Have your "real" mixers, 
 
 Content creators should check out my Jan-2024 blog article [Getting Started Tutorial](https://mcguirev10.com/2024/01/20/monkey-hi-hat-getting-started-tutorial.html). Note the article refers to the v3 install script; as of v4, the installer is a stand-alone program that is much easier to use, and the program itself no longer requires third-party drivers and all the associated configuration hassles.
 
-The automatically-installed shaders, playlists, effects, crossfades, accompanying configuration files, icons, and the origin of all these oddball names can be found in my [Volt's Laboratory](https://github.com/MV10/volts-labor  atory) repository.
+The automatically-installed shaders, playlists, effects, crossfades, accompanying configuration files, icons, and the origin of all these oddball names can be found in my [Volt's Laboratory](https://github.com/MV10/volts-laboratory) repository.
 
 ## Known issues
 
