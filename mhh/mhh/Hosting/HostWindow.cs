@@ -743,11 +743,13 @@ LINE 15");
 
             lock (QueuedConfigLock)
             {
+#pragma warning disable CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
                 QueuedVisualizerConfig = Program.AppConfig.DetectSilenceAction switch
                 {
                     SilenceAction.Blank => Caching.BlankVisualizer,
                     SilenceAction.Idle => Caching.IdleVisualizer,
                 };
+#pragma warning restore CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
             }
         }
 
