@@ -191,7 +191,9 @@ namespace mhh
                 case "--fade":
                     if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length != 2) return ShowHelp();
-                    var fadePathname = GetFadePathname(args[1]);
+                    var fadePathname = (args[1].StartsWith("crossfade_", StringComparison.InvariantCultureIgnoreCase))
+                        ? GetFadePathname(args[1])
+                        : GetFadePathname($"crossfade_{args[1]}");
                     if (fadePathname is null) return "ERR: Crossfade not found.";
                     return AppWindow.Command_QueueCrossfade(fadePathname);
 
