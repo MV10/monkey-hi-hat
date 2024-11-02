@@ -9,6 +9,8 @@ namespace mhh
     {
         public static readonly string SectionOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux";
         public static readonly string InternalShaderPath = "./InternalShaders/";
+        public static readonly string PassthroughVertexPathname = Path.Combine(InternalShaderPath, "passthrough.vert");
+        public static readonly string PassthroughFragmentPathname = Path.Combine(InternalShaderPath, "passthrough.frag");
 
         public ConfigFile ConfigSource { get; private set; }
 

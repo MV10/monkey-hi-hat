@@ -188,6 +188,13 @@ namespace mhh
                     if (fxPathname is null) return "ERR: FX not found.";
                     return AppWindow.Command_ApplyFX(fxPathname);
 
+                case "--fade":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length != 2) return ShowHelp();
+                    var fadePathname = GetFadePathname(args[1]);
+                    if (fadePathname is null) return "ERR: Crossfade not found.";
+                    return AppWindow.Command_QueueCrossfade(fadePathname);
+
                 case "--next":
                     if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length > 2) return ShowHelp();
@@ -466,6 +473,9 @@ namespace mhh
         private static string GetFxPathname(string fromArg)
             => PathHelper.HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.FXPath, fromArg);
 
+        private static string GetFadePathname(string fromArg)
+            => PathHelper.HasPathSeparators(fromArg) ? fromArg : PathHelper.FindFile(AppConfig.VisualizerPath, PathHelper.MakeFragFilename(fromArg));
+
         private static string GetShaderDetail(string pathname)
         {
             // returns 0/1 for uses music, followed by shader:description entry
@@ -551,13 +561,15 @@ All switches are passed to the already-running instance:
 
 --list [viz|playlists|fx]   shows config files (*.conf) from all defined paths for the requested file type
 
---load [file]               loads [file].conf from VisualizationPath defined in mhh.conf
---load [path{Path.DirectorySeparatorChar}file]          if present, loads [file].conf from requested path
 --idle                      loads the default startup shader
 --reload                    unloads and reloads the current shader (unavailable after an FX shader loads)
---fx [file]                 loads [file].conf from FXPath defined in mhh.conf
---fx [path{Path.DirectorySeparatorChar}file]            if present, loads [file].conf from requested path
+--load [file]               loads [file].conf from VisualizationPath defined in mhh.conf
 --load [viz] [fx]           loads a visualization and immediately applies FX; must use search paths
+--fx [file]                 loads [file].conf from FXPath defined in mhh.conf
+--fade [file]               queues a specific crossfade shader for the next visualizer change
+--load [path{Path.DirectorySeparatorChar}file]          if present, loads [file].conf from requested path
+--fx [path{Path.DirectorySeparatorChar}file]            if present, loads [file].conf from requested path
+--fade [path{Path.DirectorySeparatorChar}file]          if present, queues crossfade from requested path
 
 --playlist [file]           loads [file].conf from PlaylistPath defined in mhh.conf
 --playlist [path{Path.DirectorySeparatorChar}file]      if present, loads [file].conf from requested path

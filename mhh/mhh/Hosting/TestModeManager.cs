@@ -55,16 +55,13 @@ public class TestModeManager : IDisposable
 
             case TestMode.Fade:
             {
-                if (string.IsNullOrEmpty(PathHelper.FindFile(Program.AppConfig.VisualizerPath, GetFragFilename(filename)))) return "ERR: Crossfade .frag not found";
+                if (string.IsNullOrEmpty(PathHelper.FindFile(Program.AppConfig.VisualizerPath, PathHelper.MakeFragFilename(filename)))) return "ERR: Crossfade .frag not found";
                 break;
             }
         }
 
         return string.Empty;
     }
-
-    private static string GetFragFilename(string filename)
-        => (!filename.EndsWith(".frag", Const.CompareFlags)) ? filename += ".frag" : filename;
 
     private bool VizCacheSetting = Caching.VisualizerShaders.CachingDisabled;
     private bool FxCacheSetting = Caching.FXShaders.CachingDisabled;
@@ -90,17 +87,15 @@ public class TestModeManager : IDisposable
 
             case TestMode.Fade:
             {
-                var fragPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, GetFragFilename(filename));
+                var fragPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, PathHelper.MakeFragFilename(filename));
                 if (string.IsNullOrEmpty(fragPathname))
                 {
                     mode = TestMode.None;
                     break;
                 }
 
-                var vertPathname = Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.vert");
-
-                var key = CachedShader.KeyFrom(vertPathname, fragPathname);
-                CrossfadeShader = Caching.CrossfadeShaders.FirstOrDefault(s => s.Key.Equals(key)) ?? new(vertPathname, fragPathname); ;
+                var key = CachedShader.KeyFrom(ApplicationConfiguration.PassthroughVertexPathname, fragPathname);
+                CrossfadeShader = Caching.CrossfadeShaders.FirstOrDefault(s => s.Key.Equals(key)) ?? new(ApplicationConfiguration.PassthroughVertexPathname, fragPathname); ;
                 if (!CrossfadeShader.IsValid)
                 {
                     mode = TestMode.None;

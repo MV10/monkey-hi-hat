@@ -183,7 +183,6 @@ namespace mhh
             foreach(var lib_kvp in Content["libraries"])
             {
                 var lib = lib_kvp.Value;
-                LibraryShaderConfig value;
 
                 type = null;
                 if (lib.StartsWith("vert:")) type = ShaderType.VertexShader;
