@@ -1,8 +1,14 @@
 ### About this TO-DO list
 
-Previously this was not pushed to the repo, but since I'd hate to lose it, I added it to source control. It describes things I've only done locally so far, or unreleased changes, ideas, plans, wishlist items, and so on. I will not accept any PRs which alters this file.
+I will not accept any PRs which alters this file.
 
-### Post-release changes not already in the changelog
+Previously this was not pushed to the repo, but since I'd hate to lose it, I added it to source control. It describes things I've only done locally so far, or unreleased changes, ideas, plans, wishlist items, and so on. Don't assume anything here is working or will be available in some future release.
+
+On the other hand, if you see something that interests you and you want to tackle it, please open an Issue and we'll discuss the details.
+
+### Post-release changes not already on the wiki changelog page
+
+* https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
 * eyecandy 3.0.1 dev pkg
 * Change `VertexIntegerArray` settings on `[multipass]` to use `:` instead of `=`
@@ -12,7 +18,9 @@ Previously this was not pushed to the repo, but since I'd hate to lose it, I add
 * Add `--fade file` to queue the next crossfade shader
 
 * v4.0.0 running on living room computer
-* https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
+* v4.1.0 playlist revisions; more crossfade control
+* Playlist viz entries can begin with >file identifying crossfade to use (crossfade_ prefix optional)
+* Visualizer playlist SwitchTimeHint=Half bug fixed
 
 ### Release Process
 
@@ -31,18 +39,15 @@ Previously this was not pushed to the repo, but since I'd hate to lose it, I add
 
 ### Work In Progress
 
-* Playlist - full rewrite
-    * pre-determine entire list (viz, fx, fades)
-    * prefix viz + fx entry with >file identifying crossfade to use
-    * fix short-run timing (viz.conf playlist flag SwitchTimeHint=Half)
-
-* Bump version to 4.1
-* Update installer for 4.1
-* Release it
+* Bumped version to 4.1.0:
+    * Update installer for 4.1.0
+    * Create downloads
+    * Release it
 
 ### MHH TODO
 
 * Update README for locally-stored MP4s? (100 MB file size limit)
+* Add dev and shader contributor quick-start pages to wiki
 
 * Implement a .fade file which is like a cut-down viz.conf (for loading textures, libs, etc.)
 * Playlist - hotkey to extend auto-advance time for current viz
