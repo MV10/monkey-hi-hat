@@ -93,7 +93,7 @@ public class FXRenderer : IRenderer
             // prep for crossfade unless the program is doing a larger crossfade (typically happens on instant-apply FX)
             if (Config.Crossfade && Program.AppWindow.Renderer.ActiveRenderer is not CrossfadeRenderer)
             {
-                CrossfadeShader = Caching.CrossfadeShader;
+                CrossfadeShader = Caching.InternalCrossfadeShader;
                 CrossfadeVerts = new VertexQuad();
                 CrossfadeVerts.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
                 CrossfadeResources = RenderManager.ResourceManager.CreateResourceGroups(CrossfadeOwnerName, 1, ViewportResolution)[0];

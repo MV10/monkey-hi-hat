@@ -36,6 +36,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Playlist", "Tes
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "TestContent-Visualizers", "{65165069-6A7C-410C-A703-87D43194725D}"
 	ProjectSection(SolutionItems) = preProject
+		..\testcontent\crossfade_test.frag = ..\testcontent\crossfade_test.frag
 		..\testcontent\doublebuffer.conf = ..\testcontent\doublebuffer.conf
 		..\testcontent\doublebuffer0.frag = ..\testcontent\doublebuffer0.frag
 		..\testcontent\doublebuffer1.frag = ..\testcontent\doublebuffer1.frag

@@ -228,8 +228,6 @@ public class MultipassSectionParser
     // FX column 2: frag shader from FXPath
     private void ParseFXFragShader()
     {
-        var vertPathname = Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.vert");
-
         var frag = column[2];
         if (!frag.EndsWith(".frag", Const.CompareFlags)) frag += ".frag";
         var fragPathname = PathHelper.FindFile(Program.AppConfig.FXPath, frag);
@@ -237,7 +235,7 @@ public class MultipassSectionParser
 
         // when a --reload command is in effect, reload all shaders used by this renderer (save and restore the value)
         var replaceCachedShader = RenderingHelper.ReplaceCachedShader;
-        ShaderPass.Shader = RenderingHelper.GetFXShader(OwningRenderer, vertPathname, fragPathname, RendererFXConfig.LibraryConfigs);
+        ShaderPass.Shader = RenderingHelper.GetFXShader(OwningRenderer, ApplicationConfiguration.PassthroughVertexPathname, fragPathname, RendererFXConfig.LibraryConfigs);
         if (!OwningRenderer.IsValid) return;
         RenderingHelper.ReplaceCachedShader = replaceCachedShader;
 

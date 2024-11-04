@@ -54,7 +54,7 @@ public static class Caching
     /// <summary>
     /// Crossfade is used often enough we just store a separate copy (never in the LRU cache).
     /// </summary>
-    public static Shader CrossfadeShader;
+    public static Shader InternalCrossfadeShader;
 
     /// <summary>
     /// TextManager potentially shows text every frame. Not stored in LRU cache.

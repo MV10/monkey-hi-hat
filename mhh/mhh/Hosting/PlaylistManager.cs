@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.IO.Compression;
 
 namespace mhh;
 
@@ -57,6 +58,7 @@ public class PlaylistManager
         IsFXActive = false;
         ForceStartFX = false;
 
+        string fadeFile;
         string vizFile;
         string fxFile;
         if (ActivePlaylist.Order == PlaylistOrder.RandomFavorites)
@@ -65,17 +67,17 @@ public class PlaylistManager
             {
                 if (RNG.Next(101) < 50 || RNG.Next(101) < ActivePlaylist.FavoritesPct)
                 {
-                    (vizFile, fxFile) = FilenameSplitter(ActivePlaylist.Favorites[RNG.Next(ActivePlaylist.Favorites.Count)]);
+                    (fadeFile, vizFile, fxFile) = FilenameSplitter(ActivePlaylist.Favorites[RNG.Next(ActivePlaylist.Favorites.Count)]);
                 }
                 else
                 {
-                    (vizFile, fxFile) = FilenameSplitter(ActivePlaylist.Visualizations[RNG.Next(ActivePlaylist.Visualizations.Count)]);
+                    (fadeFile, vizFile, fxFile) = FilenameSplitter(ActivePlaylist.Visualizations[RNG.Next(ActivePlaylist.Visualizations.Count)]);
                 }
             } while (vizFile.Equals(Program.AppWindow.Renderer.ActiveRenderer?.Filename ?? string.Empty));
         }
         else
         {
-            (vizFile, fxFile) = FilenameSplitter(ActivePlaylist.Playlist[PlaylistPointer++]);
+            (fadeFile, vizFile, fxFile) = FilenameSplitter(ActivePlaylist.Playlist[PlaylistPointer++]);
             if (PlaylistPointer == ActivePlaylist.Playlist.Length)
             {
                 PlaylistPointer = 0;
@@ -84,7 +86,7 @@ public class PlaylistManager
         }
 
         PlaylistAdvanceAt = (ActivePlaylist.SwitchMode == PlaylistSwitchModes.Time)
-            ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchSeconds + Program.AppConfig.CrossfadeSeconds)
+            ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchSeconds)
             : (ActivePlaylist.SwitchMode == PlaylistSwitchModes.Silence)
                 ? DateTime.Now.AddSeconds(ActivePlaylist.MaxRunSeconds)
                 : DateTime.MaxValue;
@@ -92,6 +94,21 @@ public class PlaylistManager
         PlaylistIgnoreSilenceUntil = (temporarilyIgnoreSilence && ActivePlaylist.SwitchMode == PlaylistSwitchModes.Silence)
             ? DateTime.Now.AddSeconds(ActivePlaylist.SwitchCooldownSeconds)
             : DateTime.MinValue;
+
+        if(!string.IsNullOrEmpty(fadeFile))
+        {
+            if (!fadeFile.StartsWith("crossfade_", StringComparison.InvariantCultureIgnoreCase)) fadeFile = $"crossfade_{fadeFile}";
+            var fadePathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, PathHelper.MakeFragFilename(fadeFile));
+            if(!string.IsNullOrEmpty(fadePathname))
+            {
+                LogHelper.Logger?.LogTrace($"Playlist queuing crossfade {fadeFile}");
+                Program.AppWindow.Command_QueueCrossfade(fadePathname);
+            }
+            else
+            {
+                LogHelper.Logger?.LogWarning($"Playlist crossfade not found: {fadeFile}");
+            }
+        }
 
         var vizPathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, vizFile);
         if (vizPathname is null) return $"ERR: {vizFile} not found in visualizer path(s)";
@@ -141,6 +158,8 @@ public class PlaylistManager
                 PlaylistAdvanceAt.AddSeconds(ActivePlaylist.SwitchSeconds);
             }
         }
+
+        PlaylistAdvanceAt.AddSeconds(Program.AppConfig.CrossfadeSeconds);
     }
 
     public string ApplyFX()
@@ -216,10 +235,23 @@ public class PlaylistManager
         ForceStartFX = (RNG.Next(1, 101) <= ActivePlaylist.InstantFXPercent);
     }
 
-    private (string viz, string fx) FilenameSplitter(string entry)
+    private (string fade, string viz, string fx) FilenameSplitter(string entry)
     {
         var items = entry.Split(' ', Const.SplitOptions);
-        if (items.Length == 2) return (items[0], items[1]);
-        return (items[0], string.Empty);
+
+        // viz only
+        if (items.Length == 1) return (string.Empty, items[0], string.Empty);
+
+        // first item is crossfade?
+        var fade = (items[0].StartsWith(">")) ? items[0].Substring(1) : string.Empty;
+
+        // crossfade, viz, fx
+        if (items.Length == 3) return (fade, items[1], items[2]);
+
+        // length 2 = viz, fx
+        if (string.IsNullOrEmpty(fade)) return (string.Empty, items[0], items[1]);
+
+        // length 2 = crossfade, viz
+        return (fade, items[1], string.Empty);
     }
 }

@@ -51,4 +51,8 @@ internal static class PathHelper
 
     public static bool HasPathSeparators(string argument)
         => argument.Contains(Path.DirectorySeparatorChar) || argument.Contains(Path.AltDirectorySeparatorChar);
+
+    public static string MakeFragFilename(string filename)
+        => (!filename.EndsWith(".frag", Const.CompareFlags)) ? filename += ".frag" : filename;
 }
+

@@ -78,8 +78,6 @@ namespace mhh
             Playlist = new string[Math.Max(1, Visualizations.Count + Favorites.Count)];
             GeneratePlaylist();
 
-            // TODO implement [Collections] section (reading from other playlists)
-
             if (FXPercent < 0 || FXPercent > 100 || InstantFXPercent < 0 || InstantFXPercent > 100 || FXDelaySeconds < 0)
             {
                 Warning("Some playlist FX settings are invalid, so FX usage is disabled.");

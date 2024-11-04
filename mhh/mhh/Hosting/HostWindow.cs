@@ -81,6 +81,7 @@ namespace mhh
         private object QueuedConfigLock = new();
         private VisualizerConfig QueuedVisualizerConfig = null;
         private FXConfig QueuedFXConfig = null;
+        private string QueuedCrossfadePathname = string.Empty;
 
         private Random RNG = new();
 
@@ -313,8 +314,9 @@ namespace mhh
                 bool exit = false;
                 if(QueuedVisualizerConfig is not null)
                 {
-                    Renderer.PrepareNewRenderer(QueuedVisualizerConfig);
+                    Renderer.PrepareNewRenderer(QueuedVisualizerConfig, QueuedCrossfadePathname);
                     QueuedVisualizerConfig = null;
+                    QueuedCrossfadePathname = string.Empty;
                     exit = true;
 
                     if (Program.AppConfig.ShowPlaylistPopups 
@@ -427,6 +429,15 @@ namespace mhh
             var msg = $"Requested FX {fx.ConfigSource.Pathname}";
             LogHelper.Logger?.LogInformation(msg);
             return msg;
+        }
+
+        /// <summary>
+        /// Handler for the --fade command-line switch.
+        /// </summary>
+        public string Command_QueueCrossfade(string fadeFragPathname)
+        {
+            QueuedCrossfadePathname = fadeFragPathname;
+            return $"Queued crossfader {fadeFragPathname}";
         }
 
         /// <summary>
@@ -732,11 +743,13 @@ LINE 15");
 
             lock (QueuedConfigLock)
             {
+#pragma warning disable CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
                 QueuedVisualizerConfig = Program.AppConfig.DetectSilenceAction switch
                 {
                     SilenceAction.Blank => Caching.BlankVisualizer,
                     SilenceAction.Idle => Caching.IdleVisualizer,
                 };
+#pragma warning restore CS8509 // The switch expression does not handle all possible values of its input type (it is not exhaustive).
             }
         }
 
@@ -749,11 +762,11 @@ LINE 15");
             Caching.IdleVisualizer = new(Path.Combine(ApplicationConfiguration.InternalShaderPath, "idle.conf"));
             Caching.BlankVisualizer = new(Path.Combine(ApplicationConfiguration.InternalShaderPath, "blank.conf"));
 
-            Caching.CrossfadeShader = new(
-                Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.vert"),
+            Caching.InternalCrossfadeShader = new(
+                ApplicationConfiguration.PassthroughVertexPathname,
                 Path.Combine(ApplicationConfiguration.InternalShaderPath, "crossfade.frag"));
 
-            if (!Caching.CrossfadeShader.IsValid)
+            if (!Caching.InternalCrossfadeShader.IsValid)
             {
                 Console.WriteLine($"\n\nFATAL ERROR: Internal crossfade shader was not found or failed to compile.\n\n");
                 Thread.Sleep(250);
@@ -761,7 +774,7 @@ LINE 15");
             }
 
             Caching.TextShader = new(
-                Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.vert"),
+                ApplicationConfiguration.PassthroughVertexPathname,
                 Path.Combine(ApplicationConfiguration.InternalShaderPath, "text.frag"));
 
             if (!Caching.TextShader.IsValid)
@@ -779,7 +792,7 @@ LINE 15");
                     Caching.CrossfadeShaders = new(files.Count);
                     foreach(var pathname in files)
                     {
-                        var shader = new CachedShader(Path.Combine(ApplicationConfiguration.InternalShaderPath, "passthrough.vert"), pathname);
+                        var shader = new CachedShader(ApplicationConfiguration.PassthroughVertexPathname, pathname);
                         if (shader.IsValid) Caching.CrossfadeShaders.Add(shader);
                     }
                 }
@@ -833,7 +846,7 @@ display res: {ClientSize.X} x {ClientSize.Y}";
             Caching.LibraryShaders.Dispose();
 
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade shader");
-            Caching.CrossfadeShader.Dispose();
+            Caching.InternalCrossfadeShader.Dispose();
 
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached crossfade shaders");
             if (Caching.CrossfadeShaders?.Count > 0)

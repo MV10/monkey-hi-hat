@@ -60,6 +60,8 @@ public class RenderManager : IDisposable
     }
     private bool IsTimePaused = false;
 
+    private string CrossfadeFragPathname = string.Empty;
+
     public RenderManager()
     {
         ResourceManager = new();
@@ -68,9 +70,10 @@ public class RenderManager : IDisposable
 
     /// <summary>
     /// Queues up a renderer to run the visualization as the next active renderer. May
-    /// employ a cross-fade effect before the new one is running exclusively.
+    /// employ a cross-fade effect before the new one is running exclusively. Can optionally
+    /// specify a specific cross-fade pathname.
     /// </summary>
-    public void PrepareNewRenderer(VisualizerConfig visualizerConfig)
+    public void PrepareNewRenderer(VisualizerConfig visualizerConfig, string crossfadeFragPathname = "")
     {
         IRenderer renderer;
         if (visualizerConfig.ConfigSource.Content.ContainsKey("multipass"))
@@ -106,6 +109,8 @@ public class RenderManager : IDisposable
 
         NewRenderer?.Dispose();
         NewRenderer = renderer;
+
+        CrossfadeFragPathname = crossfadeFragPathname;
     }
 
     /// <summary>
@@ -172,7 +177,7 @@ public class RenderManager : IDisposable
             {
                 // Crossfade enabled, hand off control and make the crossfader active
                 var oldRenderer = ActiveRenderer;
-                ActiveRenderer = new CrossfadeRenderer(oldRenderer, NewRenderer, CrossfadeCompleted);
+                ActiveRenderer = new CrossfadeRenderer(oldRenderer, NewRenderer, CrossfadeCompleted, CrossfadeFragPathname);
                 NewRenderer = null;
                 if (!IsTimePaused) ActiveRenderer.StartClock();
             }

@@ -48,31 +48,48 @@ public class CrossfadeRenderer : IRenderer
     private static Random RNG = new();
     private static List<int> CacheIndexes;
 
-    public CrossfadeRenderer(IRenderer oldRenderer, IRenderer newRenderer, Action completionCallback)
+    public CrossfadeRenderer(IRenderer oldRenderer, IRenderer newRenderer, Action completionCallback, string fragPathname = "")
     {
+        // Handle crossfade test mode
         if(Program.AppWindow.Tester is not null && Program.AppWindow.Tester.Mode == TestMode.Fade)
         {
             CrossfadeShader = Program.AppWindow.Tester.CrossfadeShader;
         }
         else
         {
-            if (Program.AppConfig.RandomizeCrossfade)
+            // Handle explicitly queued crossfader
+            if(!string.IsNullOrEmpty(fragPathname))
             {
-                if (CacheIndexes is null || CacheIndexes.Count == 0)
+                var key = CachedShader.KeyFrom(ApplicationConfiguration.PassthroughVertexPathname, fragPathname);
+                CrossfadeShader = Caching.CrossfadeShaders.FirstOrDefault(s => s.Key.Equals(key)) ?? new(ApplicationConfiguration.PassthroughVertexPathname, fragPathname); ;
+                if(!CrossfadeShader.IsValid)
                 {
-                    var list = new int[Caching.CrossfadeShaders.Count];
-                    for (int j = 0; j < list.Length; j++) list[j] = j;
-                    RNG.Shuffle(list);
-                    CacheIndexes = list.ToList();
+                    CrossfadeShader?.Dispose();
+                    CrossfadeShader = Caching.InternalCrossfadeShader;
                 }
-                int i = CacheIndexes[0];
-                CacheIndexes.RemoveAt(0);
-                CrossfadeShader = Caching.CrossfadeShaders[i];
-                LogHelper.Logger?.LogDebug($"Crossfade shader {((CachedShader)CrossfadeShader).Key}");
             }
             else
             {
-                CrossfadeShader = Caching.CrossfadeShader;
+                // Handle randomized crossfades
+                if (Program.AppConfig.RandomizeCrossfade)
+                {
+                    if (CacheIndexes is null || CacheIndexes.Count == 0)
+                    {
+                        var list = new int[Caching.CrossfadeShaders.Count];
+                        for (int j = 0; j < list.Length; j++) list[j] = j;
+                        RNG.Shuffle(list);
+                        CacheIndexes = list.ToList();
+                    }
+                    int i = CacheIndexes[0];
+                    CacheIndexes.RemoveAt(0);
+                    CrossfadeShader = Caching.CrossfadeShaders[i];
+                    LogHelper.Logger?.LogDebug($"Crossfade shader {((CachedShader)CrossfadeShader).Key}");
+                }
+                // Default to basic internal crossfade
+                else
+                {
+                    CrossfadeShader = Caching.InternalCrossfadeShader;
+                }
             }
         }
 
