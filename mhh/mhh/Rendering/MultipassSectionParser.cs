@@ -242,7 +242,7 @@ public class MultipassSectionParser
         // not necessary to set ShaderPass.Uniforms for FX, those are stored at the FXConfig level.
     }
 
-    // MP column 2: visualizer.conf-based multipass (see mpvizconf.conf for docs)
+    // MP column 2: visualizer.conf-based multipass (see multipass.conf for docs)
     private void ParseVisualizerConf()
     {
         var vizPathname = (column[2].Equals("*"))

@@ -288,6 +288,18 @@ namespace mhh
                 return;
             }
 
+            // Playlist extend run time by 1 minute
+            if (input.IsKeyReleased(Keys.X))
+            {
+                Playlist?.AddOneMinute();
+            }
+
+            // Playlist extend run time indefinitely
+            if (input.IsKeyReleased(Keys.X))
+            {
+                Playlist?.PauseAutoAdvance();
+            }
+
             // Spacebar to toggle full-screen mode
             if (input.IsKeyReleased(Keys.Space))
             {

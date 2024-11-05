@@ -177,6 +177,18 @@ public class PlaylistManager
         return "ACK";
     }
 
+    public void AddOneMinute()
+    {
+        if (ActivePlaylist is null) return;
+        if (PlaylistAdvanceAt != DateTime.MaxValue) PlaylistAdvanceAt.AddSeconds(60);
+    }
+
+    public void PauseAutoAdvance()
+    {
+        if (ActivePlaylist is null) return;
+        PlaylistAdvanceAt = DateTime.MaxValue;
+    }
+
     public void UpdateFrame(double silenceDuration)
     {
         if (ActivePlaylist is null || Program.AppWindow.Renderer.TimePaused) return;
