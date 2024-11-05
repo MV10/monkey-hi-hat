@@ -10,45 +10,37 @@ On the other hand, if you see something that interests you and you want to tackl
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
-* eyecandy 3.0.1 dev pkg
-* Change `VertexIntegerArray` settings on `[multipass]` to use `:` instead of `=`
-* Wiki 06 Visualization Configuration -- note : instead of = (very last sentence on page)
-* Wiki: explain OpenGL full-screen behaviors (trying to use 2nd console etc)
-* `vec4 randomrun4` - uniform with additional random numbers
-* Add `--fade file` to queue the next crossfade shader
-
-* v4.0.0 running on living room computer
-* v4.1.0 playlist revisions; more crossfade control
-* Playlist viz entries can begin with >file identifying crossfade to use (crossfade_ prefix optional)
-* Visualizer playlist SwitchTimeHint=Half bug fixed
+* v4.1.0 running on living room computer
+* eyecandy 3.0.1 released 2024-11-04, up-to-date locally
 
 ### Release Process
 
 * Verify version.txt matches release number
 * Verify install.cs has current release number
+* Add any version-based config changes to ConfigHelper.cs
 * Build install.exe release build
 * Publish mhh release build
 * Copy monkey-see-monkey-do release build to mhh publish directory
 * Archive mhh-app-x-x-x.zip and mhh-content-x-x-x.zip
 * Copy zip files into one manual-setup-x-x-x.zip
-* Upload archives to github as .bin files
+* Rename all three zips to a .bin extension
+* Push app and content .bin files to github mcguirev10.com /assets/misc
 * Update readme etc, push changes
 * Create new release tag, upload install-x-x-x.exe and manual-setup.zip
 * Update release history, wiki, etc.
-* Update pinned release announcement issue
+* Update pinned release tracker: https://github.com/MV10/monkey-hi-hat/issues/3
 
 ### Work In Progress
 
-* Bumped version to 4.1.0:
-    * Update installer for 4.1.0
-    * Create downloads
-    * Release it
+* none
 
 ### MHH TODO
 
 * Update README for locally-stored MP4s? (100 MB file size limit)
 * Add dev and shader contributor quick-start pages to wiki
 
+* Wiki: explain OpenGL full-screen behaviors (trying to use 2nd console etc)
+* Add uniform indicating FX is active so viz (like chaos_columns) can take different action
 * Implement a .fade file which is like a cut-down viz.conf (for loading textures, libs, etc.)
 * Playlist - hotkey to extend auto-advance time for current viz
 * Installer - add msmd firewall rule? or run interactively once to prompt?
