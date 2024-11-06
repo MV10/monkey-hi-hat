@@ -8,7 +8,7 @@ namespace mhhinstall
 {
     public class Installer
     {
-        public static readonly Version appVersion = new Version("4.0.0");
+        public static readonly Version appVersion = new Version("4.1.1");
         public static readonly string dotnetVer = "8";
 
         public static readonly string temp = Path.GetTempPath();

@@ -295,7 +295,7 @@ namespace mhh
             }
 
             // Playlist extend run time indefinitely
-            if (input.IsKeyReleased(Keys.X))
+            if (input.IsKeyReleased(Keys.A))
             {
                 Playlist?.PauseAutoAdvance();
             }
