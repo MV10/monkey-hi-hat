@@ -4,9 +4,11 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 
 namespace mhh
 {
@@ -645,6 +647,30 @@ LINE 15");
                     return "ERR: Unrecognized argument.";
             }
             return "ACK";
+        }
+
+        /// <summary>
+        /// Handler for the --display command-line switch
+        /// </summary>
+        public string Command_Display()
+        {
+            var mon = Monitors.GetMonitors();
+            var cur = Monitors.GetMonitorFromWindow(Program.AppWindow);
+            var idx = 0;
+
+            StringBuilder msg = new("Monitors:\n");
+            for(int i = 0; i < mon.Count; i++)
+            {
+                msg.AppendLine($"  {i + 1} name: {mon[i].Name}");
+                msg.AppendLine($"  {i + 1} area: {mon[i].ClientArea}");
+                if (mon[i].Handle.Pointer == cur.Handle.Pointer) idx = i;
+            }
+            msg.AppendLine($"Window:");
+            msg.AppendLine($"   state: {WindowState}");
+            msg.AppendLine($"   coord: ({Location.X},{Location.Y}) - ({Size.X},{Size.Y})");
+            msg.AppendLine($"  screen: {idx} - {cur.Name}");
+
+            return msg.ToString();
         }
 
         /// <summary>

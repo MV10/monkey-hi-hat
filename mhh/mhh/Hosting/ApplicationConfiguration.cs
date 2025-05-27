@@ -20,6 +20,8 @@ namespace mhh
         public readonly string FXPath = string.Empty;
 
         public readonly bool StartFullScreen;
+        public readonly int StartX;
+        public readonly int StartY;
         public readonly int SizeX;
         public readonly int SizeY;
         public readonly int RenderResolutionLimit;
@@ -74,6 +76,8 @@ namespace mhh
             CloseToStandby = ConfigSource.ReadValue("setup", "closetostandby").ToBool(false);
             WindowsHideConsoleAtStartup = ConfigSource.ReadValue("windows", "hideconsoleatstartup").ToBool(false);
             WindowsHideConsoleInStandby = ConfigSource.ReadValue("windows", "hideconsoleinstandby").ToBool(true);
+            StartX = ConfigSource.ReadValue("setup", "startx").ToInt32(100);
+            StartY = ConfigSource.ReadValue("setup", "starty").ToInt32(100);
             SizeX = ConfigSource.ReadValue("setup", "sizex").ToInt32(960);
             SizeY = ConfigSource.ReadValue("setup", "sizey").ToInt32(540);
             RenderResolutionLimit = ConfigSource.ReadValue("setup", "renderresolutionlimit").ToInt32(0);

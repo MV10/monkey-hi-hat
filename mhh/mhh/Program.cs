@@ -255,6 +255,11 @@ namespace mhh
                             $"\nFPS target is {(AppWindow.UpdateFrequency == 0 ? "not locked (max FPS)" : $"locked to {AppWindow.UpdateFrequency} FPS")}";
                     }
 
+                case "--display":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length > 1) return ShowHelp();
+                    return AppWindow.Command_Display();
+
                 case "--jpg":
                 case "--png":
                     if (OnStandby) return "ERR: Application is in standby";
@@ -432,6 +437,7 @@ namespace mhh
                     HideMousePointer = AppConfig.HideMousePointer,
                 };
                 WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
+                WindowConfig.OpenTKNativeWindowSettings.Location = (AppConfig.StartX, AppConfig.StartY);
                 WindowConfig.OpenTKNativeWindowSettings.ClientSize = (AppConfig.SizeX, AppConfig.SizeY);
                 WindowConfig.OpenTKNativeWindowSettings.APIVersion = OpenGLVersion;
                 WindowConfig.OpenTKGameWindowSettings.UpdateFrequency = AppConfig.FrameRateLimit;
@@ -588,6 +594,7 @@ All switches are passed to the already-running instance:
 --show grid                 Displays a 100 x 15 character grid for adjusting text settings
 
 --info                      writes shader and execution details to the console
+--display                   lists monitor details and the window state and coordinates
 --fullscreen                toggle between windowed and full-screen state
 --fps                       returns instantaneous FPS and average FPS over past 10 seconds
 --fps [0|1-9999]            sets a frame rate (FPS) target, or 0 to disable (some shaders may require 60 FPS)

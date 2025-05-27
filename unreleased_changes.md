@@ -1,10 +1,11 @@
 ### About this TO-DO list
 
-I will not accept any PRs which alters this file.
+I will not accept a PR which alters this file (other than my own, obviously).
 
-Previously this was not pushed to the repo, but since I'd hate to lose it, I added it to source control. It describes things I've only done locally so far, or unreleased changes, ideas, plans, wishlist items, and so on. Don't assume anything here is working or will be available in some future release.
+However, if you see something that interests you and you want to tackle it, please open an Issue and we'll discuss the details.
 
-On the other hand, if you see something that interests you and you want to tackle it, please open an Issue and we'll discuss the details.
+Don't assume anything here is working or will be available in some future release. Previously this was not pushed to the repo, but since I'd hate to lose it, I added it to source control. It describes things I've only done locally so far, or unreleased changes, ideas, plans, wishlist items, and so on.
+
 
 ### Post-release changes not already on the wiki changelog page
 
@@ -12,6 +13,7 @@ On the other hand, if you see something that interests you and you want to tackl
 
 * v4.1.0 running on living room computer
 * eyecandy 3.0.1 released 2024-11-04, up-to-date locally
+* v4.2.0 in progress
 
 ### Release Process
 
@@ -32,7 +34,14 @@ On the other hand, if you see something that interests you and you want to tackl
 
 ### Work In Progress
 
-* none
+* v4.2.0
+* eyecandy 3.0.2 released 2025-05-27, updated other dependencies
+* Multi-monitor support:
+    * https://github.com/opentk/opentk/issues/1663
+    * https://github.com/opentk/opentk/pull/1770
+    * Config - window starting position (`StartX` and `StartY`)
+    * In full-screen mode the `Enter` key advances to the next monitor
+    * Add --display command to report window and monitor info
 
 ### MHH TODO
 
@@ -44,7 +53,6 @@ On the other hand, if you see something that interests you and you want to tackl
 * Implement a .fade file which is like a cut-down viz.conf (for loading textures, libs, etc.)
 * Playlist - hotkey to extend auto-advance time for current viz
 * Installer - add msmd firewall rule? or run interactively once to prompt?
-* WSL X11 / Linux x64 testing
 * monkey-see-monkey-do - relay delay time
 * monkey-see-monkey-do - utility command(s) (fixsound.ps1)
 * Logo overlay support (random and playlist)
@@ -54,10 +62,8 @@ On the other hand, if you see something that interests you and you want to tackl
 * Installer - add eyecandy demo and tcpargs utilities
 * Installer - Use winget to retrieve .NET runtime
 * Installer - winget distro? https://github.com/Belphemur/SoundSwitch/issues/1220
-* Installer - Linux installation shell script? cmake script?
 * Create config GUI? (is WinForms supported by always-installed .NET Framework?)
 * Playlist - add `[collections]` section (playlist of other playlists)
-* Linux render/update events not suspended during `OnResize`? Fake it somehow?
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
 * Test mode - show keys on screen
@@ -78,8 +84,6 @@ On the other hand, if you see something that interests you and you want to tackl
 * Add test content to intentionally generate errors
 * `IVertexSource` init should accept a key/value config list (expose a "settings required" bool?)
 * Add OpenGL debug-callback support
-* Buggy in OpenTK, but multi-monitor support? Windowed starting position? Keys to change monitor?
-* Add start position to mhh.conf and --pos command to report window position (OpenTK issue 1663)
 * Use FontAtlasFilename? (update Wiki with info about generating new ones)
 
 * Soundcloud track overlay?
@@ -99,6 +103,12 @@ On the other hand, if you see something that interests you and you want to tackl
     * https://github.com/serilog/serilog-settings-configuration#minimumlevel-levelswitches-overrides-and-dynamic-reload
     * https://learn.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-7.0#log-category
     * Provide a Serilog.ILogger.ForContext(...) logger to eyecandy and CommandLineSwitchPipe
+
+* Linux-specific items (x64 only)
+    * WSL not a realistic option (very poor graphics / GPU support, and not planned by MS)
+    * maybe dual-boot locally for dev/testing?
+    * Installer - Linux installation shell script? cmake script?
+    * Linux render/update events not suspended during `OnResize`? Fake it somehow?
 
 * Old Spotify notes
     * https://johnnycrazy.github.io/SpotifyAPI-NET/
