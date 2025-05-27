@@ -309,6 +309,28 @@ namespace mhh
                 return;
             }
 
+            // Enter to change monitors in full-screen mode
+            if (WindowState == WindowState.Fullscreen && input.IsKeyReleased(Keys.Enter))
+            {
+                var mon = Monitors.GetMonitors();
+                if (mon.Count < 2) return;
+
+                var cur = Monitors.GetMonitorFromWindow(Program.AppWindow);
+                var idx = 0;
+                
+                for(int i = 0; i < mon.Count; i++)
+                {
+                    if (cur.Handle.Pointer == mon[i].Handle.Pointer)
+                    {
+                        idx = i + 1;
+                        if (idx == mon.Count) idx = 0;
+                        break;
+                    }
+                }
+
+                MakeFullscreen(mon[idx].Handle);
+            }
+
             double duration = DetectSilence();
             if (Program.AppConfig.DetectSilenceSeconds > 0 && duration >= Program.AppConfig.DetectSilenceSeconds)
             {

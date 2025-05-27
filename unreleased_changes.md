@@ -17,9 +17,9 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Release Process
 
-* Verify version.txt matches release number
-* Verify install.cs has current release number
-* Add any version-based config changes to ConfigHelper.cs
+* Verify `mhh\version.txt` matches release number
+* Verify `install\Installer.cs` has current release number
+* Add any version-based config changes to `install\ConfigHelper.cs`
 * Build install.exe release build
 * Publish mhh release build
 * Copy monkey-see-monkey-do release build to mhh publish directory
@@ -37,9 +37,7 @@ Don't assume anything here is working or will be available in some future releas
 * v4.2.0
 * eyecandy 3.0.2 released 2025-05-27, updated other dependencies
 * Multi-monitor support:
-    * https://github.com/opentk/opentk/issues/1663
-    * https://github.com/opentk/opentk/pull/1770
-    * Config - window starting position (`StartX` and `StartY`)
+    * Config window starting position (`StartX` and `StartY`)
     * In full-screen mode the `Enter` key advances to the next monitor
     * Add --display command to report window and monitor info
 
@@ -71,7 +69,6 @@ Don't assume anything here is working or will be available in some future releas
 * Textures via HTTP? Caching?
 * Hotkey to popup list of common hotkeys
 * Startup crashes if no audio device available? (ex. RDP disables audio)
-* Fullscreen should detect monitor based on window top-left coordinates
 * Render the text overlay buffer once instead of running the shader every frame
 * Allow aliasing multipass uniform names for reusable utility frag shaders
 * Add a basic setup.sh for Linux? (set exec and dir permissions, copy config)
