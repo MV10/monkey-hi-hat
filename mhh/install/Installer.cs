@@ -8,8 +8,14 @@ namespace mhhinstall
 {
     public class Installer
     {
-        public static readonly Version appVersion = new Version("4.1.1");
+        // Update these for each release
+        public static readonly Version appVersion = new Version("4.2.0");
+        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-4-2-0.bin";
+        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-4-2-0.bin";
+
+        // Update these for dotnet runtime bumps
         public static readonly string dotnetVer = "8";
+        public static readonly string dotnetUrl = "https://builds.dotnet.microsoft.com/dotnet/Runtime/8.0.16/dotnet-runtime-8.0.16-win-x64.exe";
 
         public static readonly string temp = Path.GetTempPath();
         public static readonly string log = Path.Combine(temp, "install-monkey-hi-hat.log");
@@ -18,10 +24,6 @@ namespace mhhinstall
         public static readonly string tempProgramZip = Path.Combine(temp, "mhh-program.zip");
         public static readonly string tempContentZip = Path.Combine(temp, "mhh-content.zip");
 
-        public static readonly string dotnetUrl = "https://download.visualstudio.microsoft.com/download/pr/7f4d5cbc-4449-4ea5-9578-c467821f251f/b9b19f89d0642bf78f4b612c6a741637/dotnet-runtime-8.0.0-win-x64.exe";
-        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-4-0-0.bin";
-        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-4-0-0.bin";
-        
         // Any download smaller than 500K is assumed to be bad content (404 HTML page etc)
         public static readonly long minDownloadSize = 500 * 1024;
 
@@ -39,7 +41,7 @@ namespace mhhinstall
         public static readonly string shortcutDesktopCmdLink = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Monkey Hi Hat Console.lnk");
         public static readonly string shortcutStartupLink = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Programs", "Startup", "Monkey Hi Hat.lnk");
 
-        // Only used to remove unneeded components installed with prior releases.
+        // Optional (really, obsolete) as of v4, only used to remove unneeded components installed with prior releases.
         public static readonly string driverUrl = "https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack43.zip";
         public static readonly string tempDriverZip = Path.Combine(temp, "mhh-installer-driver.zip");
 

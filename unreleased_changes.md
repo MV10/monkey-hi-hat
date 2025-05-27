@@ -12,8 +12,12 @@ Don't assume anything here is working or will be available in some future releas
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
 * v4.1.0 running on living room computer
-* eyecandy 3.0.1 released 2024-11-04, up-to-date locally
 * v4.2.0 in progress
+* eyecandy 3.0.2 released 2025-05-27, updated other dependencies
+* Multi-monitor support:
+    * Config window starting position (`StartX` and `StartY`)
+    * In full-screen mode the `Enter` key advances to the next monitor
+    * Add --display command to report window and monitor info
 
 ### Release Process
 
@@ -34,12 +38,7 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Work In Progress
 
-* v4.2.0
-* eyecandy 3.0.2 released 2025-05-27, updated other dependencies
-* Multi-monitor support:
-    * Config window starting position (`StartX` and `StartY`)
-    * In full-screen mode the `Enter` key advances to the next monitor
-    * Add --display command to report window and monitor info
+*
 
 ### MHH TODO
 
@@ -60,7 +59,7 @@ Don't assume anything here is working or will be available in some future releas
 * Installer - add eyecandy demo and tcpargs utilities
 * Installer - Use winget to retrieve .NET runtime
 * Installer - winget distro? https://github.com/Belphemur/SoundSwitch/issues/1220
-* Create config GUI? (is WinForms supported by always-installed .NET Framework?)
+* Create config GUI (WinForms now available for modern .NET)
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
@@ -71,7 +70,6 @@ Don't assume anything here is working or will be available in some future releas
 * Startup crashes if no audio device available? (ex. RDP disables audio)
 * Render the text overlay buffer once instead of running the shader every frame
 * Allow aliasing multipass uniform names for reusable utility frag shaders
-* Add a basic setup.sh for Linux? (set exec and dir permissions, copy config)
 * Add mhh.conf paths for saving screenshots
 * Add --paths switch to return configured paths
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
@@ -104,6 +102,7 @@ Don't assume anything here is working or will be available in some future releas
 * Linux-specific items (x64 only)
     * WSL not a realistic option (very poor graphics / GPU support, and not planned by MS)
     * maybe dual-boot locally for dev/testing?
+    * Installer - a basic setup.sh for Linux? (set exec and dir permissions, copy config)
     * Installer - Linux installation shell script? cmake script?
     * Linux render/update events not suspended during `OnResize`? Fake it somehow?
 
