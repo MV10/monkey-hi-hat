@@ -85,6 +85,11 @@ namespace mhhinstall
             {
                 if (Installer.versionFound.Minor < 2) From_310_to_400();
             }
+
+            if (Installer.versionFound.Major == 4)
+            {
+                if (Installer.versionFound.Minor < 2) From_410_to_420();
+            }
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -114,8 +119,22 @@ namespace mhhinstall
         }
 
         // Not in use, just an example, see end of above, From_310_to_400
-        static void From_400_to_410() 
-        { }
+        static void From_400_to_410()
+        {
+            Output.Write("-- v4.9.0 to v4.1.0, no config changes");
+
+            From_410_to_420();
+        }
+
+
+        static void From_410_to_420()
+        {
+            Output.Write("-- v4.1.0 to v4.2.0 changes:");
+
+            AddSetting("setup", "SizeY", "StartX",
+                $"\n\n# SETTING ADDED FOR v4.2.0 UPDATE ON {DateTime.Now}" +
+                "\n# Default is 100x100 on the primary monitor. Coordinates on other\n# monitors are in \"virtual screen space\" relative to the primary.\n# The starting window position is optional. Use the --display switch\n# to get a list of monitor names, ID numbers, and coordinate rectanges.\n# The application doesn't perform any validation of starting coords.\nStartX=100\nStartY=100"); 
+        }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////
         // These define the change operations that the update functions can register to apply.
