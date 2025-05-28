@@ -4,9 +4,11 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text;
 
 namespace mhh
 {
@@ -58,6 +60,11 @@ namespace mhh
         /// The current time (hour, minute, seconds, UTC hour)
         /// </summary>
         public Vector4 UniformClockTime;
+
+        /// <summary>
+        /// Indicates whether an FX shader is running (0-no, 1-yes).
+        /// </summary>
+        public float UniformFXActive;
 
         private MethodInfo EyecandyEnableMethod;
         private MethodInfo EyecandyDisableMethod;
@@ -146,6 +153,7 @@ namespace mhh
             UniformRandomNumber = (float)RNG.NextDouble();
             UniformDate = new(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, (float)DateTime.Now.TimeOfDay.TotalSeconds);
             UniformClockTime = new(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTime.UtcNow.Hour);
+            UniformFXActive = (Renderer.ActiveRenderer is FXRenderer) ? 1.0f : 0.0f;
 
             Renderer.RenderFrame();
 
@@ -305,6 +313,28 @@ namespace mhh
             {
                 CommandRequested = CommandRequest.ToggleFullscreen;
                 return;
+            }
+
+            // Enter to change monitors in full-screen mode
+            if (WindowState == WindowState.Fullscreen && input.IsKeyReleased(Keys.Enter))
+            {
+                var mon = Monitors.GetMonitors();
+                if (mon.Count < 2) return;
+
+                var cur = Monitors.GetMonitorFromWindow(Program.AppWindow);
+                var idx = 0;
+                
+                for(int i = 0; i < mon.Count; i++)
+                {
+                    if (cur.Handle.Pointer == mon[i].Handle.Pointer)
+                    {
+                        idx = i + 1;
+                        if (idx == mon.Count) idx = 0;
+                        break;
+                    }
+                }
+
+                MakeFullscreen(mon[idx].Handle);
             }
 
             double duration = DetectSilence();
@@ -645,6 +675,30 @@ LINE 15");
                     return "ERR: Unrecognized argument.";
             }
             return "ACK";
+        }
+
+        /// <summary>
+        /// Handler for the --display command-line switch
+        /// </summary>
+        public string Command_Display()
+        {
+            var mon = Monitors.GetMonitors();
+            var cur = Monitors.GetMonitorFromWindow(Program.AppWindow);
+            var idx = 0;
+
+            StringBuilder msg = new("Monitors:\n");
+            for(int i = 0; i < mon.Count; i++)
+            {
+                msg.AppendLine($"  {i + 1} name: {mon[i].Name}");
+                msg.AppendLine($"  {i + 1} area: {mon[i].ClientArea}");
+                if (mon[i].Handle.Pointer == cur.Handle.Pointer) idx = i;
+            }
+            msg.AppendLine($"Window:");
+            msg.AppendLine($"   state: {WindowState}");
+            msg.AppendLine($"   coord: ({Location.X},{Location.Y}) - ({Size.X},{Size.Y})");
+            msg.AppendLine($"  screen: {idx} - {cur.Name}");
+
+            return msg.ToString();
         }
 
         /// <summary>

@@ -122,6 +122,7 @@ namespace mhh
                                 if(AppConfig.CloseToStandby)
                                 {
                                     OnStandby = true;
+                                    ShowAppInfo();
                                 }
                                 else
                                 {
@@ -255,6 +256,11 @@ namespace mhh
                             $"\nFPS target is {(AppWindow.UpdateFrequency == 0 ? "not locked (max FPS)" : $"locked to {AppWindow.UpdateFrequency} FPS")}";
                     }
 
+                case "--display":
+                    if (OnStandby) return "ERR: Application is in standby";
+                    if (args.Length > 1) return ShowHelp();
+                    return AppWindow.Command_Display();
+
                 case "--jpg":
                 case "--png":
                     if (OnStandby) return "ERR: Application is in standby";
@@ -358,12 +364,12 @@ namespace mhh
         private static async Task<bool> InitializeAndWait(string[] args)
         {
             Console.Clear();
-            Console.WriteLine($"\nMonkey Hi Hat (PID {Environment.ProcessId})");
+            Console.WriteLine($"Monkey Hi Hat");
 
             var appConfigFile = FindAppConfig();
             if(appConfigFile is null)
             {
-                Console.WriteLine($"\n\nUnable to locate the \"{ConfigFilename}\" configuration file (or \"{DebugConfigFilename}\" if running with a debugger attached).\n Search sequence is the \"{ConfigLocationEnvironmentVariable}\" environment variable, if defined, then the app directory, then the \"ConfigFile\" app subdirectory.");
+                Console.WriteLine($"\nUnable to locate the \"{ConfigFilename}\" configuration file (or \"{DebugConfigFilename}\" if running with a debugger attached).\n Search sequence is the \"{ConfigLocationEnvironmentVariable}\" environment variable, if defined, then the app directory, then the \"ConfigFile\" app subdirectory.");
                 Thread.Sleep(250); // slow-ass console
                 return false;
             }
@@ -403,6 +409,7 @@ namespace mhh
             // Prepare the eycandy library
             ErrorLogging.Logger = LogHelper.Logger;
 
+            ShowAppInfo();
             return true; // continue running
         }
 
@@ -432,6 +439,7 @@ namespace mhh
                     HideMousePointer = AppConfig.HideMousePointer,
                 };
                 WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
+                WindowConfig.OpenTKNativeWindowSettings.Location = (AppConfig.StartX, AppConfig.StartY);
                 WindowConfig.OpenTKNativeWindowSettings.ClientSize = (AppConfig.SizeX, AppConfig.SizeY);
                 WindowConfig.OpenTKNativeWindowSettings.APIVersion = OpenGLVersion;
                 WindowConfig.OpenTKGameWindowSettings.UpdateFrequency = AppConfig.FrameRateLimit;
@@ -452,6 +460,15 @@ namespace mhh
                 AppWindow?.Dispose();
                 AppWindow = null;
             }
+        }
+
+        private static void ShowAppInfo()
+        {
+            var tcp = (AppConfig.UnsecuredPort == 0) ? "disabled" : AppConfig.UnsecuredPort.ToString();
+            Console.Clear();
+            Console.WriteLine($"\nMonkey Hi Hat\n");
+            Console.WriteLine($"Process ID {Environment.ProcessId}");
+            Console.WriteLine($"Listening on TCP port {tcp}");
         }
 
         private static void LogException(string message)
@@ -588,6 +605,7 @@ All switches are passed to the already-running instance:
 --show grid                 Displays a 100 x 15 character grid for adjusting text settings
 
 --info                      writes shader and execution details to the console
+--display                   lists monitor details and the window state and coordinates
 --fullscreen                toggle between windowed and full-screen state
 --fps                       returns instantaneous FPS and average FPS over past 10 seconds
 --fps [0|1-9999]            sets a frame rate (FPS) target, or 0 to disable (some shaders may require 60 FPS)

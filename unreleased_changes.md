@@ -1,29 +1,31 @@
 ### About this TO-DO list
 
-I will not accept any PRs which alters this file.
+I will not accept a PR which alters this file (other than my own, obviously).
 
-Previously this was not pushed to the repo, but since I'd hate to lose it, I added it to source control. It describes things I've only done locally so far, or unreleased changes, ideas, plans, wishlist items, and so on. Don't assume anything here is working or will be available in some future release.
+However, if you see something that interests you and you want to tackle it, please open an Issue and we'll discuss the details.
 
-On the other hand, if you see something that interests you and you want to tackle it, please open an Issue and we'll discuss the details.
+Don't assume anything here is working or will be available in some future release. Previously this was not pushed to the repo, but since I'd hate to lose it, I added it to source control. It describes things I've only done locally so far, or unreleased changes, ideas, plans, wishlist items, and so on.
+
 
 ### Post-release changes not already on the wiki changelog page
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
-* v4.1.0 running on living room computer
-* eyecandy 3.0.1 released 2024-11-04, up-to-date locally
+* v4.2.0 released 2025-05-28
+* eyecandy 3.0.2 released 2025-05-27
+
 
 ### Release Process
 
-* Verify version.txt matches release number
-* Verify install.cs has current release number
-* Add any version-based config changes to ConfigHelper.cs
+* Verify `mhh\version.txt` matches release number
+* Verify `install\Installer.cs` has current release number
+* Add any version-based config changes to `install\ConfigHelper.cs`
 * Build install.exe release build
 * Publish mhh release build
 * Copy monkey-see-monkey-do release build to mhh publish directory
 * Archive mhh-app-x-x-x.zip and mhh-content-x-x-x.zip
 * Copy zip files into one manual-setup-x-x-x.zip
-* Rename all three zips to a .bin extension
+* Rename the app and content zips to a .bin extension
 * Push app and content .bin files to github mcguirev10.com /assets/misc
 * Update readme etc, push changes
 * Create new release tag, upload install-x-x-x.exe and manual-setup.zip
@@ -32,19 +34,16 @@ On the other hand, if you see something that interests you and you want to tackl
 
 ### Work In Progress
 
-* none
+*
 
 ### MHH TODO
 
-* Update README for locally-stored MP4s? (100 MB file size limit)
-* Add dev and shader contributor quick-start pages to wiki
-
-* Wiki: explain OpenGL full-screen behaviors (trying to use 2nd console etc)
-* Add uniform indicating FX is active so viz (like chaos_columns) can take different action
+* README - Update for locally-stored MP4s instead of uploads? (100 MB file size limit)
+* Wiki - add dev and shader contributor quick-start pages
+* Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Implement a .fade file which is like a cut-down viz.conf (for loading textures, libs, etc.)
 * Playlist - hotkey to extend auto-advance time for current viz
 * Installer - add msmd firewall rule? or run interactively once to prompt?
-* WSL X11 / Linux x64 testing
 * monkey-see-monkey-do - relay delay time
 * monkey-see-monkey-do - utility command(s) (fixsound.ps1)
 * Logo overlay support (random and playlist)
@@ -54,10 +53,8 @@ On the other hand, if you see something that interests you and you want to tackl
 * Installer - add eyecandy demo and tcpargs utilities
 * Installer - Use winget to retrieve .NET runtime
 * Installer - winget distro? https://github.com/Belphemur/SoundSwitch/issues/1220
-* Installer - Linux installation shell script? cmake script?
-* Create config GUI? (is WinForms supported by always-installed .NET Framework?)
+* Create config GUI (WinForms now available for modern .NET)
 * Playlist - add `[collections]` section (playlist of other playlists)
-* Linux render/update events not suspended during `OnResize`? Fake it somehow?
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
 * Test mode - show keys on screen
@@ -65,21 +62,16 @@ On the other hand, if you see something that interests you and you want to tackl
 * Textures via HTTP? Caching?
 * Hotkey to popup list of common hotkeys
 * Startup crashes if no audio device available? (ex. RDP disables audio)
-* Fullscreen should detect monitor based on window top-left coordinates
 * Render the text overlay buffer once instead of running the shader every frame
 * Allow aliasing multipass uniform names for reusable utility frag shaders
-* Add a basic setup.sh for Linux? (set exec and dir permissions, copy config)
-* Add mhh.conf paths for saving screenshots
-* Add --paths switch to return configured paths
+* Add mhh.conf paths for saving screenshots 
+* Add `--paths` switch to return configured paths
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
-* Add MP4 support? (old: https://github.com/AtomCrafty/MotionTK)
-* Show startup / standby details: devices, standby mode, port listener, etc.
+* Add MP4 support? (old, OpenTK v3 + ffmpeg: https://github.com/AtomCrafty/MotionTK)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
 * Add test content to intentionally generate errors
 * `IVertexSource` init should accept a key/value config list (expose a "settings required" bool?)
 * Add OpenGL debug-callback support
-* Buggy in OpenTK, but multi-monitor support? Windowed starting position? Keys to change monitor?
-* Add start position to mhh.conf and --pos command to report window position (OpenTK issue 1663)
 * Use FontAtlasFilename? (update Wiki with info about generating new ones)
 
 * Soundcloud track overlay?
@@ -99,6 +91,13 @@ On the other hand, if you see something that interests you and you want to tackl
     * https://github.com/serilog/serilog-settings-configuration#minimumlevel-levelswitches-overrides-and-dynamic-reload
     * https://learn.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-7.0#log-category
     * Provide a Serilog.ILogger.ForContext(...) logger to eyecandy and CommandLineSwitchPipe
+
+* Linux-specific items (x64 only)
+    * WSL not a realistic option (very poor graphics / GPU support, and not planned by MS)
+    * maybe dual-boot locally for dev/testing?
+    * Installer - a basic setup.sh for Linux? (set exec and dir permissions, copy config)
+    * Installer - Linux installation shell script? cmake script?
+    * Linux render/update events not suspended during `OnResize`? Fake it somehow?
 
 * Old Spotify notes
     * https://johnnycrazy.github.io/SpotifyAPI-NET/
