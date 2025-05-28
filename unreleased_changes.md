@@ -11,16 +11,8 @@ Don't assume anything here is working or will be available in some future releas
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
-* v4.2.0 in progress
-* eyecandy 3.0.2 released 2025-05-27, updated other dependencies
-* Multi-monitor support:
-    * Config window starting position (`StartX` and `StartY`)
-    * In full-screen mode the `Enter` key advances to the next monitor
-    * Add --display command to report window and monitor info
-* Add `fxactive` uniform (float 0/1) to notify viz shaders that post-processing FX is active
-* Alter chaos_columns viz to hide the sphere when `fxactive` is true (float 1.0)
-
-* Startup / standby shows PID and TCP port
+* v4.2.0 released 2025-05-28
+* eyecandy 3.0.2 released 2025-05-27
 
 
 ### Release Process
