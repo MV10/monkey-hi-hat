@@ -202,6 +202,7 @@ public static class RenderingHelper
         shader.SetUniform("randomnumber", Program.AppWindow.UniformRandomNumber);
         shader.SetUniform("date", Program.AppWindow.UniformDate);
         shader.SetUniform("clocktime", Program.AppWindow.UniformClockTime);
+        shader.SetUniform("fxactive", Program.AppWindow.UniformFXActive);
 
         foreach(var list in uniforms)
         {

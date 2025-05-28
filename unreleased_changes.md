@@ -11,13 +11,17 @@ Don't assume anything here is working or will be available in some future releas
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
-* v4.1.0 running on living room computer
 * v4.2.0 in progress
 * eyecandy 3.0.2 released 2025-05-27, updated other dependencies
 * Multi-monitor support:
     * Config window starting position (`StartX` and `StartY`)
     * In full-screen mode the `Enter` key advances to the next monitor
     * Add --display command to report window and monitor info
+* Add `fxactive` uniform (float 0/1) to notify viz shaders that post-processing FX is active
+* Alter chaos_columns viz to hide the sphere when `fxactive` is true (float 1.0)
+
+* Show startup / standby details: devices, standby mode, port listener, etc.
+
 
 ### Release Process
 
@@ -42,11 +46,9 @@ Don't assume anything here is working or will be available in some future releas
 
 ### MHH TODO
 
-* Update README for locally-stored MP4s? (100 MB file size limit)
-* Add dev and shader contributor quick-start pages to wiki
-
-* Wiki: explain OpenGL full-screen behaviors (trying to use 2nd console etc)
-* Add uniform indicating FX is active so viz (like chaos_columns) can take different action
+* README - Update for locally-stored MP4s instead of uploads? (100 MB file size limit)
+* Wiki - add dev and shader contributor quick-start pages
+* Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Implement a .fade file which is like a cut-down viz.conf (for loading textures, libs, etc.)
 * Playlist - hotkey to extend auto-advance time for current viz
 * Installer - add msmd firewall rule? or run interactively once to prompt?
@@ -70,11 +72,10 @@ Don't assume anything here is working or will be available in some future releas
 * Startup crashes if no audio device available? (ex. RDP disables audio)
 * Render the text overlay buffer once instead of running the shader every frame
 * Allow aliasing multipass uniform names for reusable utility frag shaders
-* Add mhh.conf paths for saving screenshots
-* Add --paths switch to return configured paths
+* Add mhh.conf paths for saving screenshots 
+* Add `--paths` switch to return configured paths
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
-* Add MP4 support? (old: https://github.com/AtomCrafty/MotionTK)
-* Show startup / standby details: devices, standby mode, port listener, etc.
+* Add MP4 support? (old, OpenTK v3 + ffmpeg: https://github.com/AtomCrafty/MotionTK)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
 * Add test content to intentionally generate errors
 * `IVertexSource` init should accept a key/value config list (expose a "settings required" bool?)

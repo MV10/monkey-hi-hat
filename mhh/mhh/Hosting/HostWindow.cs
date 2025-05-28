@@ -61,6 +61,11 @@ namespace mhh
         /// </summary>
         public Vector4 UniformClockTime;
 
+        /// <summary>
+        /// Indicates whether an FX shader is running (0-no, 1-yes).
+        /// </summary>
+        public float UniformFXActive;
+
         private MethodInfo EyecandyEnableMethod;
         private MethodInfo EyecandyDisableMethod;
         // Example of how to invoke generic method
@@ -148,6 +153,7 @@ namespace mhh
             UniformRandomNumber = (float)RNG.NextDouble();
             UniformDate = new(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, (float)DateTime.Now.TimeOfDay.TotalSeconds);
             UniformClockTime = new(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTime.UtcNow.Hour);
+            UniformFXActive = (Renderer.ActiveRenderer is FXRenderer) ? 1.0f : 0.0f;
 
             Renderer.RenderFrame();
 
