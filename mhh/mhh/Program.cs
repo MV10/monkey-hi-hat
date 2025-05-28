@@ -363,7 +363,7 @@ namespace mhh
         private static async Task<bool> InitializeAndWait(string[] args)
         {
             Console.Clear();
-            Console.WriteLine($"\nMonkey Hi Hat (PID {Environment.ProcessId})");
+            Console.WriteLine($"\nMonkey Hi Hat");
 
             var appConfigFile = FindAppConfig();
             if(appConfigFile is null)
@@ -407,6 +407,11 @@ namespace mhh
 
             // Prepare the eycandy library
             ErrorLogging.Logger = LogHelper.Logger;
+
+            // Show some details while we wait
+            var tcp = (AppConfig.UnsecuredPort == 0) ? "disabled" : AppConfig.UnsecuredPort.ToString();
+            Console.WriteLine($"\nProcess ID {Environment.ProcessId}");
+            Console.WriteLine($"Listening on TCP port {tcp}");
 
             return true; // continue running
         }
