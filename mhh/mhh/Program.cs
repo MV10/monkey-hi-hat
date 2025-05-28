@@ -122,6 +122,7 @@ namespace mhh
                                 if(AppConfig.CloseToStandby)
                                 {
                                     OnStandby = true;
+                                    ShowAppInfo();
                                 }
                                 else
                                 {
@@ -363,12 +364,12 @@ namespace mhh
         private static async Task<bool> InitializeAndWait(string[] args)
         {
             Console.Clear();
-            Console.WriteLine($"\nMonkey Hi Hat");
+            Console.WriteLine($"Monkey Hi Hat");
 
             var appConfigFile = FindAppConfig();
             if(appConfigFile is null)
             {
-                Console.WriteLine($"\n\nUnable to locate the \"{ConfigFilename}\" configuration file (or \"{DebugConfigFilename}\" if running with a debugger attached).\n Search sequence is the \"{ConfigLocationEnvironmentVariable}\" environment variable, if defined, then the app directory, then the \"ConfigFile\" app subdirectory.");
+                Console.WriteLine($"\nUnable to locate the \"{ConfigFilename}\" configuration file (or \"{DebugConfigFilename}\" if running with a debugger attached).\n Search sequence is the \"{ConfigLocationEnvironmentVariable}\" environment variable, if defined, then the app directory, then the \"ConfigFile\" app subdirectory.");
                 Thread.Sleep(250); // slow-ass console
                 return false;
             }
@@ -408,11 +409,7 @@ namespace mhh
             // Prepare the eycandy library
             ErrorLogging.Logger = LogHelper.Logger;
 
-            // Show some details while we wait
-            var tcp = (AppConfig.UnsecuredPort == 0) ? "disabled" : AppConfig.UnsecuredPort.ToString();
-            Console.WriteLine($"\nProcess ID {Environment.ProcessId}");
-            Console.WriteLine($"Listening on TCP port {tcp}");
-
+            ShowAppInfo();
             return true; // continue running
         }
 
@@ -463,6 +460,15 @@ namespace mhh
                 AppWindow?.Dispose();
                 AppWindow = null;
             }
+        }
+
+        private static void ShowAppInfo()
+        {
+            var tcp = (AppConfig.UnsecuredPort == 0) ? "disabled" : AppConfig.UnsecuredPort.ToString();
+            Console.Clear();
+            Console.WriteLine($"\nMonkey Hi Hat\n");
+            Console.WriteLine($"Process ID {Environment.ProcessId}");
+            Console.WriteLine($"Listening on TCP port {tcp}");
         }
 
         private static void LogException(string message)

@@ -20,7 +20,7 @@ Don't assume anything here is working or will be available in some future releas
 * Add `fxactive` uniform (float 0/1) to notify viz shaders that post-processing FX is active
 * Alter chaos_columns viz to hide the sphere when `fxactive` is true (float 1.0)
 
-* * Standby shows PID and TCP port
+* Startup / standby shows PID and TCP port
 
 
 ### Release Process
