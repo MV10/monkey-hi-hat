@@ -25,7 +25,7 @@ Don't assume anything here is working or will be available in some future releas
 * Copy monkey-see-monkey-do release build to mhh publish directory
 * Archive mhh-app-x-x-x.zip and mhh-content-x-x-x.zip
 * Copy zip files into one manual-setup-x-x-x.zip
-* Rename all three zips to a .bin extension
+* Rename the app and content zips to a .bin extension
 * Push app and content .bin files to github mcguirev10.com /assets/misc
 * Update readme etc, push changes
 * Create new release tag, upload install-x-x-x.exe and manual-setup.zip
