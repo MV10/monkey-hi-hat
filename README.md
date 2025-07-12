@@ -8,17 +8,19 @@ Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-r
 
 As of the latest release, there are nearly _**4,000 combinations**_ of visualizations and effects, plus 17 transitiional (crossfade) effects! Great for DJs, parties and other events!
 
-Playlists and many of the visualizations are customizable. The program and all content are 100% free, and I encourage users to contribute new visualizations (.NET programmers, see [Contributor's Getting Started](https://github.com/MV10/monkey-hi-hat/wiki/13.-Contributor's-Getting-Started) in the wiki).
+Playlists and many of the visualizations are customizable. The program and all content is 100% free. It's very stable and trouble-free, I have let it run 24 hours with no crashes or memory leaks.
+
+I encourage shader programmers to contribute new visualizations; see [Creating Visualizations](https://github.com/MV10/monkey-hi-hat/wiki/05.-Creating-Visualizations) in the wiki. If you're a .NET programmer and want to work on bugs or features, see [Contributor's Getting Started](https://github.com/MV10/monkey-hi-hat/wiki/13.-Contributor's-Getting-Started) in the wiki.
 
 ## Requirements and Usage
 
-Get the installer from the [release](https://github.com/MV10/monkey-hi-hat/releases) page, then read the [documentation home page](https://github.com/MV10/monkey-hi-hat/wiki) for a quick step-by-step first-run walk-through. The docs range from basic usage to advanced customization.
+Download and run the installer from the [release](https://github.com/MV10/monkey-hi-hat/releases) page, then read the [documentation home page](https://github.com/MV10/monkey-hi-hat/wiki) for a quick step-by-step first-run walk-through. The docs range from basic usage to advanced customization.
 
 This should run on almost any 64-bit Windows 10 or Windows 11 PC with a decent graphics card and practically any type of audio playback. (Linux support is indefinitely on hold: it works on Raspberry Pi but that GPU is underpowered, it doesn't work on WSL, and I don't have any need for or much interest in maintaining a full-blown Linux desktop.)
 
 > 2024-NOV: The Shadertoy example linked below is not working. It appears Soundcloud is blocking ALL access from Shadertoy at this time, and Shadertoy doesn't offer any other audio support except microphone loopback. I'll keep an eye on the situation but it's beyond my control.
 
-CPU and memory requirements are minimal, 99% of the work is on the graphics card. If your PC can run [this Shadertoy example](https://www.shadertoy.com/view/mtKfWd) full-screen, which is a Monkey Hi Hat visualization with effects that I back-ported, you should be able to run Monkey Hi Hat just fine. No third-party drivers are required (earlier versions did require one). Overhead is so low, on my desktop PC I often run the program on a second monitor while I do other work. It's very stable and trouble-free, I have let it run 24 hours with no crashes or memory leaks.
+CPU and memory requirements are minimal, 99% of the work is on the graphics card. If your PC can run [this Shadertoy example](https://www.shadertoy.com/view/mtKfWd) full-screen, which is a Monkey Hi Hat visualization with effects that I back-ported, you should be able to run Monkey Hi Hat just fine. No third-party drivers are required (earlier versions did require one). Overhead is so low, on my desktop PC I often run the program on a second monitor while I do other work.
 
 The music reactivity responds to _anything_ your PC is playing from _any_ source, whether that is Spotify, Soundcloud, Pandora, an external device connected to the line-in or surround-sound jacks, MP3s, YouTube, etc. If you can hear it from your speakers, the program can "hear" it too. For on-screen track info, only the native Windows Spotify client is supported. 
 
@@ -26,15 +28,16 @@ Please understand there is no "user interface" -- the program is designed to run
 
 ## Sample Videos
 
-Here's a 2 minute look at some of the version 3 post-processing effects released around the end of 2023, and a different series of visualizers. These very small videos still have compression artifacts due to Github's file-size limit, but they will give you a good idea of what's possible. The real thing looks about a million times better (especially on a really good display like 4K OLED).
+Soon I will add a version 4 video which shows crossfade transition effects, text overlays, and cool new visualizers and effects.
+
+Here's a 2 minute look at some of the version 3 post-processing effects released around the end of 2023. These very small videos still have compression artifacts due to Github's file-size limit, but they will give you a good idea of what's possible. The real thing looks about a million times better (especially on a really good screen like big 4K OLED).
 
 https://github.com/MV10/monkey-hi-hat/assets/794270/6705bbe7-e558-4753-b57d-c90b4a07cb89
 
-This is from version 2 in the summer of 2023, which only had basic visualizations. 
+This is from version 2 released in the summer of 2023, which only had basic visualizations. 
 
 https://github.com/MV10/monkey-hi-hat/assets/794270/9e33ab83-2b93-48f2-8833-6b1c09eb6494
 
-Soon I will add a version 4 video which shows crossfade transition effects, text overlays, and even more cool visualizers and effects.
 
 ## Related Material
 

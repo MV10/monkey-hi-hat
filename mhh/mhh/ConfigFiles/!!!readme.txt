@@ -1,4 +1,11 @@
 ﻿
+If you use the install program, you probably don't need to worry about
+the template files in this directory.
+
+For developers running MHH in debug from Visual Studio, and for those
+who prefer a manual unzip install, see below, and also read the
+config section of the Wiki. (But seriously, use the installer.)
+
 The program looks for configuration files in the top-level application 
 directory. They are stored here so that unzipping a new release over the
 old install directory won't overwrite your existing configuration (but 
