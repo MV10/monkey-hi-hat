@@ -7,14 +7,6 @@ However, if you see something that interests you and you want to tackle it, plea
 Don't assume anything here is working or will be available in some future release. Previously this was not pushed to the repo, but since I'd hate to lose it, I added it to source control. It describes things I've only done locally so far, or unreleased changes, ideas, plans, wishlist items, and so on.
 
 
-### Post-release changes not already on the wiki changelog page
-
-* https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
-
-* v4.2.0 released 2025-05-28
-* eyecandy 3.0.2 released 2025-05-27
-
-
 ### Release Process
 
 * Verify `mhh\version.txt` matches release number
@@ -32,20 +24,33 @@ Don't assume anything here is working or will be available in some future releas
 * Update release history, wiki, etc.
 * Update pinned release tracker: https://github.com/MV10/monkey-hi-hat/issues/3
 
+
+### Post-release changes not already on the wiki changelog page
+
+* https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
+
+* v4.2.0 released 2025-05-28
+* eyecandy 3.0.2 released 2025-05-27
+
+* v4.2.1 bug fixes / tweaks
+* Disallow switches other than `--help` when starting first instance
+
 ### Work In Progress
 
 *
 
 ### MHH TODO
 
+* Add mhh.conf paths for saving screenshots 
+* Add `--paths` switch to return configured paths
 * README - Update for locally-stored MP4s instead of uploads? (100 MB file size limit)
 * Wiki - add dev and shader contributor quick-start pages
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Implement a .fade file which is like a cut-down viz.conf (for loading textures, libs, etc.)
 * Playlist - hotkey to extend auto-advance time for current viz
-* Installer - add msmd firewall rule? or run interactively once to prompt?
+* Installer - need to add msmd firewall rule? or run interactively once to prompt?
 * monkey-see-monkey-do - relay delay time
-* monkey-see-monkey-do - utility command(s) (fixsound.ps1)
+* monkey-see-monkey-do - utility command(s) (fixsound.ps1 for VBAudio bugs)
 * Logo overlay support (random and playlist)
 * Installer - Start menu link to edit .conf
 * Installer - Start menu link to view mhh.log and msmd.log
@@ -64,8 +69,6 @@ Don't assume anything here is working or will be available in some future releas
 * Startup crashes if no audio device available? (ex. RDP disables audio)
 * Render the text overlay buffer once instead of running the shader every frame
 * Allow aliasing multipass uniform names for reusable utility frag shaders
-* Add mhh.conf paths for saving screenshots 
-* Add `--paths` switch to return configured paths
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
 * Add MP4 support? (old, OpenTK v3 + ffmpeg: https://github.com/AtomCrafty/MotionTK)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)

@@ -42,7 +42,7 @@ namespace mhh
 
         // Previously MHH only supported core API v4.6, the "final" OpenGL, but Linux MESA
         // drivers apparently only support v4.5 (according to "glxinfo -B" from mesa-utils)
-        // and 4.6 features aren't important to MHH, so post-3.1 will be reverted to v4.5.
+        // and 4.6 features aren't important to MHH, so post-3.1 was reverted to v4.5.
         // https://www.khronos.org/opengl/wiki/History_of_OpenGL#OpenGL_4.6_(2017)
         static readonly Version OpenGLVersion = new(4, 5);
         
@@ -385,12 +385,19 @@ namespace mhh
                 || (args.Length == 0 && alreadyRunning))
             {
                 Console.WriteLine(ShowHelp());
-                return false;
+                return false; // end program
+            }
+
+            // Disallow switches at startup of first instance
+            if (!alreadyRunning && args.Length > 0)
+            {
+                Console.WriteLine("Only the --help switch is accepted if the program is not already running.");
+                return false; // end program
             }
 
             LogHelper.Logger?.LogInformation($"Starting (PID {Environment.ProcessId})");
 
-            // Send args to an already-running instance?
+            // Try sending args to an already-running instance...
             if (await CommandLineSwitchServer.TrySendArgs().ConfigureAwait(false))
             {
                 LogHelper.Logger?.LogDebug($"Sending switch: {args[0]}");
