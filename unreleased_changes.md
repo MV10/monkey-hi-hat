@@ -32,15 +32,28 @@ Don't assume anything here is working or will be available in some future releas
 * v4.2.0 released 2025-05-28
 * eyecandy 3.0.2 released 2025-05-27
 
-* v4.2.1 bug fixes / tweaks
+* v4.2.1 bug fixes / tweaks (unreleased)
 * Disallow switches other than `--help` when starting first instance
+
+* v4.3.0 MP4 video support
 
 ### Work In Progress
 
-*
+* Add pause/resume support for video playback when visualizer is paused
+* Distribute ffmpeg binaries via the installer (new `ffmpeg` subdirectory in app install directory)
+* Video uniforms; appends `_duration`, `_progress`, `_resolution` to video uniform name
+
+* Add Windows video playback support (only tested with h.264 MP4s; no audio support planned)
+* Add `FFmpegPath` to `[windows]` section of `mhh.conf`
+* Add `[video]` section in viz/FX config files (same rules as `[textures]` section)
+* Add sample MP4 files to the Volt's Laboratory textures directory
+    * [dancer.mp4](https://pixabay.com/videos/woman-model-dancing-silhouette-vj-185787/)
+    * [traffic.mp4](https://www.pexels.com/video/time-lapse-of-traffic-in-the-city-26690703/)
+    * [costume.mp4](https://mixkit.co/free-stock-video/terrifying-performance-of-a-woman-in-disguise-44230/)
 
 ### MHH TODO
 
+* Add mhh.conf setting to control window frame style when not in full-screen mode
 * Add mhh.conf paths for saving screenshots 
 * Add `--paths` switch to return configured paths
 * README - Update for locally-stored MP4s instead of uploads? (100 MB file size limit)
@@ -70,7 +83,6 @@ Don't assume anything here is working or will be available in some future releas
 * Render the text overlay buffer once instead of running the shader every frame
 * Allow aliasing multipass uniform names for reusable utility frag shaders
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
-* Add MP4 support? (old, OpenTK v3 + ffmpeg: https://github.com/AtomCrafty/MotionTK)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
 * Add test content to intentionally generate errors
 * `IVertexSource` init should accept a key/value config list (expose a "settings required" bool?)

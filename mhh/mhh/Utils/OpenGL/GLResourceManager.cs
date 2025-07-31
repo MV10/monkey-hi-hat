@@ -24,7 +24,7 @@ namespace mhh;
 // assigned TUs won't necessarily be sequential.
 //
 // Any future TextureUnit requirements should also be managed by this class (for
-// example, if support is added for loading external image files).
+// example, when support was added for loading external image and video files).
 
 /// <summary>
 /// Do not instantiate this object. Access it via RenderManager's static 
@@ -205,6 +205,23 @@ public class GLResourceManager : IDisposable
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
+    /// <summary>
+    /// Render pass for all video textures.
+    /// </summary>
+    public void UpdateVideoTextureFrames()
+    {
+        foreach (var kvp in AllocatedImageTextures)
+        {
+            foreach (var tex in kvp.Value)
+            {
+                if (tex.VideoData is not null && tex.Loaded)
+                {
+                    VideoRenderingHelper.Update(tex);
+                }
+            }
+        }
+    }
+
     // assumes caller has bound the texture handle
     private void AllocateFramebufferTexture(int textureHandle, int viewportWidth, int viewportHeight, TextureWrapMode wrapMode = TextureWrapMode.Repeat)
     {
@@ -261,6 +278,13 @@ public class GLResourceManager : IDisposable
 
     private void DestroyImageTexturesInternal(IReadOnlyList<GLImageTexture> list)
     {
+        var videos = list.Where(i => i.VideoData is not null).ToList();
+        LogHelper.Logger?.LogTrace($"   Releasing {videos.Count} video file resources");
+        foreach (var video in videos)
+        {
+            VideoRenderingHelper.DestroyVideoObjects(video);
+        }
+
         var handles = list.Select(i => i.TextureHandle).ToArray();
         LogHelper.Logger?.LogTrace($"   Deleting {handles.Length} texture handles");
         GL.DeleteTextures(handles.Length, handles);

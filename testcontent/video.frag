@@ -4,7 +4,7 @@ precision highp float;
 in vec2 fragCoord;
 uniform vec2 resolution;
 uniform float time;
-uniform sampler2D imageA;
+uniform sampler2D video;
 out vec4 fragColor;
 
 void main()
@@ -20,7 +20,7 @@ void main()
                 0.1250 * cos(uv.xy * 4.1 * freq + vec2(5.0, 3.0) + time) +
                 0.0625 * cos(uv.yx * 7.9 * freq + vec2(3.0, 4.0) + time);
     
-	vec2 st = uv + warp*0.5;
+	vec2 st = uv + warp * 0.5;
 
-	fragColor = vec4(texture(imageA, st).xyz, 1.0);
+	fragColor = vec4(texture(video, st).xyz, 1.0);
 }

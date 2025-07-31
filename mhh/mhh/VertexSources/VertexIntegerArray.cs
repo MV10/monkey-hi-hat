@@ -82,6 +82,7 @@ public class VertexIntegerArray : IVertexSource
     public void RenderFrame(Shader shader)
     {
         shader.SetUniform("vertexCount", (float)VertexIntegerCount);
+        RenderingHelper.RenderVideoTextures();
         RenderingHelper.SetTextureUniforms(Textures, shader);
 
         GL.BindVertexArray(VertexArrayObject);

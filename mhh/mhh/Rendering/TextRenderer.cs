@@ -43,7 +43,7 @@ public class TextRenderer : IRenderer
         FontTexture = RenderManager.ResourceManager.CreateTextureResources(OwnerName, 1)[0];
         FontTexture.Filename = "font.png";
         FontTexture.UniformName = "font";
-        FontTexture.ImageLoaded = RenderingHelper.LoadImageFile(FontTexture, TextureWrapMode.ClampToEdge, ApplicationConfiguration.InternalShaderPath);
+        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, TextureWrapMode.ClampToEdge, ApplicationConfiguration.InternalShaderPath);
 
         VertQuad = new VertexQuad();
         VertQuad.Initialize(null, TextShader); // fragquad doesn't have settings, so null is safe

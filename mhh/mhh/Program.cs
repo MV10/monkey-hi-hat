@@ -1,6 +1,7 @@
 ﻿
 using CommandLineSwitchPipe;
 using eyecandy;
+using FFMediaToolkit;
 using Microsoft.Extensions.Logging;
 using OpenTK.Windowing.Desktop;
 using Serilog;
@@ -415,6 +416,12 @@ namespace mhh
 
             // Prepare the eycandy library
             ErrorLogging.Logger = LogHelper.Logger;
+
+            // Prepare the FFmpeg helper
+            if (!string.IsNullOrWhiteSpace(AppConfig.FFmpegPath))
+            {
+                FFmpegLoader.FFmpegPath = AppConfig.FFmpegPath;
+            }
 
             ShowAppInfo();
             return true; // continue running

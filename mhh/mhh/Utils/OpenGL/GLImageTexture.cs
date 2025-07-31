@@ -21,9 +21,9 @@ public class GLImageTexture
     public string UniformName;
 
     /// <summary>
-    /// Indicates whether the filename was successfully loaded.
+    /// Indicates whether the target file was successfully loaded.
     /// </summary>
-    public bool ImageLoaded;
+    public bool Loaded;
 
     /// <summary>
     /// The handle of the buffer where the image is stored.
@@ -40,4 +40,9 @@ public class GLImageTexture
     /// </summary>
     public TextureUnit TextureUnit
         => TextureUnit.Texture0 + TextureUnitOrdinal;
+
+    /// <summary>
+    /// If the texture is a video, this object stores the FFMediaToolkit references needed for playback.
+    /// </summary>
+    public VideoMediaData VideoData;
 }

@@ -1,5 +1,7 @@
 ﻿
 using eyecandy;
+using FFMediaToolkit.Decoding;
+using FFMediaToolkit.Graphics;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -10,6 +12,12 @@ namespace mhh;
 
 public static class RenderingHelper
 {
+    private static readonly MediaOptions VideoMediaOptions = new()
+    {
+        StreamsToLoad = MediaMode.Video,            // no audio support planned
+        VideoPixelFormat = ImagePixelFormat.Rgba32, // RGBA for direct OpenGL compatibility
+    };
+
     /// <summary>
     /// When true, GetShader will delete the matching shader key so that a new instance will
     /// be loaded, compiled, and cached. The flag is cleared after processing. This is set by
@@ -82,14 +90,14 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Returns an IVisualizer matching the primary visualizer listed in the config file.
+    /// Returns an IVertexSource matching the primary visualizer listed in the config file.
     /// The caller must invoke the Initialize method on the returned object instance.
     /// </summary>
     public static IVertexSource GetVertexSource(IRenderer renderer, VisualizerConfig visualizerConfig)
         => GetVertexSource(renderer, visualizerConfig.VertexSourceTypeName);
 
     /// <summary>
-    /// Returns an IVisualizer matching the requested type name. The caller must invoke the
+    /// Returns an IVertexSource matching the requested type name. The caller must invoke the
     /// Initialize method on the returned object instance.
     /// </summary>
     public static IVertexSource GetVertexSource(IRenderer renderer, string vertexSourceTypeName)
@@ -106,47 +114,56 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Maps visualizer config [textures] data to GLImageTexture resource assignments and loads
-    /// the indicated filenames.
+    /// Maps visualizer config [textures] and [videos] data to GLImageTexture resource assignments
+    /// and loads the indicated files.
     /// </summary>
     public static IReadOnlyList<GLImageTexture> GetTextures(string ownerName, ConfigFile configSource)
     {
-        if (!configSource.Content.ContainsKey("textures")) return null;
+        if (!configSource.Content.ContainsKey("textures") && !configSource.Content.ContainsKey("videos")) return null;
 
         var rand = new Random();
 
         // key is uniform name, List is filenames (>1 means choose one at random)
-        Dictionary<string, List<string>> textureDefs = new();
-        foreach(var tex in configSource.Content["textures"])
+        var textureDefs = LoadTextureDefinitions(configSource, "textures");
+        var videoDefs = LoadTextureDefinitions(configSource, "videos");
+
+        var totalRequired = (textureDefs?.Count ?? 0) + (videoDefs?.Count ?? 0);
+        var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, totalRequired);
+        int resourceIndex = 0;
+
+        if(textureDefs is not null)
         {
-            var parts = tex.Value.Split(':', Const.SplitOptions);
-            if (parts.Length == 2)
+            foreach (var tex in textureDefs)
             {
-                var uniform = parts[0];
-                var filename = parts[1];
-                if (!textureDefs.ContainsKey(uniform)) textureDefs.Add(uniform, new());
-                if (!textureDefs[uniform].Contains(filename)) textureDefs[uniform].Add(filename);
+                var res = resources[resourceIndex++];
+
+                res.Filename = tex.Value[rand.Next(tex.Value.Count)];
+
+                var uniformName = tex.Key;
+                if (uniformName.EndsWith("!"))
+                {
+                    res.UniformName = uniformName.Substring(0, uniformName.Length - 1);
+                    res.Loaded = LoadImageFile(res, TextureWrapMode.ClampToEdge);
+                }
+                else
+                {
+                    res.UniformName = uniformName;
+                    res.Loaded = LoadImageFile(res);
+                }
             }
         }
 
-        var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, textureDefs.Count);
-        int i = 0;
-        foreach (var tex in textureDefs)
+        if(videoDefs is not null)
         {
-            var res = resources[i++];
+            foreach (var vid in videoDefs)
+            {
+                var res = resources[resourceIndex++];
 
-            res.Filename = tex.Value[rand.Next(tex.Value.Count)];
-            
-            var uniformName = tex.Key;
-            if (uniformName.EndsWith("!"))
-            {
-                res.UniformName = uniformName.Substring(0, uniformName.Length - 1);
-                res.ImageLoaded = LoadImageFile(res, TextureWrapMode.ClampToEdge);
-            }
-            else
-            {
+                res.Filename = vid.Value[rand.Next(vid.Value.Count)];
+
+                var uniformName = vid.Key;
                 res.UniformName = uniformName;
-                res.ImageLoaded = LoadImageFile(res);
+                res.Loaded = LoadVideoFile(res);
             }
         }
 
@@ -182,14 +199,70 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Called by VertexSource RenderFrame to set any loaded image texture uniforms before drawing.
+    /// Prepares a texture resource with the file identified in GLImageTexture.
+    /// </summary>
+    public static bool LoadVideoFile(GLImageTexture tex, string pathspec = "")
+    {
+        var paths = (pathspec == "") ? Program.AppConfig.TexturePath : pathspec;
+        var pathname = PathHelper.FindFile(paths, tex.Filename);
+        if (pathname is null) return false;
+
+        try
+        {
+            tex.VideoData = new();
+            tex.VideoData.File = MediaFile.Open(pathname, VideoMediaOptions);
+            tex.VideoData.Stream = tex.VideoData.File.Video;
+
+            if (tex.VideoData.Stream == null)
+            {
+                // TODO log the error instead of writing to console
+                Console.WriteLine("No video stream found in the file.");
+                return false;
+            }
+
+            tex.VideoData.Width = tex.VideoData.Stream.Info.FrameSize.Width;
+            tex.VideoData.Height = tex.VideoData.Stream.Info.FrameSize.Height;
+
+            GL.ActiveTexture(tex.TextureUnit);
+            GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, tex.VideoData.Width, tex.VideoData.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+
+        }
+        catch (Exception ex)
+        {
+            // TODO log the error instead of writing to console
+            Console.WriteLine($"Error loading video:\n{ex.Message}\n{ex.InnerException?.Message}");
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Called by IVertexSource RenderFrame to update any video textures that are currently playing,
+    /// and to apply any video-derived uniforms like duration, progress, and resolution.
+    /// </summary>
+    public static void RenderVideoTextures()
+    {
+        RenderManager.ResourceManager.UpdateVideoTextureFrames();
+        // TODO output video-derived uniforms
+    }
+
+    /// <summary>
+    /// Called by IVertexSource RenderFrame to set any loaded image/video texture uniforms before drawing.
     /// </summary>
     public static void SetTextureUniforms(IReadOnlyList<GLImageTexture> textures, Shader shader)
     {
         if (textures is null) return;
         foreach(var tex in textures)
         {
-            if(tex.ImageLoaded) shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit);
+            if(tex.Loaded) shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit);
         }
     }
 
@@ -324,5 +397,23 @@ public static class RenderingHelper
         renderer.IsValid = false;
         renderer.InvalidReason = reason;
         LogHelper.Logger.LogError(reason);
+    }
+
+    private static Dictionary<string, List<string>> LoadTextureDefinitions(ConfigFile configSource, string sectionName)
+    {
+        if (!configSource.Content.ContainsKey(sectionName)) return null;
+        var definitions = new Dictionary<string, List<string>>();
+        foreach (var def in configSource.Content[sectionName])
+        {
+            var parts = def.Value.Split(':', Const.SplitOptions);
+            if (parts.Length == 2)
+            {
+                var uniform = parts[0];
+                var filename = parts[1];
+                if (!definitions.ContainsKey(uniform)) definitions.Add(uniform, new());
+                if (!definitions[uniform].Contains(filename)) definitions[uniform].Add(filename);
+            }
+        }
+        return definitions;
     }
 }

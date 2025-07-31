@@ -67,6 +67,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "
 		..\testcontent\vertquad.conf = ..\testcontent\vertquad.conf
 		..\testcontent\vertquad.frag = ..\testcontent\vertquad.frag
 		..\testcontent\vert_library.glsl = ..\testcontent\vert_library.glsl
+		video.conf = video.conf
+		video.frag = video.frag
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "install", "install\install.csproj", "{53C2DBDC-AEE2-457C-8B4F-8E46BC1CA8DF}"
