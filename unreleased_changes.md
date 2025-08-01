@@ -35,15 +35,14 @@ Don't assume anything here is working or will be available in some future releas
 * v4.2.1 bug fixes / tweaks (unreleased)
 * Disallow switches other than `--help` when starting first instance
 
-* v4.3.0 MP4 video support
+* v4.3.0 MP4 video support, release TBD
 
 ### Work In Progress
 
-* Add pause/resume support for video playback when visualizer is paused
 * Distribute ffmpeg binaries via the installer (new `ffmpeg` subdirectory in app install directory)
-* Video uniforms; appends `_duration`, `_progress`, `_resolution` to video uniform name
 
 * Add Windows video playback support (only tested with h.264 MP4s; no audio support planned)
+* Video uniforms (appends `_duration`, `_progress`, `_resolution` to video uniform name)
 * Add `FFmpegPath` to `[windows]` section of `mhh.conf`
 * Add `[video]` section in viz/FX config files (same rules as `[textures]` section)
 * Add sample MP4 files to the Volt's Laboratory textures directory
@@ -166,5 +165,3 @@ ffmpeg -i c:\users\jon\desktop\mhh.mp4
 ### Terminal Path
 
 C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
-
-

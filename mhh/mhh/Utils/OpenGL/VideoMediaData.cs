@@ -1,5 +1,6 @@
 ﻿
 using FFMediaToolkit.Decoding;
+using OpenTK.Mathematics;
 using System.Diagnostics;
 
 namespace mhh;
@@ -19,6 +20,8 @@ public class VideoMediaData
     public int Width;
 
     public int Height;
+
+    public Vector2 Resolution;
 
     public TimeSpan Duration => Stream?.Info.Duration ?? TimeSpan.Zero;
 

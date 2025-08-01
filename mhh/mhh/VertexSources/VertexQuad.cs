@@ -78,8 +78,7 @@ public class VertexQuad : IVertexSource
 
     public void RenderFrame(Shader shader)
     {
-        //RenderingHelper.SetGlobalUniforms(shader);
-        RenderingHelper.RenderVideoTextures();
+        VideoRenderingHelper.Render(Textures);
         RenderingHelper.SetTextureUniforms(Textures, shader);
 
         GL.BindVertexArray(VertexArrayObject);

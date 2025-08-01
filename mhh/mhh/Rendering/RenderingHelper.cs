@@ -222,6 +222,7 @@ public static class RenderingHelper
 
             tex.VideoData.Width = tex.VideoData.Stream.Info.FrameSize.Width;
             tex.VideoData.Height = tex.VideoData.Stream.Info.FrameSize.Height;
+            tex.VideoData.Resolution = new(tex.VideoData.Width, tex.VideoData.Height);
 
             GL.ActiveTexture(tex.TextureUnit);
             GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
@@ -245,16 +246,6 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Called by IVertexSource RenderFrame to update any video textures that are currently playing,
-    /// and to apply any video-derived uniforms like duration, progress, and resolution.
-    /// </summary>
-    public static void RenderVideoTextures()
-    {
-        RenderManager.ResourceManager.UpdateVideoTextureFrames();
-        // TODO output video-derived uniforms
-    }
-
-    /// <summary>
     /// Called by IVertexSource RenderFrame to set any loaded image/video texture uniforms before drawing.
     /// </summary>
     public static void SetTextureUniforms(IReadOnlyList<GLImageTexture> textures, Shader shader)
@@ -262,7 +253,16 @@ public static class RenderingHelper
         if (textures is null) return;
         foreach(var tex in textures)
         {
-            if(tex.Loaded) shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit);
+            if (tex.Loaded)
+            {
+                shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit);
+                if(tex.VideoData is not null)
+                {
+                    shader.SetUniform($"{tex.UniformName}_duration", (float)tex.VideoData.Duration.TotalSeconds);
+                    shader.SetUniform($"{tex.UniformName}_progress", (float)tex.VideoData.Clock.Elapsed.TotalSeconds / (float)tex.VideoData.Duration.TotalSeconds);
+                    shader.SetUniform($"{tex.UniformName}_resolution", tex.VideoData.Resolution);
+                }
+            }
         }
     }
 

@@ -205,23 +205,6 @@ public class GLResourceManager : IDisposable
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
-    /// <summary>
-    /// Render pass for all video textures.
-    /// </summary>
-    public void UpdateVideoTextureFrames()
-    {
-        foreach (var kvp in AllocatedImageTextures)
-        {
-            foreach (var tex in kvp.Value)
-            {
-                if (tex.VideoData is not null && tex.Loaded)
-                {
-                    VideoRenderingHelper.Update(tex);
-                }
-            }
-        }
-    }
-
     // assumes caller has bound the texture handle
     private void AllocateFramebufferTexture(int textureHandle, int viewportWidth, int viewportHeight, TextureWrapMode wrapMode = TextureWrapMode.Repeat)
     {

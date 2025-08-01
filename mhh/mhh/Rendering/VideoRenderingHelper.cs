@@ -6,13 +6,62 @@ namespace mhh;
 public static class VideoRenderingHelper
 {
     /// <summary>
-    /// Call this each render frame. Time-stepping is managed internally.
+    /// Called by IVertexSource RenderFrame to update any video textures that are currently playing,
+    /// and to apply any video-derived uniforms like duration, progress, and resolution.
     /// </summary>
-    public static void Update(GLImageTexture tex)
+    public static void Render(IReadOnlyList<GLImageTexture> textures)
+    {
+        if (textures is null || textures.Count == 0) return;
+
+        bool paused = Program.AppWindow.Renderer.TimePaused;
+
+        foreach (var tex in textures)
+        {
+            if (tex.VideoData is not null && tex.Loaded)
+            {
+                if (paused)
+                {
+                    if (!tex.VideoData.IsPaused) Pause(tex);
+                    continue; // don't update video frames when paused
+                }
+                else 
+                {
+                    if (tex.VideoData.IsPaused) Unpause(tex);
+                }
+
+                UpdateTexture(tex);
+            }
+        }
+    }
+
+    public static void Pause(GLImageTexture tex)
+    {
+        if (tex.VideoData is null || tex.VideoData.IsPaused) return;
+        tex.VideoData.IsPaused = true;
+        tex.VideoData.Clock.Stop();
+    }
+
+    public static void Unpause(GLImageTexture tex)
+    {
+        if (tex.VideoData is null || !tex.VideoData.IsPaused) return;
+        tex.VideoData.IsPaused = false;
+        tex.VideoData.Clock.Start();
+    }
+
+    /// <summary>
+    /// Called by GLResourceManagers's Dispose/Destroy methods.
+    /// </summary>
+    public static void DestroyVideoObjects(GLImageTexture tex)
+    {
+        tex.VideoData.File?.Dispose();
+        tex.VideoData = null;
+    }
+
+    private static void UpdateTexture(GLImageTexture tex)
     {
         if (tex.VideoData is null || !tex.Loaded || tex.VideoData.Stream is null) return;
 
-        if(!tex.VideoData.Clock.IsRunning)
+        if (!tex.VideoData.Clock.IsRunning)
         {
             if (tex.VideoData.IsPaused) return;
             tex.VideoData.Clock.Start();
@@ -76,38 +125,5 @@ public static class VideoRenderingHelper
         {
             // TODO better error handling
         }
-    }
-
-    public static void Pause(GLImageTexture tex)
-    {
-        if (tex.VideoData is null || tex.VideoData.IsPaused) return;
-        tex.VideoData.IsPaused = true;
-        tex.VideoData.Clock.Stop();
-    }
-
-    public static void Unpause(GLImageTexture tex)
-    {
-        if (tex.VideoData is null || !tex.VideoData.IsPaused) return;
-        tex.VideoData.IsPaused = false;
-        tex.VideoData.Clock.Start();
-    }
-
-    /// <summary>
-    /// Binds the texture for rendering
-    /// </summary>
-    public static void Bind(GLImageTexture tex)
-    {
-        if (tex.TextureHandle == -1) return;
-        GL.ActiveTexture(tex.TextureUnit);
-        GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-    }
-
-    /// <summary>
-    /// Called by GLResourceManagers's Dispose/Destroy methods.
-    /// </summary>
-    public static void DestroyVideoObjects(GLImageTexture tex)
-    {
-        tex.VideoData.File?.Dispose();
-        tex.VideoData = null;
     }
 }
