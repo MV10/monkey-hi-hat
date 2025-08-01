@@ -6,8 +6,7 @@ namespace mhh;
 public static class VideoRenderingHelper
 {
     /// <summary>
-    /// Called by IVertexSource RenderFrame to update any video textures that are currently playing,
-    /// and to apply any video-derived uniforms like duration, progress, and resolution.
+    /// Called by IVertexSource RenderFrame to update any video textures that are currently playing.
     /// </summary>
     public static void Render(IReadOnlyList<GLImageTexture> textures)
     {
@@ -21,31 +20,25 @@ public static class VideoRenderingHelper
             {
                 if (paused)
                 {
-                    if (!tex.VideoData.IsPaused) Pause(tex);
+                    if (!tex.VideoData.IsPaused)
+                    {
+                        tex.VideoData.IsPaused = true;
+                        tex.VideoData.Clock.Stop();
+                    }
                     continue; // don't update video frames when paused
                 }
                 else 
                 {
-                    if (tex.VideoData.IsPaused) Unpause(tex);
+                    if (tex.VideoData.IsPaused)
+                    {
+                        tex.VideoData.IsPaused = false;
+                        tex.VideoData.Clock.Start();
+                    }
                 }
 
                 UpdateTexture(tex);
             }
         }
-    }
-
-    public static void Pause(GLImageTexture tex)
-    {
-        if (tex.VideoData is null || tex.VideoData.IsPaused) return;
-        tex.VideoData.IsPaused = true;
-        tex.VideoData.Clock.Stop();
-    }
-
-    public static void Unpause(GLImageTexture tex)
-    {
-        if (tex.VideoData is null || !tex.VideoData.IsPaused) return;
-        tex.VideoData.IsPaused = false;
-        tex.VideoData.Clock.Start();
     }
 
     /// <summary>
