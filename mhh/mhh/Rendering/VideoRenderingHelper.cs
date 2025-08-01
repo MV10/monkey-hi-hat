@@ -39,27 +39,22 @@ public static class VideoRenderingHelper
 
             tex.VideoData.LastUpdateTime = tex.VideoData.Clock.Elapsed;
 
-            if (!frame.Data.IsEmpty)
+            if (!frame.Data.IsEmpty && tex.VideoData.Stream.Position != tex.VideoData.LastStreamPosition)
             {
-                // Handle potential stride (padding) in the image data; 4 bytes per pixel for RGBA
-                GL.PixelStore(PixelStoreParameter.UnpackRowLength, frame.Stride / 4);
+                tex.VideoData.LastStreamPosition = tex.VideoData.Stream.Position;
 
-                GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-
-                // Flip the frame data vertically to match OpenGL's bottom-left origin (parallel is only faster for high-res videos)
-                int bytesPerPixel = 4; // RGBA32
-                int rowBytes = tex.VideoData.Width * bytesPerPixel;
+                // Flip the frame data vertically to match OpenGL's bottom-left origin (parallel processing has too much overhead even at 1080p)
+                int rowBytes = tex.VideoData.Width * 4; // 4 bytes per pixel for RGBA
                 byte[] flippedData = new byte[frame.Data.Length];
-
                 for (int y = 0; y < tex.VideoData.Height; y++)
                 {
-                    // Copy row (Height - 1 - y) to row y
                     int sourceOffset = y * frame.Stride;
                     int destOffset = (tex.VideoData.Height - 1 - y) * rowBytes;
                     frame.Data.Slice(sourceOffset, rowBytes).CopyTo(flippedData.AsSpan(destOffset, rowBytes));
                 }
 
-                // Update texture with new frame data
+                //GL.PixelStore(PixelStoreParameter.UnpackRowLength, frame.Stride / 4);
+                GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
                 unsafe
                 {
                     fixed (byte* ptr = flippedData)
@@ -67,12 +62,8 @@ public static class VideoRenderingHelper
                         GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
                     }
                 }
-
-                // Undo the binding
                 GL.BindTexture(TextureTarget.Texture2D, 0);
-
-                // Reset unpack row length to default
-                GL.PixelStore(PixelStoreParameter.UnpackRowLength, 0);
+                //GL.PixelStore(PixelStoreParameter.UnpackRowLength, 0);
             }
         }
         catch (EndOfStreamException e)

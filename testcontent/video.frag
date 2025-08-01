@@ -7,6 +7,11 @@ uniform float time;
 uniform sampler2D video;
 out vec4 fragColor;
 
+// Not used here but also available:
+// uniform vec2 video_resolution;
+// uniform float video_duration;
+// uniform float video_progress;
+
 void main()
 {
 	vec2 uv = fragCoord;

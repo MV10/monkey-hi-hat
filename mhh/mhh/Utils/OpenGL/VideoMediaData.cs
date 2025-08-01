@@ -24,6 +24,8 @@ public class VideoMediaData
 
     public TimeSpan LastUpdateTime = TimeSpan.Zero;
 
+    public TimeSpan LastStreamPosition = TimeSpan.MaxValue;
+
     /// <summary>
     /// The video feature manages its own clock to control playback timing.
     /// </summary>
