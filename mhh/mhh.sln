@@ -7,6 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mhh", "mhh\mhh.csproj", "{1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoFiles", "RepoFiles", "{B1FB730B-7B8A-449A-894C-91EEF3972121}"
 	ProjectSection(SolutionItems) = preProject
+		..\copilot.md = ..\copilot.md
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 		..\unreleased_changes.md = ..\unreleased_changes.md

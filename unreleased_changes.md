@@ -52,6 +52,7 @@ Don't assume anything here is working or will be available in some future releas
 
 ### MHH TODO
 
+* Consider adding a markdown file for co-pilot guidance (must be open in the IDE for co-pilot to "see" it)
 * Add mhh.conf setting to control window frame style when not in full-screen mode
 * Add mhh.conf paths for saving screenshots 
 * Add `--paths` switch to return configured paths
