@@ -85,27 +85,39 @@ public static class VideoRenderingHelper
             {
                 tex.VideoData.LastStreamPosition = tex.VideoData.Stream.Position;
 
-                // Flip the frame data vertically to match OpenGL's bottom-left origin (parallel processing has too much overhead even at 1080p)
-                int rowBytes = tex.VideoData.Width * 4; // 4 bytes per pixel for RGBA
-                byte[] flippedData = new byte[frame.Data.Length];
-                for (int y = 0; y < tex.VideoData.Height; y++)
+                if(Program.AppConfig.VideoFlip == VideoFlipMode.Internal)
                 {
-                    int sourceOffset = y * frame.Stride;
-                    int destOffset = (tex.VideoData.Height - 1 - y) * rowBytes;
-                    frame.Data.Slice(sourceOffset, rowBytes).CopyTo(flippedData.AsSpan(destOffset, rowBytes));
-                }
-
-                //GL.PixelStore(PixelStoreParameter.UnpackRowLength, frame.Stride / 4);
-                GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-                unsafe
-                {
-                    fixed (byte* ptr = flippedData)
+                    int rowBytes = tex.VideoData.Width * 4; // 4 bytes per pixel for RGBA
+                    byte[] flippedData = new byte[frame.Data.Length];
+                    for (int y = 0; y < tex.VideoData.Height; y++)
                     {
-                        GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
+                        int sourceOffset = y * frame.Stride;
+                        int destOffset = (tex.VideoData.Height - 1 - y) * rowBytes;
+                        frame.Data.Slice(sourceOffset, rowBytes).CopyTo(flippedData.AsSpan(destOffset, rowBytes));
                     }
+
+                    GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+                    unsafe
+                    {
+                        fixed (byte* ptr = flippedData)
+                        {
+                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
+                        }
+                    }
+                    GL.BindTexture(TextureTarget.Texture2D, 0);
                 }
-                GL.BindTexture(TextureTarget.Texture2D, 0);
-                //GL.PixelStore(PixelStoreParameter.UnpackRowLength, 0);
+                else
+                {
+                    GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+                    unsafe
+                    {
+                        fixed (byte* ptr = frame.Data)
+                        {
+                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
+                        }
+                    }
+                    GL.BindTexture(TextureTarget.Texture2D, 0);
+                }
             }
         }
         catch (EndOfStreamException e)

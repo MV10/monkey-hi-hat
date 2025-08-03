@@ -38,6 +38,7 @@ namespace mhh
         public readonly int UnsecuredPort;
         public readonly int TestingSkipVizCount;
         public readonly int TestingSkipFXCount;
+        public readonly VideoFlipMode VideoFlip;
 
         public readonly bool StartInStandby;
         public readonly bool CloseToStandby;
@@ -94,6 +95,7 @@ namespace mhh
             UnsecuredPort = ConfigSource.ReadValue("setup", "unsecuredport").ToInt32(0);
             TestingSkipVizCount = ConfigSource.ReadValue("setup", "testingskipvizcount").ToInt32(0);
             TestingSkipFXCount = ConfigSource.ReadValue("setup", "testingskipfxcount").ToInt32(0);
+            VideoFlip = ConfigSource.ReadValue("setup", "videoflip").ToEnum(VideoFlipMode.Internal);
 
             VisualizerPath = ConfigSource.ReadValue(SectionOS, "visualizerpath");
             PlaylistPath = ConfigSource.ReadValue(SectionOS, "playlistpath");

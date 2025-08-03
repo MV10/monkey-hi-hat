@@ -10,12 +10,12 @@ public class VideoMediaData
     /// <summary>
     /// File-level data for the video.
     /// </summary>
-    public MediaFile? File;
+    public MediaFile File;
 
     /// <summary>
     /// Active video stream
     /// </summary>
-    public VideoStream? Stream;
+    public VideoStream Stream;
 
     public int Width;
 

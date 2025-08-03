@@ -36,14 +36,18 @@ Don't assume anything here is working or will be available in some future releas
 * Disallow switches other than `--help` when starting first instance
 
 * v4.3.0 MP4 video support, release TBD
+* Waiting for 4.7.0 of FFMediaToolkit (using local build for now)
 
 ### Work In Progress
+
+> Currently using a local build of FFMediaToolkit v4.7.0 (waiting for it to be released).
 
 * Distribute ffmpeg binaries via the installer (new `ffmpeg` subdirectory in app install directory)
 
 * Add Windows video playback support (only tested with h.264 MP4s; no audio support planned)
 * Video uniforms (appends `_duration`, `_progress`, `_resolution` to video uniform name)
 * Add `FFmpegPath` to `[windows]` section of `mhh.conf`
+* Add `VideoFlip` to `[setup]` section of `mhh.conf` (default `Internal`, also `FFmpeg` or `None`)
 * Add `[video]` section in viz/FX config files (same rules as `[textures]` section)
 * Add sample MP4 files to the Volt's Laboratory textures directory
     * [dancer.mp4](https://pixabay.com/videos/woman-model-dancing-silhouette-vj-185787/)

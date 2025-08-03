@@ -12,12 +12,6 @@ namespace mhh;
 
 public static class RenderingHelper
 {
-    private static readonly MediaOptions VideoMediaOptions = new()
-    {
-        StreamsToLoad = MediaMode.Video,            // no audio support planned
-        VideoPixelFormat = ImagePixelFormat.Rgba32, // RGBA for direct OpenGL compatibility
-    };
-
     /// <summary>
     /// When true, GetShader will delete the matching shader key so that a new instance will
     /// be loaded, compiled, and cached. The flag is cleared after processing. This is set by
@@ -47,6 +41,16 @@ public static class RenderingHelper
         set => StoredClientSize = new(value.X, value.Y); 
     }
     private static Vector2i StoredClientSize;
+
+    /// <summary>
+    /// Settings that control FFMediaToolkit video decoding and rendering.
+    /// </summary>
+    public static MediaOptions VideoMediaOptions = new()
+    {
+        StreamsToLoad = MediaMode.Video,            // no audio support planned
+        VideoPixelFormat = ImagePixelFormat.Rgba32, // RGBA for direct OpenGL compatibility
+        FlipVertically = false,                     // default; Program.InitializeAndWait can change if AppConfig VideoFlip is FFmpeg
+    };
 
     /// <summary>
     /// Retreives a visualizer shader from the cache, optionally replacing it with a newly loaded and

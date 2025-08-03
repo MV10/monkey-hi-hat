@@ -85,4 +85,14 @@ namespace mhh
         FX = 2,
         Fade = 3,
     }
+
+    /// <summary>
+    /// Specifies how or if video frames are vertically flipped.
+    /// </summary>
+    public enum VideoFlipMode
+    {
+        None = 0,
+        Internal = 1,
+        FFmpeg = 2,
+    }
 }

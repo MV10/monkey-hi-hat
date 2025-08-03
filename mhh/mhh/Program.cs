@@ -417,10 +417,11 @@ namespace mhh
             // Prepare the eycandy library
             ErrorLogging.Logger = LogHelper.Logger;
 
-            // Prepare the FFmpeg helper
+            // Prepare video-related settings
             if (!string.IsNullOrWhiteSpace(AppConfig.FFmpegPath))
             {
                 FFmpegLoader.FFmpegPath = AppConfig.FFmpegPath;
+                RenderingHelper.VideoMediaOptions.FlipVertically = (AppConfig.VideoFlip == VideoFlipMode.FFmpeg);
             }
 
             ShowAppInfo();
