@@ -1,4 +1,5 @@
 ﻿
+using eyecandy;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;

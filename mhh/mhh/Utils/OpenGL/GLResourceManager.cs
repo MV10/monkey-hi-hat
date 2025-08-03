@@ -4,6 +4,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace mhh;
 
@@ -131,7 +132,7 @@ public class GLResourceManager : IDisposable
         if (AllocatedImageTextures.ContainsKey(ownerName))
         {
             LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} destroying texture resources for {ownerName}");
-            DestroyImageTexturesInternal(AllocatedImageTextures[ownerName]);
+            DestroyLoadedTexturesInternal(AllocatedImageTextures[ownerName]);
             AllocatedImageTextures.Remove(ownerName);
         }
     }
@@ -259,13 +260,14 @@ public class GLResourceManager : IDisposable
         AvailableTextureUnits.AddRange(handles.ToList());
     }
 
-    private void DestroyImageTexturesInternal(IReadOnlyList<GLImageTexture> list)
+    private void DestroyLoadedTexturesInternal(IReadOnlyList<GLImageTexture> list)
     {
         var videos = list.Where(i => i.VideoData is not null).ToList();
         LogHelper.Logger?.LogTrace($"   Releasing {videos.Count} video file resources");
         foreach (var video in videos)
         {
-            VideoRenderingHelper.DestroyVideoObjects(video);
+            video.VideoData.File?.Dispose();
+            video.VideoData = null;
         }
 
         var handles = list.Select(i => i.TextureHandle).ToArray();
@@ -292,7 +294,7 @@ public class GLResourceManager : IDisposable
         foreach(var kvp in AllocatedImageTextures)
         {
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ImageTexture owner {kvp.Key}");
-            DestroyImageTexturesInternal(kvp.Value);
+            DestroyLoadedTexturesInternal(kvp.Value);
         }
         AllocatedImageTextures.Clear();
 

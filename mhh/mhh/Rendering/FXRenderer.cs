@@ -38,11 +38,11 @@ public class FXRenderer : IRenderer
 
     private Dictionary<string, float> PrimaryFXUniforms;
 
-    private string CrossfadeOwnerName = RenderingHelper.MakeOwnerName("Crossfading");
-    private GLResourceGroup CrossfadeResources;
-    private Shader CrossfadeShader;
-    private IVertexSource CrossfadeVerts;
-    private float DurationMS;
+    private string FXCrossfadeOwnerName = RenderingHelper.MakeOwnerName("Crossfading");
+    private GLResourceGroup FXCrossfadeResources;
+    private Shader FXCrossfadeShader;
+    private IVertexSource FXCrossfadeVerts;
+    private float FXCrossfadeDurationMS;
 
     private Stopwatch Clock = new();
     private float FrameCount = 0;
@@ -93,11 +93,11 @@ public class FXRenderer : IRenderer
             // prep for crossfade unless the program is doing a larger crossfade (typically happens on instant-apply FX)
             if (Config.Crossfade && Program.AppWindow.Renderer.ActiveRenderer is not CrossfadeRenderer)
             {
-                CrossfadeShader = Caching.InternalCrossfadeShader;
-                CrossfadeVerts = new VertexQuad();
-                CrossfadeVerts.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
-                CrossfadeResources = RenderManager.ResourceManager.CreateResourceGroups(CrossfadeOwnerName, 1, ViewportResolution)[0];
-                DurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
+                FXCrossfadeShader = Caching.InternalCrossfadeShader;
+                FXCrossfadeVerts = new VertexQuad();
+                FXCrossfadeVerts.Initialize(null, FXCrossfadeShader); // fragquad doesn't have settings, so null is safe
+                FXCrossfadeResources = RenderManager.ResourceManager.CreateResourceGroups(FXCrossfadeOwnerName, 1, ViewportResolution)[0];
+                FXCrossfadeDurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
             }
 
             Textures = RenderingHelper.GetTextures(DrawbufferOwnerName, Config.ConfigSource);
@@ -160,7 +160,6 @@ public class FXRenderer : IRenderer
             pass.Shader.ResetUniforms();
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
             RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms, PrimaryFXUniforms);
-            RenderingHelper.SetTextureUniforms(Textures, pass.Shader);
             pass.Shader.SetUniform("resolution", ViewportResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);
@@ -195,32 +194,32 @@ public class FXRenderer : IRenderer
             screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
 
         // is FX crossfade active?
-        float fadeLevel = (float)Clock.ElapsedMilliseconds / DurationMS;
-        if (Config.Crossfade && CrossfadeShader is not null)
+        float fadeLevel = (float)Clock.ElapsedMilliseconds / FXCrossfadeDurationMS;
+        if (Config.Crossfade && FXCrossfadeShader is not null)
         {
             // Cached, only HostWindow.Dispose releases this
             if (fadeLevel >= 1f)
             {
-                CrossfadeShader = null;
-                CrossfadeVerts.Dispose();
-                CrossfadeVerts = null;
+                FXCrossfadeShader = null;
+                FXCrossfadeVerts.Dispose();
+                FXCrossfadeVerts = null;
             }
         }
 
         // execute the FX crossfade
-        if (CrossfadeShader is not null)
+        if (FXCrossfadeShader is not null)
         {
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, CrossfadeResources.FramebufferHandle);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, FXCrossfadeResources.FramebufferHandle);
             GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
-            CrossfadeShader.Use();
-            CrossfadeShader.ResetUniforms();
-            CrossfadeShader.SetUniform("fadeLevel", fadeLevel);
-            CrossfadeShader.SetTexture("oldBuffer", ShaderPasses[0].Drawbuffers.TextureHandle, ShaderPasses[0].Drawbuffers.TextureUnit);
-            CrossfadeShader.SetTexture("newBuffer", FinalDrawbuffers.TextureHandle, FinalDrawbuffers.TextureUnit);
-            CrossfadeVerts.RenderFrame(CrossfadeShader);
+            FXCrossfadeShader.Use();
+            FXCrossfadeShader.ResetUniforms();
+            FXCrossfadeShader.SetUniform("fadeLevel", fadeLevel);
+            FXCrossfadeShader.SetTexture("oldBuffer", ShaderPasses[0].Drawbuffers.TextureHandle, ShaderPasses[0].Drawbuffers.TextureUnit);
+            FXCrossfadeShader.SetTexture("newBuffer", FinalDrawbuffers.TextureHandle, FinalDrawbuffers.TextureUnit);
+            FXCrossfadeVerts.RenderFrame(FXCrossfadeShader);
 
-            FinalDrawbuffers = CrossfadeResources;
+            FinalDrawbuffers = FXCrossfadeResources;
         }
 
         // blit drawbuffer to OpenGL's backbuffer unless CrossfadeRenderer is intercepting
@@ -264,7 +263,7 @@ public class FXRenderer : IRenderer
         // resize draw buffers, and resize/copy back buffers
         RenderManager.ResourceManager.ResizeTextures(DrawbufferOwnerName, ViewportResolution);
         if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, true);
-        if (Config.Crossfade) RenderManager.ResourceManager.ResizeTextures(CrossfadeOwnerName, ViewportResolution);
+        if (Config.Crossfade) RenderManager.ResourceManager.ResizeTextures(FXCrossfadeOwnerName, ViewportResolution);
 
         // if primary doesn't have buffers, ShaderPass[0] needs to match the primary's resolution (assuming it differs from the FX buffer resolution)
         if(PrimaryRenderer is not null && PrimaryRenderer.OutputBuffers is null
@@ -279,7 +278,7 @@ public class FXRenderer : IRenderer
         {
             pass.VertexSource?.BindBuffers(pass.Shader);
         }
-        CrossfadeVerts?.BindBuffers(CrossfadeShader);
+        FXCrossfadeVerts?.BindBuffers(FXCrossfadeShader);
     }
 
     public void StartClock()
@@ -331,17 +330,17 @@ public class FXRenderer : IRenderer
         RenderManager.ResourceManager.DestroyAllResources(BackbufferOwnerName);
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade Resources");
-        RenderManager.ResourceManager.DestroyAllResources(CrossfadeOwnerName);
+        RenderManager.ResourceManager.DestroyAllResources(FXCrossfadeOwnerName);
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade VertexSource");
-        CrossfadeVerts?.Dispose();
+        FXCrossfadeVerts?.Dispose();
 
         DrawbufferResources = null;
         BackbufferResources = null;
-        CrossfadeResources = null;
+        FXCrossfadeResources = null;
 
         // Cached, only HostWindow.Dispose() actually destroys this
-        CrossfadeShader = null;
+        FXCrossfadeShader = null;
 
         IsDisposed = true;
         GC.SuppressFinalize(this);

@@ -28,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-FX", "TestConte
 		..\testcontent\fx\texture.conf = ..\testcontent\fx\texture.conf
 		..\testcontent\fx\texture1.frag = ..\testcontent\fx\texture1.frag
 		..\testcontent\fx\texture2.frag = ..\testcontent\fx\texture2.frag
+		..\testcontent\fx\videofx.conf = ..\testcontent\fx\videofx.conf
+		..\testcontent\fx\videofx.frag = ..\testcontent\fx\videofx.frag
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Playlist", "TestContent-Playlist", "{76056212-75DC-4ACC-8E11-22E4EBFB74B4}"

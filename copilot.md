@@ -40,7 +40,7 @@
 * ConfigFiles/ : Application and development configuration templates
 * Hosting/ : Main window, config file support, management of playlists and test mode
 * InternalShaders/ : Essential shaders always available
-* Rendering/ : Shader loading, execution, and pipeline management
+* Rendering/ : Shader and texture loading, shader execution, and render pipeline management
 * Utils/Caching/ : Shader and library caching
 * Utils/Global/ : Constants, enums, logging, path utilities
 * Utils/OpenGL/ : OpenGL resource and texture management
@@ -52,7 +52,7 @@
 * The ConfigFiles directory stores the full template "mhh.conf" file and the dev/debug-oriented "mhh-dev.conf" file.
 * The Hosting directory stores the HostWindow.cs file, which is the main window of the application, and various files used to read and store application configuration, playlists, and shader configurations. The PlaylistManager.cs file manages playlists and their content, and TestModeManager.cs manages test mode operations, which is used to test new viz or FX shaders running combined with existing viz or FX shaders.
 * The InternalShaders directory contains utility shaders that are always required and used often, such as text overlay support, a basic crossfade, passthrough shaders, and a simple default idle shader guaranteed to always be available.
-* The Rendering directory contains a RenderingManager.cs file, which handles loading, execution, control, and unloading of shaders and the rendering pipeline. The RenderingHelper.cs file provides utility functions for rendering operations, such as loading textures and managing shader programs. Specific rendering classes like VizShader.cs, FXShader.cs, and CrossfadeShader.cs define the behavior of different shader types. Also present are classes for generating screenshots, managing video textures, and multi-pass shader config parsing and support.
+* The Rendering directory contains a RenderingManager.cs file, which handles loading, execution, control, and unloading of shaders and the rendering pipeline. The RenderingHelper.cs file provides utility functions for rendering operations, such as loading textures, videos, and managing shader programs. Specific rendering classes like VizShader.cs, FXShader.cs, and CrossfadeShader.cs define the behavior of different shader types. Also present are classes for generating screenshots, and multi-pass shader config parsing and support.
 * The Utils/Caching directory contains classes for caching compiled shaders and shader libraries.
 * The Utils/Global directory contains files defining constants, enums, extensions, and utilities to support logging and path handling.
 * The Utils/OpenGL directory contains classes focused on OpenGL resource management. GLImageTexture.cs is a simple data storage class defining static images or video files. The program uses the concept of a "resource group" which can include OpenGL framebuffer objects (FBOs) and textures. GLResourceGroup is a simple data storage class that defines one of these OpenGL resources stored within a resource group. GLResourceManager.cs manages these resource groups, allowing for easy creation, retrieval, and disposal of OpenGL resources. The VideoMediaData.cs class is a simple data storage class defining characteristics of a video file, which is attached to a GLImageTexture object when the texture comes from video playback.

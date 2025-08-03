@@ -132,7 +132,9 @@ public static class RenderingHelper
         var videoDefs = LoadTextureDefinitions(configSource, "videos");
 
         var totalRequired = (textureDefs?.Count ?? 0) + (videoDefs?.Count ?? 0);
+        if (totalRequired == 0) return null;
         var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, totalRequired);
+
         int resourceIndex = 0;
 
         if(textureDefs is not null)
@@ -183,17 +185,13 @@ public static class RenderingHelper
         var pathname = PathHelper.FindFile(paths, tex.Filename);
         if (pathname is null) return false;
 
-        // OpenGL origin is bottom left instead of top left
-        StbImage.stbi_set_flip_vertically_on_load(1);
+        using var stream = File.OpenRead(pathname);
+        StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
+        var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
         GL.ActiveTexture(tex.TextureUnit);
         GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-
-        using var stream = File.OpenRead(pathname);
-        var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
-
         GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
-
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
@@ -230,14 +228,11 @@ public static class RenderingHelper
 
             GL.ActiveTexture(tex.TextureUnit);
             GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, tex.VideoData.Width, tex.VideoData.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-
         }
         catch (Exception ex)
         {
@@ -251,21 +246,42 @@ public static class RenderingHelper
 
     /// <summary>
     /// Called by IVertexSource RenderFrame to set any loaded image/video texture uniforms before drawing.
+    /// Also updates any video textures that are currently playing.
     /// </summary>
     public static void SetTextureUniforms(IReadOnlyList<GLImageTexture> textures, Shader shader)
     {
         if (textures is null) return;
-        foreach(var tex in textures)
+
+        foreach (var tex in textures)
         {
             if (tex.Loaded)
             {
-                shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit);
-                if(tex.VideoData is not null)
+                if (tex.VideoData is not null)
                 {
+                    if (Program.AppWindow.Renderer.TimePaused)
+                    {
+                        if (!tex.VideoData.IsPaused)
+                        {
+                            tex.VideoData.IsPaused = true;
+                            tex.VideoData.Clock.Stop();
+                        }
+                    }
+                    else
+                    {
+                        if (tex.VideoData.IsPaused)
+                        {
+                            tex.VideoData.IsPaused = false;
+                            tex.VideoData.Clock.Start();
+                        }
+
+                        UpdateVideoTexture(tex);
+                    }
                     shader.SetUniform($"{tex.UniformName}_duration", (float)tex.VideoData.Duration.TotalSeconds);
                     shader.SetUniform($"{tex.UniformName}_progress", (float)tex.VideoData.Clock.Elapsed.TotalSeconds / (float)tex.VideoData.Duration.TotalSeconds);
                     shader.SetUniform($"{tex.UniformName}_resolution", tex.VideoData.Resolution);
                 }
+
+                shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit);
             }
         }
     }
@@ -405,6 +421,8 @@ public static class RenderingHelper
 
     private static Dictionary<string, List<string>> LoadTextureDefinitions(ConfigFile configSource, string sectionName)
     {
+        // return dictionary key is uniform name, List is filenames (>1 means choose one at random)
+
         if (!configSource.Content.ContainsKey(sectionName)) return null;
         var definitions = new Dictionary<string, List<string>>();
         foreach (var def in configSource.Content[sectionName])
@@ -420,4 +438,85 @@ public static class RenderingHelper
         }
         return definitions;
     }
+
+    private static void UpdateVideoTexture(GLImageTexture tex)
+    {
+        if (tex.VideoData is null || !tex.Loaded || tex.VideoData.Stream is null) return;
+
+        if (!tex.VideoData.Clock.IsRunning)
+        {
+            if (tex.VideoData.IsPaused) return;
+            tex.VideoData.Clock.Start();
+        }
+
+        if (tex.VideoData.Clock.Elapsed == tex.VideoData.LastUpdateTime) return; // abort if time hasn't changed
+
+        if (tex.VideoData.Clock.Elapsed > tex.VideoData.Duration)
+        {
+            tex.VideoData.Clock.Restart(); // always loop
+        }
+
+        /*
+        Performance Considerations: For sequential playback without seeking, consider switching to 
+        TryGetNextFrame(out ImageData frame) which returns a boolean indicating success. The current 
+        implementation uses GetFrame for flexible time-based updates, suitable for looping or non-linear playback.
+
+        Error Handling: In production, add try-catch around GetFrame as it may throw exceptions on severe
+        errors (e.g., corrupt files). The empty check handles most end-of-stream cases gracefully.
+        */
+        try
+        {
+            var frame = tex.VideoData.Stream.GetFrame(tex.VideoData.Clock.Elapsed);
+
+            tex.VideoData.LastUpdateTime = tex.VideoData.Clock.Elapsed;
+
+            if (!frame.Data.IsEmpty && tex.VideoData.Stream.Position != tex.VideoData.LastStreamPosition)
+            {
+                tex.VideoData.LastStreamPosition = tex.VideoData.Stream.Position;
+
+                if (Program.AppConfig.VideoFlip == VideoFlipMode.Internal)
+                {
+                    int rowBytes = tex.VideoData.Width * 4; // 4 bytes per pixel for RGBA
+                    byte[] flippedData = new byte[frame.Data.Length];
+                    for (int y = 0; y < tex.VideoData.Height; y++)
+                    {
+                        int sourceOffset = y * frame.Stride;
+                        int destOffset = (tex.VideoData.Height - 1 - y) * rowBytes;
+                        frame.Data.Slice(sourceOffset, rowBytes).CopyTo(flippedData.AsSpan(destOffset, rowBytes));
+                    }
+
+                    GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+                    unsafe
+                    {
+                        fixed (byte* ptr = flippedData)
+                        {
+                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
+                        }
+                    }
+                }
+                else
+                {
+                    GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+                    unsafe
+                    {
+                        fixed (byte* ptr = frame.Data)
+                        {
+                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
+                        }
+                    }
+                }
+            }
+        }
+        catch (EndOfStreamException e)
+        {
+            // If we reach the end of the stream, restart the clock to loop the video and abort
+            tex.VideoData.Clock.Restart();
+            return;
+        }
+        catch (Exception ex)
+        {
+            // TODO better error handling
+        }
+    }
+
 }
