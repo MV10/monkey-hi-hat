@@ -37,20 +37,12 @@ public class VertexQuad : IVertexSource
     private int VertexBufferObject;
     private int VertexArrayObject;
 
-    private string OwnerName = RenderingHelper.MakeOwnerName("Textures");
-    private IReadOnlyList<GLImageTexture> Textures;
-
-    public void Initialize(VisualizerConfig config, Shader shader)
+    public void Initialize(IConfigSource config, Shader shader)
     {
         VertexArrayObject = GL.GenVertexArray();
         VertexBufferObject = GL.GenBuffer();
         ElementBufferObject = GL.GenBuffer();
         BindBuffers(shader);
-
-        // Crossfade and FXRenderer initializes this with a null config
-        if (config is null) return;
-
-        Textures = RenderingHelper.GetTextures(OwnerName, config.ConfigSource);
     }
 
     public void BindBuffers(Shader shader)
@@ -78,8 +70,6 @@ public class VertexQuad : IVertexSource
 
     public void RenderFrame(Shader shader)
     {
-        RenderingHelper.SetTextureUniforms(Textures, shader);
-
         GL.BindVertexArray(VertexArrayObject);
         GL.DrawElements(PrimitiveType.Triangles, indices.Length, DrawElementsType.UnsignedInt, 0);
     }
@@ -97,9 +87,6 @@ public class VertexQuad : IVertexSource
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VertexArrayObject");
         GL.DeleteVertexArray(VertexArrayObject);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Resources");
-        RenderManager.ResourceManager.DestroyAllResources(OwnerName);
 
         IsDisposed = true;
         GC.SuppressFinalize(true);

@@ -39,6 +39,7 @@ public class MultipassRenderer : IRenderer
     private IReadOnlyList<GLResourceGroup> DrawbufferResources;
     private IReadOnlyList<GLResourceGroup> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
+    private IReadOnlyList<GLImageTexture> Textures;
 
     private Stopwatch Clock = new();
     private float ClockOffset = 0;
@@ -68,20 +69,27 @@ public class MultipassRenderer : IRenderer
             ShaderPasses = parser.ShaderPasses;
             DrawbufferResources = parser.DrawbufferResources;
             BackbufferResources = parser.BackbufferResources;
+            parser = null;
 
             // initialize the output buffer info
             FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
 
-            parser = null;
+            Textures = RenderingHelper.GetTextures(DrawbufferOwnerName, Config.ConfigSource);
         }
         catch (ArgumentException ex)
         {
             IsValid = false;
             InvalidReason = ex.Message;
+            return;
         }
 
         RandomRun = (float)RNG.NextDouble();
         RandomRun4 = new((float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble());
+    }
+
+    public void PreRenderFrame()
+    {
+        RenderingHelper.UpdateVideoTextures(Textures);
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -94,6 +102,7 @@ public class MultipassRenderer : IRenderer
             pass.Shader.ResetUniforms();
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
             RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms, pass.Uniforms);
+            RenderingHelper.SetTextureUniforms(Textures, pass.Shader);
             pass.Shader.SetUniform("resolution", ViewportResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);

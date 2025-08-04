@@ -17,6 +17,7 @@ public class SimpleRenderer : IRenderer
 
     public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
     private GLResourceGroup FinalDrawbuffers;
+    private IReadOnlyList<GLImageTexture> Textures;
 
     public Vector2 Resolution { get => ViewportResolution; }
     private Vector2 ViewportResolution;
@@ -56,10 +57,17 @@ public class SimpleRenderer : IRenderer
 
         VertexSource.Initialize(Config, Shader);
 
+        Textures = RenderingHelper.GetTextures(OwnerName, Config.ConfigSource);
+
         OnResize();
 
         RandomRun = (float)RNG.NextDouble();
         RandomRun4 = new((float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble());
+    }
+
+    public void PreRenderFrame()
+    {
+        RenderingHelper.UpdateVideoTextures(Textures);
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -70,6 +78,7 @@ public class SimpleRenderer : IRenderer
         Shader.ResetUniforms();
         Program.AppWindow.Eyecandy.SetTextureUniforms(Shader);
         RenderingHelper.SetGlobalUniforms(Shader, Config.Uniforms);
+        RenderingHelper.SetTextureUniforms(Textures, Shader);
         Shader.SetUniform("resolution", ViewportResolution);
         Shader.SetUniform("time", timeUniform);
         Shader.SetUniform("frame", FrameCount);

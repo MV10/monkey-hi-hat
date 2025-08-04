@@ -30,11 +30,8 @@ public class VertexIntegerArray : IVertexSource
         PrimitiveType.TriangleFan,
     };
 
-    private string OwnerName = RenderingHelper.MakeOwnerName("Textures");
-    private IReadOnlyList<GLImageTexture> Textures;
-
-    // init from config via interface (only way to load textures)
-    public void Initialize(VisualizerConfig config, Shader shader)
+    // init from config via interface
+    public void Initialize(IConfigSource config, Shader shader)
     {
         var count = config.ConfigSource
             .ReadValue(nameof(VertexIntegerArray), "VertexIntegerCount")
@@ -43,8 +40,6 @@ public class VertexIntegerArray : IVertexSource
         var mode = config.ConfigSource
             .ReadValue(nameof(VertexIntegerArray), "ArrayDrawingMode")
             .ToEnum(ArrayDrawingMode.Points);
-
-        Textures = RenderingHelper.GetTextures(OwnerName, config.ConfigSource);
 
         Initialize(count, mode, shader);
     }
@@ -82,7 +77,6 @@ public class VertexIntegerArray : IVertexSource
     public void RenderFrame(Shader shader)
     {
         shader.SetUniform("vertexCount", (float)VertexIntegerCount);
-        RenderingHelper.SetTextureUniforms(Textures, shader);
 
         GL.BindVertexArray(VertexArrayObject);
         GL.DrawArrays(Modes[DrawingMode], 0, VertexIntegerCount);
@@ -98,9 +92,6 @@ public class VertexIntegerArray : IVertexSource
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VertexArrayObject");
         GL.DeleteVertexArray(VertexArrayObject);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Resources");
-        RenderManager.ResourceManager.DestroyAllResources(OwnerName);
 
         IsDisposed = true;
         GC.SuppressFinalize(true);

@@ -46,15 +46,20 @@ public class TextRenderer : IRenderer
         FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, TextureWrapMode.ClampToEdge, ApplicationConfiguration.InternalShaderPath);
 
         VertQuad = new VertexQuad();
-        VertQuad.Initialize(null, TextShader); // fragquad doesn't have settings, so null is safe
+        VertQuad.Initialize(null, TextShader); // null is safe, fragquad has no viz/fx settings and text output doesn't support textures/videos
 
         OnResize();
+    }
+
+    public void PreRenderFrame()
+    {
+        if (!RenderManager.TextManager.HasContent) return;
+        CopyTextBufferToTexture();
     }
 
     public void RenderFrame(ScreenshotWriter screenshotWriter = null)
     {
         if (!RenderManager.TextManager.HasContent) return;
-        CopyTextBufferToTexture();
 
         // Copy the GL backbuffer as our base_image uniform
         GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);

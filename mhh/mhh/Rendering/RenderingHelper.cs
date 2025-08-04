@@ -7,6 +7,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using StbImageSharp;
 using System.Runtime.CompilerServices;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace mhh;
 
@@ -245,10 +246,11 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Called by IVertexSource RenderFrame to set any loaded image/video texture uniforms before drawing.
-    /// Also updates any video textures that are currently playing.
+    /// This must be called by the renderer before any frame buffer objects are bound. OpenGL's behavior
+    /// is "undefined" if a texture is modified while it is bound to a framebuffer (it is considered "in use"
+    /// by the bound FBO).
     /// </summary>
-    public static void SetTextureUniforms(IReadOnlyList<GLImageTexture> textures, Shader shader)
+    public static void UpdateVideoTextures(IReadOnlyList<GLImageTexture> textures)
     {
         if (textures is null) return;
 
@@ -276,12 +278,29 @@ public static class RenderingHelper
 
                         UpdateVideoTexture(tex);
                     }
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Called by IVertexSource RenderFrame to set any loaded image/video texture uniforms before drawing.
+    /// </summary>
+    public static void SetTextureUniforms(IReadOnlyList<GLImageTexture> textures, Shader shader)
+    {
+        if (textures is null) return;
+
+        foreach (var tex in textures)
+        {
+            if (tex.Loaded)
+            {
+                shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit);
+                if (tex.VideoData is not null)
+                {
                     shader.SetUniform($"{tex.UniformName}_duration", (float)tex.VideoData.Duration.TotalSeconds);
                     shader.SetUniform($"{tex.UniformName}_progress", (float)tex.VideoData.Clock.Elapsed.TotalSeconds / (float)tex.VideoData.Duration.TotalSeconds);
                     shader.SetUniform($"{tex.UniformName}_resolution", tex.VideoData.Resolution);
                 }
-
-                shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit);
             }
         }
     }
@@ -456,14 +475,6 @@ public static class RenderingHelper
             tex.VideoData.Clock.Restart(); // always loop
         }
 
-        /*
-        Performance Considerations: For sequential playback without seeking, consider switching to 
-        TryGetNextFrame(out ImageData frame) which returns a boolean indicating success. The current 
-        implementation uses GetFrame for flexible time-based updates, suitable for looping or non-linear playback.
-
-        Error Handling: In production, add try-catch around GetFrame as it may throw exceptions on severe
-        errors (e.g., corrupt files). The empty check handles most end-of-stream cases gracefully.
-        */
         try
         {
             var frame = tex.VideoData.Stream.GetFrame(tex.VideoData.Clock.Elapsed);
@@ -474,35 +485,12 @@ public static class RenderingHelper
             {
                 tex.VideoData.LastStreamPosition = tex.VideoData.Stream.Position;
 
-                if (Program.AppConfig.VideoFlip == VideoFlipMode.Internal)
+                GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+                unsafe
                 {
-                    int rowBytes = tex.VideoData.Width * 4; // 4 bytes per pixel for RGBA
-                    byte[] flippedData = new byte[frame.Data.Length];
-                    for (int y = 0; y < tex.VideoData.Height; y++)
+                    fixed (byte* ptr = (Program.AppConfig.VideoFlip == VideoFlipMode.Internal) ? FlipVideoFrame(tex.VideoData, frame) : frame.Data)
                     {
-                        int sourceOffset = y * frame.Stride;
-                        int destOffset = (tex.VideoData.Height - 1 - y) * rowBytes;
-                        frame.Data.Slice(sourceOffset, rowBytes).CopyTo(flippedData.AsSpan(destOffset, rowBytes));
-                    }
-
-                    GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-                    unsafe
-                    {
-                        fixed (byte* ptr = flippedData)
-                        {
-                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
-                        }
-                    }
-                }
-                else
-                {
-                    GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-                    unsafe
-                    {
-                        fixed (byte* ptr = frame.Data)
-                        {
-                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
-                        }
+                        GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
                     }
                 }
             }
@@ -519,4 +507,16 @@ public static class RenderingHelper
         }
     }
 
+    private static byte[] FlipVideoFrame(VideoMediaData video, ImageData frame)
+    {
+        int rowBytes = video.Width * 4; // 4 bytes per pixel for RGBA
+        byte[] flippedData = new byte[frame.Data.Length];
+        for (int y = 0; y < video.Height; y++)
+        {
+            int sourceOffset = y * frame.Stride;
+            int destOffset = (video.Height - 1 - y) * rowBytes;
+            frame.Data.Slice(sourceOffset, rowBytes).CopyTo(flippedData.AsSpan(destOffset, rowBytes));
+        }
+        return flippedData;
+    }
 }

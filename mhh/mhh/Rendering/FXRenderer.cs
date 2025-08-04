@@ -74,10 +74,11 @@ public class FXRenderer : IRenderer
                 return;
             }
 
-            // copy references to the results
+            // copy parser results, then destroy the parser
             ShaderPasses = parser.ShaderPasses;
             DrawbufferResources = parser.DrawbufferResources;
             BackbufferResources = parser.BackbufferResources;
+            parser = null;
 
             // if primary doesn't have buffers, ShaderPass[0] needs to match the primary's resolution (assuming it differs from the FX buffer resolution)
             if (PrimaryRenderer is not null && PrimaryRenderer.OutputBuffers is null
@@ -95,14 +96,12 @@ public class FXRenderer : IRenderer
             {
                 FXCrossfadeShader = Caching.InternalCrossfadeShader;
                 FXCrossfadeVerts = new VertexQuad();
-                FXCrossfadeVerts.Initialize(null, FXCrossfadeShader); // fragquad doesn't have settings, so null is safe
+                FXCrossfadeVerts.Initialize(null, FXCrossfadeShader); // null is safe, fragquad has no viz/fx settings and crossfade doesn't support textures/videos
                 FXCrossfadeResources = RenderManager.ResourceManager.CreateResourceGroups(FXCrossfadeOwnerName, 1, ViewportResolution)[0];
                 FXCrossfadeDurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
             }
 
             Textures = RenderingHelper.GetTextures(DrawbufferOwnerName, Config.ConfigSource);
-
-            parser = null;
         }
         catch (ArgumentException ex)
         {
@@ -117,6 +116,11 @@ public class FXRenderer : IRenderer
 
         RandomRun = (float)RNG.NextDouble();
         RandomRun4 = new((float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble());
+    }
+
+    public void PreRenderFrame()
+    {
+        RenderingHelper.UpdateVideoTextures(Textures);
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -160,6 +164,7 @@ public class FXRenderer : IRenderer
             pass.Shader.ResetUniforms();
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
             RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms, PrimaryFXUniforms);
+            RenderingHelper.SetTextureUniforms(Textures, pass.Shader);
             pass.Shader.SetUniform("resolution", ViewportResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);

@@ -153,10 +153,6 @@ public class MultipassSectionParser
             ParseFXFragShader();
             if (!OwningRenderer.IsValid) return;
 
-            // every FX pass uses a VertexQuad
-            ShaderPass.VertexSource = new VertexQuad();
-            ShaderPass.VertexSource.Initialize(null, ShaderPass.Shader);
-
             ShaderPasses.Add(ShaderPass);
         }
     }
@@ -239,7 +235,10 @@ public class MultipassSectionParser
         if (!OwningRenderer.IsValid) return;
         RenderingHelper.ReplaceCachedShader = replaceCachedShader;
 
-        // not necessary to set ShaderPass.Uniforms for FX, those are stored at the FXConfig level.
+        // every FX pass uses a VertexQuad; uniforms and related resources (textures/videos) are shared by all passes via FXRenderer
+        ShaderPass.Uniforms = null;
+        ShaderPass.VertexSource = new VertexQuad();
+        ShaderPass.VertexSource.Initialize(null, ShaderPass.Shader);
     }
 
     // MP column 2: visualizer.conf-based multipass (see multipass.conf for docs)
