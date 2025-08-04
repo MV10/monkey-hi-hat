@@ -7,7 +7,6 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using StbImageSharp;
 using System.Runtime.CompilerServices;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace mhh;
 
@@ -254,6 +253,9 @@ public static class RenderingHelper
     {
         if (textures is null) return;
 
+        // textures should never be updated when a framebuffer is bound (the behavior is "undefined")
+        GL.BindFramebuffer(0, 0);
+
         foreach (var tex in textures)
         {
             if (tex.Loaded)
@@ -276,7 +278,7 @@ public static class RenderingHelper
                             tex.VideoData.Clock.Start();
                         }
 
-                        UpdateVideoTexture(tex);
+                        DecodeVideoFrame(tex);
                     }
                 }
             }
@@ -458,7 +460,7 @@ public static class RenderingHelper
         return definitions;
     }
 
-    private static void UpdateVideoTexture(GLImageTexture tex)
+    private static void DecodeVideoFrame(GLImageTexture tex)
     {
         if (tex.VideoData is null || !tex.Loaded || tex.VideoData.Stream is null) return;
 
@@ -485,6 +487,7 @@ public static class RenderingHelper
             {
                 tex.VideoData.LastStreamPosition = tex.VideoData.Stream.Position;
 
+                GL.ActiveTexture(tex.TextureUnit);
                 GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
                 unsafe
                 {
@@ -493,6 +496,7 @@ public static class RenderingHelper
                         GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
                     }
                 }
+                GL.BindTexture(TextureTarget.Texture2D, 0);
             }
         }
         catch (EndOfStreamException e)
