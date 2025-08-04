@@ -36,6 +36,13 @@ public class TextRenderer : IRenderer
     private IVertexSource VertQuad;
     private Shader TextShader;
 
+    /// <summary>
+    /// Text rendering involves frequently updating the texture with new frames.
+    /// Since OpenGL is not thread-safe, this mutex prevents overlapping calls with
+    /// the eyecandy background thread that updates audio texture data.
+    /// </summary>
+    private static readonly Mutex GLTextureLockMutex = new(false, AudioTextureEngine.GLTextureMutexName);
+
     public TextRenderer()
     {
         TextShader = Caching.TextShader;
@@ -125,7 +132,8 @@ public class TextRenderer : IRenderer
     {
         if (LastUpdateCopied > RenderManager.TextManager.LastUpdate) return;
 
-        lock(AudioTextureEngine.GLTextureLock)
+        GLTextureLockMutex.WaitOne();
+        try
         {
             GL.ActiveTexture(TextData.TextureUnit);
             GL.BindTexture(TextureTarget.Texture2D, TextData.TextureHandle);
@@ -138,6 +146,12 @@ public class TextRenderer : IRenderer
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.R32i,
                 RenderManager.TextManager.Dimensions.X, RenderManager.TextManager.Dimensions.Y, 0,
                 PixelFormat.RedInteger, PixelType.Int, RenderManager.TextManager.TextBuffer);
+
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+        }
+        finally
+        {
+            GLTextureLockMutex.ReleaseMutex();
         }
 
         LastUpdateCopied = DateTime.Now;

@@ -53,6 +53,13 @@ public static class RenderingHelper
     };
 
     /// <summary>
+    /// Video file playback involves frequently updating the texture with new frames.
+    /// Since OpenGL is not thread-safe, this mutex prevents overlapping calls with
+    /// the eyecandy background thread that updates audio texture data.
+    /// </summary>
+    private static readonly Mutex GLTextureLockMutex = new(false, AudioTextureEngine.GLTextureMutexName);
+
+    /// <summary>
     /// Retreives a visualizer shader from the cache, optionally replacing it with a newly loaded and
     /// compiled copy if the --reload command was used (which sets the ReplacedCachedShader flag).
     /// </summary>
@@ -196,6 +203,7 @@ public static class RenderingHelper
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+        GL.BindTexture(TextureTarget.Texture2D, 0);
 
         return true;
     }
@@ -233,6 +241,7 @@ public static class RenderingHelper
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
             GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+            GL.BindTexture(TextureTarget.Texture2D, 0);
         }
         catch (Exception ex)
         {
@@ -254,7 +263,7 @@ public static class RenderingHelper
         if (textures is null) return;
 
         // textures should never be updated when a framebuffer is bound (the behavior is "undefined")
-        GL.BindFramebuffer(0, 0);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
         foreach (var tex in textures)
         {
@@ -487,16 +496,24 @@ public static class RenderingHelper
             {
                 tex.VideoData.LastStreamPosition = tex.VideoData.Stream.Position;
 
-                GL.ActiveTexture(tex.TextureUnit);
-                GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-                unsafe
+                GLTextureLockMutex.WaitOne();
+                try
                 {
-                    fixed (byte* ptr = (Program.AppConfig.VideoFlip == VideoFlipMode.Internal) ? FlipVideoFrame(tex.VideoData, frame) : frame.Data)
+                    GL.ActiveTexture(tex.TextureUnit);
+                    GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+                    unsafe
                     {
-                        GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
+                        fixed (byte* ptr = (Program.AppConfig.VideoFlip == VideoFlipMode.Internal) ? FlipVideoFrame(tex.VideoData, frame) : frame.Data)
+                        {
+                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
+                        }
                     }
+                    GL.BindTexture(TextureTarget.Texture2D, 0);
                 }
-                GL.BindTexture(TextureTarget.Texture2D, 0);
+                finally
+                {
+                    GLTextureLockMutex.ReleaseMutex();
+                }
             }
         }
         catch (EndOfStreamException e)
