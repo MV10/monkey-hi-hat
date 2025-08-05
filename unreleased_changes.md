@@ -12,15 +12,17 @@ Don't assume anything here is working or will be available in some future releas
 * Verify `mhh\version.txt` matches release number
 * Verify `install\Installer.cs` has current release number
 * Add any version-based config changes to `install\ConfigHelper.cs`
-* Build install.exe release build
+* Build install.exe release build, rename `install-x-x-x.exe` (x-x-x is version)
 * Publish mhh release build
 * Copy monkey-see-monkey-do release build to mhh publish directory
-* Archive mhh-app-x-x-x.zip and mhh-content-x-x-x.zip
-* Copy zip files into one manual-setup-x-x-x.zip
+* Copy ffmpeg files to an ffmpeg directory in the mhh publish directory
+* Archive publish directory into `mhh-app-x-x-x.zip` (x-x-x is version)
+* Archive Volt's Lab files into `mhh-content-x-x-x.zip`
+* Copy zip files into one `manual-setup-x-x-x.zip`
 * Rename the app and content zips to a .bin extension
 * Push app and content .bin files to github mcguirev10.com /assets/misc
 * Update readme etc, push changes
-* Create new release tag, upload install-x-x-x.exe and manual-setup.zip
+* Create new release tag, upload install-x-x-x.exe and manual-setup
 * Update release history, wiki, etc.
 * Update pinned release tracker: https://github.com/MV10/monkey-hi-hat/issues/3
 
@@ -29,33 +31,18 @@ Don't assume anything here is working or will be available in some future releas
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
-* v4.2.0 released 2025-05-28
-* eyecandy 3.0.2 released 2025-05-27
+* v4.3.0 MP4 video support, released 2025-08-05
+* eyecandy 3.1.0 released 2025-08-04
 
-* v4.2.1 bug fixes / tweaks (unreleased)
-* Disallow switches other than `--help` when starting first instance
-
-* v4.3.0 MP4 video support, release TBD
-* Waiting for 4.7.0 of FFMediaToolkit (using local build for now)
 
 ### Work In Progress
 
-> Currently using a local build of FFMediaToolkit v4.7.0 (waiting for it to be released).
+*
 
-* Distribute ffmpeg binaries via the installer (new `ffmpeg` subdirectory in app install directory)
-
-* Add Windows video playback support (only tested with h.264 MP4s; no audio support planned)
-* Video uniforms (appends `_duration`, `_progress`, `_resolution` to video uniform name)
-* Add `FFmpegPath` to `[windows]` section of `mhh.conf`
-* Add `VideoFlip` to `[setup]` section of `mhh.conf` (default `Internal`, also `FFmpeg` or `None`)
-* Add `[video]` section in viz/FX config files (same rules as `[textures]` section)
-* Add sample MP4 files to the Volt's Laboratory textures directory
-    * [dancer.mp4](https://pixabay.com/videos/woman-model-dancing-silhouette-vj-185787/)
-    * [traffic.mp4](https://www.pexels.com/video/time-lapse-of-traffic-in-the-city-26690703/)
-    * [costume.mp4](https://mixkit.co/free-stock-video/terrifying-performance-of-a-woman-in-disguise-44230/)
 
 ### MHH TODO
 
+* Move video processing to a background thread (decouple from the render loop)
 * Add mhh.conf setting to control window frame style when not in full-screen mode
 * Add mhh.conf paths for saving screenshots 
 * Add `--paths` switch to return configured paths

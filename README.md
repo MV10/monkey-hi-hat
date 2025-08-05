@@ -4,7 +4,7 @@
 
 Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC's speaker outputs.
 
-> [2025-MAY-28: Install or update to version 4.2.0](https://github.com/MV10/monkey-hi-hat/releases)!
+> [2025-AUG-05: Install or update to version 4.3.0](https://github.com/MV10/monkey-hi-hat/releases)!
 
 As of the latest release, there are nearly _**4,000 combinations**_ of visualizations and effects, plus 17 transitiional (crossfade) effects! Great for DJs, parties and other events!
 
@@ -18,8 +18,6 @@ Download and run the installer from the [release](https://github.com/MV10/monkey
 
 This should run on almost any 64-bit Windows 10 or Windows 11 PC with a decent graphics card and practically any type of audio playback. (Linux support is indefinitely on hold: it works on Raspberry Pi but that GPU is underpowered, it doesn't work on WSL, and I don't have any need for or much interest in maintaining a full-blown Linux desktop.)
 
-> 2024-NOV: The Shadertoy example linked below is not working. It appears Soundcloud is blocking ALL access from Shadertoy at this time, and Shadertoy doesn't offer any other audio support except microphone loopback. I'll keep an eye on the situation but it's beyond my control.
-
 CPU and memory requirements are minimal, 99% of the work is on the graphics card. If your PC can run [this Shadertoy example](https://www.shadertoy.com/view/mtKfWd) full-screen, which is a Monkey Hi Hat visualization with effects that I back-ported, you should be able to run Monkey Hi Hat just fine. No third-party drivers are required (earlier versions did require one). Overhead is so low, on my desktop PC I often run the program on a second monitor while I do other work.
 
 The music reactivity responds to _anything_ your PC is playing from _any_ source, whether that is Spotify, Soundcloud, Pandora, an external device connected to the line-in or surround-sound jacks, MP3s, YouTube, etc. If you can hear it from your speakers, the program can "hear" it too. For on-screen track info, only the native Windows Spotify client is supported. 
@@ -28,7 +26,7 @@ Please understand there is no "user interface" -- the program is designed to run
 
 ## Sample Videos
 
-Soon I will add a version 4 video which shows crossfade transition effects, text overlays, and cool new visualizers and effects.
+Soon I will add a version 4 video which shows crossfade transition effects, text overlays, video file support, and cool new visualizers and effects.
 
 Here's a 2 minute look at some of the version 3 post-processing effects released around the end of 2023. These very small videos still have compression artifacts due to Github's file-size limit, but they will give you a good idea of what's possible. The real thing looks about a million times better (especially on a really good screen like big 4K OLED).
 
@@ -66,7 +64,7 @@ I have been asked about music reactivity for DJ usage. Have your "real" mixers, 
 
 Content creators should check out my Jan-2024 blog article [Getting Started Tutorial](https://mcguirev10.com/2024/01/20/monkey-hi-hat-getting-started-tutorial.html). Note the article refers to the v3 install script; as of version 4 released Feb-2024, the installer is a stand-alone program that is much easier to use, and the program itself no longer requires third-party drivers and all the associated configuration hassles.
 
-The automatically-installed shaders, playlists, effects, crossfades, accompanying configuration files, icons, and the origin of all these oddball names can be found in my [Volt's Laboratory](https://github.com/MV10/volts-laboratory) repository.
+The automatically-installed shaders, playlists, effects, crossfades, accompanying configuration files, icons, graphical textures and videos, and the origin of all these oddball names can be found in my [Volt's Laboratory](https://github.com/MV10/volts-laboratory) repository.
 
 ## Known issues
 
