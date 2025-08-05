@@ -70,6 +70,8 @@ public class GLResourceManager : IDisposable
                 TextureUnitOrdinal = AssignTextureUnit(),
             };
 
+            LogHelper.Logger?.LogTrace($"...Creating resource group for draw pass index {i}");
+
             info.FramebufferHandle = GL.GenFramebuffer();
             info.TextureHandle = GL.GenTexture();
 
@@ -150,6 +152,9 @@ public class GLResourceManager : IDisposable
     public void ResizeTextures(string ownerName, int viewportWidth, int viewportHeight, bool copyContent = false)
     {
         if (!AllocatedResourceGroups.ContainsKey(ownerName)) return;
+
+        LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} resizing framebuffer textures for {ownerName}");
+
         foreach (var resources in AllocatedResourceGroups[ownerName])
         {
             ResizeTexture(resources, viewportWidth, viewportHeight, copyContent);
@@ -162,6 +167,8 @@ public class GLResourceManager : IDisposable
     /// </summary>
     public void ResizeTexture(GLResourceGroup resources, int viewportWidth, int viewportHeight, bool copyContent = false)
     {
+        LogHelper.Logger?.LogTrace($"...Resizing framebuffer texture for draw pass index {resources.DrawPassIndex} to ({viewportWidth},{viewportHeight})");
+
         int oldFramebufferHandle = 0;
         int oldTextureHandle = 0;
 
@@ -186,9 +193,11 @@ public class GLResourceManager : IDisposable
         // Do the copy, if requested, then delete the old buffers
         if (copyContent)
         {
+            LogHelper.Logger?.LogTrace("...Copying old framebuffer content to new framebuffer");
+
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldFramebufferHandle);
             GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureWidth, out int oldWidth);
-            GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureWidth, out int oldHeight);
+            GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureHeight, out int oldHeight);
 
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, resources.FramebufferHandle);
             GL.BlitFramebuffer(
@@ -202,18 +211,6 @@ public class GLResourceManager : IDisposable
         }
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-    }
-
-    // assumes caller has activated and bound the texture handle
-    private void AllocateFramebufferTexture(int textureHandle, int viewportWidth, int viewportHeight, TextureWrapMode wrapMode = TextureWrapMode.Repeat)
-    {
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, viewportWidth, viewportHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, textureHandle, 0);
     }
 
     private int AssignTextureUnit()
@@ -231,13 +228,28 @@ public class GLResourceManager : IDisposable
         return tu;
     }
 
+    // assumes caller has activated and bound the texture handle
+    private void AllocateFramebufferTexture(int textureHandle, int viewportWidth, int viewportHeight, TextureWrapMode wrapMode = TextureWrapMode.Repeat)
+    {
+        LogHelper.Logger?.LogTrace($"...Allocating framebuffer texture");
+
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, viewportWidth, viewportHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2D, textureHandle, 0);
+    }
+
     // failure instantly crashes the program (yay!)
     private void ValidateFramebuffer()
     {
         var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (!status.Equals(FramebufferErrorCode.FramebufferComplete) && !status.Equals(FramebufferErrorCode.FramebufferCompleteExt))
         {
-            Console.WriteLine($"Error creating framebuffer: {status}");
+            Console.WriteLine($"Error creating or resizing framebuffer: {status}");
+            LogHelper.Logger?.LogError($"Error creating or resizing framebuffer: {status}");
             Thread.Sleep(250);
             Environment.Exit(-1);
         }

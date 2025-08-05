@@ -37,17 +37,21 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Work In Progress
 
-*
+* v4.3.1
+* Add Trace logging to try to diagnose user's FramebufferIncompleteAttachment error
+* https://github.com/MV10/monkey-hi-hat/issues/5
+
+* Remove Linux support
+* Add mhh.conf setting to control window frame style when not in full-screen mode
+* Add mhh.conf paths for saving screenshots 
+* Add `--paths` switch to return configured paths
 
 
 ### MHH TODO
 
 * Move video processing to a background thread (decouple from the render loop)
-* Add mhh.conf setting to control window frame style when not in full-screen mode
-* Add mhh.conf paths for saving screenshots 
-* Add `--paths` switch to return configured paths
+* Add OpenGL debug-callback support
 * README - Update for locally-stored MP4s instead of uploads? (100 MB file size limit)
-* Wiki - add dev and shader contributor quick-start pages
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Implement a .fade file which is like a cut-down viz.conf (for loading textures, libs, etc.)
 * Playlist - hotkey to extend auto-advance time for current viz
@@ -67,16 +71,15 @@ Don't assume anything here is working or will be available in some future releas
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
 * Test mode - show keys on screen
 * Test mode - abort if --load or similar commands are issued
-* Textures via HTTP? Caching?
+* Textures via HTTP? Caching? Videos too?
+* Streaming video via HTTP? RTSP?
 * Hotkey to popup list of common hotkeys
 * Startup crashes if no audio device available? (ex. RDP disables audio)
-* Render the text overlay buffer once instead of running the shader every frame
+* Render the text overlay buffer once instead of running the shader every frame (set a "change" flag)
 * Allow aliasing multipass uniform names for reusable utility frag shaders
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
 * Add test content to intentionally generate errors
-* `IVertexSource` init should accept a key/value config list (expose a "settings required" bool?)
-* Add OpenGL debug-callback support
 * Use FontAtlasFilename? (update Wiki with info about generating new ones)
 
 * Soundcloud track overlay?
