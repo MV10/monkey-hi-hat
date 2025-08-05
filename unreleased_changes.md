@@ -41,16 +41,17 @@ Don't assume anything here is working or will be available in some future releas
 * Add Trace logging to try to diagnose user's FramebufferIncompleteAttachment error
 * https://github.com/MV10/monkey-hi-hat/issues/5
 
-* Remove Linux support
-* Add mhh.conf setting to control window frame style when not in full-screen mode
+* Added mhh.conf `HideWindowBorder` setting to control window frame style when not in full-screen mode
+
 * Add mhh.conf paths for saving screenshots 
 * Add `--paths` switch to return configured paths
 
 
 ### MHH TODO
 
+* Remove Linux support
 * Move video processing to a background thread (decouple from the render loop)
-* Add OpenGL debug-callback support
+* Add OpenGL debug-callback support for error logging (see https://github.com/MV10/opengl-upscale-test/blob/master/Win.cs)
 * README - Update for locally-stored MP4s instead of uploads? (100 MB file size limit)
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Implement a .fade file which is like a cut-down viz.conf (for loading textures, libs, etc.)

@@ -3,6 +3,7 @@ using CommandLineSwitchPipe;
 using eyecandy;
 using FFMediaToolkit;
 using Microsoft.Extensions.Logging;
+using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using Serilog;
 using Serilog.Extensions.Logging;
@@ -460,6 +461,7 @@ namespace mhh
                 WindowConfig.OpenTKGameWindowSettings.UpdateFrequency = AppConfig.FrameRateLimit;
                 WindowConfig.OpenTKNativeWindowSettings.Vsync = AppConfig.VSync;
                 WindowConfig.OpenTKNativeWindowSettings.AutoIconify = AppConfig.FullscreenMinimizeOnFocusChange;
+                WindowConfig.OpenTKNativeWindowSettings.WindowBorder = (AppConfig.HideWindowBorder) ? WindowBorder.Hidden : WindowBorder.Resizable;
 
                 // Starts hidden to avoid a white flicker before the first frame is rendered.
                 // Window is made visible by OnRenderFrame.

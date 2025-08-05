@@ -27,6 +27,7 @@ namespace mhh
         public readonly int SizeY;
         public readonly int RenderResolutionLimit;
         public readonly bool HideMousePointer;
+        public readonly bool HideWindowBorder;
         public readonly bool FullscreenMinimizeOnFocusChange;
         public readonly int ShaderCacheSize;
         public readonly int FXCacheSize;
@@ -84,6 +85,7 @@ namespace mhh
             SizeY = ConfigSource.ReadValue("setup", "sizey").ToInt32(540);
             RenderResolutionLimit = ConfigSource.ReadValue("setup", "renderresolutionlimit").ToInt32(0);
             HideMousePointer = ConfigSource.ReadValue("setup", "hidemousepointer").ToBool(true);
+            HideWindowBorder = ConfigSource.ReadValue("setup", "hidewindowborder").ToBool(true);
             FullscreenMinimizeOnFocusChange = ConfigSource.ReadValue("setup", "fullscreenminimizeonfocuschange").ToBool(true);
             ShaderCacheSize = ConfigSource.ReadValue("setup", "shadercachesize").ToInt32(150);
             FXCacheSize = ConfigSource.ReadValue("setup", "fxcachesize").ToInt32(50);
