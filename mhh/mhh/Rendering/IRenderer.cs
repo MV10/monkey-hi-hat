@@ -29,6 +29,12 @@ public interface IRenderer : IConfigSource, IDisposable
     public string Description { get; }
 
     /// <summary>
+    /// Called before frame buffers are bound; next call should be to RenderFrame. Generally
+    /// this should be used to update textures (such as running videos).
+    /// </summary>
+    public void PreRenderFrame();
+
+    /// <summary>
     /// Called to produce a new frame of output. If a ScreenshotWriter is provided,
     /// the output buffer should be provided to that object to generate a screenshot.
     /// </summary>

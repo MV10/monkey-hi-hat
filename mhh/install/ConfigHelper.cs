@@ -89,7 +89,10 @@ namespace mhhinstall
             if (Installer.versionFound.Major == 4)
             {
                 if (Installer.versionFound.Minor < 2) From_410_to_420();
+                if (Installer.versionFound.Minor < 3) From_420_to_430();
             }
+
+            ApplyChanges();
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -101,39 +104,53 @@ namespace mhhinstall
             Output.Write("-- v3.1.0 to v4.0.0 changes:");
 
             AddSetting("setup", "LibraryCacheSize", "RandomizeCrossfade",
-                $"\n\n# SETTING ADDED FOR v4.0.0 UPDATE ON {DateTime.Now}" +
+                $"\n# SETTING ADDED FOR v4.0.0 UPDATE ON {DateTime.Now}" +
                 "\n# Default is false, which uses the internal crossfade. When true, the\n# visualization and library paths are searched for .frag files with\n# a crossfade_ prefix (such as crossfade_burning.frag). No conf file\n# is used. See comments in crossfade_burning in Volt's Laboratory for\n# more details. All crossfade shaders are always cached (there is no\n# separate cache size setting).\nRandomizeCrossfade=true\n");
 
             AddSection("setup", "msmd",
-                $"\n\n# SECTION ADDED FOR v4.0.0 UPDATE ON {DateTime.Now}" +
+                $"\n# SECTION ADDED FOR v4.0.0 UPDATE ON {DateTime.Now}" +
                 "\n#########################################################################\n[msmd]\n# This section is not used by MHH directly. Instead it is read by the\n# https://github.com/MV10/monkey-see-monkey-do background service, which\n# can launch MHH if commands are received while it is not running, and\n# will relay received commands to MHH. The UnsecuredPort option must also\n# be specified for the relay service to work.\n\n# This is the port number the relay service listens on. It is 50002 by\n# default. If it is not specified (or if the MHH UnsecuredPort is not\n# specified) the relay service will log an error and exit.\nUnsecuredRelayPort=50002\n\n# Use \"4\" or \"6\" to restrict the relay service to IPv4 or IPv6 for\n# localhost name resolution. If unspecified, the default is 0 which uses\n# both. Due to an issue in .NET's socket-handling, it can be slow to query\n# IPv6 when the network isn't actually using IPv6.\nRelayIPType=4\n\n# How long the service waits for the application to start before relaying\n# the command. If unspecified, the default is 5 seconds.\nLaunchWaitSeconds=9\n");
 
             AddSetting("windows", "CaptureDeviceName", "LoopbackApi",
-                $"\n\n# SETTING ADDED FOR v4.0.0 UPDATE ON {DateTime.Now}" +
+                $"\n# SETTING ADDED FOR v4.0.0 UPDATE ON {DateTime.Now}" +
                 "\n# There is probably no need to change this. WindowsInternal uses the built-in\n# Windows multimedia WASAPI loopback support and is the default. The other\n# option is OpenALSoft which requires installing and configuring a separate\n# loopback driver and OpenAL library DLLs. (Linux always uses OpenALSoft.)\nLoopbackApi=WindowsInternal\n");
-
-            ApplyChanges();
 
             // Only here as an example -- each should "chain" to the next higher version as they're released.
             From_400_to_410();
         }
 
-        // Not in use, just an example, see end of above, From_310_to_400
         static void From_400_to_410()
         {
             Output.Write("-- v4.0.0 to v4.1.0, no config changes");
 
+            // Not in use, just an example, see end of above, From_310_to_400
+
             From_410_to_420();
         }
-
 
         static void From_410_to_420()
         {
             Output.Write("-- v4.1.0 to v4.2.0 changes:");
 
             AddSetting("setup", "SizeY", "StartX / StartY",
-                $"\n\n# SETTING ADDED FOR v4.2.0 UPDATE ON {DateTime.Now}" +
-                "\n# Default is 100x100 on the primary monitor. Coordinates on other\n# monitors are in \"virtual screen space\" relative to the primary.\n# The starting window position is optional. Use the --display switch\n# to get a list of monitor names, ID numbers, and coordinate rectanges.\n# The application doesn't perform any validation of starting coords.\nStartX=100\nStartY=100"); 
+                $"\n# SETTING ADDED FOR v4.2.0 UPDATE ON {DateTime.Now}" +
+                "\n# Default is 100x100 on the primary monitor. Coordinates on other\n# monitors are in \"virtual screen space\" relative to the primary.\n# The starting window position is optional. Use the --display switch\n# to get a list of monitor names, ID numbers, and coordinate rectanges.\n# The application doesn't perform any validation of starting coords.\nStartX=100\nStartY=100");
+
+            From_420_to_430();
+        }
+
+        static void From_420_to_430()
+        {
+            Output.Write("-- v4.2.0 to v4.3.0 changes:");
+
+            AddSetting("setup", "TestingSkipFXCount", "VideoFlip",
+                $"\n# SETTING ADDED FOR v4.3.0 UPDATE ON {DateTime.Now}" +
+                "\n# This controls how (or if) video files are inverted. Most graphic formats\n# have the origin (pixel 0,0) at the top-left corner, but OpenGL has the\n# origin at the bottom-left corner. Testing seems to indicate Internal is\n# the fastest option, but you can also specify FFmpeg. If you're only using\n# custom videos that are stored inverted, you can set this to None. The\n# default value is Internal.\nVideoFlip=Internal");
+
+            AddSetting("windows", "FXPath", "FFmpegPath",
+                $"\n# SETTING ADDED FOR v4.3.0 UPDATE ON {DateTime.Now}" +
+                "\n# location of the FFmpeg binaries; normally the ffmpeg subdirectory under the app install directory\nFFmpegPath=C:\\Program Files\\mhh\\ffmpeg");
+
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////

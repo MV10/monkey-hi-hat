@@ -185,14 +185,17 @@ public class RenderManager : IDisposable
 
         if(ActiveRenderer is CrossfadeRenderer)
         {
+            ActiveRenderer.PreRenderFrame();
             ActiveRenderer.RenderFrame(null);
         }
         else
         {
+            ActiveRenderer?.PreRenderFrame();
             ActiveRenderer?.RenderFrame(ScreenshotHandler);
             ScreenshotHandler = null;
         }
 
+        TextManager.Renderer.PreRenderFrame();
         TextManager.Renderer.RenderFrame();
     }
 

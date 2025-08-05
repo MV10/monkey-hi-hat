@@ -36,6 +36,13 @@ public class TextRenderer : IRenderer
     private IVertexSource VertQuad;
     private Shader TextShader;
 
+    /// <summary>
+    /// Text rendering involves frequently updating the texture with new frames.
+    /// Since OpenGL is not thread-safe, this mutex prevents overlapping calls with
+    /// the eyecandy background thread that updates audio texture data.
+    /// </summary>
+    private static readonly Mutex GLTextureLockMutex = new(false, AudioTextureEngine.GLTextureMutexName);
+
     public TextRenderer()
     {
         TextShader = Caching.TextShader;
@@ -43,18 +50,23 @@ public class TextRenderer : IRenderer
         FontTexture = RenderManager.ResourceManager.CreateTextureResources(OwnerName, 1)[0];
         FontTexture.Filename = "font.png";
         FontTexture.UniformName = "font";
-        FontTexture.ImageLoaded = RenderingHelper.LoadImageFile(FontTexture, TextureWrapMode.ClampToEdge, ApplicationConfiguration.InternalShaderPath);
+        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, TextureWrapMode.ClampToEdge, ApplicationConfiguration.InternalShaderPath);
 
         VertQuad = new VertexQuad();
-        VertQuad.Initialize(null, TextShader); // fragquad doesn't have settings, so null is safe
+        VertQuad.Initialize(null, TextShader); // null is safe, fragquad has no viz/fx settings and text output doesn't support textures/videos
 
         OnResize();
+    }
+
+    public void PreRenderFrame()
+    {
+        if (!RenderManager.TextManager.HasContent) return;
+        CopyTextBufferToTexture();
     }
 
     public void RenderFrame(ScreenshotWriter screenshotWriter = null)
     {
         if (!RenderManager.TextManager.HasContent) return;
-        CopyTextBufferToTexture();
 
         // Copy the GL backbuffer as our base_image uniform
         GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);
@@ -120,7 +132,8 @@ public class TextRenderer : IRenderer
     {
         if (LastUpdateCopied > RenderManager.TextManager.LastUpdate) return;
 
-        lock(AudioTextureEngine.GLTextureLock)
+        GLTextureLockMutex.WaitOne();
+        try
         {
             GL.ActiveTexture(TextData.TextureUnit);
             GL.BindTexture(TextureTarget.Texture2D, TextData.TextureHandle);
@@ -133,6 +146,12 @@ public class TextRenderer : IRenderer
             GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.R32i,
                 RenderManager.TextManager.Dimensions.X, RenderManager.TextManager.Dimensions.Y, 0,
                 PixelFormat.RedInteger, PixelType.Int, RenderManager.TextManager.TextBuffer);
+
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+        }
+        finally
+        {
+            GLTextureLockMutex.ReleaseMutex();
         }
 
         LastUpdateCopied = DateTime.Now;

@@ -1,8 +1,7 @@
 {
   "profiles": {
     "mhh": {
-      "commandName": "Project",
-      "commandLineArgs": "--display"
+      "commandName": "Project"
     }
   }
 }

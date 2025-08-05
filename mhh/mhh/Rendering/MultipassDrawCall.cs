@@ -3,7 +3,7 @@ namespace mhh;
 
 /// <summary>
 /// Each of these are the elements of a single draw call (aka pass). If Shader
-/// or Visualizer is null, the "primary" defined in the [shader] section of
+/// or VertexSource is null, the "primary" defined in the [shader] section of
 /// the visualizer config file is used. 
 /// </summary>
 public class MultipassDrawCall

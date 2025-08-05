@@ -2,8 +2,6 @@
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using OpenTK.Windowing.GraphicsLibraryFramework;
-using System.Text;
 
 namespace mhh;
 
@@ -15,7 +13,7 @@ namespace mhh;
 // the total number of required FBOs may involve multiple simultaneous usages, any
 // FBO reference (such as the numbers in the [multipass] section of a visualizer
 // config file) are "virtual" and will be mapped to a physical FBO index number by
-// this manager.
+// this manager. A texture must be attached to the FBO as the render target.
 //
 // The class also manages TextureUnit assignments, because optimal performance
 // is to avoid changing TUs on the fly, and a given renderer won't know what TUs
@@ -24,16 +22,15 @@ namespace mhh;
 // assigned TUs won't necessarily be sequential.
 //
 // Any future TextureUnit requirements should also be managed by this class (for
-// example, if support is added for loading external image files).
+// example, when support was added for loading external image and video files).
 
 /// <summary>
-/// Do not instantiate this object. Access it via RenderManager's static 
-/// ResourceManager property, which is what invokes the static factory.
+/// Do not instantiate this object. Access it via RenderManager's static ResourceManager property.
 /// </summary>
 public class GLResourceManager : IDisposable
 {
     private Dictionary<string, IReadOnlyList<GLResourceGroup>> AllocatedResourceGroups = new();
-    private Dictionary<string, IReadOnlyList<GLImageTexture>> AllocatedImageTextures = new();
+    private Dictionary<string, IReadOnlyList<GLImageTexture>> AllocatedTextures = new();
     private List<int> AvailableTextureUnits = new(Caching.MaxAvailableTextureUnit);
 
     public GLResourceManager()
@@ -77,6 +74,7 @@ public class GLResourceManager : IDisposable
             info.TextureHandle = GL.GenTexture();
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, info.FramebufferHandle);
+            GL.ActiveTexture(info.TextureUnit);
             GL.BindTexture(TextureTarget.Texture2D, info.TextureHandle);
             AllocateFramebufferTexture(info.TextureHandle, viewportWidth, viewportHeight);
             ValidateFramebuffer();
@@ -92,7 +90,7 @@ public class GLResourceManager : IDisposable
 
     public IReadOnlyList<GLImageTexture> CreateTextureResources(string ownerName, int totalRequired)
     {
-        if (AllocatedImageTextures.ContainsKey(ownerName)) throw new InvalidOperationException($"GL texture resources already allocated to owner name {ownerName}");
+        if (AllocatedTextures.ContainsKey(ownerName)) throw new InvalidOperationException($"GL texture resources already allocated to owner name {ownerName}");
         if (totalRequired < 1) throw new ArgumentOutOfRangeException("GL texture resource allocation request must be 1 or greater");
 
         LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} creating {totalRequired} texture resources for {ownerName}");
@@ -111,7 +109,7 @@ public class GLResourceManager : IDisposable
             list.Add(info);
         }
 
-        AllocatedImageTextures.Add(ownerName, list);
+        AllocatedTextures.Add(ownerName, list);
         return list;
     }
 
@@ -128,11 +126,11 @@ public class GLResourceManager : IDisposable
             AllocatedResourceGroups.Remove(ownerName);
         }
 
-        if (AllocatedImageTextures.ContainsKey(ownerName))
+        if (AllocatedTextures.ContainsKey(ownerName))
         {
             LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} destroying texture resources for {ownerName}");
-            DestroyImageTexturesInternal(AllocatedImageTextures[ownerName]);
-            AllocatedImageTextures.Remove(ownerName);
+            DestroyLoadedTexturesInternal(AllocatedTextures[ownerName]);
+            AllocatedTextures.Remove(ownerName);
         }
     }
 
@@ -180,6 +178,7 @@ public class GLResourceManager : IDisposable
 
         // Attach a new texture of a new size to the framebuffer
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, resources.FramebufferHandle);
+        GL.ActiveTexture(resources.TextureUnit);
         GL.BindTexture(TextureTarget.Texture2D, resources.TextureHandle);
         AllocateFramebufferTexture(resources.TextureHandle, viewportWidth, viewportHeight);
         ValidateFramebuffer();
@@ -205,7 +204,7 @@ public class GLResourceManager : IDisposable
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
-    // assumes caller has bound the texture handle
+    // assumes caller has activated and bound the texture handle
     private void AllocateFramebufferTexture(int textureHandle, int viewportWidth, int viewportHeight, TextureWrapMode wrapMode = TextureWrapMode.Repeat)
     {
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
@@ -259,8 +258,16 @@ public class GLResourceManager : IDisposable
         AvailableTextureUnits.AddRange(handles.ToList());
     }
 
-    private void DestroyImageTexturesInternal(IReadOnlyList<GLImageTexture> list)
+    private void DestroyLoadedTexturesInternal(IReadOnlyList<GLImageTexture> list)
     {
+        var videos = list.Where(i => i.VideoData is not null).ToList();
+        LogHelper.Logger?.LogTrace($"   Releasing {videos.Count} video file resources");
+        foreach (var video in videos)
+        {
+            video.VideoData.File?.Dispose();
+            video.VideoData = null;
+        }
+
         var handles = list.Select(i => i.TextureHandle).ToArray();
         LogHelper.Logger?.LogTrace($"   Deleting {handles.Length} texture handles");
         GL.DeleteTextures(handles.Length, handles);
@@ -282,12 +289,12 @@ public class GLResourceManager : IDisposable
         }
         AllocatedResourceGroups.Clear();
 
-        foreach(var kvp in AllocatedImageTextures)
+        foreach(var kvp in AllocatedTextures)
         {
             LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ImageTexture owner {kvp.Key}");
-            DestroyImageTexturesInternal(kvp.Value);
+            DestroyLoadedTexturesInternal(kvp.Value);
         }
-        AllocatedImageTextures.Clear();
+        AllocatedTextures.Clear();
 
         IsDisposed = true;
         GC.SuppressFinalize(this);

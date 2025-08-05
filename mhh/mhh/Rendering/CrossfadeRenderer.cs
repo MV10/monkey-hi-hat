@@ -94,7 +94,7 @@ public class CrossfadeRenderer : IRenderer
         }
 
         VertQuad = new VertexQuad(); 
-        VertQuad.Initialize(null, CrossfadeShader); // fragquad doesn't have settings, so null is safe
+        VertQuad.Initialize(null, CrossfadeShader); // null is safe, fragquad has no viz/fx settings and crossfade doesn't support textures/videos
         
         OldRenderer = oldRenderer;
         NewRenderer = newRenderer;
@@ -113,6 +113,13 @@ public class CrossfadeRenderer : IRenderer
 
         RandomRun = (float)RNG.NextDouble();
         RandomRun4 = new((float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble());
+    }
+
+    public void PreRenderFrame()
+    {
+        if (OldRenderer is null || NewRenderer is null) return;
+        OldRenderer?.PreRenderFrame();
+        NewRenderer?.PreRenderFrame();
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)

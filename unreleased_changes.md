@@ -12,15 +12,17 @@ Don't assume anything here is working or will be available in some future releas
 * Verify `mhh\version.txt` matches release number
 * Verify `install\Installer.cs` has current release number
 * Add any version-based config changes to `install\ConfigHelper.cs`
-* Build install.exe release build
+* Build install.exe release build, rename `install-x-x-x.exe` (x-x-x is version)
 * Publish mhh release build
 * Copy monkey-see-monkey-do release build to mhh publish directory
-* Archive mhh-app-x-x-x.zip and mhh-content-x-x-x.zip
-* Copy zip files into one manual-setup-x-x-x.zip
+* Copy ffmpeg files to an ffmpeg directory in the mhh publish directory
+* Archive publish directory into `mhh-app-x-x-x.zip` (x-x-x is version)
+* Archive Volt's Lab files into `mhh-content-x-x-x.zip`
+* Copy zip files into one `manual-setup-x-x-x.zip`
 * Rename the app and content zips to a .bin extension
 * Push app and content .bin files to github mcguirev10.com /assets/misc
 * Update readme etc, push changes
-* Create new release tag, upload install-x-x-x.exe and manual-setup.zip
+* Create new release tag, upload install-x-x-x.exe and manual-setup
 * Update release history, wiki, etc.
 * Update pinned release tracker: https://github.com/MV10/monkey-hi-hat/issues/3
 
@@ -29,18 +31,19 @@ Don't assume anything here is working or will be available in some future releas
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
-* v4.2.0 released 2025-05-28
-* eyecandy 3.0.2 released 2025-05-27
+* v4.3.0 MP4 video support, released 2025-08-05
+* eyecandy 3.1.0 released 2025-08-04
 
-* v4.2.1 bug fixes / tweaks
-* Disallow switches other than `--help` when starting first instance
 
 ### Work In Progress
 
 *
 
+
 ### MHH TODO
 
+* Move video processing to a background thread (decouple from the render loop)
+* Add mhh.conf setting to control window frame style when not in full-screen mode
 * Add mhh.conf paths for saving screenshots 
 * Add `--paths` switch to return configured paths
 * README - Update for locally-stored MP4s instead of uploads? (100 MB file size limit)
@@ -70,7 +73,6 @@ Don't assume anything here is working or will be available in some future releas
 * Render the text overlay buffer once instead of running the shader every frame
 * Allow aliasing multipass uniform names for reusable utility frag shaders
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
-* Add MP4 support? (old, OpenTK v3 + ffmpeg: https://github.com/AtomCrafty/MotionTK)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
 * Add test content to intentionally generate errors
 * `IVertexSource` init should accept a key/value config list (expose a "settings required" bool?)
@@ -154,5 +156,3 @@ ffmpeg -i c:\users\jon\desktop\mhh.mp4
 ### Terminal Path
 
 C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
-
-

@@ -18,6 +18,7 @@ namespace mhh
         public readonly string PlaylistPath = string.Empty;
         public readonly string TexturePath = string.Empty;
         public readonly string FXPath = string.Empty;
+        public readonly string FFmpegPath = string.Empty;
 
         public readonly bool StartFullScreen;
         public readonly int StartX;
@@ -37,6 +38,7 @@ namespace mhh
         public readonly int UnsecuredPort;
         public readonly int TestingSkipVizCount;
         public readonly int TestingSkipFXCount;
+        public readonly VideoFlipMode VideoFlip;
 
         public readonly bool StartInStandby;
         public readonly bool CloseToStandby;
@@ -93,11 +95,13 @@ namespace mhh
             UnsecuredPort = ConfigSource.ReadValue("setup", "unsecuredport").ToInt32(0);
             TestingSkipVizCount = ConfigSource.ReadValue("setup", "testingskipvizcount").ToInt32(0);
             TestingSkipFXCount = ConfigSource.ReadValue("setup", "testingskipfxcount").ToInt32(0);
+            VideoFlip = ConfigSource.ReadValue("setup", "videoflip").ToEnum(VideoFlipMode.Internal);
 
             VisualizerPath = ConfigSource.ReadValue(SectionOS, "visualizerpath");
             PlaylistPath = ConfigSource.ReadValue(SectionOS, "playlistpath");
             TexturePath = ConfigSource.ReadValue(SectionOS, "texturepath");
             FXPath = ConfigSource.ReadValue(SectionOS, "fxpath");
+            FFmpegPath = ConfigSource.ReadValue(SectionOS, "ffmpegpath");
 
             DetectSilenceSeconds = ConfigSource.ReadValue("setup", "detectsilenceseconds").ToInt32(0);
             DetectSilenceMaxRMS = ConfigSource.ReadValue("setup", "detectsilencemaxrms").ToDouble(1.5d);
@@ -148,6 +152,9 @@ namespace mhh
             PathValidation(PlaylistPath);
             PathValidation(TexturePath);
             PathValidation(FXPath);
+
+            if (PathHelper.GetIndividualPaths(FFmpegPath).Length > 1) ConfError("Exactly one path is required for FFmpegPath.");
+            PathValidation(FFmpegPath);
         }
 
         private void PathValidation(string pathspec)

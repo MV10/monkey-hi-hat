@@ -7,6 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mhh", "mhh\mhh.csproj", "{1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoFiles", "RepoFiles", "{B1FB730B-7B8A-449A-894C-91EEF3972121}"
 	ProjectSection(SolutionItems) = preProject
+		..\copilot.md = ..\copilot.md
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 		..\unreleased_changes.md = ..\unreleased_changes.md
@@ -27,6 +28,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-FX", "TestConte
 		..\testcontent\fx\texture.conf = ..\testcontent\fx\texture.conf
 		..\testcontent\fx\texture1.frag = ..\testcontent\fx\texture1.frag
 		..\testcontent\fx\texture2.frag = ..\testcontent\fx\texture2.frag
+		..\testcontent\fx\videofx.conf = ..\testcontent\fx\videofx.conf
+		..\testcontent\fx\videofx.frag = ..\testcontent\fx\videofx.frag
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Playlist", "TestContent-Playlist", "{76056212-75DC-4ACC-8E11-22E4EBFB74B4}"
@@ -67,6 +70,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "
 		..\testcontent\vertquad.conf = ..\testcontent\vertquad.conf
 		..\testcontent\vertquad.frag = ..\testcontent\vertquad.frag
 		..\testcontent\vert_library.glsl = ..\testcontent\vert_library.glsl
+		..\testcontent\video.conf = ..\testcontent\video.conf
+		..\testcontent\video.frag = ..\testcontent\video.frag
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "install", "install\install.csproj", "{53C2DBDC-AEE2-457C-8B4F-8E46BC1CA8DF}"

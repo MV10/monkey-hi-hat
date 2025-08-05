@@ -9,7 +9,7 @@ namespace mhhinstall
     public class Installer
     {
         // Update these for each release
-        public static readonly Version appVersion = new Version("4.2.0");
+        public static readonly Version appVersion = new Version("4.3.0");
         public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-4-2-0.bin";
         public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-4-2-0.bin";
 
