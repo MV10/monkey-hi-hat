@@ -37,7 +37,8 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Work In Progress
 
-*
+* Add Trace logging to try to diagnose user's FramebufferIncompleteAttachment error
+* https://github.com/MV10/monkey-hi-hat/issues/5
 
 
 ### MHH TODO

@@ -150,6 +150,9 @@ public class GLResourceManager : IDisposable
     public void ResizeTextures(string ownerName, int viewportWidth, int viewportHeight, bool copyContent = false)
     {
         if (!AllocatedResourceGroups.ContainsKey(ownerName)) return;
+
+        LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} resizing textures to ({viewportWidth}x{viewportHeight}) for {ownerName}");
+
         foreach (var resources in AllocatedResourceGroups[ownerName])
         {
             ResizeTexture(resources, viewportWidth, viewportHeight, copyContent);
@@ -188,7 +191,7 @@ public class GLResourceManager : IDisposable
         {
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldFramebufferHandle);
             GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureWidth, out int oldWidth);
-            GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureWidth, out int oldHeight);
+            GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureHeight, out int oldHeight);
 
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, resources.FramebufferHandle);
             GL.BlitFramebuffer(
@@ -238,6 +241,7 @@ public class GLResourceManager : IDisposable
         if (!status.Equals(FramebufferErrorCode.FramebufferComplete) && !status.Equals(FramebufferErrorCode.FramebufferCompleteExt))
         {
             Console.WriteLine($"Error creating framebuffer: {status}");
+            LogHelper.Logger?.LogError($"Error creating framebuffer: {status}");
             Thread.Sleep(250);
             Environment.Exit(-1);
         }
