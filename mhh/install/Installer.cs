@@ -33,6 +33,7 @@ namespace mhhinstall
 
         public static readonly string programPath = "C:\\Program Files\\mhh";
         public static readonly string contentPath = "C:\\ProgramData\\mhh-content";
+        public static readonly string ffmpegPath = $"{programPath}\\ffmpeg";
 
         public static readonly string wikiUrl = "https://github.com/MV10/monkey-hi-hat/wiki/";
         public static readonly string postInstallUrl = "https://github.com/MV10/monkey-hi-hat/wiki/Post%E2%80%90Install%E2%80%90Instructions";
