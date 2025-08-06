@@ -90,6 +90,7 @@ namespace mhhinstall
             {
                 if (Installer.versionFound.Minor < 2) From_410_to_420();
                 if (Installer.versionFound.Minor < 3) From_420_to_430();
+                if (Installer.versionFound.Minor == 3 && Installer.versionFound.Revision < 1) From_430_to_431();
             }
 
             ApplyChanges();
@@ -135,8 +136,6 @@ namespace mhhinstall
             AddSetting("setup", "SizeY", "StartX / StartY",
                 $"\n# SETTING ADDED FOR v4.2.0 UPDATE ON {DateTime.Now}" +
                 "\n# Default is 100x100 on the primary monitor. Coordinates on other\n# monitors are in \"virtual screen space\" relative to the primary.\n# The starting window position is optional. Use the --display switch\n# to get a list of monitor names, ID numbers, and coordinate rectanges.\n# The application doesn't perform any validation of starting coords.\nStartX=100\nStartY=100");
-
-            From_420_to_430();
         }
 
         static void From_420_to_430()
@@ -150,6 +149,16 @@ namespace mhhinstall
             AddSetting("windows", "FXPath", "FFmpegPath",
                 $"\n# SETTING ADDED FOR v4.3.0 UPDATE ON {DateTime.Now}" +
                 "\n# location of the FFmpeg binaries; normally the ffmpeg subdirectory under the app install directory\nFFmpegPath=C:\\Program Files\\mhh\\ffmpeg");
+
+        }
+
+        static void From_430_to_431()
+        {
+            Output.Write("-- v4.3.0 to v4.3.1 changes:");
+
+            AddSetting("setup", "HideMousePointer", "HideWindowBorder",
+                $"\n# SETTING ADDED FOR v4.3.1 UPDATE ON {DateTime.Now}" +
+                "\n# In windowed mode, controls whether the window is sizeable or fixed\n# size with no border. The default is false. No effect in full-screen.\nHideWindowBorder=false");
 
         }
 

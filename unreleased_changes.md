@@ -10,7 +10,7 @@ Don't assume anything here is working or will be available in some future releas
 ### Release Process
 
 * Verify `mhh\version.txt` matches release number
-* Verify `install\Installer.cs` has current release number
+* Verify `install\Installer.cs` has current release number (in all 3 places)
 * Add any version-based config changes to `install\ConfigHelper.cs`
 * Build install.exe release build, rename `install-x-x-x.exe` (x-x-x is version)
 * Publish mhh release build
@@ -31,22 +31,14 @@ Don't assume anything here is working or will be available in some future releas
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
-* v4.3.0 MP4 video support, released 2025-08-05
-* eyecandy 3.1.0 released 2025-08-04
-
-* v4.3.1 changes in progress
-* eyecandy 3.2.0
-* Added mhh.conf `HideWindowBorder` setting to control window frame style when not in full-screen mode
-* Add `--paths` switch to return configured paths
-* Connected MHH logging to eyecandy 3.2.0 logging and OpenGL debug-message error callbacks / stack traces
-* Added Trace logging to diagnose user's FramebufferIncompleteAttachment error (https://github.com/MV10/monkey-hi-hat/issues/5)
-* Bugfix in `GLResourceManager.ResizeTexture` copy operation
-* Removed Linux support
+* v4.3.1 changes released 2025-08-06
+* eyecandy 3.2.0 released 2025-08-06
 
 
 ### Work In Progress
 
 *
+
 
 ### MHH TODO
 
@@ -67,14 +59,14 @@ Don't assume anything here is working or will be available in some future releas
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
-* Add mhh.conf path for saving screenshots 
+* Add mhh.conf path for saving screenshots (default to user's Desktop if no path is provided)
 * Test mode - show keys on screen
 * Test mode - abort if --load or similar commands are issued
 * Textures via HTTP? Caching? Videos too?
 * Streaming video via HTTP? RTSP?
+* Render the text overlay buffer once instead of running the shader every frame (set a "change" flag)
 * Hotkey to popup list of common hotkeys
 * Startup crashes if no audio device available? (ex. RDP disables audio)
-* Render the text overlay buffer once instead of running the shader every frame (set a "change" flag)
 * Allow aliasing multipass uniform names for reusable utility frag shaders
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
@@ -97,7 +89,7 @@ Don't assume anything here is working or will be available in some future releas
 
 ### MONKEY-DROID TODO
 
-* FUCKING REWRITE
+* FUCKING REWRITE (planned for .NET 10 ... maybe MAUI doesn't suck 3 major releases later)
 * Truncates "E" on "ERR" responses; displays ERR as viz description? (maybe that's ok?)
 * Crashes if playlist tab selected with no server selected
 * Newly-added server isn't showing up (Android only?)
