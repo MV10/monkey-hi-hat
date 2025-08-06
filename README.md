@@ -16,7 +16,7 @@ I encourage shader programmers to contribute new visualizations; see [Creating V
 
 Download and run the installer from the [release](https://github.com/MV10/monkey-hi-hat/releases) page, then read the [documentation home page](https://github.com/MV10/monkey-hi-hat/wiki) for a quick step-by-step first-run walk-through. The docs range from basic usage to advanced customization.
 
-This should run on almost any 64-bit Windows 10 or Windows 11 PC with a decent graphics card and practically any type of audio playback. (Linux support is indefinitely on hold: it works on Raspberry Pi but that GPU is underpowered, it doesn't work on WSL, and I don't have any need for or much interest in maintaining a full-blown Linux desktop.)
+This should run on almost any 64-bit Windows 10 or Windows 11 PC with a decent NVIDIA or AMD graphics card and practically any type of audio playback. (As of v4.3.1 there is no support for Linux.) 
 
 CPU and memory requirements are minimal, 99% of the work is on the graphics card. If your PC can run [this Shadertoy example](https://www.shadertoy.com/view/mtKfWd) full-screen, which is a Monkey Hi Hat visualization with effects that I back-ported, you should be able to run Monkey Hi Hat just fine. No third-party drivers are required (earlier versions did require one). Overhead is so low, on my desktop PC I often run the program on a second monitor while I do other work.
 

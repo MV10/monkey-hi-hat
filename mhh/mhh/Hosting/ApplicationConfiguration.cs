@@ -7,7 +7,7 @@ namespace mhh
 {
     public class ApplicationConfiguration : IConfigSource
     {
-        public static readonly string SectionOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux";
+        public static readonly string SectionOS = "windows"; // Linux support removed as of version 4.3.1
         public static readonly string InternalShaderPath = "./InternalShaders/";
         public static readonly string PassthroughVertexPathname = Path.Combine(InternalShaderPath, "passthrough.vert");
         public static readonly string PassthroughFragmentPathname = Path.Combine(InternalShaderPath, "passthrough.frag");
@@ -112,14 +112,7 @@ namespace mhh
             CaptureDriverName = ConfigSource.ReadValue(SectionOS, "capturedrivername");
             CaptureDeviceName = ConfigSource.ReadValue(SectionOS, "capturedevicename");
 
-            if (SectionOS == "linux")
-            {
-                LoopbackApi = LoopbackApi.OpenALSoft;
-            }
-            else
-            {
-                LoopbackApi = ConfigSource.ReadValue("windows", "loopbackapi").ToEnum(LoopbackApi.WindowsInternal);
-            }
+            LoopbackApi = ConfigSource.ReadValue("windows", "loopbackapi").ToEnum(LoopbackApi.WindowsInternal);
 
             ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
             PopupVisibilitySeconds = ConfigSource.ReadValue("text", "PopupVisibilitySeconds").ToInt32(5);

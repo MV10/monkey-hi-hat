@@ -28,9 +28,6 @@ the named pipe).
 However, if a named pipe is found, any args are passed to the already-running program.
 If a response is received, it is written to the console and the secondary instance ends.
 For example, the frame rate of the running instance can be queried.
-
-On Linux, spotifyd can run an arbitrary command on track change, so this feature could
-be used to tell the program to load the next shader in the playlist with each new song.
 */
 
 namespace mhh
@@ -44,7 +41,8 @@ namespace mhh
 
         // Previously MHH only supported core API v4.6, the "final" OpenGL, but Linux MESA
         // drivers apparently only support v4.5 (according to "glxinfo -B" from mesa-utils)
-        // and 4.6 features aren't important to MHH, so post-3.1 was reverted to v4.5.
+        // and 4.6 features aren't important to MHH, so post-3.1 was reverted to v4.5. Support
+        // for Linux was dropped as of MHH version 4.3.1.
         // https://www.khronos.org/opengl/wiki/History_of_OpenGL#OpenGL_4.6_(2017)
         static readonly Version OpenGLVersion = new(4, 5);
         
@@ -86,7 +84,6 @@ namespace mhh
             get => ConsoleVisible;
             set
             {
-                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) throw new InvalidOperationException("Console visibility can only be changed on Windows OS");
                 ConsoleVisible = value;
                 var hwnd = GetConsoleWindow();
                 var flag = ConsoleVisible ? SW_SHOW : SW_HIDE;
@@ -103,10 +100,7 @@ namespace mhh
             {
                 if(await InitializeAndWait(args))
                 {
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        IsConsoleVisible = !AppConfig.WindowsHideConsoleAtStartup || (AppConfig.StartInStandby && AppConfig.WindowsHideConsoleInStandby);
-                    }
+                    IsConsoleVisible = !AppConfig.WindowsHideConsoleAtStartup || (AppConfig.StartInStandby && AppConfig.WindowsHideConsoleInStandby);
 
                     AppRunning = true;
                     OnStandby = AppConfig.StartInStandby;
@@ -333,15 +327,12 @@ namespace mhh
                     return AppWindow.Command_Test(TestMode.None);
 
                 case "--console":
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        IsConsoleVisible = !IsConsoleVisible;
-                        return "ACK";
-                    }
-                    else
-                    {
-                        return "ERR: Console visibility is only available on Windows OS";
-                    }
+                    IsConsoleVisible = !IsConsoleVisible;
+                    return "ACK";
+
+                case "--paths":
+                    if (args.Length > 1) return ShowHelp();
+                    return $"\nConfigured paths\n\nVizualization shaders:\n{AppConfig.VisualizerPath.Replace(';','\n')}\n\nPost-processing FX shaders:\n{AppConfig.FXPath.Replace(';', '\n')}\n\nTexure and video files:\n{AppConfig.TexturePath.Replace(';', '\n')}\n\nPlaylists:\n{AppConfig.PlaylistPath.Replace(';', '\n')}";
 
                 case "--cls":
                     return AppWindow.Command_CLS();
@@ -612,8 +603,8 @@ All switches are passed to the already-running instance:
 --next                      when a playlist is active, advances to the next viz (using the Order setting)
 --next fx                   when a playlist is active, applies a post-processing FX (if one isn't running)
 
---jpg [wait]                JPG screenshot; Win: desktop, Linux: app path; ""wait"" watches for spacebar
---png [wait]                PNG screenshot; Win: desktop, Linux: app path; ""wait"" watches for spacebar
+--jpg [wait]                JPG screenshot (saves to desktop); ""wait"" watches for spacebar
+--png [wait]                PNG screenshot (saves to desktop); ""wait"" watches for spacebar
 
 --show [viz|stats]          Text overlay for 10 seconds (unless ""toggle"" command is used)
 --show [toggle|clear]       Switches text overlays from 10 seconds to permanent, ""clear"" removes overlay
@@ -636,8 +627,9 @@ All switches are passed to the already-running instance:
 --run                       resumes the current shader
 --pid                       shows the current Process ID
 --log [level]               shows or sets log-level (None, Trace, Debug, Information, Warning, Error, Critical)
+--paths                     shows the configured content paths (viz, FX, etc.)
 
---console                   Windows: toggles the visibility of the console window (only minimizes Terminal)
+--console                   toggles the visibility of the console window (only minimizes Terminal)
 --cls                       clears the console window of the running instance (useful during debug)
 ";
     }

@@ -92,8 +92,7 @@ public class SimpleRenderer : IRenderer
             GL.Clear(ClearBufferMask.ColorBufferBit);
             VertexSource.RenderFrame(Shader);
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
+            screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
 
             // blit drawbuffer to OpenGL's backbuffer unless Crossfade or FXRenderer is intercepting the final draw buffer
             if (!IsOutputIntercepted)
@@ -113,8 +112,7 @@ public class SimpleRenderer : IRenderer
             GL.Clear(ClearBufferMask.ColorBufferBit);
             VertexSource.RenderFrame(Shader);
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y);
+            screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y);
         }
 
         FrameCount++;

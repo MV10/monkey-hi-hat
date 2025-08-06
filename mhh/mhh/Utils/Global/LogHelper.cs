@@ -44,6 +44,8 @@ namespace mhh
 
             Logger = new SerilogLoggerFactory().CreateLogger("monkey-hi-hat");
 
+            eyecandy.ErrorLogging.Logger = Logger;
+
             Logger.LogDebug($"ILogger created (PID {Environment.ProcessId})");
         }
 
