@@ -132,8 +132,7 @@ public class MultipassRenderer : IRenderer
         // changed from the previous frame if that pass has a front/back buffer swap)
         FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
 
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
+        screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
 
         // blit drawbuffer to OpenGL's backbuffer unless Crossfade or FXRenderer is intercepting the final draw buffer
         if (!IsOutputIntercepted)

@@ -10,7 +10,7 @@ Don't assume anything here is working or will be available in some future releas
 ### Release Process
 
 * Verify `mhh\version.txt` matches release number
-* Verify `install\Installer.cs` has current release number
+* Verify `install\Installer.cs` has current release number (in all 3 places)
 * Add any version-based config changes to `install\ConfigHelper.cs`
 * Build install.exe release build, rename `install-x-x-x.exe` (x-x-x is version)
 * Publish mhh release build
@@ -27,35 +27,25 @@ Don't assume anything here is working or will be available in some future releas
 * Update pinned release tracker: https://github.com/MV10/monkey-hi-hat/issues/3
 
 
-### Post-release changes not already on the wiki changelog page
+### Post-release changes (not guaranteed to be on the wiki changelog page yet)
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
-* v4.3.0 MP4 video support, released 2025-08-05
-* eyecandy 3.1.0 released 2025-08-04
+* v4.3.1 changes released 2025-08-06
+* eyecandy 3.2.0 released 2025-08-06
 
 
 ### Work In Progress
 
-* v4.3.1
-* Add Trace logging to try to diagnose user's FramebufferIncompleteAttachment error
-* https://github.com/MV10/monkey-hi-hat/issues/5
-
-* Remove Linux support
-* Add mhh.conf setting to control window frame style when not in full-screen mode
-* Add mhh.conf paths for saving screenshots 
-* Add `--paths` switch to return configured paths
+*
 
 
 ### MHH TODO
 
 * Move video processing to a background thread (decouple from the render loop)
-* Add OpenGL debug-callback support
-* README - Update for locally-stored MP4s instead of uploads? (100 MB file size limit)
+* Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
-* Implement a .fade file which is like a cut-down viz.conf (for loading textures, libs, etc.)
 * Playlist - hotkey to extend auto-advance time for current viz
-* Installer - need to add msmd firewall rule? or run interactively once to prompt?
 * monkey-see-monkey-do - relay delay time
 * monkey-see-monkey-do - utility command(s) (fixsound.ps1 for VBAudio bugs)
 * Logo overlay support (random and playlist)
@@ -69,13 +59,14 @@ Don't assume anything here is working or will be available in some future releas
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
+* Add mhh.conf path for saving screenshots (default to user's Desktop if no path is provided)
 * Test mode - show keys on screen
 * Test mode - abort if --load or similar commands are issued
 * Textures via HTTP? Caching? Videos too?
 * Streaming video via HTTP? RTSP?
+* Render the text overlay buffer once instead of running the shader every frame (set a "change" flag)
 * Hotkey to popup list of common hotkeys
 * Startup crashes if no audio device available? (ex. RDP disables audio)
-* Render the text overlay buffer once instead of running the shader every frame (set a "change" flag)
 * Allow aliasing multipass uniform names for reusable utility frag shaders
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
@@ -92,41 +83,13 @@ Don't assume anything here is working or will be available in some future releas
     * use six separate files? https://ogldev.org/www/tutorial25/tutorial25.html
     * Emil has lots of HQ skyboxes https://opengameart.org/content/mountain-skyboxes
 
-### LONG-TERM TODO (MHH, EYECANDY, SWITCHPIPE)
-
-* Logging improvements
-    * Structured-logging sources/categories and support source-based log-level
-    * https://github.com/serilog/serilog-settings-configuration#minimumlevel-levelswitches-overrides-and-dynamic-reload
-    * https://learn.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-7.0#log-category
-    * Provide a Serilog.ILogger.ForContext(...) logger to eyecandy and CommandLineSwitchPipe
-
-* Linux-specific items (x64 only)
-    * WSL not a realistic option (very poor graphics / GPU support, and not planned by MS)
-    * maybe dual-boot locally for dev/testing?
-    * Installer - a basic setup.sh for Linux? (set exec and dir permissions, copy config)
-    * Installer - Linux installation shell script? cmake script?
-    * Linux render/update events not suspended during `OnResize`? Fake it somehow?
-
-* Old Spotify notes
-    * https://johnnycrazy.github.io/SpotifyAPI-NET/
-    * https://developer.spotify.com/dashboard
-    * https://johnnycrazy.github.io/SpotifyAPI-NET/docs/iplayableitem/
-    * scope https://developer.spotify.com/documentation/web-api/concepts/scopes#user-read-playback-state
-    * https://developer.spotify.com/documentation/web-api/reference/get-the-users-currently-playing-track
-    * https://developer.spotify.com/documentation/web-api/concepts/quota-modes
-    * https://developer.spotify.com/documentation/web-api/concepts/rate-limits
-    * revoke access https://github.com/JohnnyCrazy/SpotifyAPI-NET/issues/434
-    * https://github.com/spotify/web-api/issues/492
-    * https://community.spotify.com/t5/Spotify-for-Developers/Access-to-websockets/m-p/4955299
-
 ### EYECANDY TODO
 
-* Util to determine compiled shader size? (https://www.khronos.org/opengl/wiki/Shader_Compilation#Binary_upload)
 * Fake-audio silence-playback option so "floor-noise-level" data is always available? Mild sine-wave pattern?
 
 ### MONKEY-DROID TODO
 
-* FUCKING REWRITE
+* FUCKING REWRITE (planned for .NET 10 ... maybe MAUI doesn't suck 3 major releases later)
 * Truncates "E" on "ERR" responses; displays ERR as viz description? (maybe that's ok?)
 * Crashes if playlist tab selected with no server selected
 * Newly-added server isn't showing up (Android only?)

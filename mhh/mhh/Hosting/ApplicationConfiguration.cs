@@ -7,7 +7,7 @@ namespace mhh
 {
     public class ApplicationConfiguration : IConfigSource
     {
-        public static readonly string SectionOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux";
+        public static readonly string SectionOS = "windows"; // Linux support removed as of version 4.3.1
         public static readonly string InternalShaderPath = "./InternalShaders/";
         public static readonly string PassthroughVertexPathname = Path.Combine(InternalShaderPath, "passthrough.vert");
         public static readonly string PassthroughFragmentPathname = Path.Combine(InternalShaderPath, "passthrough.frag");
@@ -27,6 +27,7 @@ namespace mhh
         public readonly int SizeY;
         public readonly int RenderResolutionLimit;
         public readonly bool HideMousePointer;
+        public readonly bool HideWindowBorder;
         public readonly bool FullscreenMinimizeOnFocusChange;
         public readonly int ShaderCacheSize;
         public readonly int FXCacheSize;
@@ -84,6 +85,7 @@ namespace mhh
             SizeY = ConfigSource.ReadValue("setup", "sizey").ToInt32(540);
             RenderResolutionLimit = ConfigSource.ReadValue("setup", "renderresolutionlimit").ToInt32(0);
             HideMousePointer = ConfigSource.ReadValue("setup", "hidemousepointer").ToBool(true);
+            HideWindowBorder = ConfigSource.ReadValue("setup", "hidewindowborder").ToBool(true);
             FullscreenMinimizeOnFocusChange = ConfigSource.ReadValue("setup", "fullscreenminimizeonfocuschange").ToBool(true);
             ShaderCacheSize = ConfigSource.ReadValue("setup", "shadercachesize").ToInt32(150);
             FXCacheSize = ConfigSource.ReadValue("setup", "fxcachesize").ToInt32(50);
@@ -110,14 +112,7 @@ namespace mhh
             CaptureDriverName = ConfigSource.ReadValue(SectionOS, "capturedrivername");
             CaptureDeviceName = ConfigSource.ReadValue(SectionOS, "capturedevicename");
 
-            if (SectionOS == "linux")
-            {
-                LoopbackApi = LoopbackApi.OpenALSoft;
-            }
-            else
-            {
-                LoopbackApi = ConfigSource.ReadValue("windows", "loopbackapi").ToEnum(LoopbackApi.WindowsInternal);
-            }
+            LoopbackApi = ConfigSource.ReadValue("windows", "loopbackapi").ToEnum(LoopbackApi.WindowsInternal);
 
             ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
             PopupVisibilitySeconds = ConfigSource.ReadValue("text", "PopupVisibilitySeconds").ToInt32(5);

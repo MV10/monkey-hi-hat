@@ -195,8 +195,7 @@ public class FXRenderer : IRenderer
         var lastPass = ShaderPasses[ShaderPasses.Count - 1];
         FinalDrawbuffers = lastPass.Drawbuffers;
 
-        if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
+        screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
 
         // is FX crossfade active?
         float fadeLevel = (float)Clock.ElapsedMilliseconds / FXCrossfadeDurationMS;

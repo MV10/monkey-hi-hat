@@ -23,10 +23,7 @@ public class ScreenshotWriter
     {
         var ext = IsJpeg ? "jpg" : "png";
         var filename = $"monkey-hi-hat-{DateTime.Now:yyyy-MM-dd-HH-mm-ss-ffff}.{ext}";
-        var path = (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            ? Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory)
-            : Environment.ProcessPath;
-        var pathname = Path.Combine(path, filename);
+        var pathname = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), filename);
 
         try
         {

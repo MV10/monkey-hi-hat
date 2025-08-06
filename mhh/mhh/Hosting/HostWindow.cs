@@ -172,8 +172,6 @@ namespace mhh
         {
             base.OnUpdateFrame(e);
 
-            // TODO Verify OnUpdateFrame is NOT suspended on Linux during OnResize event-storms
-
             // On Windows, Update/Render events are suspended during resize operations.
             if (OnResizeFired)
             {

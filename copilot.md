@@ -12,7 +12,6 @@
 * Supported shaders are visualizations (viz), post-processing effects (FX), crossfades, and function libraries.
 * Shaders are written in OpenGL 4.5's GLSL shader language via support from the OpenTK library and the eyecandy library.
 * The eyecandy library processes audio data into OpenGL textures which are then used by the shaders.
-* The project primarily targets Windows. Code exists to support Linux but is not currently maintained and may be removed.
 * The configuration file 'mhh.conf' contains all application settings and explanatory comments.
 * For development purposes, the configuration file 'mhh-dev.conf' will be used, which is a simplified version of 'mhh.conf'.
 * Co-Pilot can recommend additions or changes to this document to improve its ability to understand the application.
@@ -25,8 +24,7 @@
 * Aliases: MHH, Monkey-Hi-Hat
 * MainTargetFramework: .NET 8
 * InstallerTargetFramework: .NET Framework 4.8
-* PrimaryPlatform: Windows
-* DeprecatedPlatform: Linux
+* Platform: Windows
 * UI: Console with non-interactive graphics window
 * AudioLibrary: eyecandy
 * ShaderLibrary: eyecandy
