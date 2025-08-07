@@ -80,18 +80,32 @@ namespace mhhinstall
             Output.Write("-- Copying mhh.conf to mhh.conf.bak in the application directory.");
             File.Copy(confPathname, Path.Combine(Installer.programPath, "mhh.conf.bak"), overwrite: true);
 
-            // Code below nvokes the per-release config updates...
-
-            if(Installer.versionFound.Major == 3)
+            // Code below invokes the per-release config updates... each should "chain" to the next one.
+            switch(Installer.versionFound.ToString(3))
             {
-                if (Installer.versionFound.Minor < 2) From_310_to_400();
-            }
+                case "3.1.0":
+                    From_310_to_400();
+                    break;
 
-            if (Installer.versionFound.Major == 4)
-            {
-                if (Installer.versionFound.Minor < 2) From_410_to_420();
-                if (Installer.versionFound.Minor < 3) From_420_to_430();
-                if (Installer.versionFound.Minor == 3 && Installer.versionFound.Revision < 1) From_430_to_431();
+                case "4.0.0":
+                    From_400_to_410();
+                    break;
+
+                case "4.1.0":
+                    From_410_to_420();
+                    break;
+
+                case "4.2.0":
+                    From_420_to_430();
+                    break;
+
+                case "4.3.0":
+                    From_430_to_431();
+                    break;
+
+                default:
+                    Output.Write($"-- No changes; installed version {Installer.versionFound.ToString(3)} is not recognized.");
+                    return;
             }
 
             ApplyChanges();
@@ -125,7 +139,7 @@ namespace mhhinstall
         {
             Output.Write("-- v4.0.0 to v4.1.0, no config changes");
 
-            // Not in use, just an example, see end of above, From_310_to_400
+            // no config changes
 
             From_410_to_420();
         }
@@ -137,6 +151,8 @@ namespace mhhinstall
             AddSetting("setup", "SizeY", "StartX / StartY",
                 $"\n# SETTING ADDED FOR v4.2.0 UPDATE ON {DateTime.Now}" +
                 "\n# Default is 100x100 on the primary monitor. Coordinates on other\n# monitors are in \"virtual screen space\" relative to the primary.\n# The starting window position is optional. Use the --display switch\n# to get a list of monitor names, ID numbers, and coordinate rectanges.\n# The application doesn't perform any validation of starting coords.\nStartX=100\nStartY=100");
+
+            From_420_to_430();
         }
 
         static void From_420_to_430()
@@ -151,6 +167,8 @@ namespace mhhinstall
                 $"\n# SETTING ADDED FOR v4.3.0 UPDATE ON {DateTime.Now}" +
                 $"\n# location of the FFmpeg binaries; normally the ffmpeg subdirectory under the app install directory\nFFmpegPath={Installer.ffmpegPath}");
 
+        
+            From_430_to_431();
         }
 
         static void From_430_to_431()
@@ -161,6 +179,7 @@ namespace mhhinstall
                 $"\n# SETTING ADDED FOR v4.3.1 UPDATE ON {DateTime.Now}" +
                 "\n# In windowed mode, controls whether the window is sizeable or fixed\n# size with no border. The default is false. No effect in full-screen.\nHideWindowBorder=false");
 
+            //From_431_to_XXX();
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////
