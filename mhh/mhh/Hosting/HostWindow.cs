@@ -153,7 +153,12 @@ namespace mhh
             UniformRandomNumber = (float)RNG.NextDouble();
             UniformDate = new(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, (float)DateTime.Now.TimeOfDay.TotalSeconds);
             UniformClockTime = new(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTime.UtcNow.Hour);
-            UniformFXActive = (Renderer.ActiveRenderer is FXRenderer) ? 1.0f : 0.0f;
+
+            UniformFXActive = 
+                (Renderer.ActiveRenderer is FXRenderer || 
+                (Renderer.ActiveRenderer is CrossfadeRenderer && 
+                ((CrossfadeRenderer)Renderer.ActiveRenderer).FXActive() == 1.0f)) 
+                ? 1.0f : 0.0f;
 
             Renderer.RenderFrame();
 
