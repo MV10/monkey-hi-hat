@@ -420,8 +420,7 @@ namespace mhh
         protected override void OnResize(ResizeEventArgs e)
         {
             base.OnResize(e);
-            // https://github.com/opentk/opentk/issues/1647
-            //Debug.WriteLine($"OnResize ClientSize {ClientSize.X},{ClientSize.Y}  WindowState {WindowState}");
+            //Console.WriteLine($"OnResize ClientSize {ClientSize.X},{ClientSize.Y}  WindowState {WindowState}");
             OnResizeFired = true;
         }
 
