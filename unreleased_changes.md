@@ -34,6 +34,10 @@ Don't assume anything here is working or will be available in some future releas
 * v4.3.1 changes released 2025-08-06
 * eyecandy 3.2.0 released 2025-08-06
 
+* Post v4.3.1
+* Fixed FXActive uniform during crossfades
+* Added video-clip-based "ghostly" FX (Volt's Laboratory repo)
+* Added additional variants on the "costume" video clip (Volt's Laboratory repo)
 
 ### Work In Progress
 
@@ -42,7 +46,6 @@ Don't assume anything here is working or will be available in some future releas
 
 ### MHH TODO
 
-* Move video processing to a background thread (decouple from the render loop)
 * Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz

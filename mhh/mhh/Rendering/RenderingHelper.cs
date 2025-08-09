@@ -516,7 +516,7 @@ public static class RenderingHelper
                 }
             }
         }
-        catch (EndOfStreamException e)
+        catch (EndOfStreamException)
         {
             // If we reach the end of the stream, restart the clock to loop the video and abort
             tex.VideoData.Clock.Restart();
@@ -524,7 +524,7 @@ public static class RenderingHelper
         }
         catch (Exception ex)
         {
-            // TODO better error handling
+            LogHelper.Logger?.LogError(ex, $"Error decoding video stream {tex.Filename}");
         }
     }
 

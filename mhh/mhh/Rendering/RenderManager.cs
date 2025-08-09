@@ -236,6 +236,17 @@ visualizer : {viz}
 render res : {rez}";
     }
 
+    public float FXActive()
+    {
+        if (ActiveRenderer is FXRenderer) return 1.0f;
+        if (NewRenderer is FXRenderer) return 1.0f;
+
+        float result = 0.0f;
+        if (ActiveRenderer is CrossfadeRenderer ar) result = ar.FXActive();
+        if (NewRenderer is CrossfadeRenderer nr) result += nr.FXActive();
+        return float.Clamp(result, 0.0f, 1.0f);
+    }
+
     private (string viz, string rez) GetFXInfo(FXRenderer fx)
     {
         var viz = $"{fx.PrimaryRenderer.Filename.Replace("_", " ")} with FX {fx.Filename.Replace("_", " ")}";
