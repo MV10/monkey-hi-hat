@@ -41,11 +41,13 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Work In Progress
 
-*
+* eyecandy 3.3.0 local dev build
+* Synthetic data for silence periods, related config changes
 
 
 ### MHH TODO
 
+* Uniform to indicate silence is detected
 * Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
@@ -88,7 +90,7 @@ Don't assume anything here is working or will be available in some future releas
 
 ### EYECANDY TODO
 
-* Fake-audio silence-playback option so "floor-noise-level" data is always available? Mild sine-wave pattern?
+* Nuthin' here boss
 
 ### MONKEY-DROID TODO
 

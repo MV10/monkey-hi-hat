@@ -428,8 +428,18 @@ namespace mhh
                 {
                     LoopbackApi = AppConfig.LoopbackApi,
                     CaptureDeviceName = AppConfig.CaptureDeviceName,
+                    
                     DetectSilence = true, // always detect, playlists may need it
                     MaximumSilenceRMS = AppConfig.DetectSilenceMaxRMS,
+                    
+                    ReplaceSilenceAfterSeconds = AppConfig.ReplaceSilenceAfterSeconds,
+                    SyntheticDataBPM = AppConfig.SyntheticDataBPM,
+                    SyntheticDataBeatDuration = AppConfig.SyntheticDataBeatDuration,
+                    SyntheticDataBeatFrequency = AppConfig.SyntheticDataBeatFrequency,
+                    SyntheticDataAmplitude = AppConfig.SyntheticDataAmplitude,
+                    SyntheticDataMinimumLevel = AppConfig.SyntheticDataMinimumLevel,
+                    SyntheticAlgorithm = AppConfig.SyntheticAlgorithm,
+                    SyntheticDataPlaybackVolume = AppConfig.SyntheticDataPlaybackVolume,
                 };
 
                 // Since console programs don't have a SynchronizationContext, the use of await prior to

@@ -18,11 +18,14 @@ Download and run the installer from the [release](https://github.com/MV10/monkey
 
 This should run on almost any 64-bit Windows 10 or Windows 11 PC with a decent NVIDIA or AMD graphics card and practically any type of audio playback. (As of v4.3.1 there is no support for Linux.) 
 
-CPU and memory requirements are minimal, 99% of the work is on the graphics card. If your PC can run [this Shadertoy example](https://www.shadertoy.com/view/mtKfWd) full-screen, which is a Monkey Hi Hat visualization with effects that I back-ported, you should be able to run Monkey Hi Hat just fine. No third-party drivers are required (earlier versions did require one). Overhead is so low, on my desktop PC I often run the program on a second monitor while I do other work.
-
-The music reactivity responds to _anything_ your PC is playing from _any_ source, whether that is Spotify, Soundcloud, Pandora, an external device connected to the line-in or surround-sound jacks, MP3s, YouTube, etc. If you can hear it from your speakers, the program can "hear" it too. For on-screen track info, only the native Windows Spotify client is supported. 
+CPU and memory requirements are minimal, 99% of the work is on the graphics card. If your PC can run [this Shadertoy example](https://www.shadertoy.com/view/mtKfWd) full-screen, which is a Monkey Hi Hat visualization with effects that I back-ported, you should be able to run Monkey Hi Hat just fine. No third-party drivers are required (earlier versions did require one). Overhead is so low, on my desktop PC I often run the program on a second monitor while I do other work. As of version 4.3 it only uses around 110 MB at runtime.
 
 Please understand there is no "user interface" -- the program is designed to run full screen, and to be controlled from _another_ PC or Android device. Remote control is optimal but not mandatory, see the _Related material_ section at the end of this page for details. The general idea is to get it running and let it do its thing.
+
+The music reactivity responds to _anything_ your PC is playing from _any_ source, whether that is Spotify, Soundcloud, Pandora, an external device connected to the line-in or surround-sound jacks, MP3s, YouTube, etc. If you can hear it from your speakers, the program can "hear" it too. For on-screen track info, only the native Windows Spotify client is supported.
+
+> ### <b>IMPORTANT: Turn Up The Volume!</b>
+> Since the app "hears" everything your computer outputs, meaning it is processing the final mixed results of all possible inputs, the playback volume is also "heard" by the program. If your master volume level is at 50%, the "strength" of the audio signals passed to visualizers will only be half as strong as if your volume level is at 100%. My preference and recommendation is to use an external amplifier to control the volume, and leave your computer set to 100%. All of the content I provide was written / adapted / tested this way.
 
 ## Sample Videos
 
