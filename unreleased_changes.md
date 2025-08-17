@@ -18,7 +18,7 @@ Don't assume anything here is working or will be available in some future releas
 * Copy ffmpeg files to an ffmpeg directory in the mhh publish directory
 * Archive publish directory into `mhh-app-x-x-x.zip` (x-x-x is version)
 * Archive Volt's Lab files into `mhh-content-x-x-x.zip`
-* Copy zip files into one `manual-setup-x-x-x.zip`
+* No longer distributing this: Copy zip files into one `manual-setup-x-x-x.zip`
 * Rename the app and content zips to a .bin extension
 * Push app and content .bin files to github mcguirev10.com /assets/misc
 * Update readme etc, push changes
@@ -31,18 +31,20 @@ Don't assume anything here is working or will be available in some future releas
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
-* v4.3.1 changes released 2025-08-06
+* 4.3.1 changes released 2025-08-06
 * eyecandy 3.2.0 released 2025-08-06
+
+* 4.4.0 in progress
+* eyecandy 3.3.0 released 2025-08-17
 
 
 ### Work In Progress
 
-*
+* 
 
 
 ### MHH TODO
 
-* Move video processing to a background thread (decouple from the render loop)
 * Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
@@ -85,7 +87,7 @@ Don't assume anything here is working or will be available in some future releas
 
 ### EYECANDY TODO
 
-* Fake-audio silence-playback option so "floor-noise-level" data is always available? Mild sine-wave pattern?
+* Nuthin' here boss
 
 ### MONKEY-DROID TODO
 

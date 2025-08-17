@@ -66,6 +66,11 @@ namespace mhh
         /// </summary>
         public float UniformFXActive;
 
+        /// <summary>
+        /// Indicates whether the audio processor indicates silence (0-no, 1-yes).
+        /// </summary>
+        public float UniformSilenceDetected;
+
         private MethodInfo EyecandyEnableMethod;
         private MethodInfo EyecandyDisableMethod;
         // Example of how to invoke generic method
@@ -153,7 +158,8 @@ namespace mhh
             UniformRandomNumber = (float)RNG.NextDouble();
             UniformDate = new(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, (float)DateTime.Now.TimeOfDay.TotalSeconds);
             UniformClockTime = new(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTime.UtcNow.Hour);
-            UniformFXActive = (Renderer.ActiveRenderer is FXRenderer) ? 1.0f : 0.0f;
+            UniformFXActive = Renderer.FXActive();
+            UniformSilenceDetected = Eyecandy.IsSilent ? 1 : 0;
 
             Renderer.RenderFrame();
 
@@ -420,8 +426,7 @@ namespace mhh
         protected override void OnResize(ResizeEventArgs e)
         {
             base.OnResize(e);
-            // https://github.com/opentk/opentk/issues/1647
-            //Debug.WriteLine($"OnResize ClientSize {ClientSize.X},{ClientSize.Y}  WindowState {WindowState}");
+            //Console.WriteLine($"OnResize ClientSize {ClientSize.X},{ClientSize.Y}  WindowState {WindowState}");
             OnResizeFired = true;
         }
 

@@ -54,6 +54,15 @@ namespace mhh
         public readonly double DetectSilenceMaxRMS = 1.5d;
         public readonly SilenceAction DetectSilenceAction = SilenceAction.None;
 
+        public readonly double MinimumSilenceSeconds = 0.25;
+        public readonly double ReplaceSilenceAfterSeconds = 0;
+        public readonly double SyntheticDataBPM = 120;
+        public readonly double SyntheticDataBeatDuration = 0.1;
+        public readonly double SyntheticDataBeatFrequency = 440;
+        public readonly double SyntheticDataAmplitude = 0.5;
+        public readonly float SyntheticDataMinimumLevel = 0.1f;
+        public readonly SyntheticDataAlgorithm SyntheticAlgorithm = SyntheticDataAlgorithm.MetronomeBeat;
+
         public bool ShowPlaylistPopups; // not readonly, can be toggled at runtime
         public readonly int PopupVisibilitySeconds;
         public readonly int PopupFadeMilliseconds;
@@ -108,6 +117,15 @@ namespace mhh
             DetectSilenceSeconds = ConfigSource.ReadValue("setup", "detectsilenceseconds").ToInt32(0);
             DetectSilenceMaxRMS = ConfigSource.ReadValue("setup", "detectsilencemaxrms").ToDouble(1.5d);
             DetectSilenceAction = ConfigSource.ReadValue("setup", "detectsilenceaction").ToEnum(SilenceAction.Blank);
+
+            MinimumSilenceSeconds = ConfigSource.ReadValue("setup", "minimumsilenceseconds").ToDouble(0.25);
+            ReplaceSilenceAfterSeconds = ConfigSource.ReadValue("setup", "replacesilenceafterseconds").ToDouble(2.0);
+            SyntheticDataBPM = ConfigSource.ReadValue("setup", "syntheticdatabpm").ToDouble(120);
+            SyntheticDataBeatDuration = ConfigSource.ReadValue("setup", "syntheticdatabeatduration").ToDouble(0.1);
+            SyntheticDataBeatFrequency = ConfigSource.ReadValue("setup", "syntheticdatabeatfrequency").ToDouble(440);
+            SyntheticDataAmplitude = ConfigSource.ReadValue("setup", "syntheticdataamplitude").ToDouble(0.5);
+            SyntheticDataMinimumLevel = ConfigSource.ReadValue("setup", "syntheticdataminimumlevel").ToFloat(0.1f);
+            SyntheticAlgorithm = ConfigSource.ReadValue("setup", "syntheticalgorithm").ToEnum(SyntheticDataAlgorithm.MetronomeBeat);
 
             CaptureDriverName = ConfigSource.ReadValue(SectionOS, "capturedrivername");
             CaptureDeviceName = ConfigSource.ReadValue(SectionOS, "capturedevicename");

@@ -4,9 +4,9 @@
 
 Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC's speaker outputs.
 
-> [2025-AUG-05: Install or update to version 4.3.0](https://github.com/MV10/monkey-hi-hat/releases)!
+> [2025-AUG-17: Install or update to version 4.4.0](https://github.com/MV10/monkey-hi-hat/releases)!
 
-As of the latest release, there are nearly _**4,000 combinations**_ of visualizations and effects, plus 17 transitiional (crossfade) effects! Great for DJs, parties and other events!
+As of the latest release, there are around _**4,500 combinations**_ of visualizations and effects, plus 17 transition (crossfade) effects! Great for DJs, parties and other events!
 
 Playlists and many of the visualizations are customizable. The program and all content is 100% free. It's very stable and trouble-free, I have let it run 24 hours with no crashes or memory leaks.
 
@@ -18,11 +18,14 @@ Download and run the installer from the [release](https://github.com/MV10/monkey
 
 This should run on almost any 64-bit Windows 10 or Windows 11 PC with a decent NVIDIA or AMD graphics card and practically any type of audio playback. (As of v4.3.1 there is no support for Linux.) 
 
-CPU and memory requirements are minimal, 99% of the work is on the graphics card. If your PC can run [this Shadertoy example](https://www.shadertoy.com/view/mtKfWd) full-screen, which is a Monkey Hi Hat visualization with effects that I back-ported, you should be able to run Monkey Hi Hat just fine. No third-party drivers are required (earlier versions did require one). Overhead is so low, on my desktop PC I often run the program on a second monitor while I do other work.
+CPU and memory requirements are minimal, 99% of the work is on the graphics card. If your PC can run [this Shadertoy example](https://www.shadertoy.com/view/mtKfWd) full-screen, which is a Monkey Hi Hat visualization with effects that I back-ported, you should be able to run Monkey Hi Hat just fine. No third-party drivers are required (earlier versions did require one). Overhead is so low, on my desktop PC I often run the program on a second monitor while I do other work. As of version 4.4 it only uses around 110 MB at runtime.
 
-The music reactivity responds to _anything_ your PC is playing from _any_ source, whether that is Spotify, Soundcloud, Pandora, an external device connected to the line-in or surround-sound jacks, MP3s, YouTube, etc. If you can hear it from your speakers, the program can "hear" it too. For on-screen track info, only the native Windows Spotify client is supported. 
+Please understand there is no "user interface" -- the program is designed to run full screen, and to be controlled from _another_ PC or Android device. Remote control is optimal but not mandatory, see the _Related Material_ section at the end of this page for details. The general idea is to get it running and let it do its thing.
 
-Please understand there is no "user interface" -- the program is designed to run full screen, and to be controlled from _another_ PC or Android device. Remote control is optimal but not mandatory, see the _Related material_ section at the end of this page for details. The general idea is to get it running and let it do its thing.
+The music reactivity responds to _anything_ your PC is playing from _any_ source, whether that is Spotify, Soundcloud, Pandora, an external device connected to the line-in or surround-sound jacks, MP3s, YouTube, etc. If you can hear it from your speakers, the program can "hear" it too. For on-screen track info, only the native Windows Spotify client is supported.
+
+> ### <b>IMPORTANT: Turn Up The Volume!</b>
+> Since the app "hears" everything your computer outputs, meaning it is processing the final mixed results of all possible inputs, the playback volume is also "heard" by the program. If your master volume level is at 50%, the "strength" of the audio signals passed to visualizers will only be half as strong as if your volume level is at 100%. My preference and recommendation is to use an external amplifier to control the volume, and leave your computer set to 100%. All of the content I provide was written / adapted / tested this way.
 
 ## Sample Videos
 
@@ -51,7 +54,7 @@ In my living room setup where we watch this most often, the computer running Mon
 
 * Command-line control is via SSH terminal connections. See the documentation _Quick Start_ for details about setting up and using SSH. My systems are configured for this, but frankly Monkey Droid is so much easier to use, I never actually connect via SSH any more.
 
-* Old school: a wireless keyboard with integrated trackball or other pointer control, which is obviously handy for more than just controlling this program. The program responds to quite a few useful keystrokes. As usual, please refer to the documentation, but my keyboard is hidden off to the side of the couch, and I most commonly use just a four keyboard commands that I can readily find by touch:
+* Old school: a wireless keyboard with integrated trackball or other pointer control, which is obviously handy for more than just controlling this program. The program responds to quite a few useful keystrokes. As usual, please refer to the documentation, but my keyboard is hidden off to the side of the couch, and I most commonly use just four keyboard commands that I can readily find by touch:
 
     * `Right Arrow` to skip to the next visualization
     * `Down Arrow` to add an FX to the current visualizer
@@ -60,7 +63,7 @@ In my living room setup where we watch this most often, the computer running Mon
 
 * Although remote control is the intended usage, control from the same PC is certainly possible. Configure the program to launch in a window, start another console window to issue commands, get it showing the content you want (such as a playlist), then either issue the `--fullscreen` command or focus on the window and hit the spacebar. This is how the documentation's first-time walk-through works.
 
-I have been asked about music reactivity for DJ usage. Have your "real" mixers, amps and speakers set up separately, then feed a line-in to any PCs connected to the displays. As long as the PC "thinks" it is outputting audio, the visualizers will work -- either leave the PC's speaker-out jacks disconnected, or mute the PC speakers externally. If you mute them from within Windows, no sound will be "seen" by the program, it really is driven by _playback_. If you have a pre-determined music set, you can create a playlist with manual advance (`Switch` mode `External`), and simply use the right-arrow to load the next viz/FX combo manually. You can even script the crossfade transitions.
+I have been asked about music reactivity for DJ usage. Have your "real" mixers, amps and speakers set up separately, then feed a line-in to any PCs connected to the displays. As long as the PC "thinks" it is outputting audio, the visualizers will work -- either leave the PC's speaker-out jacks disconnected, or mute the PC speakers externally. If you mute them from within Windows, no sound will be "seen" by the program, it really is driven by _playback_ (including volume level). If you have a pre-determined music set, you can create a playlist with manual advance (`Switch` mode `External`), and simply use the right-arrow to load the next viz/FX combo manually. You can even script the crossfade transitions.
 
 Content creators should check out my Jan-2024 blog article [Getting Started Tutorial](https://mcguirev10.com/2024/01/20/monkey-hi-hat-getting-started-tutorial.html). Note the article refers to the v3 install script; as of version 4 released Feb-2024, the installer is a stand-alone program that is much easier to use, and the program itself no longer requires third-party drivers and all the associated configuration hassles.
 
@@ -68,5 +71,6 @@ The automatically-installed shaders, playlists, effects, crossfades, accompanyin
 
 ## Known issues
 
-* None
+* Visualizers using the playlist `SwitchTimeHint=Half` setting will be cut short
+* The NVIDIA GTX 1070 series may [crash](https://github.com/MV10/monkey-hi-hat/issues/5) when switching to full-screen mode
 

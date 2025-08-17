@@ -326,8 +326,9 @@ public static class RenderingHelper
         shader.SetUniform("date", Program.AppWindow.UniformDate);
         shader.SetUniform("clocktime", Program.AppWindow.UniformClockTime);
         shader.SetUniform("fxactive", Program.AppWindow.UniformFXActive);
+        shader.SetUniform("silent", Program.AppWindow.UniformSilenceDetected);
 
-        foreach(var list in uniforms)
+        foreach (var list in uniforms)
         {
             if(list is not null)
             {
@@ -516,7 +517,7 @@ public static class RenderingHelper
                 }
             }
         }
-        catch (EndOfStreamException e)
+        catch (EndOfStreamException)
         {
             // If we reach the end of the stream, restart the clock to loop the video and abort
             tex.VideoData.Clock.Restart();
@@ -524,7 +525,7 @@ public static class RenderingHelper
         }
         catch (Exception ex)
         {
-            // TODO better error handling
+            LogHelper.Logger?.LogError(ex, $"Error decoding video stream {tex.Filename}");
         }
     }
 

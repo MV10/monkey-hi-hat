@@ -115,9 +115,14 @@ public class CrossfadeRenderer : IRenderer
         RandomRun4 = new((float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble(), (float)RNG.NextDouble());
     }
 
+    public float FXActive()
+    {
+        if ((OldRenderer is not null && OldRenderer is FXRenderer) || (NewRenderer is not null && NewRenderer is FXRenderer)) return 1.0f;
+        return 0.0f;
+    }
+
     public void PreRenderFrame()
     {
-        if (OldRenderer is null || NewRenderer is null) return;
         OldRenderer?.PreRenderFrame();
         NewRenderer?.PreRenderFrame();
     }
