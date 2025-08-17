@@ -326,8 +326,9 @@ public static class RenderingHelper
         shader.SetUniform("date", Program.AppWindow.UniformDate);
         shader.SetUniform("clocktime", Program.AppWindow.UniformClockTime);
         shader.SetUniform("fxactive", Program.AppWindow.UniformFXActive);
+        shader.SetUniform("silent", Program.AppWindow.UniformSilenceDetected);
 
-        foreach(var list in uniforms)
+        foreach (var list in uniforms)
         {
             if(list is not null)
             {

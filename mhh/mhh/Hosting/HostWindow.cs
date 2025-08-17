@@ -66,6 +66,11 @@ namespace mhh
         /// </summary>
         public float UniformFXActive;
 
+        /// <summary>
+        /// Indicates whether the audio processor indicates silence (0-no, 1-yes).
+        /// </summary>
+        public float UniformSilenceDetected;
+
         private MethodInfo EyecandyEnableMethod;
         private MethodInfo EyecandyDisableMethod;
         // Example of how to invoke generic method
@@ -154,6 +159,7 @@ namespace mhh
             UniformDate = new(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, (float)DateTime.Now.TimeOfDay.TotalSeconds);
             UniformClockTime = new(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTime.UtcNow.Hour);
             UniformFXActive = Renderer.FXActive();
+            UniformSilenceDetected = Eyecandy.IsSilent ? 1 : 0;
 
             Renderer.RenderFrame();
 
