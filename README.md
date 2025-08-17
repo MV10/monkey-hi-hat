@@ -4,9 +4,9 @@
 
 Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC's speaker outputs.
 
-> [2025-AUG-XX: Install or update to version 4.4.0](https://github.com/MV10/monkey-hi-hat/releases)!
+> [2025-AUG-17: Install or update to version 4.4.0](https://github.com/MV10/monkey-hi-hat/releases)!
 
-As of the latest release, there are nearly _**4,000 combinations**_ of visualizations and effects, plus 17 transitiional (crossfade) effects! Great for DJs, parties and other events!
+As of the latest release, there are around _**4,500 combinations**_ of visualizations and effects, plus 17 transition (crossfade) effects! Great for DJs, parties and other events!
 
 Playlists and many of the visualizations are customizable. The program and all content is 100% free. It's very stable and trouble-free, I have let it run 24 hours with no crashes or memory leaks.
 

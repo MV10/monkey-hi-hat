@@ -18,7 +18,7 @@ Don't assume anything here is working or will be available in some future releas
 * Copy ffmpeg files to an ffmpeg directory in the mhh publish directory
 * Archive publish directory into `mhh-app-x-x-x.zip` (x-x-x is version)
 * Archive Volt's Lab files into `mhh-content-x-x-x.zip`
-* Copy zip files into one `manual-setup-x-x-x.zip`
+* No longer distributing this: Copy zip files into one `manual-setup-x-x-x.zip`
 * Rename the app and content zips to a .bin extension
 * Push app and content .bin files to github mcguirev10.com /assets/misc
 * Update readme etc, push changes

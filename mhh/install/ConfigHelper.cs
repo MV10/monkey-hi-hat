@@ -80,7 +80,8 @@ namespace mhhinstall
             Output.Write("-- Copying mhh.conf to mhh.conf.bak in the application directory.");
             File.Copy(confPathname, Path.Combine(Installer.programPath, "mhh.conf.bak"), overwrite: true);
 
-            // Code below invokes the per-release config updates... each should "chain" to the next one.
+            // Code below invokes the config update starting with the version
+            // already found on the machine. Each should "chain" to the next one.
             switch(Installer.versionFound.ToString(3))
             {
                 case "3.1.0":
@@ -102,6 +103,14 @@ namespace mhhinstall
                 case "4.3.0":
                     From_430_to_431();
                     break;
+
+                case "4.3.1":
+                    From_431_to_440();
+                    break;
+
+                //case "4.4.0":
+                //    From_440_to_XXX();
+                //    break;
 
                 default:
                     Output.Write($"-- No changes; installed version {Installer.versionFound.ToString(3)} is not recognized.");
@@ -179,7 +188,18 @@ namespace mhhinstall
                 $"\n# SETTING ADDED FOR v4.3.1 UPDATE ON {DateTime.Now}" +
                 "\n# In windowed mode, controls whether the window is sizeable or fixed\n# size with no border. The default is false. No effect in full-screen.\nHideWindowBorder=false");
 
-            //From_431_to_XXX();
+            From_431_to_440();
+        }
+
+        static void From_431_to_440()
+        {
+            Output.Write("-- v4.3.1 to v4.4.0 changes:");
+
+            AddSetting("setup", "DetectSilenceAction", "SilenceReplacement",
+                $"\n# SETTING ADDED FOR v4.4.0 UPDATE ON {DateTime.Now}" +
+                "\n# When DetectSilenceSeconds is 0 (disabled), periods of silence can be\n# replaced by synthetically generated data which can prevent a blank\n# screen with some audio-reactive visualizers. Enable this by setting\n# ReplaceSilenceAfterSeconds to a non-zero value. MinimumSilenceSeconds\n# is the period of time silence must occur to respond. SyntheticAlgorithm\n# determines what kind of data is generated and the other Settings\n# control aspects of the generated data. Refer to the wiki for help.\nMinimumSilenceSeconds=0.25\nReplaceSilenceAfterSeconds=2.0\nSyntheticDataBPM=120\nSyntheticDataBeatDuration=0.1\nSyntheticDataBeatFrequency=440\nSyntheticDataAmplitude=0.5\nSyntheticDataMinimumLevel=0.1\nSyntheticDataAlgorithm=MetronomeBeat");
+
+            //From_440_to_XXX();
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -8,14 +8,20 @@ namespace mhhinstall
 {
     public class Installer
     {
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Update these for each release
-        public static readonly Version appVersion = new Version("4.3.1");
 
-        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-4-3-1.bin";
+        public static readonly Version appVersion = new Version("4.4.0");
+        //                                                       ^ update version
+
+        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-4-4-0.bin";
         //                                                                                     ^ update version
 
-        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-4-3-1.bin";
+        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-4-4-0.bin";
         //                                                                                         ^ update version
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
         // Update these for dotnet runtime bumps
         public static readonly string dotnetVer = "8";
