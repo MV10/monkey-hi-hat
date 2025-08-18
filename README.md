@@ -8,11 +8,15 @@ Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-r
 
 > Subscribe to [Release Notifications](https://github.com/MV10/monkey-hi-hat/issues/3) to find out about updates!
 
-As of the latest release, there are around _**4,500 combinations**_ of visualizations and effects, plus 17 transition (crossfade) effects! Great for DJs, parties and other events!
+As of the latest release, there are around _**4,000 combinations**_ of visualizations and effects, plus 17 transition (crossfade) effects! Great for DJs, parties and other events!
 
 Playlists and many of the visualizations are customizable. The program and all content is 100% free. It's very stable and trouble-free, I have let it run 24 hours with no crashes or memory leaks.
 
 I encourage shader programmers to contribute new visualizations; see [Creating Visualizations](https://github.com/MV10/monkey-hi-hat/wiki/05.-Creating-Visualizations) in the wiki. If you're a .NET programmer and want to work on bugs or features, see [Contributor's Getting Started](https://github.com/MV10/monkey-hi-hat/wiki/13.-Contributor's-Getting-Started) in the wiki.
+
+See thumbnails like the one below in the Volt's Laboratory [wiki](https://github.com/MV10/volts-laboratory/wiki).
+
+![color_skein](https://raw.githubusercontent.com/MV10/volts-laboratory/refs/heads/master/thumbnails/color_skein.jpg)
 
 ## Requirements and Usage
 
