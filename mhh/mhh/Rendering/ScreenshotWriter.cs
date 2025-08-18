@@ -1,8 +1,9 @@
 ﻿
+using FFMediaToolkit.Graphics;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
+using StbImageSharp;
 using StbImageWriteSharp;
-using System.Runtime.InteropServices;
 
 namespace mhh;
 
@@ -19,7 +20,7 @@ public class ScreenshotWriter
         IsJpeg = (cmd == CommandRequest.SnapshotNowJpg || cmd == CommandRequest.SnapshotSpacebarJpg);
     }
 
-    public void SaveFramebuffer(int width, int height, int framebufferHandle = 0)
+    public unsafe void SaveFramebuffer(int width, int height, int framebufferHandle = 0)
     {
         var ext = IsJpeg ? "jpg" : "png";
         var filename = $"monkey-hi-hat-{DateTime.Now:yyyy-MM-dd-HH-mm-ss-ffff}.{ext}";
@@ -31,15 +32,20 @@ public class ScreenshotWriter
             var buffer = ReadFramebufferPixels(width, height);
             if (framebufferHandle > 0) GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
+            fixed (void* ptr = buffer)
+            {
+                StbImage.stbi__vertical_flip(ptr, width, height, 4);
+            }
+
             using var stream = File.OpenWrite(pathname);
             var writer = new ImageWriter();
             if (IsJpeg)
             {
-                writer.WriteJpg(buffer, width, height, ColorComponents.RedGreenBlueAlpha, stream, JpegQuality);
+                writer.WriteJpg(buffer, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream, JpegQuality);
             }
             else
             {
-                writer.WritePng(buffer, width, height, ColorComponents.RedGreenBlueAlpha, stream);
+                writer.WritePng(buffer, width, height, StbImageWriteSharp.ColorComponents.RedGreenBlueAlpha, stream);
             }
         }
         catch (Exception ex)
