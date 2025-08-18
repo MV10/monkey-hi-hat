@@ -31,12 +31,11 @@ Don't assume anything here is working or will be available in some future releas
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
-* 4.3.1 changes released 2025-08-06
-* eyecandy 3.2.0 released 2025-08-06
-
-* 4.4.0 in progress
+* 4.4.0 released 2025-08-17
 * eyecandy 3.3.0 released 2025-08-17
 
+* 4.4.1 not yet released
+* Vertically flip screenshots (duh)
 
 ### Work In Progress
 
