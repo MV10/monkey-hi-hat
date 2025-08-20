@@ -116,6 +116,9 @@ c:\source\_dev_utils_standalone\ffmpeg_20240426\bin\shrinkmp4.cmd
 ffmpeg -i c:\users\jon\desktop\mhh.mp4 
     -vf "scale=trunc(iw/8)*2:trunc(ih/8)*2" -c:v libx264 
     -crf 23 c:\users\jon\desktop\mhh_small.mp4
+
+ffmpeg -i c:\users\jon\desktop\mhh.mp4 -vf "scale=trunc(iw/8)*2:trunc(ih/8)*2" -c:v libx264 -crf 23 c:\users\jon\desktop\mhh_small.mp4
+
 ```
 
 * Rename and drag-drop into README.md via Github online editor
