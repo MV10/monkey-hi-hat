@@ -35,9 +35,11 @@ The music reactivity responds to _anything_ your PC is playing from _any_ source
 
 ## Sample Videos
 
-Soon I will add a version 4 video which shows crossfade transition effects, text overlays, video file support, and cool new visualizers and effects.
+New! A 2-minute look at version 4.4.0 -- text overlays, crossfade transition effects, video file support, and new visualizers and effects! These very small videos still have compression artifacts due to Github's file-size limit, but they will give you a good idea of what's possible. The real thing looks about a million times better (especially on a really good screen like big 4K OLED).
 
-Here's a 2 minute look at some of the version 3 post-processing effects released around the end of 2023. These very small videos still have compression artifacts due to Github's file-size limit, but they will give you a good idea of what's possible. The real thing looks about a million times better (especially on a really good screen like big 4K OLED).
+https://github.com/user-attachments/assets/4623c986-c511-4a30-ad0d-6a12a5259037
+
+Here's a quick look at some of the version 3 post-processing effects released around the end of 2023. 
 
 https://github.com/MV10/monkey-hi-hat/assets/794270/6705bbe7-e558-4753-b57d-c90b4a07cb89
 
