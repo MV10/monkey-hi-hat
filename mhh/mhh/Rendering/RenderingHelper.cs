@@ -502,11 +502,13 @@ public static class RenderingHelper
                 {
                     GL.ActiveTexture(tex.TextureUnit);
                     GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+                    var buffer = frame.Data;
                     unsafe
                     {
-                        fixed (byte* ptr = (Program.AppConfig.VideoFlip == VideoFlipMode.Internal) ? FlipVideoFrame(tex.VideoData, frame) : frame.Data)
+                        fixed (void* ptr = frame.Data)
                         {
-                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
+                            if (Program.AppConfig.VideoFlip == VideoFlipMode.Internal) StbImage.stbi__vertical_flip(ptr, tex.VideoData.Width, tex.VideoData.Height, 4);
+                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)(byte*)ptr);
                         }
                     }
                     GL.BindTexture(TextureTarget.Texture2D, 0);
@@ -529,16 +531,17 @@ public static class RenderingHelper
         }
     }
 
-    private static byte[] FlipVideoFrame(VideoMediaData video, ImageData frame)
-    {
-        int rowBytes = video.Width * 4; // 4 bytes per pixel for RGBA
-        byte[] flippedData = new byte[frame.Data.Length];
-        for (int y = 0; y < video.Height; y++)
-        {
-            int sourceOffset = y * frame.Stride;
-            int destOffset = (video.Height - 1 - y) * rowBytes;
-            frame.Data.Slice(sourceOffset, rowBytes).CopyTo(flippedData.AsSpan(destOffset, rowBytes));
-        }
-        return flippedData;
-    }
+    // 2025-08-20 Replaced with StbImage's buffer flip code inside the pinned section in DecodeVideoFrame
+    //private static byte[] FlipVideoFrame(VideoMediaData video, ImageData frame)
+    //{
+    //    int rowBytes = video.Width * 4; // 4 bytes per pixel for RGBA
+    //    byte[] flippedData = new byte[frame.Data.Length];
+    //    for (int y = 0; y < video.Height; y++)
+    //    {
+    //        int sourceOffset = y * frame.Stride;
+    //        int destOffset = (video.Height - 1 - y) * rowBytes;
+    //        frame.Data.Slice(sourceOffset, rowBytes).CopyTo(flippedData.AsSpan(destOffset, rowBytes));
+    //    }
+    //    return flippedData;
+    //}
 }

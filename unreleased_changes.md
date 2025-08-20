@@ -36,10 +36,11 @@ Don't assume anything here is working or will be available in some future releas
 
 * 4.4.1 not yet released
 * Vertically flip screenshots (duh)
+* Change internal video frame-flip to use StbImage instead of C# loop, ~30% faster
 
 ### Work In Progress
 
-* 
+*
 
 
 ### MHH TODO
