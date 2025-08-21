@@ -35,6 +35,8 @@ The music reactivity responds to _anything_ your PC is playing from _any_ source
 
 ## Sample Videos
 
+(Warning: Apparently these videos are pretty loud when viewed on mobile devices. Sorry about that.)
+
 New! A 2-minute look at version 4.4.0 -- text overlays, crossfade transition effects, video file support, and new visualizers and effects! These very small videos still have compression artifacts due to Github's file-size limit, but they will give you a good idea of what's possible. The real thing looks about a million times better (especially on a really good screen like big 4K OLED).
 
 https://github.com/user-attachments/assets/4623c986-c511-4a30-ad0d-6a12a5259037

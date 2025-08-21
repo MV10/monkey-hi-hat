@@ -544,9 +544,13 @@ playlist   : {Playlist.GetInfo()}";
 
             CommandRequested = commandRequest;
 
-            return (commandRequest == CommandRequest.SnapshotSpacebarJpg || commandRequest == CommandRequest.SnapshotSpacebarPng) 
-                ? "ACK - press spacebar to save image" 
-                : "ACK - saving image";
+            if (commandRequest == CommandRequest.SnapshotSpacebarJpg || commandRequest == CommandRequest.SnapshotSpacebarPng)
+            {
+                Program.AppWindow.Focus();
+                return "ACK - press spacebar to save image";
+            }
+
+            return "ACK - saving image";
         }
 
         /// <summary>

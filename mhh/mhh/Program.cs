@@ -320,7 +320,7 @@ namespace mhh
                     if (OnStandby) return "ERR: Application is in standby";
                     if (args.Length != 3) return ShowHelp();
                     if (!Enum.TryParse<TestMode>(args[1], ignoreCase: true, out var testmode)) return "ERR: Must specify viz, fx, or fade mode";
-                    if (testmode == TestMode.None) return "ERR: Test mode None doesn't accept a filename";
+                    if (testmode == TestMode.None) return "ERR: Use --endtest to terminate testing mode";
                     return AppWindow.Command_Test(testmode, args[2]);
 
                 case "--endtest":
