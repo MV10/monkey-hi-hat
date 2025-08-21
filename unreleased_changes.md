@@ -38,14 +38,20 @@ Don't assume anything here is working or will be available in some future releas
 * Change internal video frame-flip to use StbImage instead of C# loop, ~30% faster
 * Vertically flip screenshots (duh)
 * Set focus after spacebar-to-screenshot `--jpg wait` and `--png wait` commands
+* Improved some video processing error messages
+
 
 ### Work In Progress
 
-* 
+*
 
 
 ### MHH TODO
 
+* Syncrhonize primary viz clock when an FX is loaded (crossfade loads new copy)
+* Add mhh.conf path for saving screenshots (default to user's Desktop if no path is provided)
+* Test mode - show keys on screen
+* Test mode - abort if --load or similar commands are issued
 * Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
@@ -62,9 +68,6 @@ Don't assume anything here is working or will be available in some future releas
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
-* Add mhh.conf path for saving screenshots (default to user's Desktop if no path is provided)
-* Test mode - show keys on screen
-* Test mode - abort if --load or similar commands are issued
 * Textures via HTTP? Caching? Videos too?
 * Streaming video via HTTP? RTSP?
 * Render the text overlay buffer once instead of running the shader every frame (set a "change" flag)

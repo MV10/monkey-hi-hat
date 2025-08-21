@@ -225,8 +225,7 @@ public static class RenderingHelper
 
             if (tex.VideoData.Stream == null)
             {
-                // TODO log the error instead of writing to console
-                Console.WriteLine("No video stream found in the file.");
+                LogHelper.Logger?.LogError($"{nameof(RenderingHelper)}.{nameof(LoadVideoFile)}: No video stream found in the file {tex.Filename}");
                 return false;
             }
 
@@ -245,8 +244,7 @@ public static class RenderingHelper
         }
         catch (Exception ex)
         {
-            // TODO log the error instead of writing to console
-            Console.WriteLine($"Error loading video:\n{ex.Message}\n{ex.InnerException?.Message}");
+            LogHelper.Logger?.LogError($"{nameof(RenderingHelper)}.{nameof(LoadVideoFile)}: Error loading video {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
             return false;
         }
 
