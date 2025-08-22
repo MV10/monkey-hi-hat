@@ -40,6 +40,7 @@ public class MultipassRenderer : IRenderer
     private IReadOnlyList<GLResourceGroup> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
     private IReadOnlyList<GLImageTexture> Textures;
+    private VideoMediaProcessor VideoProcessor;
 
     private Stopwatch Clock = new();
     private float ClockOffset = 0;
@@ -75,6 +76,7 @@ public class MultipassRenderer : IRenderer
             FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
 
             Textures = RenderingHelper.GetTextures(DrawbufferOwnerName, Config.ConfigSource);
+            if (Textures?.Any(t => t.Loaded && t.VideoData is not null) ?? false) VideoProcessor = new(Textures);
         }
         catch (ArgumentException ex)
         {
@@ -89,7 +91,8 @@ public class MultipassRenderer : IRenderer
 
     public void PreRenderFrame()
     {
-        RenderingHelper.UpdateVideoTextures(Textures);
+        VideoProcessor?.UpdateTextures(); // synchronous version
+        //VideoProcessor?.BeginProcessing(); // async version
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -196,6 +199,10 @@ public class MultipassRenderer : IRenderer
     {
         if (IsDisposed) return;
         LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VideoProcessor");
+        VideoProcessor?.Dispose();
+        VideoProcessor = null;
 
         if (ShaderPasses is not null)
         {

@@ -215,13 +215,14 @@ public static class RenderingHelper
     {
         var paths = (pathspec == "") ? Program.AppConfig.TexturePath : pathspec;
         var pathname = PathHelper.FindFile(paths, tex.Filename);
-        if (pathname is null) return false;
+        if (pathname is null) throw new FileNotFoundException();
 
         try
         {
             tex.VideoData = new();
             tex.VideoData.File = MediaFile.Open(pathname, VideoMediaOptions);
             tex.VideoData.Stream = tex.VideoData.File.Video;
+            tex.VideoData.Pathname = pathname;
 
             if (tex.VideoData.Stream == null)
             {
@@ -249,47 +250,6 @@ public static class RenderingHelper
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// This must be called by the renderer before any frame buffer objects are bound. OpenGL's behavior
-    /// is "undefined" if a texture is modified while it is bound to a framebuffer (it is considered "in use"
-    /// by the bound FBO).
-    /// </summary>
-    public static void UpdateVideoTextures(IReadOnlyList<GLImageTexture> textures)
-    {
-        if (textures is null) return;
-
-        // textures should never be updated when a framebuffer is bound (the behavior is "undefined")
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-
-        foreach (var tex in textures)
-        {
-            if (tex.Loaded)
-            {
-                if (tex.VideoData is not null)
-                {
-                    if (Program.AppWindow.Renderer.TimePaused)
-                    {
-                        if (!tex.VideoData.IsPaused)
-                        {
-                            tex.VideoData.IsPaused = true;
-                            tex.VideoData.Clock.Stop();
-                        }
-                    }
-                    else
-                    {
-                        if (tex.VideoData.IsPaused)
-                        {
-                            tex.VideoData.IsPaused = false;
-                            tex.VideoData.Clock.Start();
-                        }
-
-                        DecodeVideoFrame(tex);
-                    }
-                }
-            }
-        }
     }
 
     /// <summary>
@@ -466,67 +426,6 @@ public static class RenderingHelper
             }
         }
         return definitions;
-    }
-
-    private static void DecodeVideoFrame(GLImageTexture tex)
-    {
-        if (tex.VideoData is null || !tex.Loaded || tex.VideoData.Stream is null) return;
-
-        if (!tex.VideoData.Clock.IsRunning)
-        {
-            if (tex.VideoData.IsPaused) return;
-            tex.VideoData.Clock.Start();
-        }
-
-        if (tex.VideoData.Clock.Elapsed == tex.VideoData.LastUpdateTime) return; // abort if time hasn't changed
-
-        if (tex.VideoData.Clock.Elapsed > tex.VideoData.Duration)
-        {
-            tex.VideoData.Clock.Restart(); // always loop
-        }
-
-        try
-        {
-            var frame = tex.VideoData.Stream.GetFrame(tex.VideoData.Clock.Elapsed);
-
-            tex.VideoData.LastUpdateTime = tex.VideoData.Clock.Elapsed;
-
-            if (!frame.Data.IsEmpty && tex.VideoData.Stream.Position != tex.VideoData.LastStreamPosition)
-            {
-                tex.VideoData.LastStreamPosition = tex.VideoData.Stream.Position;
-
-                GLTextureLockMutex.WaitOne();
-                try
-                {
-                    GL.ActiveTexture(tex.TextureUnit);
-                    GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-                    var buffer = frame.Data;
-                    unsafe
-                    {
-                        fixed (void* ptr = frame.Data)
-                        {
-                            if (Program.AppConfig.VideoFlip == VideoFlipMode.Internal) StbImage.stbi__vertical_flip(ptr, tex.VideoData.Width, tex.VideoData.Height, 4);
-                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)(byte*)ptr);
-                        }
-                    }
-                    GL.BindTexture(TextureTarget.Texture2D, 0);
-                }
-                finally
-                {
-                    GLTextureLockMutex.ReleaseMutex();
-                }
-            }
-        }
-        catch (EndOfStreamException)
-        {
-            // If we reach the end of the stream, restart the clock to loop the video and abort
-            tex.VideoData.Clock.Restart();
-            return;
-        }
-        catch (Exception ex)
-        {
-            LogHelper.Logger?.LogError(ex, $"Error decoding video stream {tex.Filename}");
-        }
     }
 
     // 2025-08-20 Replaced with StbImage's buffer flip code inside the pinned section in DecodeVideoFrame

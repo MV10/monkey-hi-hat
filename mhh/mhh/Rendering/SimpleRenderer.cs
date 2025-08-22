@@ -1,10 +1,8 @@
 ﻿
-using eyecandy;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 
 namespace mhh;
 
@@ -18,6 +16,7 @@ public class SimpleRenderer : IRenderer
     public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
     private GLResourceGroup FinalDrawbuffers;
     private IReadOnlyList<GLImageTexture> Textures;
+    private VideoMediaProcessor VideoProcessor;
 
     public Vector2 Resolution { get => ViewportResolution; }
     private Vector2 ViewportResolution;
@@ -58,6 +57,7 @@ public class SimpleRenderer : IRenderer
         VertexSource.Initialize(Config, Shader);
 
         Textures = RenderingHelper.GetTextures(OwnerName, Config.ConfigSource);
+        if(Textures?.Any(t => t.Loaded && t.VideoData is not null) ?? false) VideoProcessor = new(Textures);
 
         OnResize();
 
@@ -67,7 +67,8 @@ public class SimpleRenderer : IRenderer
 
     public void PreRenderFrame()
     {
-        RenderingHelper.UpdateVideoTextures(Textures);
+        VideoProcessor?.UpdateTextures(); // synchronous version
+        //VideoProcessor?.BeginProcessing(); // async version
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -167,6 +168,10 @@ public class SimpleRenderer : IRenderer
     {
         if (IsDisposed) return;
         LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VideoProcessor");
+        VideoProcessor?.Dispose();
+        VideoProcessor = null;
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VertexSource");
         VertexSource?.Dispose();

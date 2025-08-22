@@ -35,6 +35,7 @@ public class FXRenderer : IRenderer
     private IReadOnlyList<GLResourceGroup> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
     private IReadOnlyList<GLImageTexture> Textures;
+    private VideoMediaProcessor VideoProcessor;
 
     private Dictionary<string, float> PrimaryFXUniforms;
 
@@ -102,6 +103,7 @@ public class FXRenderer : IRenderer
             }
 
             Textures = RenderingHelper.GetTextures(DrawbufferOwnerName, Config.ConfigSource);
+            if (Textures?.Any(t => t.Loaded && t.VideoData is not null) ?? false) VideoProcessor = new(Textures);
         }
         catch (ArgumentException ex)
         {
@@ -120,7 +122,10 @@ public class FXRenderer : IRenderer
 
     public void PreRenderFrame()
     {
-        RenderingHelper.UpdateVideoTextures(Textures);
+        PrimaryRenderer?.PreRenderFrame();
+
+        VideoProcessor?.UpdateTextures(); // synchronous version
+        //VideoProcessor?.BeginProcessing(); // async version
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -309,6 +314,10 @@ public class FXRenderer : IRenderer
         LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
 
         RenderingHelper.UseFXResolutionLimit = false;
+
+        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VideoProcessor");
+        VideoProcessor?.Dispose();
+        VideoProcessor = null;
 
         LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() primary visualization renderer");
         PrimaryRenderer?.Dispose();
