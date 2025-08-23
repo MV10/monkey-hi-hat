@@ -6,10 +6,16 @@ using StbImageSharp;
 
 namespace mhh;
 
+// MHH temporarily supported background-thread processing for the decode
+// portion, but the overhead of locking the buffer for threadsafe buffer
+// usage between the main thread (OpenGL texture updates) and the decode
+// thread (buffer writes) was less smooth than synchronous updating.
+
 /// <summary>
 /// This manages FFMediaToolkit decoding of video files and blitting frame
 /// data to a previously-allocated OpenGL texture buffer. This works in a
-/// synchronous fashion, the render loop should invoke UpdateTextures.
+/// synchronous fashion, the renderer should invoke UpdateTextures in the
+/// PreRenderFrame function.
 /// </summary>
 public class VideoMediaProcessor : IDisposable
 {
@@ -23,83 +29,85 @@ public class VideoMediaProcessor : IDisposable
     public VideoMediaProcessor(IReadOnlyList<GLImageTexture> textures)
     {
         VideoTextures = textures.Where(t => t.Loaded && t.VideoData is not null).ToList();
+        LogHelper.Logger?.LogTrace($"{GetType()} constructor found {VideoTextures.Count} video textures");
     }
 
+    /// <summary>
+    /// This should be invoked from the renferer's PreRenderFrame method.
+    /// </summary>
     public void UpdateTextures()
     {
         foreach (var tex in VideoTextures)
         {
-            if (Program.AppWindow.Renderer.TimePaused)
-            {
-                if (!tex.VideoData.IsPaused)
-                {
-                    tex.VideoData.IsPaused = true;
-                    tex.VideoData.Clock.Stop();
-                }
-            }
-            else
-            {
-                if (tex.VideoData.IsPaused)
-                {
-                    tex.VideoData.IsPaused = false;
-                    tex.VideoData.Clock.Start();
-                }
-
-                DecodeVideoFrame(tex);
-            }
+            CheckPauseState(tex);
+            if (tex.VideoData.IsPaused) continue;
+            DecodeVideoFrame(tex);
         }
     }
 
-    private static void DecodeVideoFrame(GLImageTexture tex)
+    private void CheckPauseState(GLImageTexture tex)
+    {
+        if (Program.AppWindow.Renderer.TimePaused)
+        {
+            if (!tex.VideoData.IsPaused)
+            {
+                tex.VideoData.IsPaused = true;
+                tex.VideoData.Clock.Stop();
+                LogHelper.Logger?.LogTrace($"{GetType()} paused video {tex.VideoData.Pathname}");
+            }
+        }
+        else
+        {
+            if (tex.VideoData.IsPaused)
+            {
+                tex.VideoData.IsPaused = false;
+                tex.VideoData.Clock.Start();
+                LogHelper.Logger?.LogTrace($"{GetType()} unpaused video {tex.VideoData.Pathname}");
+            }
+
+        }
+    }
+
+    protected void DecodeVideoFrame(GLImageTexture tex)
     {
         if (!tex.VideoData.Clock.IsRunning)
         {
             if (tex.VideoData.IsPaused) return;
             tex.VideoData.Clock.Start();
+            LogHelper.Logger?.LogTrace($"{GetType()} clock started on video {tex.Filename}");
         }
 
         if (tex.VideoData.Clock.Elapsed == tex.VideoData.LastUpdateTime) return; // abort if time hasn't changed
 
         if (tex.VideoData.Clock.Elapsed > tex.VideoData.Duration)
         {
+            LogHelper.Logger?.LogTrace($"{GetType()} looped video {tex.Filename} at {tex.VideoData.Clock.Elapsed.TotalSeconds:F2}");
             tex.VideoData.Clock.Restart(); // always loop
         }
 
         try
         {
             var frame = tex.VideoData.Stream.GetFrame(tex.VideoData.Clock.Elapsed);
-
             tex.VideoData.LastUpdateTime = tex.VideoData.Clock.Elapsed;
-
             if (!frame.Data.IsEmpty && tex.VideoData.Stream.Position != tex.VideoData.LastStreamPosition)
             {
                 tex.VideoData.LastStreamPosition = tex.VideoData.Stream.Position;
-
-                GLTextureLockMutex.WaitOne();
-                try
+                unsafe
                 {
                     GL.ActiveTexture(tex.TextureUnit);
                     GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-                    var buffer = frame.Data;
-                    unsafe
+                    fixed (void* ptr = frame.Data)
                     {
-                        fixed (void* ptr = frame.Data)
-                        {
-                            if (Program.AppConfig.VideoFlip == VideoFlipMode.Internal) StbImage.stbi__vertical_flip(ptr, tex.VideoData.Width, tex.VideoData.Height, 4);
-                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)(byte*)ptr);
-                        }
+                        if (Program.AppConfig.VideoFlip == VideoFlipMode.Internal) StbImage.stbi__vertical_flip(ptr, tex.VideoData.Width, tex.VideoData.Height, 4);
+                        GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)(byte*)ptr);
                     }
                     GL.BindTexture(TextureTarget.Texture2D, 0);
-                }
-                finally
-                {
-                    GLTextureLockMutex.ReleaseMutex();
                 }
             }
         }
         catch (EndOfStreamException)
         {
-            // If we reach the end of the stream, restart the clock to loop the video and abort
+            LogHelper.Logger?.LogTrace($"{GetType()} looped video {tex.Filename} at {tex.VideoData.Clock.Elapsed.TotalSeconds:F2}");
             tex.VideoData.Clock.Restart();
             return;
         }

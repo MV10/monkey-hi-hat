@@ -16,6 +16,7 @@ public class SimpleRenderer : IRenderer
     public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
     private GLResourceGroup FinalDrawbuffers;
     private IReadOnlyList<GLImageTexture> Textures;
+
     private VideoMediaProcessor VideoProcessor;
 
     public Vector2 Resolution { get => ViewportResolution; }
@@ -67,8 +68,7 @@ public class SimpleRenderer : IRenderer
 
     public void PreRenderFrame()
     {
-        VideoProcessor?.UpdateTextures(); // synchronous version
-        //VideoProcessor?.BeginProcessing(); // async version
+        VideoProcessor?.UpdateTextures();
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)

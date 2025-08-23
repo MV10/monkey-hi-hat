@@ -123,9 +123,7 @@ public class FXRenderer : IRenderer
     public void PreRenderFrame()
     {
         PrimaryRenderer?.PreRenderFrame();
-
-        VideoProcessor?.UpdateTextures(); // synchronous version
-        //VideoProcessor?.BeginProcessing(); // async version
+        VideoProcessor?.UpdateTextures();
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)

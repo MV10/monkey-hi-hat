@@ -91,8 +91,7 @@ public class MultipassRenderer : IRenderer
 
     public void PreRenderFrame()
     {
-        VideoProcessor?.UpdateTextures(); // synchronous version
-        //VideoProcessor?.BeginProcessing(); // async version
+        VideoProcessor?.UpdateTextures();
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)

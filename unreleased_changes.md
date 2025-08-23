@@ -48,8 +48,12 @@ Don't assume anything here is working or will be available in some future releas
 
 ### MHH TODO
 
+* Eyecandy - pin the buffer in `AudioTexture.GenerateTexture`
+* Eyecandy - change `AudioTexture.GenerateTexture` to use `GL.TexSubImage2D` and init just once
 * Syncrhonize primary viz clock when an FX is loaded (crossfade loads new copy)
 * Add mhh.conf path for saving screenshots (default to user's Desktop if no path is provided)
+* HTTP texture retrieval and caching support for textures (incl. preload, refresh, etc.)
+* RTSP video support?
 * Test mode - show keys on screen
 * Test mode - abort if --load or similar commands are issued
 * Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
@@ -68,7 +72,6 @@ Don't assume anything here is working or will be available in some future releas
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
-* Textures via HTTP? Caching? Videos too?
 * Streaming video via HTTP? RTSP?
 * Render the text overlay buffer once instead of running the shader every frame (set a "change" flag)
 * Hotkey to popup list of common hotkeys
@@ -78,6 +81,7 @@ Don't assume anything here is working or will be available in some future releas
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
 * Add test content to intentionally generate errors
 * Use FontAtlasFilename? (update Wiki with info about generating new ones)
+* Video generation? Step-wise clocks and timers?
 
 * Soundcloud track overlay?
     * https://help.soundcloud.com/hc/en-us/articles/115000182454-SoundCloud-for-Windows
@@ -89,7 +93,7 @@ Don't assume anything here is working or will be available in some future releas
     * use six separate files? https://ogldev.org/www/tutorial25/tutorial25.html
     * Emil has lots of HQ skyboxes https://opengameart.org/content/mountain-skyboxes
 
-### EYECANDY TODO
+### EYECANDY TODO (MAJOR)
 
 * Nuthin' here boss
 
