@@ -35,13 +35,14 @@ Don't assume anything here is working or will be available in some future releas
 * eyecandy 3.3.0 released 2025-08-17
 
 * 4.4.1 not yet released
-* eyecandy 3.4.0 local build
+* Update to eyecandy 3.4.0 (local build, not yet released)
+* Update to FFMediaToolkit 4.8.0 (cleaner release of some managed resources)
 * Change internal video frame-flip to use StbImage instead of C# loop, ~30% faster
 * Vertically flip screenshots (duh)
 * Set focus after spacebar-to-screenshot `--jpg wait` and `--png wait` commands
 * Improved some video processing error messages
 * Tested background-thread video decode; too much locking overhead required
-* Eyecandy changes to omit re-allocation of texture buffers
+* Eyecandy changes to avoid re-allocation of texture buffers
 
 
 ### Work In Progress

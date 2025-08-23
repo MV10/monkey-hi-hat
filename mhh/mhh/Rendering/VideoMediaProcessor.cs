@@ -1,5 +1,6 @@
 ﻿
 using eyecandy;
+using FFMediaToolkit.Graphics;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using StbImageSharp;
@@ -104,6 +105,7 @@ public class VideoMediaProcessor : IDisposable
                     GL.BindTexture(TextureTarget.Texture2D, 0);
                 }
             }
+            frame.Dispose();
         }
         catch (EndOfStreamException)
         {
