@@ -24,7 +24,7 @@ public class ScreenshotWriter
     {
         var ext = IsJpeg ? "jpg" : "png";
         var filename = $"monkey-hi-hat-{DateTime.Now:yyyy-MM-dd-HH-mm-ss-ffff}.{ext}";
-        var pathname = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), filename);
+        var pathname = Path.Combine(Program.AppConfig.ScreenshotPath, filename);
 
         try
         {

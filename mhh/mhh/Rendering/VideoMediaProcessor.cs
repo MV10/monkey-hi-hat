@@ -1,6 +1,5 @@
 ﻿
 using eyecandy;
-using FFMediaToolkit.Graphics;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using StbImageSharp;

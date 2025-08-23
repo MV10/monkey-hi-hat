@@ -43,21 +43,21 @@ Don't assume anything here is working or will be available in some future releas
 * Improved some video processing error messages
 * Tested background-thread video decode; too much locking overhead required
 * Eyecandy changes to avoid re-allocation of texture buffers
+* Added `ScreenshotPath` to `mhh.conf` (defaults to user's Desktop if no path is provided)
 
 
 ### Work In Progress
 
-*
+* 
 
 
 ### MHH TODO
 
-* Syncrhonize primary viz clock when an FX is loaded (crossfade loads new copy)
-* Add mhh.conf path for saving screenshots (default to user's Desktop if no path is provided)
 * HTTP texture retrieval and caching support for textures (incl. preload, refresh, etc.)
 * RTSP video support?
+* Revisit logging to provide log message context and related configuration
 * Test mode - show keys on screen
-* Test mode - abort if --load or similar commands are issued
+* Test mode - abort when `--load` or similar commands are issued
 * Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
@@ -74,7 +74,6 @@ Don't assume anything here is working or will be available in some future releas
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
-* Streaming video via HTTP? RTSP?
 * Render the text overlay buffer once instead of running the shader every frame (set a "change" flag)
 * Hotkey to popup list of common hotkeys
 * Startup crashes if no audio device available? (ex. RDP disables audio)
