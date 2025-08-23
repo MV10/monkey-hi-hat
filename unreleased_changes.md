@@ -35,10 +35,13 @@ Don't assume anything here is working or will be available in some future releas
 * eyecandy 3.3.0 released 2025-08-17
 
 * 4.4.1 not yet released
+* eyecandy 3.4.0 local build
 * Change internal video frame-flip to use StbImage instead of C# loop, ~30% faster
 * Vertically flip screenshots (duh)
 * Set focus after spacebar-to-screenshot `--jpg wait` and `--png wait` commands
 * Improved some video processing error messages
+* Tested background-thread video decode; too much locking overhead required
+* Eyecandy changes to omit re-allocation of texture buffers
 
 
 ### Work In Progress
@@ -48,8 +51,6 @@ Don't assume anything here is working or will be available in some future releas
 
 ### MHH TODO
 
-* Eyecandy - pin the buffer in `AudioTexture.GenerateTexture`
-* Eyecandy - change `AudioTexture.GenerateTexture` to use `GL.TexSubImage2D` and init just once
 * Syncrhonize primary viz clock when an FX is loaded (crossfade loads new copy)
 * Add mhh.conf path for saving screenshots (default to user's Desktop if no path is provided)
 * HTTP texture retrieval and caching support for textures (incl. preload, refresh, etc.)
