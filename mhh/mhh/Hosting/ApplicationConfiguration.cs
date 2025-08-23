@@ -20,6 +20,7 @@ namespace mhh
         public readonly string FXPath = string.Empty;
         public readonly string FFmpegPath = string.Empty;
         public readonly string ScreenshotPath = string.Empty;
+        public readonly string FileCachePath = string.Empty;
 
         public readonly bool StartFullScreen;
         public readonly int StartX;
@@ -80,6 +81,11 @@ namespace mhh
 
         public readonly bool ShowSpotifyTrackPopups;
 
+        public readonly int FileCacheMaxSize = 512;
+        public readonly int FileCacheMaxAge = 0;
+        public readonly string FileCachePlaceholder = string.Empty;
+        public readonly bool FileCacheCaseSensitive = false;
+
         public ApplicationConfiguration(ConfigFile appConfigFile)
         {
             ConfigSource = appConfigFile;
@@ -115,6 +121,7 @@ namespace mhh
             FXPath = ConfigSource.ReadValue(SectionOS, "fxpath");
             FFmpegPath = ConfigSource.ReadValue(SectionOS, "ffmpegpath");
             ScreenshotPath = ConfigSource.ReadValue(SectionOS, "screenshotpath");
+            FileCachePath = ConfigSource.ReadValue(SectionOS, "filecachepath");
 
             DetectSilenceSeconds = ConfigSource.ReadValue("setup", "detectsilenceseconds").ToInt32(0);
             DetectSilenceMaxRMS = ConfigSource.ReadValue("setup", "detectsilencemaxrms").ToDouble(1.5d);
@@ -150,6 +157,13 @@ namespace mhh
 
             ShowSpotifyTrackPopups = ConfigSource.ReadValue(SectionOS, "showspotifytrackpopups").ToBool(false);
 
+            FileCacheMaxSize = ConfigSource.ReadValue("filecache", "filecachemaxsize").ToInt32(512);
+            FileCacheMaxAge = ConfigSource.ReadValue("filecache", "filecachemaxage").ToInt32(0);
+            FileCachePlaceholder = ConfigSource.ReadValue("filecache", "filecacheplaceholder");
+            FileCacheCaseSensitive = ConfigSource.ReadValue("text", "filecachecasesensitive").ToBool(false);
+            var fileCacheImageExtensions = ConfigSource.ReadValue("filecache", "filecacheimageextensions");
+            var fileCacheVideoExtensions = ConfigSource.ReadValue("filecache", "filecachevideoextensions");
+
             // validation
             // TODO validate [text] section settings
             if (RenderResolutionLimit < 256 && RenderResolutionLimit !=0) ConfError("RenderResolutionLimit must be 256 or greater (default is 0 to disable).");
@@ -169,10 +183,23 @@ namespace mhh
             PathValidation(FXPath);
 
             if (string.IsNullOrWhiteSpace(ScreenshotPath)) ScreenshotPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            if (PathHelper.GetIndividualPaths(ScreenshotPath).Length > 1) ConfError("Exactly one path is required for ScreenshotPath.");
             PathValidation(ScreenshotPath);
+
+            if (string.IsNullOrWhiteSpace(FileCachePath))
+            {
+                FileCachePath = Path.Combine(Path.GetTempPath(), "mhh_cache");
+                if(!Directory.Exists(FileCachePath)) Directory.CreateDirectory(FileCachePath);
+            }
+            if (PathHelper.GetIndividualPaths(FileCachePath).Length > 1) ConfError("Exactly one path is required for FileCachePath.");
+            PathValidation(FileCachePath);
 
             if (PathHelper.GetIndividualPaths(FFmpegPath).Length > 1) ConfError("Exactly one path is required for FFmpegPath.");
             PathValidation(FFmpegPath);
+
+            if (FileCacheMaxSize <= 0) ConfError("FileCacheMaxSize must be greater than 0. Default is 512 when omitted.");
+            if (FileCacheMaxAge < 0) ConfError("FileCacheMaxAge must be 0 or greater. Default is 0 which disables cache expiration.");
+            if (!string.IsNullOrEmpty(FileCachePlaceholder) && PathHelper.FindFile(TexturePath, FileCachePlaceholder) is null) ConfError("The specified FileCachePlaceholder was not found in the TexturePath.");
         }
 
         private void PathValidation(string pathspec)

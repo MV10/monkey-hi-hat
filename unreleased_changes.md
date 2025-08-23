@@ -48,13 +48,20 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Work In Progress
 
-* 
-
+* HTTP texture retrieval and caching support for textures (incl. preload, refresh, etc.)
+* Added `[FileCache]` section and settings to `mhh.conf`
+* Added `--filecache status` command
+* Added `--filecache list` command
+* Added `--filecache purge` command
+* Added `--filecache refresh` command
+* Added `--filecache fetch [url]` command
+* Added `--filecache remove [url]` command
+* The `--filecache` commands do not require MHH to be already running
+* Viz and FX configs can reference HTTP/S for image and video textures
 
 ### MHH TODO
 
-* HTTP texture retrieval and caching support for textures (incl. preload, refresh, etc.)
-* RTSP video support?
+* RTSP video support? (does FFMediaToolkit support it? see [issue](https://github.com/radek-k/FFMediaToolkit/issues/130))
 * Revisit logging to provide log message context and related configuration
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued

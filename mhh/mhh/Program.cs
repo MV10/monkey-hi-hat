@@ -145,6 +145,7 @@ namespace mhh
             {
                 // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
                 ctsSwitchPipe?.Cancel();
+                FileCacheManager.Dispose();
                 AppWindow?.Dispose();
                 Log.CloseAndFlush();
             }
@@ -332,7 +333,7 @@ namespace mhh
 
                 case "--paths":
                     if (args.Length > 1) return ShowHelp();
-                    return $"\nConfigured paths\n\nVizualization shaders:\n{AppConfig.VisualizerPath.Replace(';','\n')}\n\nPost-processing FX shaders:\n{AppConfig.FXPath.Replace(';', '\n')}\n\nTexure and video files:\n{AppConfig.TexturePath.Replace(';', '\n')}\n\nPlaylists:\n{AppConfig.PlaylistPath.Replace(';', '\n')}";
+                    return $"\nConfigured paths\n\nVizualization shaders:\n{AppConfig.VisualizerPath.Replace(';','\n')}\n\nPost-processing FX shaders:\n{AppConfig.FXPath.Replace(';', '\n')}\n\nTexure and video files:\n{AppConfig.TexturePath.Replace(';', '\n')}\n\nPlaylists:\n{AppConfig.PlaylistPath.Replace(';', '\n')}\n\nScreenshots:\n{AppConfig.ScreenshotPath}\n\nFile cache:\n{AppConfig.FileCachePath}";
 
                 case "--cls":
                     return AppWindow.Command_CLS();
@@ -381,7 +382,13 @@ namespace mhh
                 return false; // end program
             }
 
-            // Disallow switches at startup of first instance
+            // Handle filecache commands (these do not require a running instance)
+            if ((args.Length > 1 &&args[0].ToLowerInvariant().Equals("--filecache")))
+            {
+                // TODO
+            }
+
+            // Disallow other switches at startup of first instance
             if (!alreadyRunning && args.Length > 0)
             {
                 Console.WriteLine("Only the --help switch is accepted if the program is not already running.");
