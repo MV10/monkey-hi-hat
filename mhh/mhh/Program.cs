@@ -145,7 +145,7 @@ namespace mhh
             {
                 // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
                 ctsSwitchPipe?.Cancel();
-                FileCacheManager.Dispose();
+                HttpFileCache.Dispose();
                 AppWindow?.Dispose();
                 Log.CloseAndFlush();
             }

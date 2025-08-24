@@ -6,7 +6,7 @@ namespace mhh;
 /// <summary>
 /// Details of a cached texture file (image or video).
 /// </summary>
-public class FileCacheData
+public class CachedFileData
 {
     /// <summary>
     /// This is the filename of the data stored in the cache directory.
@@ -42,7 +42,7 @@ public class FileCacheData
     { 
         get => Counter; 
         set => Counter = Math.Min(0, value);
-    };
+    }
     private int Counter = 0;
 
     /// <summary>
@@ -59,5 +59,5 @@ public class FileCacheData
     /// Returns the physical location of the cached file.
     /// </summary>
     public string GetPathname() 
-        => PathHelper.FindFile(Program.AppConfig.TexturePath, GuidFilename);
+        => PathHelper.FindFile(Program.AppConfig.FileCachePath, GuidFilename);
 }

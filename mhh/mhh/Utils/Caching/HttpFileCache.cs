@@ -4,29 +4,24 @@ using Newtonsoft.Json;
 
 namespace mhh;
 
-public static class FileCacheManager
+public static class HttpFileCache
 {
     private static readonly string CacheIndexPathname;
     
     // Keyed on FileCacheData OriginURI
-    private static Dictionary<string, FileCacheData> CacheIndex = new();
-    private static Dictionary<string, FileCacheRequest> QueuedURIs = new();
+    private static Dictionary<string, CachedFileData> CacheIndex = new();
+    private static Dictionary<string, CachedFileRequest> QueuedURIs = new();
 
     // Total of all FileCacheData.Size values
     private static long CacheSpaceUsed;
 
-
-    // Negatively incremented when FileCacheRequest.TextureHandle is zero, so
-    // that command-line --filecache requests can still be keyed in the queue.
-    private static int CommandLineIDs = 0;
-
     private static readonly HttpClient Downloader = new();
 
-    static FileCacheManager()
+    static HttpFileCache()
     {
         if(Program.AppConfig is null)
         {
-            Console.WriteLine($"{nameof(FileCacheManager)} was accessed before app configuration was loaded");
+            Console.WriteLine($"{nameof(HttpFileCache)} was accessed before app configuration was loaded");
             Thread.Sleep(250);
             Environment.Exit(1);
         }
@@ -42,12 +37,12 @@ public static class FileCacheManager
     /// Command-line requests from --filecache can omit textureHandle and callback.
     /// The file consumer should call ReleaseURI when releasing texture resources.
     /// </summary>
-    public static void RequestURI(string sourceUri, int textureHandle = 0, Action<int, FileCacheData> callback = null)
+    public static void RequestURI(string sourceUri, int fileHandle, Action<int, CachedFileData> callback = null)
     {
         var uri = ParseUri(sourceUri);
         if (uri is null)
         {
-            callback?.Invoke(textureHandle, null);
+            callback?.Invoke(fileHandle, null);
             return;
         }
 
@@ -57,7 +52,7 @@ public static class FileCacheManager
         bool replacingExpiredFile = false;
         if(CacheIndex.TryGetValue(uri, out var fileData))
         {
-            callback?.Invoke(textureHandle, fileData);
+            callback?.Invoke(fileHandle, fileData);
 
             // Mark it as in-use
             fileData.UsageCounter++;
@@ -70,12 +65,12 @@ public static class FileCacheManager
         }
 
         // Queue for retrieval
-        var request = new FileCacheRequest
+        var request = new CachedFileRequest
         {
-            TextureHandle = (textureHandle > 0) ? textureHandle : --CommandLineIDs,
+            FileHandle = fileHandle,
             Callback = callback,
             ReplacingExpiredFile = replacingExpiredFile,
-            Data = new FileCacheData
+            Data = new CachedFileData
             {
                 GuidFilename = new Guid().ToString().ToUpperInvariant(),
                 OriginURI = uri
@@ -130,13 +125,13 @@ public static class FileCacheManager
         }
         catch (Exception ex)
         {
-            LogHelper.Logger?.LogError($"{nameof(FileCacheManager)} unable to parse URI {sourceUri}\n{ex.Message}");
+            LogHelper.Logger?.LogError($"{nameof(HttpFileCache)} unable to parse URI {sourceUri}\n{ex.Message}");
             return null;
         }
         return parsedUri.AbsoluteUri;
     }
 
-    private static void DownloadFile(FileCacheRequest request)
+    private static void DownloadFile(CachedFileRequest request)
     {
         bool downloadFailed = false;
 
@@ -163,7 +158,7 @@ public static class FileCacheManager
             request.Data.RetrievalTimestamp = DateTime.Now;
             request.Data.ContentType = response.Content.Headers.ContentType?.ToString();
 
-            request.Callback?.Invoke(request.TextureHandle, request.Data);
+            request.Callback?.Invoke(request.FileHandle, request.Data);
 
             if(request.ReplacingExpiredFile)
             {
@@ -178,12 +173,12 @@ public static class FileCacheManager
         catch (OperationCanceledException)
         {
             downloadFailed = true;
-            request.Callback?.Invoke(request.TextureHandle, null);
+            request.Callback?.Invoke(request.FileHandle, null);
         }
         catch (Exception)
         {
             downloadFailed = true;
-            request.Callback?.Invoke(request.TextureHandle, null);
+            request.Callback?.Invoke(request.FileHandle, null);
         }
         finally
         {
@@ -221,7 +216,7 @@ public static class FileCacheManager
     private static void ReadCacheIndex()
     {
         var json = File.ReadAllText(CacheIndexPathname);
-        CacheIndex = JsonConvert.DeserializeObject<Dictionary<string, FileCacheData>>(json);
+        CacheIndex = JsonConvert.DeserializeObject<Dictionary<string, CachedFileData>>(json);
         CacheSpaceUsed = CacheIndex.Sum(kvp => kvp.Value.Size);
     }
 

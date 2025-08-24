@@ -4,7 +4,7 @@ namespace mhh;
 /// <summary>
 /// Represents a resource being downloaded.
 /// </summary>
-public class FileCacheRequest
+public class CachedFileRequest
 {
     /// <summary>
     /// If this is zero, it is assumed this request is from a command-line
@@ -12,13 +12,13 @@ public class FileCacheRequest
     /// negative number (since this is a key value for queued download 
     /// requests, and the command-line callback is a NOP).
     /// </summary>
-    public int TextureHandle;
+    public int FileHandle;
 
-    public Action<int, FileCacheData> Callback;
+    public Action<int, CachedFileData> Callback;
     
     public CancellationTokenSource CTS = new();
     
     public bool ReplacingExpiredFile = false;
 
-    public FileCacheData Data;
+    public CachedFileData Data;
 }
