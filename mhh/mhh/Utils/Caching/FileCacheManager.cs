@@ -4,17 +4,17 @@ using Newtonsoft.Json;
 
 namespace mhh;
 
-// TODO manage total cache size
-
 public static class FileCacheManager
 {
     private static readonly string CacheIndexPathname;
     
     // Keyed on FileCacheData OriginURI
     private static Dictionary<string, FileCacheData> CacheIndex = new();
+    private static Dictionary<string, FileCacheRequest> QueuedURIs = new();
 
-    // Keyed on textureHandle by RequestURI
-    private static Dictionary<int, FileCacheRequest> QueuedURIs = new();
+    // Total of all FileCacheData.Size values
+    private static long CacheSpaceUsed;
+
 
     // Negatively incremented when FileCacheRequest.TextureHandle is zero, so
     // that command-line --filecache requests can still be keyed in the queue.
@@ -40,24 +40,16 @@ public static class FileCacheManager
     /// the response is a callback with the FileCacheData describing the file, or
     /// a null. The assigned texture handle is used to identify the requested content.
     /// Command-line requests from --filecache can omit textureHandle and callback.
+    /// The file consumer should call ReleaseURI when releasing texture resources.
     /// </summary>
-    public static void RequestURI(string targetUri, int textureHandle = 0, Action<int, FileCacheData> callback = null)
+    public static void RequestURI(string sourceUri, int textureHandle = 0, Action<int, FileCacheData> callback = null)
     {
-        // Validation
-        var uri = (Program.AppConfig.FileCacheCaseSensitive) ? targetUri : targetUri.ToLowerInvariant();
-        Uri parsedUri;
-        try
+        var uri = ParseUri(sourceUri);
+        if (uri is null)
         {
-            parsedUri = new(targetUri);
-            if (!parsedUri.IsFile) throw new ArgumentException("URI must reference a file");
-        }
-        catch (Exception ex)
-        {
-            LogHelper.Logger?.LogError($"{nameof(FileCacheManager)} unable to parse URI {targetUri}\n{ex.Message}");
             callback?.Invoke(textureHandle, null);
             return;
         }
-        uri = parsedUri.AbsoluteUri;
 
         // Immediate response if already cached; if file has expired, the
         // current version is still returned, but a new download is requested
@@ -66,6 +58,9 @@ public static class FileCacheManager
         if(CacheIndex.TryGetValue(uri, out var fileData))
         {
             callback?.Invoke(textureHandle, fileData);
+
+            // Mark it as in-use
+            fileData.UsageCounter++;
 
             // Exit unless we also need to download a new copy
             var expires = fileData.RetrievalTimestamp.AddDays(Program.AppConfig.FileCacheMaxAge);
@@ -86,20 +81,28 @@ public static class FileCacheManager
                 OriginURI = uri
             }
         };
-        QueuedURIs.Add(textureHandle, request);
+        QueuedURIs.Add(request.Data.OriginURI, request);
 
-        DownloadFile(request);
+        _ = Task.Run(() => DownloadFile(request));
     }
 
     /// <summary>
-    /// Call this for any textureHandle being released (low overhead).
+    /// Texture consumers should call this when disposing texture resources.
     /// </summary>
-    public static void CancelDownload(int textureHandle)
+    public static void ReleaseURI(string sourceUri)
     {
-        if(QueuedURIs.TryGetValue(textureHandle, out var download))
+        var uri = ParseUri(sourceUri);
+        if (uri is null) return;
+
+        if (QueuedURIs.TryGetValue(uri, out var download))
         {
             download.CTS.Cancel();
-            QueuedURIs.Remove(textureHandle);
+            QueuedURIs.Remove(uri);
+        }
+
+        if(CacheIndex.TryGetValue(uri, out var file))
+        {
+            file.UsageCounter--;
         }
     }
 
@@ -116,8 +119,27 @@ public static class FileCacheManager
         QueuedURIs.Clear();
     }
 
+    private static string ParseUri(string sourceUri)
+    {
+        var uri = (Program.AppConfig.FileCacheCaseSensitive) ? sourceUri : sourceUri.ToLowerInvariant();
+        Uri parsedUri;
+        try
+        {
+            parsedUri = new(sourceUri);
+            if (!parsedUri.IsFile) throw new ArgumentException("URI must reference a file");
+        }
+        catch (Exception ex)
+        {
+            LogHelper.Logger?.LogError($"{nameof(FileCacheManager)} unable to parse URI {sourceUri}\n{ex.Message}");
+            return null;
+        }
+        return parsedUri.AbsoluteUri;
+    }
+
     private static void DownloadFile(FileCacheRequest request)
     {
+        bool downloadFailed = false;
+
         try
         {
             request.CTS.Token.ThrowIfCancellationRequested();
@@ -149,34 +171,64 @@ public static class FileCacheManager
                 CacheIndex[request.Data.OriginURI] = request.Data;
             }
 
+            CacheSpaceUsed += request.Data.Size;
+            PruneCache();
             WriteCacheIndex();
         }
         catch (OperationCanceledException)
         {
+            downloadFailed = true;
             request.Callback?.Invoke(request.TextureHandle, null);
         }
         catch (Exception)
         {
+            downloadFailed = true;
             request.Callback?.Invoke(request.TextureHandle, null);
         }
         finally
         {
-            QueuedURIs.Remove(request.TextureHandle);
+            QueuedURIs.Remove(request.Data.OriginURI);
         }
 
-        // TODO clean up failed partial download?
+        // clean up failed partial download
+        if (downloadFailed && File.Exists(request.Data.GetPathname()))
+        {
+            File.Delete(request.Data.GetPathname());
+        }
+    }
+
+    private static void PruneCache()
+    {
+        if (CacheSpaceUsed < Program.AppConfig.FileCacheMaxSize) return;
+        var files = CacheIndex
+                    .Where(kvp => kvp.Value.UsageCounter == 0)
+                    .OrderBy(kvp => kvp.Value.RetrievalTimestamp)
+                    .Select(kvp => kvp.Value)
+                    .ToList();
+
+        foreach(var file in files)
+        {
+            if(File.Exists(file.GetPathname()))
+            {
+                File.Delete(file.GetPathname());
+                CacheSpaceUsed -= file.Size;
+                CacheIndex.Remove(file.OriginURI);
+            }
+            if (CacheSpaceUsed < Program.AppConfig.FileCacheMaxSize) return;
+        }
     }
 
     private static void ReadCacheIndex()
     {
         var json = File.ReadAllText(CacheIndexPathname);
         CacheIndex = JsonConvert.DeserializeObject<Dictionary<string, FileCacheData>>(json);
+        CacheSpaceUsed = CacheIndex.Sum(kvp => kvp.Value.Size);
     }
 
     private static void WriteCacheIndex()
     {
         string json = JsonConvert.SerializeObject(CacheIndex, Formatting.Indented);
         File.WriteAllText(CacheIndexPathname, json);
+        CacheSpaceUsed = CacheIndex.Sum(kvp => kvp.Value.Size);
     }
-
 }

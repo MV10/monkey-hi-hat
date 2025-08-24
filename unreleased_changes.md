@@ -58,6 +58,7 @@ Don't assume anything here is working or will be available in some future releas
 * Added `--filecache remove [url]` command
 * The `--filecache` commands do not require MHH to be already running
 * Viz and FX configs can reference HTTP/S for image and video textures
+* Viz and FX configs can specify `PlaceholderImageTexture` and `PlaceholderVideoTexture`
 
 ### MHH TODO
 

@@ -1,4 +1,6 @@
 ﻿
+using System.Text.Json.Serialization;
+
 namespace mhh;
 
 /// <summary>
@@ -31,6 +33,17 @@ public class FileCacheData
     /// When the file was fetched from the OriginURL.
     /// </summary>
     public DateTime RetrievalTimestamp { get; set; }
+
+    /// <summary>
+    /// If nonzero, a viz or FX is actively using this file.
+    /// </summary>
+    [JsonIgnore]
+    public int UsageCounter
+    { 
+        get => Counter; 
+        set => Counter = Math.Min(0, value);
+    };
+    private int Counter = 0;
 
     /// <summary>
     /// Returns the filename portion of the OriginURI for logging / debugging.
