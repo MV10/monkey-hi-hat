@@ -34,9 +34,11 @@ Don't assume anything here is working or will be available in some future releas
 * 4.4.0 released 2025-08-17
 * eyecandy 3.3.0 released 2025-08-17
 
-* 4.4.1 not yet released
-* Update to eyecandy 3.4.0 (local build, not yet released)
-* Update to FFMediaToolkit 4.8.0 (cleaner release of some managed resources)
+* 4.5.0 not yet released
+* Updated to eyecandy v4.0.0 (local build, not yet released, maybe v4?)
+* Updated to CommandLineSwitchPipe v2.0.0 (logging improvements)
+* Updated to FFMediaToolkit v4.8.0 (cleaner release of some managed resources)
+* Added HttpFileCache v0.1.1
 * Change internal video frame-flip to use StbImage instead of C# loop, ~30% faster
 * Vertically flip screenshots (duh)
 * Set focus after spacebar-to-screenshot `--jpg wait` and `--png wait` commands
@@ -47,6 +49,9 @@ Don't assume anything here is working or will be available in some future releas
 
 
 ### Work In Progress
+
+* Logging improvements (log categories, better output control)
+  * Config changes TBD
 
 * HTTP texture retrieval and caching support for textures (incl. preload, refresh, etc.)
 * Added `[FileCache]` section and settings to `mhh.conf`
