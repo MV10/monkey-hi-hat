@@ -2,6 +2,7 @@
 using CommandLineSwitchPipe;
 using eyecandy;
 using FFMediaToolkit;
+using HttpFileCache;
 using Microsoft.Extensions.Logging;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -16,14 +17,13 @@ Program.Main primarily does two things:
 -- sets up and runs the VisualizerHostWindow
 -- processes switches / args recieved at runtime
 
-There are no startup switches.
+There are no startup switches. Only --help and --filecache can be used without
+another instance already running.
 
 The last part is accomplished by my CommandLineSwitchPipe library. At startup it
 tries to connect to an existing named pipe. If none is found, this instance becomes
-the named pipe listener and the program starts, loading the window and the idle viz.
-
-After that it's just waiting for the window to exit (or to receive a quit command over
-the named pipe).
+the named pipe listener and the program starts, either in standby mode (waiting for
+additional commands from another instance), or loading the window and the idle viz.
 
 However, if a named pipe is found, any args are passed to the already-running program.
 If a response is received, it is written to the console and the secondary instance ends.
@@ -94,6 +94,9 @@ namespace mhh
         internal static bool AppRunning = true; // the window can change this
         private static bool OnStandby = false;
 
+        // only valid after InitializeAndWait
+        private static Microsoft.Extensions.Logging.ILogger Logger;
+
         public static async Task Main(string[] args)
         {
             try
@@ -136,18 +139,18 @@ namespace mhh
                 var e = ex;
                 while (e != null)
                 {
-                    LogException($"{e.GetType().Name}: {e.Message}");
+                    LogExceptionMessage($"{e.GetType()}: {e.Message}");
                     e = e.InnerException;
                 }
-                LogException(ex.StackTrace);
+                LogExceptionMessage(ex.StackTrace);
             }
             finally
             {
                 // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
                 ctsSwitchPipe?.Cancel();
-                HttpFileCache.Dispose();
+                FileCache.Dispose();
                 AppWindow?.Dispose();
-                Log.CloseAndFlush();
+                LogHelper.Dispose();
             }
 
             // Give the sloooow console time to catch up...
@@ -158,7 +161,7 @@ namespace mhh
         {
             if (args.Length == 0) return ShowHelp();
 
-            LogHelper.Logger?.LogInformation($"Processing switches: {string.Join(" ", args)}");
+            Logger?.LogInformation($"Processing switches: {string.Join(" ", args)}");
 
             switch (args[0].ToLowerInvariant())
             {
@@ -368,11 +371,13 @@ namespace mhh
                 return false;
             }
 
-            // Prepare logging and the switch server
+            // Start the switch server and look for another instance
             CommandLineSwitchServer.Options.PipeName = SwitchPipeName;
             var alreadyRunning = await CommandLineSwitchServer.TryConnect().ConfigureAwait(false);
+
+            // Initialize logging (including setting LoggerFactory in libraries)
             LogHelper.Initialize(appConfigFile, alreadyRunning);
-            CommandLineSwitchServer.Options.Logger = LogHelper.Logger;
+            Logger = LogHelper.CreateLogger(nameof(Program));
 
             // Show help if requested, or if it's already running but no args were provided
             if ((args.Length == 1 && args[0].ToLowerInvariant().Equals("--help"))
@@ -382,25 +387,27 @@ namespace mhh
                 return false; // end program
             }
 
-            // Handle filecache commands (these do not require a running instance)
             if ((args.Length > 1 &&args[0].ToLowerInvariant().Equals("--filecache")))
             {
-                // TODO
+                // TODO read file caching config "the hard way" (see LogHelper.Initialize)
+                FileCache.Initialize();
+                // TODO process filecache commands
+                return false; // end program
             }
 
             // Disallow other switches at startup of first instance
             if (!alreadyRunning && args.Length > 0)
             {
-                Console.WriteLine("Only the --help switch is accepted if the program is not already running.");
+                Console.WriteLine("Only --help and --filecache switches are accepted if the program is not already running.");
                 return false; // end program
             }
 
-            LogHelper.Logger?.LogInformation($"Starting (PID {Environment.ProcessId})");
+            Logger?.LogInformation($"Starting (PID {Environment.ProcessId})");
 
             // Try sending args to an already-running instance...
             if (await CommandLineSwitchServer.TrySendArgs().ConfigureAwait(false))
             {
-                LogHelper.Logger?.LogDebug($"Sending switch: {args[0]}");
+                Logger?.LogDebug($"Sending switch: {args[0]}");
                 Console.WriteLine(CommandLineSwitchServer.QueryResponse);
                 return false; // end program
             }
@@ -409,12 +416,12 @@ namespace mhh
             // Parse the application configuration file and internal shaders
             AppConfig = new ApplicationConfiguration(appConfigFile);
 
+            // Since this is the persistent instance, initialize HttpFileCache
+            FileCache.Initialize();
+
             // Start listening for commands
             ctsSwitchPipe = new();
             _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessSwitches, ctsSwitchPipe.Token, AppConfig.UnsecuredPort));
-
-            // Prepare the eycandy library
-            ErrorLogging.Logger = LogHelper.Logger;
 
             // Prepare video-related settings
             if (!string.IsNullOrWhiteSpace(AppConfig.FFmpegPath))
@@ -496,15 +503,15 @@ namespace mhh
             Console.WriteLine($"Listening on TCP port {tcp}");
         }
 
-        private static void LogException(string message)
+        private static void LogExceptionMessage(string message)
         {
-            if(LogHelper.Logger is null)
+            if(Logger is null)
             {
                 Console.WriteLine($"[no logger] {message}");
             }
             else
             {
-                LogHelper.Logger.LogError(message);
+                Logger.LogError(message);
             }
         }
 

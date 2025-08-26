@@ -62,6 +62,8 @@ public class RenderManager : IDisposable
 
     private string CrossfadeFragPathname = string.Empty;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(RenderManager));
+
     public RenderManager()
     {
         ResourceManager = new();
@@ -88,7 +90,7 @@ public class RenderManager : IDisposable
         if (!renderer.IsValid)
         {
             renderer.Dispose();
-            LogHelper.Logger?.LogError(renderer.InvalidReason);
+            Logger?.LogError(renderer.InvalidReason);
             return;
         }
 
@@ -132,7 +134,7 @@ public class RenderManager : IDisposable
         if (!fxRenderer.IsValid)
         {
             fxRenderer.Dispose();
-            LogHelper.Logger?.LogError(fxRenderer.InvalidReason);
+            Logger?.LogError(fxRenderer.InvalidReason);
             return false;
         }
 
@@ -294,20 +296,16 @@ $@"{primary.Filename.Replace("_", " ")}
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() NewRenderer");
         NewRenderer?.Dispose();
         NewRenderer = null;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ActiveRenderer");
         ActiveRenderer?.Dispose();
         ActiveRenderer = null;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ResourceManager");
         ResourceManager?.Dispose();
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() TextManager");
         TextManager?.Dispose();
 
         IsDisposed = true;

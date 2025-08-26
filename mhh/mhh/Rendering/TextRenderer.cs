@@ -43,6 +43,8 @@ public class TextRenderer : IRenderer
     /// </summary>
     private static readonly Mutex GLTextureLockMutex = new(false, AudioTextureEngine.GLTextureMutexName);
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(TextRenderer));
+
     public TextRenderer()
     {
         TextShader = Caching.TextShader;
@@ -160,13 +162,9 @@ public class TextRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
+        Logger?.LogTrace("Disposing");
 
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() IVertexSource");
         VertQuad?.Dispose();
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Resources");
         RenderManager.ResourceManager.DestroyAllResources(OwnerName);
 
         IsDisposed = true;

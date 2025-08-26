@@ -1,7 +1,6 @@
 ﻿
 using eyecandy;
 using OpenTK.Windowing.Common;
-using System.Runtime.InteropServices;
 
 namespace mhh
 {

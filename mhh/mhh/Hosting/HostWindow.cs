@@ -104,6 +104,8 @@ namespace mhh
         private DateTime NextSpotifyCheck = DateTime.MaxValue;
         private string SpotifyTrackInfo = SpotifyUnavailableMessage;
 
+        private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(HostWindow));
+
         public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
             : base(windowConfig, createShaderFromConfig: false)
         {
@@ -439,7 +441,7 @@ namespace mhh
             if (newViz.ConfigSource.Content.Count == 0)
             {
                 var err = $"Unable to load visualizer configuration {newViz.ConfigSource.Pathname}";
-                LogHelper.Logger?.LogError(err);
+                Logger?.LogError(err);
                 return $"ERR: {err}";
             }
 
@@ -454,7 +456,7 @@ namespace mhh
             }
 
             var msg = $"Requested visualizer {newViz.ConfigSource.Pathname}{(string.IsNullOrWhiteSpace(fxConfPathname) ? "" : $" with FX {fxConfPathname}")}";
-            LogHelper.Logger?.LogInformation(msg);
+            Logger?.LogInformation(msg);
             return msg;
         }
 
@@ -467,12 +469,12 @@ namespace mhh
             if(fx.ConfigSource.Content.Count == 0)
             {
                 var err = $"Unable to load FX configuration {fx.ConfigSource.Pathname}";
-                LogHelper.Logger?.LogError(err);
+                Logger?.LogError(err);
                 return $"ERR: {err}";
             }
             QueueFX(fx);
             var msg = $"Requested FX {fx.ConfigSource.Pathname}";
-            LogHelper.Logger?.LogInformation(msg);
+            Logger?.LogInformation(msg);
             return msg;
         }
 
@@ -522,7 +524,7 @@ $@"{GetStatistics()}
 {Renderer.GetInfo()}
 playlist   : {Playlist.GetInfo()}";
 
-            LogHelper.Logger?.LogInformation(msg);
+            Logger?.LogInformation(msg);
             return msg;
         }
 
@@ -600,13 +602,13 @@ playlist   : {Playlist.GetInfo()}";
             if (newViz.ConfigSource.Content.Count == 0)
             {
                 var err = $"Unable to load visualizer configuration {newViz.ConfigSource.Pathname}";
-                LogHelper.Logger?.LogError(err);
+                Logger?.LogError(err);
                 return $"ERR: {err}";
             }
 
             QueueVisualization(newViz, replaceCachedShader: true);
             var msg = $"Reloading {newViz.ConfigSource.Pathname}";
-            LogHelper.Logger?.LogInformation(msg);
+            Logger?.LogInformation(msg);
             return msg;
         }
 
@@ -810,7 +812,7 @@ LINE 15");
         /// </summary>
         private void RespondToSilence(double duration)
         {
-            LogHelper.Logger?.LogDebug($"Long-term silence detected (duration: {duration:0.####} sec");
+            Logger?.LogDebug($"Long-term silence detected (duration: {duration:0.####} sec");
 
             Playlist.TerminatePlaylist();
 
@@ -872,7 +874,7 @@ LINE 15");
 
                 if(files.Count == 0 || Caching.CrossfadeShaders?.Count == 0)
                 {
-                    LogHelper.Logger?.LogWarning("No crossfade shaders found, or none compiled successfully; disabling RandomizeCrossfade setting.");
+                    Logger?.LogWarning("No crossfade shaders found, or none compiled successfully; disabling RandomizeCrossfade setting.");
                     Program.AppConfig.RandomizeCrossfade = false;
                 }
             }
@@ -880,7 +882,7 @@ LINE 15");
             // see property comments for an explanation
             GL.GetInteger(GetPName.MaxCombinedTextureImageUnits, out var maxTU);
             Caching.MaxAvailableTextureUnit = maxTU - 1 - Caching.KnownAudioTextures.Count;
-            LogHelper.Logger?.LogInformation($"This GPU supports a combined maximum of {maxTU} TextureUnits.");
+            Logger?.LogInformation($"This GPU supports a combined maximum of {maxTU} TextureUnits.");
         }
 
         private string GetStatistics() =>
@@ -895,33 +897,21 @@ display res: {ClientSize.X} x {ClientSize.Y}";
         public new void Dispose()
         {
             if (IsDisposed) return;
-            LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+            Logger?.LogTrace("Disposing");
 
             base.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy.EndAudioProcessing()");
             var success = Eyecandy?.EndAudioProcessing();
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy.EndAudioProcessing() success: {success}");
+            Logger?.LogTrace($"Dispose Eyecandy.EndAudioProcessing success: {success}");
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal TestModeManager");
             Tester?.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy AudioTextureEngine");
             Eyecandy?.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached visualizer shaders");
             Caching.VisualizerShaders.Dispose();
-
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached FX shaders");
             Caching.FXShaders.Dispose();
-
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached library shaders");
             Caching.LibraryShaders.Dispose();
-
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade shader");
             Caching.InternalCrossfadeShader.Dispose();
-
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached crossfade shaders");
             if (Caching.CrossfadeShaders?.Count > 0)
             {
                 foreach(var s in Caching.CrossfadeShaders)
@@ -930,11 +920,8 @@ display res: {ClientSize.X} x {ClientSize.Y}";
                 }
                 Caching.CrossfadeShaders = null;
             }
-
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal text shader");
             Caching.TextShader.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Renderer / RenderManager");
             Renderer?.Dispose();
 
             IsDisposed = true;

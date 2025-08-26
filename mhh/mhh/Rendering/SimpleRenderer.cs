@@ -40,6 +40,8 @@ public class SimpleRenderer : IRenderer
     private float RandomRun;
     private Vector4 RandomRun4;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(SimpleRenderer));
+
     public SimpleRenderer(VisualizerConfig visualizerConfig)
     {
         ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
@@ -167,21 +169,17 @@ public class SimpleRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VideoProcessor");
         VideoProcessor?.Dispose();
         VideoProcessor = null;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VertexSource");
         VertexSource?.Dispose();
         VertexSource = null;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Uncached Shader");
         RenderingHelper.DisposeUncachedShader(Shader);
         Shader = null;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Resources");
         RenderManager.ResourceManager.DestroyAllResources(OwnerName);
         FinalDrawbuffers = null;
 

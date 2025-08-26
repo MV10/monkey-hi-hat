@@ -49,6 +49,8 @@ public class MultipassRenderer : IRenderer
     private float RandomRun;
     private Vector4 RandomRun4;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(MultipassRenderer));
+
     public MultipassRenderer(VisualizerConfig visualizerConfig)
     {
         ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
@@ -197,9 +199,8 @@ public class MultipassRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VideoProcessor");
         VideoProcessor?.Dispose();
         VideoProcessor = null;
 
@@ -207,19 +208,13 @@ public class MultipassRenderer : IRenderer
         {
             foreach (var pass in ShaderPasses)
             {
-                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass VertexSource");
                 pass.VertexSource?.Dispose();
-
-                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Uncached Shader");
                 RenderingHelper.DisposeUncachedShader(pass.Shader);
             }
             ShaderPasses = null;
         }
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Drawbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(DrawbufferOwnerName);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Backbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(BackbufferOwnerName);
 
         DrawbufferResources = null;

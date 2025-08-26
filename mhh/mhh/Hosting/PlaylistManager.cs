@@ -20,6 +20,11 @@ public class PlaylistManager
     private bool ForceStartFX;
     private int FXAddStartPercent;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(PlaylistManager));
+
+    public PlaylistManager()
+    { }
+
     public string StartNewPlaylist(string playlistConfPathname)
     {
         ActivePlaylist = null;
@@ -30,7 +35,7 @@ public class PlaylistManager
         if (cfg.Order == PlaylistOrder.RandomFavorites && cfg.Favorites.Count == 0) err = "RandomWeighted playlist requires Favorites visualizations, aborted";
         if (err is not null)
         {
-            LogHelper.Logger?.LogError(err);
+            Logger?.LogError(err);
             return $"ERR: {err}";
         }
 
@@ -101,12 +106,12 @@ public class PlaylistManager
             var fadePathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, PathHelper.MakeFragFilename(fadeFile));
             if(!string.IsNullOrEmpty(fadePathname))
             {
-                LogHelper.Logger?.LogTrace($"Playlist queuing crossfade {fadeFile}");
+                Logger?.LogTrace($"Playlist queuing crossfade {fadeFile}");
                 Program.AppWindow.Command_QueueCrossfade(fadePathname);
             }
             else
             {
-                LogHelper.Logger?.LogWarning($"Playlist crossfade not found: {fadeFile}");
+                Logger?.LogWarning($"Playlist crossfade not found: {fadeFile}");
             }
         }
 
@@ -120,7 +125,7 @@ public class PlaylistManager
             if (fxPathname is null) return $"ERR: {fxFile} not found in FX path(s)";
         }
 
-        LogHelper.Logger?.LogTrace($"Playlist queuing viz {Path.GetFileNameWithoutExtension(vizPathname)} with FX {fxPathname}");
+        Logger?.LogTrace($"Playlist queuing viz {Path.GetFileNameWithoutExtension(vizPathname)} with FX {fxPathname}");
 
         var msg = Program.AppWindow.Command_Load(vizPathname, fxPathname, terminatesPlaylist: false);
         return msg;

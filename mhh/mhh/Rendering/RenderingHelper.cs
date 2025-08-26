@@ -12,6 +12,9 @@ namespace mhh;
 
 public static class RenderingHelper
 {
+    // created by LogHelper after initialization
+    internal static ILogger Logger;
+
     /// <summary>
     /// When true, GetShader will delete the matching shader key so that a new instance will
     /// be loaded, compiled, and cached. The flag is cleared after processing. This is set by
@@ -87,16 +90,16 @@ public static class RenderingHelper
     public static void DisposeUncachedShader(CachedShader shader)
     {
         if (shader is null) return;
-        LogHelper.Logger?.LogTrace("RenderingHelper.DisposeUncachedShader() ----------------------------");
+        Logger?.LogTrace($"{nameof(DisposeUncachedShader)} ----------------------------");
 
         if (!Caching.VisualizerShaders.ContainsKey(shader.Key) && !Caching.FXShaders.ContainsKey(shader.Key))
         {
-            LogHelper.Logger?.LogTrace($"  Disposed key {shader.Key}");
+            Logger?.LogTrace($"  Disposed key {shader.Key}");
             shader.Dispose();
         }
         else
         {
-            LogHelper.Logger?.LogTrace($"  Shader key is cached {shader.Key}");
+            Logger?.LogTrace($"  Shader key is cached {shader.Key}");
         }
     }
 
@@ -116,7 +119,7 @@ public static class RenderingHelper
         var vsType = Caching.KnownVertexSources.FindType(vertexSourceTypeName);
         if (vsType is null)
         {
-            LogInvalidReason($"VertexSource type not recognized: {vertexSourceTypeName}", renderer);
+            ShaderInvalid($"VertexSource type not recognized: {vertexSourceTypeName}", renderer);
             return null;
         }
 
@@ -226,7 +229,7 @@ public static class RenderingHelper
 
             if (tex.VideoData.Stream == null)
             {
-                LogHelper.Logger?.LogError($"{nameof(RenderingHelper)}.{nameof(LoadVideoFile)}: No video stream found in the file {tex.Filename}");
+                Logger?.LogError($"{nameof(LoadVideoFile)}: No video stream found in the file {tex.Filename}");
                 return false;
             }
 
@@ -245,7 +248,7 @@ public static class RenderingHelper
         }
         catch (Exception ex)
         {
-            LogHelper.Logger?.LogError($"{nameof(RenderingHelper)}.{nameof(LoadVideoFile)}: Error loading video {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
+            Logger?.LogError($"{nameof(LoadVideoFile)}: Error loading video {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
             return false;
         }
 
@@ -345,7 +348,7 @@ public static class RenderingHelper
         if (string.IsNullOrWhiteSpace(vertexShaderPathname)
             || string.IsNullOrWhiteSpace(fragmentShaderPathname))
         {
-            LogInvalidReason("Invalid shader pathname", renderer);
+            ShaderInvalid("Invalid shader pathname", renderer);
             return null;
         }
 
@@ -366,12 +369,12 @@ public static class RenderingHelper
             shader = new(vertexShaderPathname, fragmentShaderPathname, libraries);
             if (!shader.IsValid)
             {
-                LogInvalidReason("Shader invalid", renderer);
+                ShaderInvalid("Shader invalid", renderer);
                 return null;
             }
 
             var cached = cache.TryAdd(shaderKey, shader);
-            if (!cached && !cache.CachingDisabled) LogHelper.Logger.LogWarning($"{nameof(GetCachedShader)} TryAdd failed to store or find {vertexShaderPathname} and {fragmentShaderPathname}");
+            if (!cached && !cache.CachingDisabled) Logger?.LogWarning($"{nameof(GetCachedShader)} TryAdd failed to store or find {vertexShaderPathname} and {fragmentShaderPathname}");
         }
         return shader;
     }
@@ -389,23 +392,23 @@ public static class RenderingHelper
                 shader = new(libraryConfigs[i]);
                 if(!shader.IsValid)
                 {
-                    LogInvalidReason($"Shader library {libraryConfigs[i].Pathname} invalid", renderer);
+                    ShaderInvalid($"Shader library {libraryConfigs[i].Pathname} invalid", renderer);
                     return null;
                 }
 
                 var cached = Caching.LibraryShaders.TryAdd(libraryConfigs[i], shader);
-                if (!cached && !Caching.LibraryShaders.CachingDisabled) LogHelper.Logger.LogWarning($"{nameof(GetCachedLibraryShaders)} TryAdd failed to store or find {libraryConfigs[i].Pathname}");
+                if (!cached && !Caching.LibraryShaders.CachingDisabled) Logger?.LogWarning($"{nameof(GetCachedLibraryShaders)} TryAdd failed to store or find {libraryConfigs[i].Pathname}");
             }
             libs[i] = shader;
         }
         return libs;
     }
 
-    private static void LogInvalidReason(string reason, IRenderer renderer)
+    private static void ShaderInvalid(string reason, IRenderer renderer)
     {
         renderer.IsValid = false;
         renderer.InvalidReason = reason;
-        LogHelper.Logger.LogError(reason);
+        Logger?.LogError(reason);
     }
 
     private static Dictionary<string, List<string>> LoadTextureDefinitions(ConfigFile configSource, string sectionName)

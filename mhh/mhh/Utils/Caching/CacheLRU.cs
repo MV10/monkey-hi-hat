@@ -26,6 +26,8 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
     // items should still be valid for re-use.
     public bool CachingDisabled { get; set; }
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(CacheLRU<TKey, TValue>));
+
     public CacheLRU(int maxSize, IEqualityComparer<TKey> comparer = default)
     {
         if (maxSize < 0) throw new ArgumentOutOfRangeException(nameof(maxSize));
@@ -159,7 +161,7 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
         lock (LockStorage)
         {
@@ -167,7 +169,7 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
             {
                 foreach (var obj in Sequence)
                 {
-                    LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() key {obj.Key}");
+                    Logger?.LogTrace($"Disposing key {obj.Key}");
                     (obj.Lazy.Value as IDisposable).Dispose();
                 }
             }

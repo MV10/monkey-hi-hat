@@ -50,7 +50,8 @@ public class ScreenshotWriter
         }
         catch (Exception ex)
         {
-            LogHelper.Logger?.LogError(ex, "Unable to save screenshot");
+            ILogger Logger = LogHelper.CreateLogger("ScreenshotWriter");
+            Logger?.LogError(ex, "Unable to save screenshot");
         }
 
     }

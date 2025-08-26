@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
 using Serilog.Extensions.Logging;
+using Serilog.Filters;
 
 namespace mhh
 {
@@ -13,14 +14,18 @@ namespace mhh
     public static class LogHelper
     {
         /// <summary>
-        /// Standard Microsoft-style ILogger instance with category name "monkey-hi-hat".
-        /// </summary>
-        public static Microsoft.Extensions.Logging.ILogger Logger;
-
-        /// <summary>
         /// Used to change log-level on the fly. Call SetLogLevel with an MS LogLevel.
         /// </summary>
         public static LoggingLevelSwitch LevelSwitch;
+
+        // Prefix for all ILoggers created within this app.
+        private const string LOGGER_CATEGORY = "MHH";
+
+        // Serilog by default will suppress log categories
+        // https://github.com/serilog/serilog/wiki/Formatting-Output
+        private const string OUTPUT_TEMPLATE = "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}";
+
+        private static ILoggerFactory LoggerFactory;
 
         /// <summary>
         /// Reads logger settings and prepares the public fields for use.
@@ -34,20 +39,36 @@ namespace mhh
             var logLevel = appConfig.ReadValue("setup", "loglevel").ToEnum(LogLevel.Warning);
             LevelSwitch = new(LevelConvert.ToSerilogLevel(logLevel));
 
-            var cfg = new LoggerConfiguration()
-                    .MinimumLevel.ControlledBy(LevelSwitch)
-                    .WriteTo.Async(a => a.File(logPath, shared: true));
+            var cfg = new LoggerConfiguration();
 
-            if (appConfig.ReadValue("setup", "logtoconsole").ToBool(false)) cfg.WriteTo.Console();
+            cfg.MinimumLevel.ControlledBy(LevelSwitch);
 
-            Log.Logger = cfg.CreateLogger();
+            cfg.WriteTo.Async(a => a.File(logPath, shared: true, outputTemplate: OUTPUT_TEMPLATE));
 
-            Logger = new SerilogLoggerFactory().CreateLogger("monkey-hi-hat");
+            if (appConfig.ReadValue("setup", "logtoconsole").ToBool(false))
+            {
+                cfg.WriteTo.Console(outputTemplate: OUTPUT_TEMPLATE);
+            }
 
-            eyecandy.ErrorLogging.Logger = Logger;
+            // TODO support log category suppression
+            cfg.Filter.ByExcluding(Matching.FromSource("Eyecandy.Shader"));
 
-            Logger.LogDebug($"ILogger created (PID {Environment.ProcessId})");
+            LoggerFactory = new SerilogLoggerFactory(cfg.CreateLogger(), dispose: true);
+
+            // Provide the factory to libaries
+            eyecandy.ErrorLogging.LoggerFactory = LoggerFactory;
+            HttpFileCache.FileCache.Configuration.LoggerFactory = LoggerFactory;
+
+            // Create loggers for static classes
+            RenderingHelper.Logger = CreateLogger(nameof(RenderingHelper));
         }
+
+        /// <summary>
+        /// Creates a categorized ILogger with the MHH category prefix. It shouldn't be possible
+        /// to call this before LoggerFactory exists, but if this happens a null is returned.
+        /// </summary>
+        public static Microsoft.Extensions.Logging.ILogger CreateLogger(string category)
+            => LoggerFactory?.CreateLogger($"{LOGGER_CATEGORY}.{category}");
 
         /// <summary>
         /// Changes the minimum logger output level on the fly. Defaults to Warning if
@@ -58,6 +79,15 @@ namespace mhh
             var logLevel = msLogLevel.ToEnum(LogLevel.Warning);
             LevelSwitch = new(LevelConvert.ToSerilogLevel(logLevel));
             return logLevel.ToString();
+        }
+
+        /// <summary>
+        /// Technically statics don't have a dipose, but this is cleaner.
+        /// </summary>
+        public static void Dispose()
+        {
+            Log.CloseAndFlush();
+            LoggerFactory?.Dispose();
         }
     }
 }

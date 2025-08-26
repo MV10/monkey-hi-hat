@@ -40,6 +40,8 @@ namespace mhh
 
         public readonly List<LibraryShaderConfig> LibraryConfigs;
 
+        private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(VisualizerConfig));
+
         public VisualizerConfig(string pathname)
         {
             ConfigSource = new ConfigFile(pathname);
@@ -108,19 +110,19 @@ namespace mhh
 
             if (Program.AppConfig.RenderResolutionLimit > 0 && RenderResolutionLimit > Program.AppConfig.RenderResolutionLimit)
             {
-                LogHelper.Logger?.LogWarning($"Clamping visualizer to global RenderResolutionLimit {Program.AppConfig.RenderResolutionLimit} instead of {RenderResolutionLimit} in conf.");
+                Logger?.LogWarning($"Clamping visualizer to global RenderResolutionLimit {Program.AppConfig.RenderResolutionLimit} instead of {RenderResolutionLimit} in conf.");
                 RenderResolutionLimit = Program.AppConfig.RenderResolutionLimit;
             }
 
             if (Program.AppConfig.RenderResolutionLimit > 0 && FXResolutionLimit > Program.AppConfig.RenderResolutionLimit)
             {
-                LogHelper.Logger?.LogWarning($"Clamping visualizer FXResolutionLimit to global limit {Program.AppConfig.RenderResolutionLimit} instead of {FXResolutionLimit} in conf.");
+                Logger?.LogWarning($"Clamping visualizer FXResolutionLimit to global limit {Program.AppConfig.RenderResolutionLimit} instead of {FXResolutionLimit} in conf.");
                 FXResolutionLimit = Program.AppConfig.RenderResolutionLimit;
             }
 
             if (FXResolutionLimit > 0 && RenderResolutionLimit > 0 && RenderResolutionLimit < FXResolutionLimit)
             {
-                LogHelper.Logger?.LogWarning($"Clamping visualizer FXResolutionLimit {FXResolutionLimit} to RenderResolutionLimit {RenderResolutionLimit}.");
+                Logger?.LogWarning($"Clamping visualizer FXResolutionLimit {FXResolutionLimit} to RenderResolutionLimit {RenderResolutionLimit}.");
                 FXResolutionLimit = RenderResolutionLimit;
             }
 

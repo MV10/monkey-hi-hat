@@ -51,6 +51,8 @@ public class FXRenderer : IRenderer
     private float RandomRun;
     private Vector4 RandomRun4;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(FXRenderer));
+
     public FXRenderer(FXConfig fxConfig, IRenderer primaryRenderer)
     {
         ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
@@ -309,41 +311,30 @@ public class FXRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
         RenderingHelper.UseFXResolutionLimit = false;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VideoProcessor");
         VideoProcessor?.Dispose();
         VideoProcessor = null;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() primary visualization renderer");
         PrimaryRenderer?.Dispose();
 
         if (ShaderPasses is not null)
         {
             foreach (var pass in ShaderPasses)
             {
-                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass VertexSource");
                 pass.VertexSource?.Dispose();
-
-                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Uncached Shader");
                 RenderingHelper.DisposeUncachedShader(pass.Shader);
             }
             ShaderPasses = null;
         }
 
         // this also deletes any allocated textures
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Drawbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(DrawbufferOwnerName);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Backbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(BackbufferOwnerName);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade Resources");
         RenderManager.ResourceManager.DestroyAllResources(FXCrossfadeOwnerName);
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade VertexSource");
         FXCrossfadeVerts?.Dispose();
 
         DrawbufferResources = null;
