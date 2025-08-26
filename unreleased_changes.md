@@ -51,11 +51,11 @@ Don't assume anything here is working or will be available in some future releas
 ### Work In Progress
 
 * Logging improvements (log categories, better output control)
-  * Config changes TBD
-
+  * Added `LogSuppress` to `mhh.conf` listing log categories to filter out
+  * Includes logging improvements in Eyecandy, CommandLineSwitchPipe, and HttpFileCache
+  * Wiki "Appendix: Logging" section lists available log categories
 * HTTP texture retrieval and caching support for textures (incl. preload, refresh, etc.)
 * Added `[FileCache]` section and settings to `mhh.conf`
-* Added `--filecache status` command
 * Added `--filecache list` command
 * Added `--filecache purge` command
 * Added `--filecache refresh` command

@@ -32,30 +32,34 @@ namespace mhh
         /// </summary>
         public static void Initialize(ConfigFile appConfig, bool alreadyRunning)
         {
+            // Prepare the log file
             var logPath = appConfig.ReadValue(ApplicationConfiguration.SectionOS, "logpath").DefaultString("./mhh.log");
             logPath = Path.GetFullPath(logPath);
             if (!alreadyRunning && File.Exists(logPath)) File.Delete(logPath);
 
-            var logLevel = appConfig.ReadValue("setup", "loglevel").ToEnum(LogLevel.Warning);
-            LevelSwitch = new(LevelConvert.ToSerilogLevel(logLevel));
-
             var cfg = new LoggerConfiguration();
 
+            // Set minimum log level
+            var logLevel = appConfig.ReadValue("setup", "loglevel").ToEnum(LogLevel.Warning);
+            LevelSwitch = new(LevelConvert.ToSerilogLevel(logLevel));
             cfg.MinimumLevel.ControlledBy(LevelSwitch);
 
+            // Configure outputs
             cfg.WriteTo.Async(a => a.File(logPath, shared: true, outputTemplate: OUTPUT_TEMPLATE));
-
             if (appConfig.ReadValue("setup", "logtoconsole").ToBool(false))
             {
                 cfg.WriteTo.Console(outputTemplate: OUTPUT_TEMPLATE);
             }
 
-            // TODO support log category suppression
-            cfg.Filter.ByExcluding(Matching.FromSource("Eyecandy.Shader"));
+            // Log category suppression
+            var suppress = (appConfig.ReadValue("setup", "logsuppress").DefaultString("Eyecandy,CommandLineSwitchPipe,HttpFileCache")).Split(',', StringSplitOptions.TrimEntries);
+            foreach (var s in suppress) cfg.Filter.ByExcluding(Matching.FromSource(s));
 
+            // Get this party started
             LoggerFactory = new SerilogLoggerFactory(cfg.CreateLogger(), dispose: true);
 
             // Provide the factory to libaries
+            CommandLineSwitchPipe.CommandLineSwitchServer.Options.LoggerFactory = LoggerFactory;
             eyecandy.ErrorLogging.LoggerFactory = LoggerFactory;
             HttpFileCache.FileCache.Configuration.LoggerFactory = LoggerFactory;
 
