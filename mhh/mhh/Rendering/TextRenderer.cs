@@ -52,7 +52,8 @@ public class TextRenderer : IRenderer
         FontTexture = RenderManager.ResourceManager.CreateTextureResources(OwnerName, 1)[0];
         FontTexture.Filename = "font.png";
         FontTexture.UniformName = "font";
-        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, TextureWrapMode.ClampToEdge, ApplicationConfiguration.InternalShaderPath);
+        FontTexture.WrapMode = TextureWrapMode.ClampToEdge;
+        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, ApplicationConfiguration.InternalShaderPath);
 
         VertQuad = new VertexQuad();
         VertQuad.Initialize(null, TextShader); // null is safe, fragquad has no viz/fx settings and text output doesn't support textures/videos
@@ -110,7 +111,7 @@ public class TextRenderer : IRenderer
         }
         else
         {
-            RenderManager.ResourceManager.ResizeTextures(OwnerName, Resolution);
+            RenderManager.ResourceManager.ResizeTexturesForViewport(OwnerName, Resolution);
         }
 
         VertQuad.BindBuffers(TextShader);

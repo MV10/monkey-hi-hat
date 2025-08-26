@@ -36,6 +36,11 @@ public class GLImageTexture
     public int TextureUnitOrdinal;
 
     /// <summary>
+    /// Controls how out-of-bounds sampling is handled.
+    /// </summary>
+    public TextureWrapMode WrapMode = TextureWrapMode.Repeat;
+
+    /// <summary>
     /// The assigned texture unit as an enum (required by some API calls).
     /// </summary>
     public TextureUnit TextureUnit

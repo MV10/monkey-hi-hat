@@ -1,4 +1,5 @@
 ﻿
+using HttpFileCache;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -32,6 +33,8 @@ public class GLResourceManager : IDisposable
     private Dictionary<string, IReadOnlyList<GLResourceGroup>> AllocatedResourceGroups = new();
     private Dictionary<string, IReadOnlyList<GLImageTexture>> AllocatedTextures = new();
     private List<int> AvailableTextureUnits = new(Caching.MaxAvailableTextureUnit);
+
+    private Dictionary<int, GLImageTexture> DownloadQueue = new();
 
     private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(GLResourceManager));
 
@@ -92,6 +95,10 @@ public class GLResourceManager : IDisposable
         return list;
     }
 
+    /// <summary>
+    /// This request for new textures returns a list collection of texture objects with
+    /// handle and TextureUnit assignments. The actual texture buffer is not allocated here.
+    /// </summary>
     public IReadOnlyList<GLImageTexture> CreateTextureResources(string ownerName, int totalRequired)
     {
         if (AllocatedTextures.ContainsKey(ownerName)) throw new InvalidOperationException($"GL texture resources already allocated to owner name {ownerName}");
@@ -143,15 +150,15 @@ public class GLResourceManager : IDisposable
     /// dimensions are provided, this is a signal to copy (scale) the old content, otherwise
     /// the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTextures(string ownerName, Vector2 viewportResolution, bool copyContent = false)
-        => ResizeTextures(ownerName, (int)viewportResolution.X, (int)viewportResolution.Y, copyContent);
+    public void ResizeTexturesForViewport(string ownerName, Vector2 viewportResolution, bool copyContent = false)
+        => ResizeTexturesForViewport(ownerName, (int)viewportResolution.X, (int)viewportResolution.Y, copyContent);
 
     /// <summary>
     /// Called by renderers whenever the viewport size has changed. If old viewport
     /// dimensions are provided, this is a signal to copy (scale) the old content, otherwise
     /// the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTextures(string ownerName, int viewportWidth, int viewportHeight, bool copyContent = false)
+    public void ResizeTexturesForViewport(string ownerName, int viewportWidth, int viewportHeight, bool copyContent = false)
     {
         if (!AllocatedResourceGroups.ContainsKey(ownerName)) return;
 
@@ -159,7 +166,7 @@ public class GLResourceManager : IDisposable
 
         foreach (var resources in AllocatedResourceGroups[ownerName])
         {
-            ResizeTexture(resources, viewportWidth, viewportHeight, copyContent);
+            ResizeFramebufferTexture(resources, viewportWidth, viewportHeight, copyContent);
         }
     }
 
@@ -167,7 +174,7 @@ public class GLResourceManager : IDisposable
     /// Resize a specific framebuffer texture. If old viewport dimensions are provided, this is a 
     /// signal to copy (scale) the old content, otherwise the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTexture(GLResourceGroup resources, int viewportWidth, int viewportHeight, bool copyContent = false)
+    public void ResizeFramebufferTexture(GLResourceGroup resources, int viewportWidth, int viewportHeight, bool copyContent = false)
     {
         Logger?.LogTrace($"...Resizing framebuffer texture for draw pass index {resources.DrawPassIndex} to ({viewportWidth},{viewportHeight})");
 
@@ -213,6 +220,76 @@ public class GLResourceManager : IDisposable
         }
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+    }
+
+    /// <summary>
+    /// Adds a texture to the download queue, begins the download operation, and establishes the callback.
+    /// </summary>
+    public void EnqueueDownload(GLImageTexture tex)
+    {
+        if (DownloadQueue.ContainsKey(tex.TextureHandle))
+        {
+            Logger?.LogError($"Texture handle {tex.TextureHandle} is already in the download queue");
+            return;
+        }
+
+        Logger?.LogDebug($"Enqueuing download for {tex.Filename} for texture handle {tex.TextureHandle}");
+        DownloadQueue.Add(tex.TextureHandle, tex);
+
+        if (tex.VideoData is null)
+        {
+            FileCache.RequestFile(tex.Filename, tex.TextureHandle, ImageDownloadCallback);
+        }
+        else
+        {
+            FileCache.RequestFile(tex.Filename, tex.TextureHandle, VideoDownloadCallback);
+        }
+    }
+
+    // HttpFileCache callback for image files
+    private void ImageDownloadCallback(int textureHandle, CachedFileData data)
+    {
+        GLImageTexture tex = null;
+        if(!DownloadQueue.TryGetValue(textureHandle, out tex))
+        {
+            Logger?.LogError($"{nameof(ImageDownloadCallback)}: Texture handle {textureHandle} is not in the download queue");
+            return;
+        }
+
+        DownloadQueue.Remove(textureHandle);
+
+        if(data is null || data.Size == 0)
+        {
+            Logger?.LogError($"{nameof(ImageDownloadCallback)}: Texture handle {textureHandle} failed or is zero-length");
+            return;
+        }
+
+        Logger?.LogDebug($"Image download complete for {tex.Filename} for texture handle {tex.TextureHandle}");
+
+        RenderingHelper.LoadCachedImageFile(tex, data.GetCachePathname());
+    }
+
+    // HttpFileCache callback for video files
+    private void VideoDownloadCallback(int textureHandle, CachedFileData data)
+    {
+        GLImageTexture tex = null;
+        if (!DownloadQueue.TryGetValue(textureHandle, out tex))
+        {
+            Logger?.LogError($"{nameof(VideoDownloadCallback)}: Texture handle {textureHandle} is not in the download queue");
+            return;
+        }
+        
+        DownloadQueue.Remove(textureHandle);
+
+        if (data is null || data.Size == 0)
+        {
+            Logger?.LogError($"{nameof(VideoDownloadCallback)}: Texture handle {textureHandle} failed or is zero-length");
+            return;
+        }
+
+        Logger?.LogDebug($"Video download complete for {tex.Filename} for texture handle {tex.TextureHandle}");
+
+        // TODO
     }
 
     private int AssignTextureUnit()

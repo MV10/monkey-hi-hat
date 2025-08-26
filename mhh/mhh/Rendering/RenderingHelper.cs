@@ -90,7 +90,7 @@ public static class RenderingHelper
     public static void DisposeUncachedShader(CachedShader shader)
     {
         if (shader is null) return;
-        Logger?.LogTrace($"{nameof(DisposeUncachedShader)} ----------------------------");
+        Logger?.LogTrace($"{nameof(DisposeUncachedShader)}");
 
         if (!Caching.VisualizerShaders.ContainsKey(shader.Key) && !Caching.FXShaders.ContainsKey(shader.Key))
         {
@@ -145,30 +145,55 @@ public static class RenderingHelper
         if (totalRequired == 0) return null;
         var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, totalRequired);
 
+        var httpPlaceholders = GetDownloadPlaceholderFilenames(configSource);
+        string cachedPathname = null;
+
         int resourceIndex = 0;
 
+        // handle images
         if(textureDefs is not null)
         {
             foreach (var tex in textureDefs)
             {
                 var res = resources[resourceIndex++];
 
-                res.Filename = tex.Value[rand.Next(tex.Value.Count)];
-
                 var uniformName = tex.Key;
                 if (uniformName.EndsWith("!"))
                 {
                     res.UniformName = uniformName.Substring(0, uniformName.Length - 1);
-                    res.Loaded = LoadImageFile(res, TextureWrapMode.ClampToEdge);
+                    res.WrapMode = TextureWrapMode.ClampToEdge;
                 }
                 else
                 {
                     res.UniformName = uniformName;
+                }
+
+                // Use the filename directly, find it in cache, or start a download and use a placeholder
+                res.Filename = tex.Value[rand.Next(tex.Value.Count)];
+                if (res.Filename.StartsWith("http", StringComparison.OrdinalIgnoreCase)) 
+                {
+                    if ((cachedPathname = Caching.GetPathnameIfCached(res.Filename)) is not null)
+                    {
+                        // use the cached file
+                        res.Loaded = LoadCachedImageFile(res, cachedPathname);  
+                    }
+                    else
+                    {
+                        // start the download and use a placeholder
+                        RenderManager.ResourceManager.EnqueueDownload(res);
+                        res.Filename = httpPlaceholders.placeholderImage;
+                        LoadPlaceholderImage(res);
+                    }
+                }
+                else
+                {
+                    // local file, use it directly
                     res.Loaded = LoadImageFile(res);
                 }
             }
         }
 
+        // handle videos
         if(videoDefs is not null)
         {
             foreach (var vid in videoDefs)
@@ -189,7 +214,7 @@ public static class RenderingHelper
     /// <summary>
     /// Prepares a texture resource with the file identified in GLImageTexture.
     /// </summary>
-    public static bool LoadImageFile(GLImageTexture tex, TextureWrapMode wrapMode = TextureWrapMode.Repeat, string pathspec = "")
+    public static bool LoadImageFile(GLImageTexture tex, string pathspec = "")
     {
         var paths = (pathspec == "") ? Program.AppConfig.TexturePath : pathspec;
         var pathname = PathHelper.FindFile(paths, tex.Filename);
@@ -202,12 +227,41 @@ public static class RenderingHelper
         GL.ActiveTexture(tex.TextureUnit);
         GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
         GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)tex.WrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)tex.WrapMode);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
         GL.BindTexture(TextureTarget.Texture2D, 0);
 
+        return true;
+    }
+
+    /// <summary>
+    /// Splits the cached pathname into directory and filename, assigns the filename to the texture
+    /// resource, and calls LoadImageFile. Also used by the ResourceManager download completion handler.
+    /// </summary>
+    public static bool LoadCachedImageFile(GLImageTexture tex, string cachedPathname)
+    {
+        var path = Path.GetDirectoryName(cachedPathname);
+        tex.Filename = Path.GetFileName(cachedPathname);
+        return LoadImageFile(tex, path);
+    }
+
+    /// <summary>
+    /// Loads the real texture if a filename was provided, or allocates a blank 2x2 texture.
+    /// </summary>
+    public static bool LoadPlaceholderImage(GLImageTexture tex)
+    {
+        if (!string.IsNullOrWhiteSpace(tex.Filename)) return LoadImageFile(tex);
+
+        GL.ActiveTexture(tex.TextureUnit);
+        GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, 2, 2, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)tex.WrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)tex.WrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+        GL.BindTexture(TextureTarget.Texture2D, 0);
         return true;
     }
 
@@ -419,7 +473,8 @@ public static class RenderingHelper
         var definitions = new Dictionary<string, List<string>>();
         foreach (var def in configSource.Content[sectionName])
         {
-            var parts = def.Value.Split(':', Const.SplitOptions);
+            // Split count of 2 means split only on first colon; necessary for URIs
+            var parts = def.Value.Split(':', 2, Const.SplitOptions); 
             if (parts.Length == 2)
             {
                 var uniform = parts[0];
@@ -429,6 +484,30 @@ public static class RenderingHelper
             }
         }
         return definitions;
+    }
+
+    private static (string placeholderImage, string placeholderVideo) GetDownloadPlaceholderFilenames(ConfigFile config)
+    {
+        string mainSection = string.Empty;
+        if (config.Content.ContainsKey("fx"))
+        {
+            mainSection = "fx";
+        }
+        else if (config.Content.ContainsKey("shader"))
+        {
+            mainSection = "shader";
+        }
+        else
+        {
+            return (string.Empty, string.Empty);
+        }
+
+        string placeholderImage = config.ReadValue(mainSection, "placeholderimage");
+        if (string.IsNullOrWhiteSpace(placeholderImage)) placeholderImage = Program.AppConfig.FileCachePlaceholder ?? string.Empty;
+
+        string placeholderVideo = config.ReadValue(mainSection, "placeholdervideo");
+
+        return (placeholderImage, placeholderVideo);
     }
 
     // 2025-08-20 Replaced with StbImage's buffer flip code inside the pinned section in DecodeVideoFrame

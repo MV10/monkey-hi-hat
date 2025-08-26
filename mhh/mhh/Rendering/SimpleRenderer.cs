@@ -138,7 +138,7 @@ public class SimpleRenderer : IRenderer
             }
             else
             {
-                RenderManager.ResourceManager.ResizeTextures(OwnerName, ViewportResolution);
+                RenderManager.ResourceManager.ResizeTexturesForViewport(OwnerName, ViewportResolution);
             }
         }
         else

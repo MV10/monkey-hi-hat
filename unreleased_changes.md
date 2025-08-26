@@ -54,18 +54,18 @@ Don't assume anything here is working or will be available in some future releas
   * Added `LogSuppress` to `mhh.conf` listing log categories to filter out
   * Includes logging improvements in Eyecandy, CommandLineSwitchPipe, and HttpFileCache
   * Wiki "Appendix: Logging" section lists available log categories
-* HTTP texture retrieval and caching support for textures (incl. preload, refresh, etc.)
+* HTTP texture retrieval and caching support for textures
+* Viz and FX configs can reference HTTP/S for image and video textures
 * Added `[FileCache]` section and settings to `mhh.conf`
 * Added `--filecache [cmd]` commands:
-  * `--filecache help` lists all filecache commands
   * `--filecache list` shows info about all files stored in the cache
   * `--filecache purge` clears all content from the cache
   * `--filecache refresh` retrieves new copies of all cached files
   * `--filecache fetch [uri]` adds or refreshes a single file in the cache
   * `--filecache remove [uri]` deletes a file from the cache
 * The `--filecache` commands do not require MHH to be already running
-* Viz and FX configs can reference HTTP/S for image and video textures
-* Viz and FX configs can specify `PlaceholderImageTexture` and `PlaceholderVideoTexture`
+* The `mhh.conf` can specify `FileCachePlaceholder` used for images or videos
+* Viz and FX configs can specify `PlaceholderImage` and `PlaceholderVideo`
 
 ### MHH TODO
 

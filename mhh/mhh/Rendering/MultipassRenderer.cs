@@ -173,8 +173,8 @@ public class MultipassRenderer : IRenderer
         if (ShaderPasses is null || oldResolution.X == ViewportResolution.X && oldResolution.Y == ViewportResolution.Y) return;
 
         // resize draw buffers, and resize/copy back buffers
-        RenderManager.ResourceManager.ResizeTextures(DrawbufferOwnerName, ViewportResolution);
-        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, true);
+        RenderManager.ResourceManager.ResizeTexturesForViewport(DrawbufferOwnerName, ViewportResolution);
+        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTexturesForViewport(BackbufferOwnerName, ViewportResolution, true);
 
         foreach (var pass in ShaderPasses)
         {
