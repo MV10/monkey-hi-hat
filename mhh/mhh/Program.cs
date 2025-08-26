@@ -8,6 +8,8 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using Serilog;
 using Serilog.Extensions.Logging;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -387,11 +389,18 @@ namespace mhh
                 return false; // end program
             }
 
+            // Parse the application configuration file
+            AppConfig = new ApplicationConfiguration(appConfigFile);
+
+            // Only allow --filecache commands if no other instance is running
             if ((args.Length > 1 &&args[0].ToLowerInvariant().Equals("--filecache")))
             {
-                // TODO read file caching config "the hard way" (see LogHelper.Initialize)
-                FileCache.Initialize();
-                // TODO process filecache commands
+                if(alreadyRunning)
+                {
+                    Console.WriteLine("ERR: --filecache commands are unsafe when the program is already running.");
+                    return false; // end program
+                }
+                await ProcessFileCacheCommands(args);
                 return false; // end program
             }
 
@@ -413,11 +422,8 @@ namespace mhh
             }
             // ...or continue running since we're the first instance
 
-            // Parse the application configuration file and internal shaders
-            AppConfig = new ApplicationConfiguration(appConfigFile);
-
-            // Since this is the persistent instance, initialize HttpFileCache
-            FileCache.Initialize();
+            // Since this is the persistent instance, apply config and initialize HttpFileCache
+            InitFileCache();
 
             // Start listening for commands
             ctsSwitchPipe = new();
@@ -491,6 +497,95 @@ namespace mhh
             {
                 AppWindow?.Dispose();
                 AppWindow = null;
+            }
+        }
+
+        private static void InitFileCache()
+        {
+            FileCache.Configuration.SizeLimit = AppConfig.FileCacheMaxSize;
+            FileCache.Configuration.FileExpirationDays = AppConfig.FileCacheMaxAge;
+            FileCache.Configuration.CaseSensitivity = AppConfig.FileCacheCaseSensitive;
+            FileCache.Initialize();
+        }
+
+        // This is effectively a subset of the cacheutil program available in the HttpFileCache repository.
+        private static async Task ProcessFileCacheCommands(string[] args)
+        {
+            InitFileCache();
+            Console.WriteLine($"Cache directory:\n{FileCache.Configuration.CacheFullPath}\n");
+
+            string uri;
+            CachedFileData data;
+            double megabytes = FileCache.CacheSize / 1024;
+            double percent = 100d * (FileCache.CacheSize / (FileCache.Configuration.SizeLimit * 1024d));
+
+            switch (args[1].ToLowerInvariant())
+            {
+                case "list":
+                    Console.WriteLine($"Cache contains {FileCache.CacheIndex.Count} files occupying {FileCache.CacheSize} bytes ({megabytes:F2}MB is {percent:F2}% of alloted space).");
+                    foreach (var kvp in FileCache.CacheIndex)
+                    {
+                        Console.WriteLine($"{kvp.Value.OriginURI} @ {kvp.Value.RetrievalTimestamp}");
+                    }
+                    break;
+
+                case "purge":
+                    Console.WriteLine($"Purging {FileCache.CacheIndex.Count} files.");
+                    FileCache.ClearCache();
+                    Console.WriteLine($"Cache cleared.");
+                    break;
+
+                case "refresh":
+                    Console.WriteLine($"Refreshing {FileCache.CacheIndex.Count} files.");
+                    Console.WriteLine("... TODO ...");
+                    break;
+
+                case "fetch":
+                    if (args.Length != 2)
+                    {
+                        ShowHelp();
+                        return;
+                    }
+                    uri = FileCache.ParseUri(args[1]);
+                    if (uri is null)
+                    {
+                        Console.WriteLine("The second argument must be a valid URI.");
+                        return;
+                    }
+                    if (args[0].ToLowerInvariant().Equals("fetch") && FileCache.CacheIndex.TryGetValue(uri, out data))
+                    {
+                        Console.WriteLine("Removing currently cached version.");
+                        FileCache.DeleteFile(uri);
+                    }
+                    Console.WriteLine("Requesting file...");
+                    await FileCache.RequestFileAsync(uri);
+                    Console.WriteLine("Completed.");
+                    break;
+
+                case "remove":
+                    if (args.Length != 2)
+                    {
+                        ShowHelp();
+                        return;
+                    }
+                    uri = FileCache.ParseUri(args[1]);
+                    if (uri is null)
+                    {
+                        Console.WriteLine("The second argument must be a valid URI.");
+                        return;
+                    }
+                    if (!FileCache.CacheIndex.ContainsKey(uri))
+                    {
+                        Console.WriteLine("The requested URI is not in the cache.");
+                        return;
+                    }
+                    FileCache.DeleteFile(uri);
+                    Console.WriteLine("File removed.");
+                    break;
+
+                default:
+                    ShowHelp();
+                    break;
             }
         }
 
@@ -641,7 +736,7 @@ All switches are passed to the already-running instance:
 --fullscreen                toggle between windowed and full-screen state
 --fps                       returns instantaneous FPS and average FPS over past 10 seconds
 --fps [0|1-9999]            sets a frame rate (FPS) target, or 0 to disable (some shaders may require 60 FPS)
---nocache                   disables caching for the remainder of the session (good for testing)
+--nocache                   disables shader viz/FX caching for the remainder of the session (good for testing)
 
 --test [viz|fx|fade] [file] Enters test mode, use +/- to cycle through content
 --endtest                   Exits test mode (loads the idle visualizer)
@@ -655,6 +750,14 @@ All switches are passed to the already-running instance:
 
 --console                   toggles the visibility of the console window (only minimizes Terminal)
 --cls                       clears the console window of the running instance (useful during debug)
+
+Filecache commands are only available if the program is not already running:
+
+--filecache list            shows info about all files stored in the cache
+--filecache purge           clears all content from the cache
+--filecache refresh         retrieves new copies of all cached files
+--filecache fetch [uri]     adds or refreshes a single file in the cache
+--filecache remove [uri]    deletes a file from the cache
 ";
     }
 }
