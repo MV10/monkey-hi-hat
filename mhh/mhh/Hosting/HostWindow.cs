@@ -894,6 +894,7 @@ LINE 15");
 
             if (!Caching.InternalCrossfadeShader.IsValid)
             {
+                Logger?.LogCritical("Internal crossfade shader was not found or failed to compile.");
                 Console.WriteLine("\n\nFATAL ERROR: Internal crossfade shader was not found or failed to compile.\n\n");
                 Thread.Sleep(250);
                 Environment.Exit(-1);
@@ -905,6 +906,7 @@ LINE 15");
 
             if (!Caching.TextShader.IsValid)
             {
+                Logger?.LogCritical("Internal crossfade shader was not found or failed to compile.");
                 Console.WriteLine("\n\nFATAL ERROR: Internal text shader was not found or failed to compile.\n\n");
                 Thread.Sleep(250);
                 Environment.Exit(-1);

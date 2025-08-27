@@ -11,13 +11,13 @@ namespace mhhinstall
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Update these for each release
 
-        public static readonly Version appVersion = new Version("4.4.0");
+        public static readonly Version appVersion = new Version("4.5.0");
         //                                                       ^ update version
 
-        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-4-4-0.bin";
+        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-4-5-0.bin";
         //                                                                                     ^ update version
 
-        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-4-4-0.bin";
+        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-4-5-0.bin";
         //                                                                                         ^ update version
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

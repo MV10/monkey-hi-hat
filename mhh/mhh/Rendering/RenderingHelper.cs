@@ -203,18 +203,26 @@ public static class RenderingHelper
 
         Logger?.LogDebug($"{nameof(LoadImageFile)} loading {pathname}");
 
-        using var stream = File.OpenRead(pathname);
-        StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
-        var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+        try
+        {
+            using var stream = File.OpenRead(pathname);
+            StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
+            var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
-        GL.ActiveTexture(tex.TextureUnit);
-        GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)tex.WrapMode);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)tex.WrapMode);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-        GL.BindTexture(TextureTarget.Texture2D, 0);
+            GL.ActiveTexture(tex.TextureUnit);
+            GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)tex.WrapMode);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)tex.WrapMode);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogError($"{nameof(LoadImageFile)}: Error loading image {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
+            return false;
+        }
 
         return true;
     }

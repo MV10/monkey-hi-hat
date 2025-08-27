@@ -83,7 +83,7 @@ public class GLResourceManager : IDisposable
             GL.ActiveTexture(info.TextureUnit);
             GL.BindTexture(TextureTarget.Texture2D, info.TextureHandle);
             AllocateFramebufferTexture(info.TextureHandle, viewportWidth, viewportHeight);
-            ValidateFramebuffer();
+            ValidateFramebuffer(nameof(CreateResourceGroups));
 
             list.Add(info);
         }
@@ -198,7 +198,7 @@ public class GLResourceManager : IDisposable
         GL.ActiveTexture(resources.TextureUnit);
         GL.BindTexture(TextureTarget.Texture2D, resources.TextureHandle);
         AllocateFramebufferTexture(resources.TextureHandle, viewportWidth, viewportHeight);
-        ValidateFramebuffer();
+        ValidateFramebuffer(nameof(ResizeFramebufferTexture));
 
         // Do the copy, if requested, then delete the old buffers
         if (copyContent)
@@ -253,13 +253,13 @@ public class GLResourceManager : IDisposable
     }
 
     // failure instantly crashes the program (yay!)
-    private void ValidateFramebuffer()
+    private void ValidateFramebuffer(string forMethodName)
     {
         var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (!status.Equals(FramebufferErrorCode.FramebufferComplete) && !status.Equals(FramebufferErrorCode.FramebufferCompleteExt))
         {
-            Logger?.LogError($"Error creating or resizing framebuffer: {status}");
-            Console.WriteLine($"Error creating or resizing framebuffer: {status}");
+            Logger?.LogCritical($"{forMethodName} error creating or resizing framebuffer: {status}");
+            Console.WriteLine($"{forMethodName} error creating or resizing framebuffer: {status}");
             Thread.Sleep(250);
             Environment.Exit(-1);
         }
