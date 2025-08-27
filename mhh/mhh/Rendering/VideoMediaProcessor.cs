@@ -26,10 +26,12 @@ public class VideoMediaProcessor : IDisposable
     // the eyecandy background thread that updates audio texture data.
     private static readonly Mutex GLTextureLockMutex = new(false, AudioTextureEngine.GLTextureMutexName);
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(VideoMediaProcessor));
+
     public VideoMediaProcessor(IReadOnlyList<GLImageTexture> textures)
     {
         VideoTextures = textures.Where(t => t.Loaded && t.VideoData is not null).ToList();
-        LogHelper.Logger?.LogTrace($"{GetType()} constructor found {VideoTextures.Count} video textures");
+        Logger?.LogTrace($"Constructor found {VideoTextures.Count} video textures");
     }
 
     /// <summary>
@@ -53,7 +55,7 @@ public class VideoMediaProcessor : IDisposable
             {
                 tex.VideoData.IsPaused = true;
                 tex.VideoData.Clock.Stop();
-                LogHelper.Logger?.LogTrace($"{GetType()} paused video {tex.VideoData.Pathname}");
+                Logger?.LogTrace($"Paused video {tex.VideoData.Pathname}");
             }
         }
         else
@@ -62,7 +64,7 @@ public class VideoMediaProcessor : IDisposable
             {
                 tex.VideoData.IsPaused = false;
                 tex.VideoData.Clock.Start();
-                LogHelper.Logger?.LogTrace($"{GetType()} unpaused video {tex.VideoData.Pathname}");
+                Logger?.LogTrace($"Unpaused video {tex.VideoData.Pathname}");
             }
 
         }
@@ -74,14 +76,14 @@ public class VideoMediaProcessor : IDisposable
         {
             if (tex.VideoData.IsPaused) return;
             tex.VideoData.Clock.Start();
-            LogHelper.Logger?.LogTrace($"{GetType()} clock started on video {tex.Filename}");
+            Logger?.LogTrace($"Clock started on video {tex.Filename}");
         }
 
         if (tex.VideoData.Clock.Elapsed == tex.VideoData.LastUpdateTime) return; // abort if time hasn't changed
 
         if (tex.VideoData.Clock.Elapsed > tex.VideoData.Duration)
         {
-            LogHelper.Logger?.LogTrace($"{GetType()} looped video {tex.Filename} at {tex.VideoData.Clock.Elapsed.TotalSeconds:F2}");
+            Logger?.LogTrace($"Looped video {tex.Filename} at {tex.VideoData.Clock.Elapsed.TotalSeconds:F2}");
             tex.VideoData.Clock.Restart(); // always loop
         }
 
@@ -108,22 +110,21 @@ public class VideoMediaProcessor : IDisposable
         }
         catch (EndOfStreamException)
         {
-            LogHelper.Logger?.LogTrace($"{GetType()} looped video {tex.Filename} at {tex.VideoData.Clock.Elapsed.TotalSeconds:F2}");
+            Logger?.LogTrace($"Looped video {tex.Filename} at {tex.VideoData.Clock.Elapsed.TotalSeconds:F2}");
             tex.VideoData.Clock.Restart();
             return;
         }
         catch (Exception ex)
         {
-            LogHelper.Logger?.LogError(ex, $"Error decoding video stream {tex.Filename}");
+            Logger?.LogError(ex, $"Error decoding video stream {tex.Filename}");
         }
     }
 
     public virtual void Dispose()
     {
         if(IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Releasing video resources");
         foreach(var tex in VideoTextures)
         {
             if (!tex.Loaded || tex.VideoData is null) continue;

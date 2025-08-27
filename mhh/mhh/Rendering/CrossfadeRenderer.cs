@@ -48,10 +48,12 @@ public class CrossfadeRenderer : IRenderer
     private static Random RNG = new();
     private static List<int> CacheIndexes;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(CrossfadeRenderer));
+
     public CrossfadeRenderer(IRenderer oldRenderer, IRenderer newRenderer, Action completionCallback, string fragPathname = "")
     {
         // Handle crossfade test mode
-        if(Program.AppWindow.Tester is not null && Program.AppWindow.Tester.Mode == TestMode.Fade)
+        if (Program.AppWindow.Tester is not null && Program.AppWindow.Tester.Mode == TestMode.Fade)
         {
             CrossfadeShader = Program.AppWindow.Tester.CrossfadeShader;
         }
@@ -83,7 +85,7 @@ public class CrossfadeRenderer : IRenderer
                     int i = CacheIndexes[0];
                     CacheIndexes.RemoveAt(0);
                     CrossfadeShader = Caching.CrossfadeShaders[i];
-                    LogHelper.Logger?.LogDebug($"Crossfade shader {((CachedShader)CrossfadeShader).Key}");
+                    Logger?.LogDebug($"Crossfade shader {((CachedShader)CrossfadeShader).Key}");
                 }
                 // Default to basic internal crossfade
                 else
@@ -100,8 +102,8 @@ public class CrossfadeRenderer : IRenderer
         NewRenderer = newRenderer;
         CreateResourceGroups();
 
-        LogHelper.Logger?.LogDebug($"Crossfading old, filename: {OldRenderer.Filename}, multipass? {OldRenderer.OutputBuffers is not null}");
-        LogHelper.Logger?.LogDebug($"Crossfading new, filename: {NewRenderer.Filename}, multipass? {NewRenderer.OutputBuffers is not null}");
+        Logger?.LogDebug($"Crossfading old, filename: {OldRenderer.Filename}, multipass? {OldRenderer.OutputBuffers is not null}");
+        Logger?.LogDebug($"Crossfading new, filename: {NewRenderer.Filename}, multipass? {NewRenderer.OutputBuffers is not null}");
 
         CompletionCallback = completionCallback;
         DurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
@@ -223,17 +225,13 @@ public class CrossfadeRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
         RenderingHelper.UseCrossfadeResolutionLimit = false;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() IVertexSource");
         VertQuad?.Dispose();
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() OldRenderer Resources");
         RenderManager.ResourceManager.DestroyAllResources(OldOwnerName);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() NewRenderer Resources");
         RenderManager.ResourceManager.DestroyAllResources(NewOwnerName);
 
         OldResourceGroup = null;

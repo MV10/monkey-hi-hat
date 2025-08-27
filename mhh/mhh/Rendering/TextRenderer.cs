@@ -43,6 +43,8 @@ public class TextRenderer : IRenderer
     /// </summary>
     private static readonly Mutex GLTextureLockMutex = new(false, AudioTextureEngine.GLTextureMutexName);
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(TextRenderer));
+
     public TextRenderer()
     {
         TextShader = Caching.TextShader;
@@ -50,7 +52,8 @@ public class TextRenderer : IRenderer
         FontTexture = RenderManager.ResourceManager.CreateTextureResources(OwnerName, 1)[0];
         FontTexture.Filename = "font.png";
         FontTexture.UniformName = "font";
-        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, TextureWrapMode.ClampToEdge, ApplicationConfiguration.InternalShaderPath);
+        FontTexture.WrapMode = TextureWrapMode.ClampToEdge;
+        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, ApplicationConfiguration.InternalShaderPath);
 
         VertQuad = new VertexQuad();
         VertQuad.Initialize(null, TextShader); // null is safe, fragquad has no viz/fx settings and text output doesn't support textures/videos
@@ -108,7 +111,7 @@ public class TextRenderer : IRenderer
         }
         else
         {
-            RenderManager.ResourceManager.ResizeTextures(OwnerName, Resolution);
+            RenderManager.ResourceManager.ResizeTexturesForViewport(OwnerName, Resolution);
         }
 
         VertQuad.BindBuffers(TextShader);
@@ -160,13 +163,9 @@ public class TextRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
+        Logger?.LogTrace("Disposing");
 
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() IVertexSource");
         VertQuad?.Dispose();
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Resources");
         RenderManager.ResourceManager.DestroyAllResources(OwnerName);
 
         IsDisposed = true;

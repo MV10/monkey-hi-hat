@@ -54,7 +54,7 @@ namespace mhh
             : string.Empty;
 
         /// <summary>
-        /// Config sections with cotnent not in the key=value format use a sequential integer as the key. This
+        /// Config sections with content not in the key=value format use a sequential integer as the key. This
         /// returns a List of string values ordered by that key.
         /// </summary>
         public static IReadOnlyList<string> SequentialSection(this ConfigFile config, string section)

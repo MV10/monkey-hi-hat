@@ -30,6 +30,8 @@ public class VertexIntegerArray : IVertexSource
         PrimitiveType.TriangleFan,
     };
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(VertexIntegerArray));
+
     // init from config via interface
     public void Initialize(IConfigSource config, Shader shader)
     {
@@ -85,12 +87,9 @@ public class VertexIntegerArray : IVertexSource
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VertexBufferObject");
         GL.DeleteBuffer(VertexBufferObject);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VertexArrayObject");
         GL.DeleteVertexArray(VertexArrayObject);
 
         IsDisposed = true;

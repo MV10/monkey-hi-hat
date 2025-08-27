@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.Extensions.Logging;
+using Serilog.Core;
 
 namespace mhh
 {
@@ -32,6 +33,8 @@ namespace mhh
 
         private readonly Random RNG = new();
 
+        private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(PlaylistConfig));
+
         public PlaylistConfig(string pathname)
         {
             ConfigSource = new ConfigFile(pathname);
@@ -59,7 +62,7 @@ namespace mhh
             {
                 if (string.IsNullOrWhiteSpace(Program.AppConfig.FXPath))
                 {
-                    Warning("FX settings ignored, app configuration does not define FXPath.");
+                    ConstructorWarning("FX settings ignored, app configuration does not define FXPath.");
                     FXPercent = 0;
                 }
 
@@ -69,7 +72,7 @@ namespace mhh
                     FX = PathHelper.GetConfigFiles(Program.AppConfig.FXPath);
                     if (FX.Count == 0)
                     {
-                        Warning("FX settings ignored, no .conf files in defined FXPath.");
+                        ConstructorWarning("FX settings ignored, no .conf files in defined FXPath.");
                         FXPercent = 0;
                     }
                 }
@@ -80,10 +83,12 @@ namespace mhh
 
             if (FXPercent < 0 || FXPercent > 100 || InstantFXPercent < 0 || InstantFXPercent > 100 || FXDelaySeconds < 0)
             {
-                Warning("Some playlist FX settings are invalid, so FX usage is disabled.");
+                ConstructorWarning("Some playlist FX settings are invalid, so FX usage is disabled.");
                 FXPercent = 0;
             }
 
+            void ConstructorWarning(string message)
+                => Logger?.LogWarning($"Playlist {ConfigSource.Pathname}: {message}");
         }
 
         public void GeneratePlaylist()
@@ -130,9 +135,6 @@ namespace mhh
                     break;
             }
         }
-
-        private void Warning(string message)
-            => LogHelper.Logger?.LogWarning($"Playlist {ConfigSource.Pathname}: {message}");
 
         private IReadOnlyList<string> LoadNames(string section)
         {

@@ -37,6 +37,8 @@ public class VertexQuad : IVertexSource
     private int VertexBufferObject;
     private int VertexArrayObject;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(VertexQuad));
+
     public void Initialize(IConfigSource config, Shader shader)
     {
         VertexArrayObject = GL.GenVertexArray();
@@ -77,15 +79,10 @@ public class VertexQuad : IVertexSource
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VertexBufferObject");
         GL.DeleteBuffer(VertexBufferObject);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ElementBufferObject");
         GL.DeleteBuffer(ElementBufferObject);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() VertexArrayObject");
         GL.DeleteVertexArray(VertexArrayObject);
 
         IsDisposed = true;

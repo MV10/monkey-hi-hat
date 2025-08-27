@@ -35,8 +35,9 @@ Don't assume anything here is working or will be available in some future releas
 * eyecandy 3.3.0 released 2025-08-17
 
 * 4.4.1 not yet released
-* Update to eyecandy 3.4.0 (local build, not yet released)
-* Update to FFMediaToolkit 4.8.0 (cleaner release of some managed resources)
+* Updated to eyecandy v4.0.0 (local build, not yet released, maybe v4?)
+* Updated to CommandLineSwitchPipe v2.0.0 (logging improvements)
+* Updated to FFMediaToolkit v4.8.0 (cleaner release of some managed resources)
 * Change internal video frame-flip to use StbImage instead of C# loop, ~30% faster
 * Vertically flip screenshots (duh)
 * Set focus after spacebar-to-screenshot `--jpg wait` and `--png wait` commands
@@ -44,17 +45,19 @@ Don't assume anything here is working or will be available in some future releas
 * Tested background-thread video decode; too much locking overhead required
 * Eyecandy changes to avoid re-allocation of texture buffers
 * Added `ScreenshotPath` to `mhh.conf` (defaults to user's Desktop if no path is provided)
+* Logging improvements (log categories, better output control)
+  * Added `LogSuppress` to `mhh.conf` listing log categories to filter out
+  * Includes logging improvements in Eyecandy, CommandLineSwitchPipe, and HttpFileCache
+  * Wiki "Appendix: Logging" section lists available log categories
 
 
 ### Work In Progress
 
-* 
-
+*
 
 ### MHH TODO
 
-* HTTP texture retrieval and caching support for textures (incl. preload, refresh, etc.)
-* RTSP video support?
+* RTSP video support? (does FFMediaToolkit support it? see [issue](https://github.com/radek-k/FFMediaToolkit/issues/130))
 * Revisit logging to provide log message context and related configuration
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued
@@ -93,6 +96,11 @@ Don't assume anything here is working or will be available in some future releas
     * usage https://inspirnathan.com/posts/63-shadertoy-tutorial-part-16/
     * use six separate files? https://ogldev.org/www/tutorial25/tutorial25.html
     * Emil has lots of HQ skyboxes https://opengameart.org/content/mountain-skyboxes
+
+### MHH NON-STARTERS
+
+* Background processing of video decoding (too much locking and thread switching overhead)
+* Image and video retrieval over HTTP (caching is too much bookkeeping, minimal benefits)
 
 ### EYECANDY TODO (MAJOR)
 

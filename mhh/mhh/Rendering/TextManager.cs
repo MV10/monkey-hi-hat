@@ -44,6 +44,8 @@ public class TextManager : IDisposable
     private DateTime PopupStageStart;
     private DateTime PopupStageEnd;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(TextManager));
+
     public TextManager()
     {
         Dimensions = new(Program.AppConfig.TextBufferX, Program.AppConfig.TextBufferY);
@@ -215,10 +217,8 @@ public class TextManager : IDisposable
     public void Dispose()
     {
         if (IsDisposed) return;
+        Logger?.LogTrace("Disposing");
 
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() TextRenderer");
         Renderer.Dispose();
 
         GC.SuppressFinalize(this);

@@ -31,7 +31,6 @@ public class FXConfig : IConfigSource
 
         RenderResolutionLimit = ConfigSource.ReadValue("fx", "renderresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
         ApplyPrimaryResolutionLimit = ConfigSource.ReadValue("fx", "applyprimaryresolutionlimit").ToBool(false);
-
         Crossfade = (Program.AppConfig.CrossfadeSeconds == 0) ? false : ConfigSource.ReadValue("fx", "crossfade").ToBool(true);
 
         Uniforms = ConfigSource.ParseUniforms();
