@@ -1,6 +1,5 @@
 ﻿
 using eyecandy;
-using HttpFileCache;
 
 namespace mhh;
 
@@ -69,17 +68,4 @@ public static class Caching
     /// those from the high end of the range).
     /// </summary>
     public static int MaxAvailableTextureUnit;
-
-    /// <summary>
-    /// Checks HttpFileCache and returns the file data if it is already cached. This
-    /// should be moved into the HttpFileCache library. Returns null if not cached.
-    /// </summary>
-    public static string GetPathnameIfCached(string targetUri)
-    {
-        var uri = FileCache.ParseUri(targetUri);
-        if (uri is null) return null;
-        CachedFileData data = null;
-        FileCache.CacheIndex.TryGetValue(uri, out data);
-        return data?.GetCachePathname() ?? null;
-    }
 }

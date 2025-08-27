@@ -24,9 +24,6 @@ namespace mhh
         public readonly int FXResolutionLimit;
         public readonly int RandomTimeOffset;
 
-        public readonly string PlaceholderImage;
-        public readonly string PlaceholderVideo;
-
         public readonly string VertexSourceTypeName;
 
         public readonly List<string> AudioTextureUniformNames = new();
@@ -73,8 +70,6 @@ namespace mhh
             RenderResolutionLimit = ConfigSource.ReadValue("shader", "renderresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
             FXResolutionLimit = ConfigSource.ReadValue("shader", "fxresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
             RandomTimeOffset = ConfigSource.ReadValue("shader", "randomtimeoffset").ToInt32(0);
-            PlaceholderImage = ConfigSource.ReadValue("fx", "placeholderimage");
-            PlaceholderVideo = ConfigSource.ReadValue("fx", "placeholdervideo");
 
             VertexSourceTypeName = ConfigSource.ReadValue("shader", "vertexsourcetypename");
 

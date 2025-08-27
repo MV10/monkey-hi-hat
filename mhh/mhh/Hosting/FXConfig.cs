@@ -15,9 +15,6 @@ public class FXConfig : IConfigSource
     public readonly bool ApplyPrimaryResolutionLimit;
     public readonly bool Crossfade;
 
-    public readonly string PlaceholderImage;
-    public readonly string PlaceholderVideo;
-
     public readonly Dictionary<string, float> Uniforms;
 
     public readonly List<string> AudioTextureUniformNames = new();
@@ -35,8 +32,6 @@ public class FXConfig : IConfigSource
         RenderResolutionLimit = ConfigSource.ReadValue("fx", "renderresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
         ApplyPrimaryResolutionLimit = ConfigSource.ReadValue("fx", "applyprimaryresolutionlimit").ToBool(false);
         Crossfade = (Program.AppConfig.CrossfadeSeconds == 0) ? false : ConfigSource.ReadValue("fx", "crossfade").ToBool(true);
-        PlaceholderImage = ConfigSource.ReadValue("fx", "placeholderimage");
-        PlaceholderVideo = ConfigSource.ReadValue("fx", "placeholdervideo");
 
         Uniforms = ConfigSource.ParseUniforms();
 

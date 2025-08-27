@@ -61,7 +61,6 @@ namespace mhh
             // Provide the factory to libaries
             CommandLineSwitchPipe.CommandLineSwitchServer.Options.LoggerFactory = LoggerFactory;
             eyecandy.ErrorLogging.LoggerFactory = LoggerFactory;
-            HttpFileCache.FileCache.Configuration.LoggerFactory = LoggerFactory;
 
             // Create loggers for static classes
             RenderingHelper.Logger = CreateLogger(nameof(RenderingHelper));

@@ -34,11 +34,10 @@ Don't assume anything here is working or will be available in some future releas
 * 4.4.0 released 2025-08-17
 * eyecandy 3.3.0 released 2025-08-17
 
-* 4.5.0 not yet released
+* 4.4.1 not yet released
 * Updated to eyecandy v4.0.0 (local build, not yet released, maybe v4?)
 * Updated to CommandLineSwitchPipe v2.0.0 (logging improvements)
 * Updated to FFMediaToolkit v4.8.0 (cleaner release of some managed resources)
-* Added HttpFileCache v0.1.1
 * Change internal video frame-flip to use StbImage instead of C# loop, ~30% faster
 * Vertically flip screenshots (duh)
 * Set focus after spacebar-to-screenshot `--jpg wait` and `--png wait` commands
@@ -46,26 +45,15 @@ Don't assume anything here is working or will be available in some future releas
 * Tested background-thread video decode; too much locking overhead required
 * Eyecandy changes to avoid re-allocation of texture buffers
 * Added `ScreenshotPath` to `mhh.conf` (defaults to user's Desktop if no path is provided)
-
-
-### Work In Progress
-
 * Logging improvements (log categories, better output control)
   * Added `LogSuppress` to `mhh.conf` listing log categories to filter out
   * Includes logging improvements in Eyecandy, CommandLineSwitchPipe, and HttpFileCache
   * Wiki "Appendix: Logging" section lists available log categories
-* HTTP texture retrieval and caching support for textures
-* Viz and FX configs can reference HTTP/S for image and video textures
-* Added `[FileCache]` section and settings to `mhh.conf`
-* Added `--filecache [cmd]` commands:
-  * `--filecache list` shows info about all files stored in the cache
-  * `--filecache purge` clears all content from the cache
-  * `--filecache refresh` retrieves new copies of all cached files
-  * `--filecache fetch [uri]` adds or refreshes a single file in the cache
-  * `--filecache remove [uri]` deletes a file from the cache
-* The `--filecache` commands do not require MHH to be already running
-* The `mhh.conf` can specify `FileCachePlaceholder` used for images or videos
-* Viz and FX configs can specify `PlaceholderImage` and `PlaceholderVideo`
+
+
+### Work In Progress
+
+*
 
 ### MHH TODO
 
@@ -108,6 +96,11 @@ Don't assume anything here is working or will be available in some future releas
     * usage https://inspirnathan.com/posts/63-shadertoy-tutorial-part-16/
     * use six separate files? https://ogldev.org/www/tutorial25/tutorial25.html
     * Emil has lots of HQ skyboxes https://opengameart.org/content/mountain-skyboxes
+
+### MHH NON-STARTERS
+
+* Background processing of video decoding (too much locking and thread switching overhead)
+* Image and video retrieval over HTTP (caching is too much bookkeeping, minimal benefits)
 
 ### EYECANDY TODO (MAJOR)
 

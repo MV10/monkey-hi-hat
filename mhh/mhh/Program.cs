@@ -2,7 +2,6 @@
 using CommandLineSwitchPipe;
 using eyecandy;
 using FFMediaToolkit;
-using HttpFileCache;
 using Microsoft.Extensions.Logging;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
@@ -150,7 +149,6 @@ namespace mhh
             {
                 // Stephen Cleary says CTS disposal is unnecessary as long as the token is cancelled
                 ctsSwitchPipe?.Cancel();
-                FileCache.Dispose();
                 AppWindow?.Dispose();
                 LogHelper.Dispose();
             }
@@ -392,22 +390,10 @@ namespace mhh
             // Parse the application configuration file
             AppConfig = new ApplicationConfiguration(appConfigFile);
 
-            // Only allow --filecache commands if no other instance is running
-            if ((args.Length > 1 &&args[0].ToLowerInvariant().Equals("--filecache")))
-            {
-                if(alreadyRunning)
-                {
-                    Console.WriteLine("ERR: --filecache commands are unsafe when the program is already running.");
-                    return false; // end program
-                }
-                await ProcessFileCacheCommands(args);
-                return false; // end program
-            }
-
             // Disallow other switches at startup of first instance
             if (!alreadyRunning && args.Length > 0)
             {
-                Console.WriteLine("Only --help and --filecache switches are accepted if the program is not already running.");
+                Console.WriteLine("Only the --help switch is accepted if the program is not already running.");
                 return false; // end program
             }
 
@@ -421,9 +407,6 @@ namespace mhh
                 return false; // end program
             }
             // ...or continue running since we're the first instance
-
-            // Since this is the persistent instance, apply config and initialize HttpFileCache
-            InitFileCache();
 
             // Start listening for commands
             ctsSwitchPipe = new();
@@ -497,95 +480,6 @@ namespace mhh
             {
                 AppWindow?.Dispose();
                 AppWindow = null;
-            }
-        }
-
-        private static void InitFileCache()
-        {
-            FileCache.Configuration.SizeLimit = AppConfig.FileCacheMaxSize;
-            FileCache.Configuration.FileExpirationDays = AppConfig.FileCacheMaxAge;
-            FileCache.Configuration.CaseSensitivity = AppConfig.FileCacheCaseSensitive;
-            FileCache.Initialize();
-        }
-
-        // This is effectively a subset of the cacheutil program available in the HttpFileCache repository.
-        private static async Task ProcessFileCacheCommands(string[] args)
-        {
-            InitFileCache();
-            Console.WriteLine($"Cache directory:\n{FileCache.Configuration.CacheFullPath}\n");
-
-            string uri;
-            CachedFileData data;
-            double megabytes = FileCache.CacheSize / 1024;
-            double percent = 100d * (FileCache.CacheSize / (FileCache.Configuration.SizeLimit * 1024d));
-
-            switch (args[1].ToLowerInvariant())
-            {
-                case "list":
-                    Console.WriteLine($"Cache contains {FileCache.CacheIndex.Count} files occupying {FileCache.CacheSize} bytes ({megabytes:F2}MB is {percent:F2}% of alloted space).");
-                    foreach (var kvp in FileCache.CacheIndex)
-                    {
-                        Console.WriteLine($"{kvp.Value.OriginURI} @ {kvp.Value.RetrievalTimestamp}");
-                    }
-                    break;
-
-                case "purge":
-                    Console.WriteLine($"Purging {FileCache.CacheIndex.Count} files.");
-                    FileCache.ClearCache();
-                    Console.WriteLine($"Cache cleared.");
-                    break;
-
-                case "refresh":
-                    Console.WriteLine($"Refreshing {FileCache.CacheIndex.Count} files.");
-                    Console.WriteLine("... TODO ...");
-                    break;
-
-                case "fetch":
-                    if (args.Length != 2)
-                    {
-                        ShowHelp();
-                        return;
-                    }
-                    uri = FileCache.ParseUri(args[1]);
-                    if (uri is null)
-                    {
-                        Console.WriteLine("The second argument must be a valid URI.");
-                        return;
-                    }
-                    if (args[0].ToLowerInvariant().Equals("fetch") && FileCache.CacheIndex.TryGetValue(uri, out data))
-                    {
-                        Console.WriteLine("Removing currently cached version.");
-                        FileCache.DeleteFile(uri);
-                    }
-                    Console.WriteLine("Requesting file...");
-                    await FileCache.RequestFileAsync(uri);
-                    Console.WriteLine("Completed.");
-                    break;
-
-                case "remove":
-                    if (args.Length != 2)
-                    {
-                        ShowHelp();
-                        return;
-                    }
-                    uri = FileCache.ParseUri(args[1]);
-                    if (uri is null)
-                    {
-                        Console.WriteLine("The second argument must be a valid URI.");
-                        return;
-                    }
-                    if (!FileCache.CacheIndex.ContainsKey(uri))
-                    {
-                        Console.WriteLine("The requested URI is not in the cache.");
-                        return;
-                    }
-                    FileCache.DeleteFile(uri);
-                    Console.WriteLine("File removed.");
-                    break;
-
-                default:
-                    ShowHelp();
-                    break;
             }
         }
 
@@ -750,14 +644,6 @@ All switches are passed to the already-running instance:
 
 --console                   toggles the visibility of the console window (only minimizes Terminal)
 --cls                       clears the console window of the running instance (useful during debug)
-
-Filecache commands are only available if the program is not already running:
-
---filecache list            shows info about all files stored in the cache
---filecache purge           clears all content from the cache
---filecache refresh         retrieves new copies of all cached files
---filecache fetch [uri]     adds or refreshes a single file in the cache
---filecache remove [uri]    deletes a file from the cache
 ";
     }
 }

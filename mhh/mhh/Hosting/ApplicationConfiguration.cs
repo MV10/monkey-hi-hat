@@ -80,11 +80,6 @@ namespace mhh
 
         public readonly bool ShowSpotifyTrackPopups;
 
-        public readonly long FileCacheMaxSize = 512;
-        public readonly int FileCacheMaxAge = 0;
-        public readonly string FileCachePlaceholder = string.Empty;
-        public readonly bool FileCacheCaseSensitive = false;
-
         public ApplicationConfiguration(ConfigFile appConfigFile)
         {
             ConfigSource = appConfigFile;
@@ -156,13 +151,6 @@ namespace mhh
 
             ShowSpotifyTrackPopups = ConfigSource.ReadValue(SectionOS, "showspotifytrackpopups").ToBool(false);
 
-            FileCacheMaxSize = ConfigSource.ReadValue("filecache", "filecachemaxsize").ToInt32(512) * 1024;
-            FileCacheMaxAge = ConfigSource.ReadValue("filecache", "filecachemaxage").ToInt32(0);
-            FileCachePlaceholder = ConfigSource.ReadValue("filecache", "filecacheplaceholder");
-            FileCacheCaseSensitive = ConfigSource.ReadValue("text", "filecachecasesensitive").ToBool(false);
-            var fileCacheImageExtensions = ConfigSource.ReadValue("filecache", "filecacheimageextensions");
-            var fileCacheVideoExtensions = ConfigSource.ReadValue("filecache", "filecachevideoextensions");
-
             // validation
             // TODO validate [text] section settings
             if (RenderResolutionLimit < 256 && RenderResolutionLimit !=0) ConfError("RenderResolutionLimit must be 256 or greater (default is 0 to disable).");
@@ -195,10 +183,6 @@ namespace mhh
 
             if (PathHelper.GetIndividualPaths(FFmpegPath).Length > 1) ConfError("Exactly one path is required for FFmpegPath.");
             PathValidation(FFmpegPath);
-
-            if (FileCacheMaxSize <= 0) ConfError("FileCacheMaxSize must be greater than 0. Default is 512 MB when omitted.");
-            if (FileCacheMaxAge < 0) ConfError("FileCacheMaxAge must be 0 days or greater. Default is 0 which disables cache expiration.");
-            if (!string.IsNullOrEmpty(FileCachePlaceholder) && PathHelper.FindFile(TexturePath, FileCachePlaceholder) is null) ConfError("The specified FileCachePlaceholder was not found in the TexturePath.");
         }
 
         private void PathValidation(string pathspec)

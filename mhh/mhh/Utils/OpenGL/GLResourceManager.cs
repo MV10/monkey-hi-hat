@@ -1,5 +1,4 @@
 ﻿
-using HttpFileCache;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -33,8 +32,6 @@ public class GLResourceManager : IDisposable
     private Dictionary<string, IReadOnlyList<GLResourceGroup>> AllocatedResourceGroups = new();
     private Dictionary<string, IReadOnlyList<GLImageTexture>> AllocatedTextures = new();
     private List<int> AvailableTextureUnits = new(Caching.MaxAvailableTextureUnit);
-
-    private Dictionary<int, GLImageTexture> DownloadQueue = new();
 
     private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(GLResourceManager));
 
@@ -220,76 +217,6 @@ public class GLResourceManager : IDisposable
         }
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-    }
-
-    /// <summary>
-    /// Adds a texture to the download queue, begins the download operation, and establishes the callback.
-    /// </summary>
-    public void EnqueueDownload(GLImageTexture tex)
-    {
-        if (DownloadQueue.ContainsKey(tex.TextureHandle))
-        {
-            Logger?.LogError($"Texture handle {tex.TextureHandle} is already in the download queue");
-            return;
-        }
-
-        Logger?.LogDebug($"Enqueuing download for {tex.Filename} for texture handle {tex.TextureHandle}");
-        DownloadQueue.Add(tex.TextureHandle, tex);
-
-        if (tex.VideoData is null)
-        {
-            FileCache.RequestFile(tex.Filename, tex.TextureHandle, ImageDownloadCallback);
-        }
-        else
-        {
-            FileCache.RequestFile(tex.Filename, tex.TextureHandle, VideoDownloadCallback);
-        }
-    }
-
-    // HttpFileCache callback for image files
-    private void ImageDownloadCallback(int textureHandle, CachedFileData data)
-    {
-        GLImageTexture tex = null;
-        if(!DownloadQueue.TryGetValue(textureHandle, out tex))
-        {
-            Logger?.LogError($"{nameof(ImageDownloadCallback)}: Texture handle {textureHandle} is not in the download queue");
-            return;
-        }
-
-        DownloadQueue.Remove(textureHandle);
-
-        if(data is null || data.Size == 0)
-        {
-            Logger?.LogError($"{nameof(ImageDownloadCallback)}: Texture handle {textureHandle} failed or is zero-length");
-            return;
-        }
-
-        Logger?.LogDebug($"Image download complete for {tex.Filename} for texture handle {tex.TextureHandle}");
-
-        RenderingHelper.LoadCachedImageFile(tex, data.GetCachePathname());
-    }
-
-    // HttpFileCache callback for video files
-    private void VideoDownloadCallback(int textureHandle, CachedFileData data)
-    {
-        GLImageTexture tex = null;
-        if (!DownloadQueue.TryGetValue(textureHandle, out tex))
-        {
-            Logger?.LogError($"{nameof(VideoDownloadCallback)}: Texture handle {textureHandle} is not in the download queue");
-            return;
-        }
-        
-        DownloadQueue.Remove(textureHandle);
-
-        if (data is null || data.Size == 0)
-        {
-            Logger?.LogError($"{nameof(VideoDownloadCallback)}: Texture handle {textureHandle} failed or is zero-length");
-            return;
-        }
-
-        Logger?.LogDebug($"Video download complete for {tex.Filename} for texture handle {tex.TextureHandle}");
-
-        // TODO
     }
 
     private int AssignTextureUnit()
