@@ -35,7 +35,7 @@ Don't assume anything here is working or will be available in some future releas
 * eyecandy 3.3.0 released 2025-08-17
 
 * 4.4.1 not yet released
-* Updated to eyecandy v4.0.0 (local build, not yet released, maybe v4?)
+* Updated to eyecandy v4.0.0 (logging improvements)
 * Updated to CommandLineSwitchPipe v2.0.0 (logging improvements)
 * Updated to FFMediaToolkit v4.8.0 (cleaner release of some managed resources)
 * Change internal video frame-flip to use StbImage instead of C# loop, ~30% faster
@@ -46,9 +46,8 @@ Don't assume anything here is working or will be available in some future releas
 * Eyecandy changes to avoid re-allocation of texture buffers
 * Added `ScreenshotPath` to `mhh.conf` (defaults to user's Desktop if no path is provided)
 * Logging improvements (log categories, better output control)
-  * Added `LogSuppress` to `mhh.conf` listing log categories to filter out
-  * Includes logging improvements in Eyecandy, CommandLineSwitchPipe, and HttpFileCache
-  * Wiki "Appendix: Logging" section lists available log categories
+* Added `LogSuppress` to `mhh.conf` listing log categories to filter out
+* Wiki "Appendix: Logging" section lists available log categories
 
 
 ### Work In Progress
