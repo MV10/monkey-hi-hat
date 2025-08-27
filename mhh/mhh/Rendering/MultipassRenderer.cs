@@ -40,6 +40,7 @@ public class MultipassRenderer : IRenderer
     private IReadOnlyList<GLResourceGroup> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
     private IReadOnlyList<GLImageTexture> Textures;
+    private VideoMediaProcessor VideoProcessor;
 
     private Stopwatch Clock = new();
     private float ClockOffset = 0;
@@ -48,8 +49,12 @@ public class MultipassRenderer : IRenderer
     private float RandomRun;
     private Vector4 RandomRun4;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(MultipassRenderer));
+
     public MultipassRenderer(VisualizerConfig visualizerConfig)
     {
+        Logger?.LogTrace("Constructor");
+
         ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
 
         Config = visualizerConfig;
@@ -75,6 +80,7 @@ public class MultipassRenderer : IRenderer
             FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
 
             Textures = RenderingHelper.GetTextures(DrawbufferOwnerName, Config.ConfigSource);
+            if (Textures?.Any(t => t.Loaded && t.VideoData is not null) ?? false) VideoProcessor = new(Textures);
         }
         catch (ArgumentException ex)
         {
@@ -89,7 +95,7 @@ public class MultipassRenderer : IRenderer
 
     public void PreRenderFrame()
     {
-        RenderingHelper.UpdateVideoTextures(Textures);
+        VideoProcessor?.UpdateTextures();
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -169,8 +175,8 @@ public class MultipassRenderer : IRenderer
         if (ShaderPasses is null || oldResolution.X == ViewportResolution.X && oldResolution.Y == ViewportResolution.Y) return;
 
         // resize draw buffers, and resize/copy back buffers
-        RenderManager.ResourceManager.ResizeTextures(DrawbufferOwnerName, ViewportResolution);
-        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, true);
+        RenderManager.ResourceManager.ResizeTexturesForViewport(DrawbufferOwnerName, ViewportResolution);
+        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTexturesForViewport(BackbufferOwnerName, ViewportResolution, true);
 
         foreach (var pass in ShaderPasses)
         {
@@ -195,25 +201,22 @@ public class MultipassRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
+
+        VideoProcessor?.Dispose();
+        VideoProcessor = null;
 
         if (ShaderPasses is not null)
         {
             foreach (var pass in ShaderPasses)
             {
-                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass VertexSource");
                 pass.VertexSource?.Dispose();
-
-                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Uncached Shader");
                 RenderingHelper.DisposeUncachedShader(pass.Shader);
             }
             ShaderPasses = null;
         }
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Drawbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(DrawbufferOwnerName);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Backbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(BackbufferOwnerName);
 
         DrawbufferResources = null;

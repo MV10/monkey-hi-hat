@@ -1,12 +1,16 @@
 ﻿
 using eyecandy;
 using OpenTK.Windowing.Common;
-using System.Runtime.InteropServices;
 
 namespace mhh
 {
     public class ApplicationConfiguration : IConfigSource
     {
+        //
+        // Not all mhh.conf settings are represented.
+        // Some such as LogLevel are read before config is parsed into this class.
+        //
+
         public static readonly string SectionOS = "windows"; // Linux support removed as of version 4.3.1
         public static readonly string InternalShaderPath = "./InternalShaders/";
         public static readonly string PassthroughVertexPathname = Path.Combine(InternalShaderPath, "passthrough.vert");
@@ -19,6 +23,8 @@ namespace mhh
         public readonly string TexturePath = string.Empty;
         public readonly string FXPath = string.Empty;
         public readonly string FFmpegPath = string.Empty;
+        public readonly string ScreenshotPath = string.Empty;
+        public readonly string FileCachePath = string.Empty;
 
         public readonly bool StartFullScreen;
         public readonly int StartX;
@@ -113,6 +119,8 @@ namespace mhh
             TexturePath = ConfigSource.ReadValue(SectionOS, "texturepath");
             FXPath = ConfigSource.ReadValue(SectionOS, "fxpath");
             FFmpegPath = ConfigSource.ReadValue(SectionOS, "ffmpegpath");
+            ScreenshotPath = ConfigSource.ReadValue(SectionOS, "screenshotpath");
+            FileCachePath = ConfigSource.ReadValue(SectionOS, "filecachepath");
 
             DetectSilenceSeconds = ConfigSource.ReadValue("setup", "detectsilenceseconds").ToInt32(0);
             DetectSilenceMaxRMS = ConfigSource.ReadValue("setup", "detectsilencemaxrms").ToDouble(1.5d);
@@ -165,6 +173,18 @@ namespace mhh
             PathValidation(PlaylistPath);
             PathValidation(TexturePath);
             PathValidation(FXPath);
+
+            if (string.IsNullOrWhiteSpace(ScreenshotPath)) ScreenshotPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+            if (PathHelper.GetIndividualPaths(ScreenshotPath).Length > 1) ConfError("Exactly one path is required for ScreenshotPath.");
+            PathValidation(ScreenshotPath);
+
+            if (string.IsNullOrWhiteSpace(FileCachePath))
+            {
+                FileCachePath = Path.Combine(Path.GetTempPath(), "mhh_cache");
+                if(!Directory.Exists(FileCachePath)) Directory.CreateDirectory(FileCachePath);
+            }
+            if (PathHelper.GetIndividualPaths(FileCachePath).Length > 1) ConfError("Exactly one path is required for FileCachePath.");
+            PathValidation(FileCachePath);
 
             if (PathHelper.GetIndividualPaths(FFmpegPath).Length > 1) ConfError("Exactly one path is required for FFmpegPath.");
             PathValidation(FFmpegPath);

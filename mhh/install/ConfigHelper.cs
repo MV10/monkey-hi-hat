@@ -108,8 +108,12 @@ namespace mhhinstall
                     From_431_to_440();
                     break;
 
-                //case "4.4.0":
-                //    From_440_to_XXX();
+                case "4.4.0":
+                    From_440_to_450();
+                    break;
+
+                //case "4.5.0":
+                //    From_450_to_XXX();
                 //    break;
 
                 default:
@@ -199,7 +203,23 @@ namespace mhhinstall
                 $"\n# SETTING ADDED FOR v4.4.0 UPDATE ON {DateTime.Now}" +
                 "\n# When DetectSilenceSeconds is 0 (disabled), periods of silence can be\n# replaced by synthetically generated data which can prevent a blank\n# screen with some audio-reactive visualizers. Enable this by setting\n# ReplaceSilenceAfterSeconds to a non-zero value. MinimumSilenceSeconds\n# is the period of time silence must occur to respond. SyntheticAlgorithm\n# determines what kind of data is generated and the other Settings\n# control aspects of the generated data. Refer to the wiki for help.\nMinimumSilenceSeconds=0.25\nReplaceSilenceAfterSeconds=2.0\nSyntheticDataBPM=120\nSyntheticDataBeatDuration=0.1\nSyntheticDataBeatFrequency=440\nSyntheticDataAmplitude=0.5\nSyntheticDataMinimumLevel=0.1\nSyntheticDataAlgorithm=MetronomeBeat");
 
-            //From_440_to_XXX();
+            From_440_to_450();
+        }
+
+        static void From_440_to_450()
+        {
+            Output.Write("-- v4.4.0 to v4.5.0 changes:");
+
+            AddSetting("setup", "LogToConsole", "LogCategories", @"
+# Log categories indicate which parts of the program or a library
+# generated a log message. The LogCategories setting is a comma-
+# separated list of names which will be included in the log output.
+# Since logging can be quite noisy, by defualt all categories are
+# suppressed unless expressly included here. The wiki has a full
+# list of all available log categories.
+LogCategories= MHH, Eyecandy.OpenGL");
+
+            //From_450_to_XXX();
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////

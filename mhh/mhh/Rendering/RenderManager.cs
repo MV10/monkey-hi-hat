@@ -62,8 +62,12 @@ public class RenderManager : IDisposable
 
     private string CrossfadeFragPathname = string.Empty;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(RenderManager));
+
     public RenderManager()
     {
+        Logger?.LogTrace("Constructor");
+
         ResourceManager = new();
         TextManager = new();
     }
@@ -75,6 +79,8 @@ public class RenderManager : IDisposable
     /// </summary>
     public void PrepareNewRenderer(VisualizerConfig visualizerConfig, string crossfadeFragPathname = "")
     {
+        Logger?.LogTrace($"{nameof(PrepareNewRenderer)} {visualizerConfig.ConfigSource.Pathname}");
+
         IRenderer renderer;
         if (visualizerConfig.ConfigSource.Content.ContainsKey("multipass"))
         {
@@ -88,7 +94,7 @@ public class RenderManager : IDisposable
         if (!renderer.IsValid)
         {
             renderer.Dispose();
-            LogHelper.Logger?.LogError(renderer.InvalidReason);
+            Logger?.LogError(renderer.InvalidReason);
             return;
         }
 
@@ -120,6 +126,8 @@ public class RenderManager : IDisposable
     /// </summary>
     public bool ApplyFX(FXConfig fxConfig)
     {
+        Logger?.LogTrace($"{nameof(ApplyFX)} {fxConfig.ConfigSource.Pathname}");
+
         if (ActiveRenderer is null) return false;
 
         var primaryRenderer = 
@@ -132,7 +140,7 @@ public class RenderManager : IDisposable
         if (!fxRenderer.IsValid)
         {
             fxRenderer.Dispose();
-            LogHelper.Logger?.LogError(fxRenderer.InvalidReason);
+            Logger?.LogError(fxRenderer.InvalidReason);
             return false;
         }
 
@@ -278,6 +286,8 @@ $@"{primary.Filename.Replace("_", " ")}
 
     private void CrossfadeCompleted()
     {
+        Logger?.LogTrace(nameof(CrossfadeCompleted));
+
         // Upon completion, re-take control of the new one, clean up the
         // old one and the crossfader, and make the new one active
         var crossfader = ActiveRenderer as CrossfadeRenderer;
@@ -294,20 +304,16 @@ $@"{primary.Filename.Replace("_", " ")}
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() NewRenderer");
         NewRenderer?.Dispose();
         NewRenderer = null;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ActiveRenderer");
         ActiveRenderer?.Dispose();
         ActiveRenderer = null;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ResourceManager");
         ResourceManager?.Dispose();
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() TextManager");
         TextManager?.Dispose();
 
         IsDisposed = true;

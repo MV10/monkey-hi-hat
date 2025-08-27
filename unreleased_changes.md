@@ -34,16 +34,34 @@ Don't assume anything here is working or will be available in some future releas
 * 4.4.0 released 2025-08-17
 * eyecandy 3.3.0 released 2025-08-17
 
-* 4.4.1 not yet released
+* 4.5.0 not yet released
+* eyecandy 4.0.0 released 2025-08-25
+ 
+* Updated to eyecandy v4.0.0 (logging improvements)
+* Updated to CommandLineSwitchPipe v2.0.0 (logging improvements)
+* Updated to FFMediaToolkit v4.8.0 (cleaner release of some managed resources)
+* Change internal video frame-flip to use StbImage instead of C# loop, ~30% faster
 * Vertically flip screenshots (duh)
+* Set focus after spacebar-to-screenshot `--jpg wait` and `--png wait` commands
+* Improved some video processing error messages
+* Tested background-thread video decode; too much locking overhead required
+* Eyecandy changes to avoid re-allocation of texture buffers
+* Added `ScreenshotPath` to `mhh.conf` (defaults to user's Desktop if no path is provided)
+* Logging improvements (log categories, better control, more trace/info messaging)
+* Added `LogCategories` to `mhh.conf` listing categories to include; all others filtered out
+* Wiki "Appendix: Logging" section lists available log categories
+
 
 ### Work In Progress
 
-* 
-
+*
 
 ### MHH TODO
 
+* RTSP video support? (does FFMediaToolkit support it? see [issue](https://github.com/radek-k/FFMediaToolkit/issues/130))
+* Revisit logging to provide log message context and related configuration
+* Test mode - show keys on screen
+* Test mode - abort when `--load` or similar commands are issued
 * Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
@@ -60,11 +78,6 @@ Don't assume anything here is working or will be available in some future releas
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
-* Add mhh.conf path for saving screenshots (default to user's Desktop if no path is provided)
-* Test mode - show keys on screen
-* Test mode - abort if --load or similar commands are issued
-* Textures via HTTP? Caching? Videos too?
-* Streaming video via HTTP? RTSP?
 * Render the text overlay buffer once instead of running the shader every frame (set a "change" flag)
 * Hotkey to popup list of common hotkeys
 * Startup crashes if no audio device available? (ex. RDP disables audio)
@@ -73,6 +86,7 @@ Don't assume anything here is working or will be available in some future releas
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
 * Add test content to intentionally generate errors
 * Use FontAtlasFilename? (update Wiki with info about generating new ones)
+* Video generation? Step-wise clocks and timers?
 
 * Soundcloud track overlay?
     * https://help.soundcloud.com/hc/en-us/articles/115000182454-SoundCloud-for-Windows
@@ -84,7 +98,12 @@ Don't assume anything here is working or will be available in some future releas
     * use six separate files? https://ogldev.org/www/tutorial25/tutorial25.html
     * Emil has lots of HQ skyboxes https://opengameart.org/content/mountain-skyboxes
 
-### EYECANDY TODO
+### MHH NON-STARTERS
+
+* Video decoding on background thread: too much locking and context-switching overhead
+* Image and video retrieval over HTTP: minimal benefit and caching is too much bookkeeping
+
+### EYECANDY TODO (MAJOR)
 
 * Nuthin' here boss
 
@@ -115,6 +134,9 @@ c:\source\_dev_utils_standalone\ffmpeg_20240426\bin\shrinkmp4.cmd
 ffmpeg -i c:\users\jon\desktop\mhh.mp4 
     -vf "scale=trunc(iw/8)*2:trunc(ih/8)*2" -c:v libx264 
     -crf 23 c:\users\jon\desktop\mhh_small.mp4
+
+ffmpeg -i c:\users\jon\desktop\mhh.mp4 -vf "scale=trunc(iw/8)*2:trunc(ih/8)*2" -c:v libx264 -crf 23 c:\users\jon\desktop\mhh_small.mp4
+
 ```
 
 * Rename and drag-drop into README.md via Github online editor

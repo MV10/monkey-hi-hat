@@ -104,9 +104,13 @@ namespace mhh
         private DateTime NextSpotifyCheck = DateTime.MaxValue;
         private string SpotifyTrackInfo = SpotifyUnavailableMessage;
 
+        private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(HostWindow));
+
         public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
             : base(windowConfig, createShaderFromConfig: false)
         {
+            Logger?.LogTrace(nameof(HostWindow));
+
             Eyecandy = new(audioConfig);
             EyecandyEnableMethod = Eyecandy.GetType().GetMethod("Enable");
             EyecandyDisableMethod = Eyecandy.GetType().GetMethod("Disable");
@@ -213,12 +217,12 @@ namespace mhh
                     switch(WindowState)
                     {
                         case WindowState.Fullscreen:
-                            //Debug.WriteLine($"OnUpdateFrame changing WindowState from {WindowState} to Normal");
+                            Logger?.LogDebug($"OnUpdateFrame changing WindowState from {WindowState} to Normal");
                             WindowState = WindowState.Normal;
                             break;
 
                         default:
-                            //Debug.WriteLine($"OnUpdateFrame changing WindowState from {WindowState} to Fullscreen");
+                            Logger?.LogDebug($"OnUpdateFrame changing WindowState from {WindowState} to Fullscreen");
                             WindowState = WindowState.Fullscreen;
                             break;
                     }
@@ -229,6 +233,7 @@ namespace mhh
                 case CommandRequest.SnapshotNowJpg:
                 case CommandRequest.SnapshotNowPng:
                 {
+                    Logger?.LogInformation("Saving screenshot");
                     Renderer.ScreenshotHandler = new(CommandRequested);
                     CommandRequested = CommandRequest.None;
                     return;
@@ -338,6 +343,7 @@ namespace mhh
                     }
                 }
 
+                Logger?.LogInformation($"Switching to monitor {idx + 1} - {mon[idx].Name}");
                 MakeFullscreen(mon[idx].Handle);
             }
 
@@ -435,11 +441,13 @@ namespace mhh
         /// </summary>
         public string Command_Load(string visualizerConfPathname, string fxConfPathname = "", bool terminatesPlaylist = true)
         {
+            Logger?.LogTrace($"{nameof(Command_Load)} viz {visualizerConfPathname} fx {fxConfPathname}");
+
             var newViz = new VisualizerConfig(visualizerConfPathname);
             if (newViz.ConfigSource.Content.Count == 0)
             {
                 var err = $"Unable to load visualizer configuration {newViz.ConfigSource.Pathname}";
-                LogHelper.Logger?.LogError(err);
+                Logger?.LogError(err);
                 return $"ERR: {err}";
             }
 
@@ -454,7 +462,7 @@ namespace mhh
             }
 
             var msg = $"Requested visualizer {newViz.ConfigSource.Pathname}{(string.IsNullOrWhiteSpace(fxConfPathname) ? "" : $" with FX {fxConfPathname}")}";
-            LogHelper.Logger?.LogInformation(msg);
+            Logger?.LogInformation(msg);
             return msg;
         }
 
@@ -463,16 +471,18 @@ namespace mhh
         /// </summary>
         public string Command_ApplyFX(string fxConfPathname)
         {
+            Logger?.LogTrace($"{nameof(Command_ApplyFX)} fx {fxConfPathname}");
+
             var fx = new FXConfig(fxConfPathname);
             if(fx.ConfigSource.Content.Count == 0)
             {
                 var err = $"Unable to load FX configuration {fx.ConfigSource.Pathname}";
-                LogHelper.Logger?.LogError(err);
+                Logger?.LogError(err);
                 return $"ERR: {err}";
             }
             QueueFX(fx);
             var msg = $"Requested FX {fx.ConfigSource.Pathname}";
-            LogHelper.Logger?.LogInformation(msg);
+            Logger?.LogInformation(msg);
             return msg;
         }
 
@@ -481,6 +491,8 @@ namespace mhh
         /// </summary>
         public string Command_QueueCrossfade(string fadeFragPathname)
         {
+            Logger?.LogTrace($"{nameof(Command_QueueCrossfade)} frag {fadeFragPathname}");
+
             QueuedCrossfadePathname = fadeFragPathname;
             return $"Queued crossfader {fadeFragPathname}";
         }
@@ -489,25 +501,39 @@ namespace mhh
         /// Loads and begins using a playlist.
         /// </summary>
         public string Command_Playlist(string playlistConfPathname)
-            => Playlist.StartNewPlaylist(playlistConfPathname);
+        {
+            Logger?.LogTrace($"{nameof(Command_Playlist)} {playlistConfPathname}");
+
+            return Playlist.StartNewPlaylist(playlistConfPathname);
+        }
 
         /// <summary>
         /// Advances to the next visualization when a playlist is active.
         /// </summary>
         public string Command_PlaylistNext(bool temporarilyIgnoreSilence = false)
-            => Playlist.NextVisualization(temporarilyIgnoreSilence);
+        {
+            Logger?.LogTrace($"{nameof(Command_PlaylistNext)}");
+
+            return Playlist.NextVisualization(temporarilyIgnoreSilence);
+        }
 
         /// <summary>
         /// Applies a post-processing FX even if one wasn't planned.
         /// </summary>
         public string Command_PlaylistNextFX()
-            => Playlist.ApplyFX();
+        {
+            Logger?.LogTrace($"{nameof(Command_PlaylistNextFX)}");
+
+            return Playlist.ApplyFX();
+        }
 
         /// <summary>
         /// Handler for the --quit command-line switch.
         /// </summary>
         public string Command_Quit()
         {
+            Logger?.LogTrace($"{nameof(Command_Quit)}");
+
             CommandRequested = CommandRequest.Quit;
             return "ACK";
         }
@@ -517,12 +543,14 @@ namespace mhh
         /// </summary>
         public string Command_Info()
         {
+            Logger?.LogTrace($"{nameof(Command_Info)}");
+
             var msg =
 $@"{GetStatistics()}
 {Renderer.GetInfo()}
 playlist   : {Playlist.GetInfo()}";
 
-            LogHelper.Logger?.LogInformation(msg);
+            Logger?.LogInformation(msg);
             return msg;
         }
 
@@ -531,6 +559,8 @@ playlist   : {Playlist.GetInfo()}";
         /// </summary>
         public string Command_FullScreen()
         {
+            Logger?.LogTrace($"{nameof(Command_FullScreen)}");
+
             CommandRequested = CommandRequest.ToggleFullscreen;
             return "ACK";
         }
@@ -540,13 +570,19 @@ playlist   : {Playlist.GetInfo()}";
         /// </summary>
         public string Command_Screenshot(CommandRequest commandRequest)
         {
+            Logger?.LogTrace($"{nameof(Command_Screenshot)} {commandRequest}");
+
             if (CommandRequested != CommandRequest.None) return "ERR: A command is already pending";
 
             CommandRequested = commandRequest;
 
-            return (commandRequest == CommandRequest.SnapshotSpacebarJpg || commandRequest == CommandRequest.SnapshotSpacebarPng) 
-                ? "ACK - press spacebar to save image" 
-                : "ACK - saving image";
+            if (commandRequest == CommandRequest.SnapshotSpacebarJpg || commandRequest == CommandRequest.SnapshotSpacebarPng)
+            {
+                Program.AppWindow.Focus();
+                return "ACK - press spacebar to save image";
+            }
+
+            return "ACK - saving image";
         }
 
         /// <summary>
@@ -554,6 +590,8 @@ playlist   : {Playlist.GetInfo()}";
         /// </summary>
         public string Command_Idle()
         {
+            Logger?.LogTrace($"{nameof(Command_Idle)}");
+
             Playlist.TerminatePlaylist();
             QueueVisualization(Caching.IdleVisualizer);
             return "ACK";
@@ -564,6 +602,8 @@ playlist   : {Playlist.GetInfo()}";
         /// </summary>
         public string Command_Pause()
         {
+            Logger?.LogTrace($"{nameof(Command_Pause)}");
+
             if (IsPaused) return "already paused; use --run to resume";
             Renderer.TimePaused = true;
             IsPaused = true;
@@ -575,6 +615,8 @@ playlist   : {Playlist.GetInfo()}";
         /// </summary>
         public string Command_Run()
         {
+            Logger?.LogTrace($"{nameof(Command_Run)}");
+
             if (!IsPaused) return "already running; use --pause to suspend";
             Renderer.TimePaused = false;
             IsPaused = false;
@@ -586,6 +628,8 @@ playlist   : {Playlist.GetInfo()}";
         /// </summary>
         public string Command_Reload()
         {
+            Logger?.LogTrace($"{nameof(Command_Reload)}");
+
             if (Renderer.ActiveRenderer is CrossfadeRenderer || Renderer.ActiveRenderer is FXRenderer) return "ERR - Crossfade or FX is active";
 
             var filename = Renderer.ActiveRenderer.Filename;
@@ -596,13 +640,13 @@ playlist   : {Playlist.GetInfo()}";
             if (newViz.ConfigSource.Content.Count == 0)
             {
                 var err = $"Unable to load visualizer configuration {newViz.ConfigSource.Pathname}";
-                LogHelper.Logger?.LogError(err);
+                Logger?.LogError(err);
                 return $"ERR: {err}";
             }
 
             QueueVisualization(newViz, replaceCachedShader: true);
             var msg = $"Reloading {newViz.ConfigSource.Pathname}";
-            LogHelper.Logger?.LogInformation(msg);
+            Logger?.LogInformation(msg);
             return msg;
         }
 
@@ -611,6 +655,8 @@ playlist   : {Playlist.GetInfo()}";
         /// </summary>
         public string Command_DisableCaching()
         {
+            Logger?.LogTrace($"{nameof(Command_DisableCaching)}");
+
             Caching.VisualizerShaders.CachingDisabled = true;
             Caching.FXShaders.CachingDisabled = true;
             Caching.LibraryShaders.CachingDisabled = true;
@@ -622,7 +668,9 @@ playlist   : {Playlist.GetInfo()}";
         /// </summary>
         public string Command_Show(string flag)
         {
-            switch(flag.ToLowerInvariant())
+            Logger?.LogTrace($"{nameof(Command_Show)} {flag}");
+
+            switch (flag.ToLowerInvariant())
             {
                 case "viz":
                     RenderManager.TextManager.SetOverlayText(Renderer.GetPopupText);
@@ -685,6 +733,8 @@ LINE 15");
         /// </summary>
         public string Command_Display()
         {
+            Logger?.LogTrace($"{nameof(Command_Display)}");
+
             var mon = Monitors.GetMonitors();
             var cur = Monitors.GetMonitorFromWindow(Program.AppWindow);
             var idx = 0;
@@ -701,6 +751,7 @@ LINE 15");
             msg.AppendLine($"   coord: ({Location.X},{Location.Y}) - ({Size.X},{Size.Y})");
             msg.AppendLine($"  screen: {idx} - {cur.Name}");
 
+            Logger?.LogInformation(msg.ToString());
             return msg.ToString();
         }
 
@@ -709,7 +760,9 @@ LINE 15");
         /// </summary>
         public string Command_Test(TestMode mode, string filename = "")
         {
-            if(Tester is not null)
+            Logger?.LogTrace($"{nameof(Command_Test)} {mode} {filename}");
+
+            if (Tester is not null)
             {
                 Tester.EndTest();
                 Tester.Dispose();
@@ -742,6 +795,8 @@ LINE 15");
         /// </summary>
         private void QueueVisualization(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)
         {
+            Logger?.LogTrace($"{nameof(QueueVisualization)} {newVisualizerConfig.ConfigSource.Pathname} replaceCachedShader {replaceCachedShader}");
+
             lock (QueuedConfigLock)
             {
                 // CommandLineSwitchPipe invokes this from another thread;
@@ -763,6 +818,8 @@ LINE 15");
         /// </summary>
         private void QueueFX(FXConfig fxConfig)
         {
+            Logger?.LogTrace($"{nameof(QueueFX)} {fxConfig.ConfigSource.Pathname}");
+
             lock (QueuedConfigLock)
             {
                 // CommandLineSwitchPipe invokes this from another thread;
@@ -806,7 +863,7 @@ LINE 15");
         /// </summary>
         private void RespondToSilence(double duration)
         {
-            LogHelper.Logger?.LogDebug($"Long-term silence detected (duration: {duration:0.####} sec");
+            Logger?.LogDebug($"Long-term silence detected (duration: {duration:0.####} sec");
 
             Playlist.TerminatePlaylist();
 
@@ -837,7 +894,8 @@ LINE 15");
 
             if (!Caching.InternalCrossfadeShader.IsValid)
             {
-                Console.WriteLine($"\n\nFATAL ERROR: Internal crossfade shader was not found or failed to compile.\n\n");
+                Logger?.LogCritical("Internal crossfade shader was not found or failed to compile.");
+                Console.WriteLine("\n\nFATAL ERROR: Internal crossfade shader was not found or failed to compile.\n\n");
                 Thread.Sleep(250);
                 Environment.Exit(-1);
             }
@@ -848,7 +906,8 @@ LINE 15");
 
             if (!Caching.TextShader.IsValid)
             {
-                Console.WriteLine($"\n\nFATAL ERROR: Internal text shader was not found or failed to compile.\n\n");
+                Logger?.LogCritical("Internal crossfade shader was not found or failed to compile.");
+                Console.WriteLine("\n\nFATAL ERROR: Internal text shader was not found or failed to compile.\n\n");
                 Thread.Sleep(250);
                 Environment.Exit(-1);
             }
@@ -868,7 +927,7 @@ LINE 15");
 
                 if(files.Count == 0 || Caching.CrossfadeShaders?.Count == 0)
                 {
-                    LogHelper.Logger?.LogWarning("No crossfade shaders found, or none compiled successfully; disabling RandomizeCrossfade setting.");
+                    Logger?.LogWarning("No crossfade shaders found, or none compiled successfully; disabling RandomizeCrossfade setting.");
                     Program.AppConfig.RandomizeCrossfade = false;
                 }
             }
@@ -876,7 +935,7 @@ LINE 15");
             // see property comments for an explanation
             GL.GetInteger(GetPName.MaxCombinedTextureImageUnits, out var maxTU);
             Caching.MaxAvailableTextureUnit = maxTU - 1 - Caching.KnownAudioTextures.Count;
-            LogHelper.Logger?.LogInformation($"This GPU supports a combined maximum of {maxTU} TextureUnits.");
+            Logger?.LogInformation($"This GPU supports a combined maximum of {maxTU} TextureUnits.");
         }
 
         private string GetStatistics() =>
@@ -891,33 +950,21 @@ display res: {ClientSize.X} x {ClientSize.Y}";
         public new void Dispose()
         {
             if (IsDisposed) return;
-            LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+            Logger?.LogTrace("Disposing");
 
             base.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy.EndAudioProcessing()");
             var success = Eyecandy?.EndAudioProcessing();
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy.EndAudioProcessing() success: {success}");
+            Logger?.LogTrace($"Dispose Eyecandy.EndAudioProcessing success: {success}");
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal TestModeManager");
             Tester?.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Eyecandy AudioTextureEngine");
             Eyecandy?.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached visualizer shaders");
             Caching.VisualizerShaders.Dispose();
-
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached FX shaders");
             Caching.FXShaders.Dispose();
-
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached library shaders");
             Caching.LibraryShaders.Dispose();
-
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade shader");
             Caching.InternalCrossfadeShader.Dispose();
-
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() cached crossfade shaders");
             if (Caching.CrossfadeShaders?.Count > 0)
             {
                 foreach(var s in Caching.CrossfadeShaders)
@@ -926,11 +973,8 @@ display res: {ClientSize.X} x {ClientSize.Y}";
                 }
                 Caching.CrossfadeShaders = null;
             }
-
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal text shader");
             Caching.TextShader.Dispose();
 
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Renderer / RenderManager");
             Renderer?.Dispose();
 
             IsDisposed = true;

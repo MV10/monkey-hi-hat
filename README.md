@@ -4,7 +4,7 @@
 
 Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC's speaker outputs.
 
-> [2025-AUG-17: Install or update to version 4.4.0](https://github.com/MV10/monkey-hi-hat/releases)!
+> [2025-AUG-27: Install or update to version 4.5.0](https://github.com/MV10/monkey-hi-hat/releases)!
 
 > Subscribe to [Release Notifications](https://github.com/MV10/monkey-hi-hat/issues/3) to find out about updates!
 
@@ -34,6 +34,8 @@ The music reactivity responds to _anything_ your PC is playing from _any_ source
 > Since the app "hears" everything your computer outputs, meaning it is processing the final mixed results of all possible inputs, the playback volume is also "heard" by the program. If your master volume level is at 50%, the "strength" of the audio signals passed to visualizers will only be half as strong as if your volume level is at 100%. My preference and recommendation is to use an external amplifier to control the volume, and leave your computer set to 100%. All of the content I provide was written / adapted / tested this way.
 
 ## Sample Videos
+
+(Warning: Apparently these videos are pretty loud when viewed on mobile devices. Sorry about that.)
 
 New! A 2-minute look at version 4.4.0 -- text overlays, crossfade transition effects, video file support, and new visualizers and effects! These very small videos still have compression artifacts due to Github's file-size limit, but they will give you a good idea of what's possible. The real thing looks about a million times better (especially on a really good screen like big 4K OLED).
 

@@ -28,25 +28,32 @@ namespace mhh
 
         private Random RNG = new();
 
+        // Can't be readonly or static because Program.FindAppConfig creates a ConfigFile
+        // before logging is initialized, but later ConfigFile instances need a valid Logger.
+        private static ILogger Logger;
+
         public ConfigFile(string confPathname)
         {
+            Logger = LogHelper.CreateLogger(nameof(ConfigFile));
+
             Pathname = Path.GetFullPath(confPathname);
             if (!Pathname.EndsWith(".conf", Const.CompareFlags)) Pathname += ".conf";
             if (!File.Exists(Pathname))
             {
                 var err = $"Configuration file not found: {Pathname}";
-                if (LogHelper.Logger is null)
+                if (Logger is null)
                 {
+                    // Program.FindAppConfig creates a ConfigFile before logging is initialized
                     Console.WriteLine(err);
                 }
                 else
                 {
-                    LogHelper.Logger.LogError(err);
+                    Logger.LogError(err);
                 }
                 return;
             }
 
-            LogHelper.Logger?.LogTrace($"ConfigFile: {Pathname}");
+            Logger?.LogTrace(Pathname);
 
             var section = string.Empty;
             int sectionID = 0;
@@ -72,7 +79,7 @@ namespace mhh
                                 var keylower = key.ToLowerInvariant();
                                 if (Content[section].ContainsKey(keylower))
                                 {
-                                    LogHelper.Logger?.LogWarning($"Config {Pathname} section [{section}] has multiple entries for setting {key}");
+                                    Logger?.LogWarning($"Config {Pathname} section [{section}] has multiple entries for setting {key}");
                                 }
                                 else
                                 {

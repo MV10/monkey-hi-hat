@@ -35,6 +35,7 @@ public class FXRenderer : IRenderer
     private IReadOnlyList<GLResourceGroup> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
     private IReadOnlyList<GLImageTexture> Textures;
+    private VideoMediaProcessor VideoProcessor;
 
     private Dictionary<string, float> PrimaryFXUniforms;
 
@@ -50,8 +51,12 @@ public class FXRenderer : IRenderer
     private float RandomRun;
     private Vector4 RandomRun4;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(FXRenderer));
+
     public FXRenderer(FXConfig fxConfig, IRenderer primaryRenderer)
     {
+        Logger?.LogTrace("Constructor");
+
         ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
 
         Config = fxConfig;
@@ -84,8 +89,8 @@ public class FXRenderer : IRenderer
             if (PrimaryRenderer is not null && PrimaryRenderer.OutputBuffers is null
                 && (PrimaryRenderer.Resolution.X != ViewportResolution.X || PrimaryRenderer.Resolution.Y != ViewportResolution.Y))
             {
-                RenderManager.ResourceManager.ResizeTexture(ShaderPasses[0].Drawbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
-                if (ShaderPasses[0].Backbuffers is not null) RenderManager.ResourceManager.ResizeTexture(ShaderPasses[0].Backbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
+                RenderManager.ResourceManager.ResizeFramebufferTexture(ShaderPasses[0].Drawbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
+                if (ShaderPasses[0].Backbuffers is not null) RenderManager.ResourceManager.ResizeFramebufferTexture(ShaderPasses[0].Backbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
             }
 
             // initialize the output buffer
@@ -102,6 +107,7 @@ public class FXRenderer : IRenderer
             }
 
             Textures = RenderingHelper.GetTextures(DrawbufferOwnerName, Config.ConfigSource);
+            if (Textures?.Any(t => t.Loaded && t.VideoData is not null) ?? false) VideoProcessor = new(Textures);
         }
         catch (ArgumentException ex)
         {
@@ -120,7 +126,8 @@ public class FXRenderer : IRenderer
 
     public void PreRenderFrame()
     {
-        RenderingHelper.UpdateVideoTextures(Textures);
+        PrimaryRenderer?.PreRenderFrame();
+        VideoProcessor?.UpdateTextures();
     }
 
     public void RenderFrame(ScreenshotWriter screenshotHandler = null)
@@ -265,16 +272,16 @@ public class FXRenderer : IRenderer
         if (ShaderPasses is null || oldResolution.X == ViewportResolution.X && oldResolution.Y == ViewportResolution.Y) return;
 
         // resize draw buffers, and resize/copy back buffers
-        RenderManager.ResourceManager.ResizeTextures(DrawbufferOwnerName, ViewportResolution);
-        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTextures(BackbufferOwnerName, ViewportResolution, true);
-        if (Config.Crossfade) RenderManager.ResourceManager.ResizeTextures(FXCrossfadeOwnerName, ViewportResolution);
+        RenderManager.ResourceManager.ResizeTexturesForViewport(DrawbufferOwnerName, ViewportResolution);
+        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTexturesForViewport(BackbufferOwnerName, ViewportResolution, true);
+        if (Config.Crossfade) RenderManager.ResourceManager.ResizeTexturesForViewport(FXCrossfadeOwnerName, ViewportResolution);
 
         // if primary doesn't have buffers, ShaderPass[0] needs to match the primary's resolution (assuming it differs from the FX buffer resolution)
         if(PrimaryRenderer is not null && PrimaryRenderer.OutputBuffers is null
             && (PrimaryRenderer.Resolution.X != ViewportResolution.X || PrimaryRenderer.Resolution.Y != ViewportResolution.Y))
         {
-            RenderManager.ResourceManager.ResizeTexture(ShaderPasses[0].Drawbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
-            if (ShaderPasses[0].Backbuffers is not null) RenderManager.ResourceManager.ResizeTexture(ShaderPasses[0].Backbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y, true);
+            RenderManager.ResourceManager.ResizeFramebufferTexture(ShaderPasses[0].Drawbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
+            if (ShaderPasses[0].Backbuffers is not null) RenderManager.ResourceManager.ResizeFramebufferTexture(ShaderPasses[0].Backbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y, true);
         }
 
         // re-bind the visualizers
@@ -306,37 +313,30 @@ public class FXRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
         RenderingHelper.UseFXResolutionLimit = false;
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() primary visualization renderer");
+        VideoProcessor?.Dispose();
+        VideoProcessor = null;
+
         PrimaryRenderer?.Dispose();
 
         if (ShaderPasses is not null)
         {
             foreach (var pass in ShaderPasses)
             {
-                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass VertexSource");
                 pass.VertexSource?.Dispose();
-
-                LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() shader pass Uncached Shader");
                 RenderingHelper.DisposeUncachedShader(pass.Shader);
             }
             ShaderPasses = null;
         }
 
         // this also deletes any allocated textures
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Drawbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(DrawbufferOwnerName);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() Backbuffer Resources");
         RenderManager.ResourceManager.DestroyAllResources(BackbufferOwnerName);
-
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade Resources");
         RenderManager.ResourceManager.DestroyAllResources(FXCrossfadeOwnerName);
 
-        LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() internal crossfade VertexSource");
         FXCrossfadeVerts?.Dispose();
 
         DrawbufferResources = null;

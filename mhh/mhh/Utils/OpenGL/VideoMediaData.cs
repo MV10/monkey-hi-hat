@@ -1,5 +1,6 @@
 ﻿
 using FFMediaToolkit.Decoding;
+using FFMediaToolkit.Graphics;
 using OpenTK.Mathematics;
 using System.Diagnostics;
 
@@ -7,6 +8,11 @@ namespace mhh;
 
 public class VideoMediaData
 {
+    /// <summary>
+    /// Validated complete pathname to the video file.
+    /// </summary>
+    public string Pathname;
+
     /// <summary>
     /// File-level data for the video.
     /// </summary>

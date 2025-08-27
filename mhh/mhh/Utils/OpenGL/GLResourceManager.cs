@@ -33,9 +33,13 @@ public class GLResourceManager : IDisposable
     private Dictionary<string, IReadOnlyList<GLImageTexture>> AllocatedTextures = new();
     private List<int> AvailableTextureUnits = new(Caching.MaxAvailableTextureUnit);
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(GLResourceManager));
+
     public GLResourceManager()
     {
-        for(int i = 0; i <= Caching.MaxAvailableTextureUnit; i++)
+        Logger?.LogTrace("Constructor");
+
+        for (int i = 0; i <= Caching.MaxAvailableTextureUnit; i++)
         {
             AvailableTextureUnits.Add(i);
         }
@@ -57,7 +61,7 @@ public class GLResourceManager : IDisposable
         if (AllocatedResourceGroups.ContainsKey(ownerName)) throw new InvalidOperationException($"GL resources already allocated to owner name {ownerName}");
         if (totalRequired < 1) throw new ArgumentOutOfRangeException("GL resource allocation request must be 1 or greater");
 
-        LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} creating {totalRequired} resource groups for {ownerName}");
+        Logger?.LogTrace($"Creating {totalRequired} resource groups for {ownerName}");
 
         List<GLResourceGroup> list = new(totalRequired);
 
@@ -70,7 +74,7 @@ public class GLResourceManager : IDisposable
                 TextureUnitOrdinal = AssignTextureUnit(),
             };
 
-            LogHelper.Logger?.LogTrace($"...Creating resource group for draw pass index {i}");
+            Logger?.LogTrace($"...Creating resource group for draw pass index {i}");
 
             info.FramebufferHandle = GL.GenFramebuffer();
             info.TextureHandle = GL.GenTexture();
@@ -79,7 +83,7 @@ public class GLResourceManager : IDisposable
             GL.ActiveTexture(info.TextureUnit);
             GL.BindTexture(TextureTarget.Texture2D, info.TextureHandle);
             AllocateFramebufferTexture(info.TextureHandle, viewportWidth, viewportHeight);
-            ValidateFramebuffer();
+            ValidateFramebuffer(nameof(CreateResourceGroups));
 
             list.Add(info);
         }
@@ -90,12 +94,16 @@ public class GLResourceManager : IDisposable
         return list;
     }
 
+    /// <summary>
+    /// This request for new textures returns a list collection of texture objects with
+    /// handle and TextureUnit assignments. The actual texture buffer is not allocated here.
+    /// </summary>
     public IReadOnlyList<GLImageTexture> CreateTextureResources(string ownerName, int totalRequired)
     {
         if (AllocatedTextures.ContainsKey(ownerName)) throw new InvalidOperationException($"GL texture resources already allocated to owner name {ownerName}");
         if (totalRequired < 1) throw new ArgumentOutOfRangeException("GL texture resource allocation request must be 1 or greater");
 
-        LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} creating {totalRequired} texture resources for {ownerName}");
+        Logger?.LogTrace($"Creating {totalRequired} texture resources for {ownerName}");
 
         List<GLImageTexture> list = new(totalRequired);
 
@@ -121,16 +129,18 @@ public class GLResourceManager : IDisposable
     /// </summary>
     public void DestroyAllResources(string ownerName)
     {
+        Logger?.LogTrace($"Destroying all resources for {ownerName}");
+
         if (AllocatedResourceGroups.ContainsKey(ownerName))
         {
-            LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} destroying resource groups for {ownerName}");
+            Logger?.LogTrace($"Destroying resource groups for {ownerName}");
             DestroyResourceGroupsInternal(AllocatedResourceGroups[ownerName]);
             AllocatedResourceGroups.Remove(ownerName);
         }
 
         if (AllocatedTextures.ContainsKey(ownerName))
         {
-            LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} destroying texture resources for {ownerName}");
+            Logger?.LogTrace($"Destroying texture resources for {ownerName}");
             DestroyLoadedTexturesInternal(AllocatedTextures[ownerName]);
             AllocatedTextures.Remove(ownerName);
         }
@@ -141,23 +151,23 @@ public class GLResourceManager : IDisposable
     /// dimensions are provided, this is a signal to copy (scale) the old content, otherwise
     /// the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTextures(string ownerName, Vector2 viewportResolution, bool copyContent = false)
-        => ResizeTextures(ownerName, (int)viewportResolution.X, (int)viewportResolution.Y, copyContent);
+    public void ResizeTexturesForViewport(string ownerName, Vector2 viewportResolution, bool copyContent = false)
+        => ResizeTexturesForViewport(ownerName, (int)viewportResolution.X, (int)viewportResolution.Y, copyContent);
 
     /// <summary>
     /// Called by renderers whenever the viewport size has changed. If old viewport
     /// dimensions are provided, this is a signal to copy (scale) the old content, otherwise
     /// the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTextures(string ownerName, int viewportWidth, int viewportHeight, bool copyContent = false)
+    public void ResizeTexturesForViewport(string ownerName, int viewportWidth, int viewportHeight, bool copyContent = false)
     {
         if (!AllocatedResourceGroups.ContainsKey(ownerName)) return;
 
-        LogHelper.Logger?.LogTrace($"{nameof(GLResourceManager)} resizing framebuffer textures for {ownerName}");
+        Logger?.LogTrace($"Resizing framebuffer viewport textures for {ownerName}");
 
         foreach (var resources in AllocatedResourceGroups[ownerName])
         {
-            ResizeTexture(resources, viewportWidth, viewportHeight, copyContent);
+            ResizeFramebufferTexture(resources, viewportWidth, viewportHeight, copyContent);
         }
     }
 
@@ -165,9 +175,9 @@ public class GLResourceManager : IDisposable
     /// Resize a specific framebuffer texture. If old viewport dimensions are provided, this is a 
     /// signal to copy (scale) the old content, otherwise the new content is uninitialized (blank).
     /// </summary>
-    public void ResizeTexture(GLResourceGroup resources, int viewportWidth, int viewportHeight, bool copyContent = false)
+    public void ResizeFramebufferTexture(GLResourceGroup resources, int viewportWidth, int viewportHeight, bool copyContent = false)
     {
-        LogHelper.Logger?.LogTrace($"...Resizing framebuffer texture for draw pass index {resources.DrawPassIndex} to ({viewportWidth},{viewportHeight})");
+        Logger?.LogTrace($"...Resizing framebuffer texture for draw pass index {resources.DrawPassIndex} to ({viewportWidth},{viewportHeight})");
 
         int oldFramebufferHandle = 0;
         int oldTextureHandle = 0;
@@ -188,12 +198,12 @@ public class GLResourceManager : IDisposable
         GL.ActiveTexture(resources.TextureUnit);
         GL.BindTexture(TextureTarget.Texture2D, resources.TextureHandle);
         AllocateFramebufferTexture(resources.TextureHandle, viewportWidth, viewportHeight);
-        ValidateFramebuffer();
+        ValidateFramebuffer(nameof(ResizeFramebufferTexture));
 
         // Do the copy, if requested, then delete the old buffers
         if (copyContent)
         {
-            LogHelper.Logger?.LogTrace("...Copying old framebuffer content to new framebuffer");
+            Logger?.LogTrace("...Copying old framebuffer content to new framebuffer");
 
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, oldFramebufferHandle);
             GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureWidth, out int oldWidth);
@@ -231,7 +241,7 @@ public class GLResourceManager : IDisposable
     // assumes caller has activated and bound the texture handle
     private void AllocateFramebufferTexture(int textureHandle, int viewportWidth, int viewportHeight, TextureWrapMode wrapMode = TextureWrapMode.Repeat)
     {
-        LogHelper.Logger?.LogTrace($"...Allocating framebuffer texture");
+        Logger?.LogTrace($"...Allocating framebuffer texture");
 
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
@@ -243,13 +253,13 @@ public class GLResourceManager : IDisposable
     }
 
     // failure instantly crashes the program (yay!)
-    private void ValidateFramebuffer()
+    private void ValidateFramebuffer(string forMethodName)
     {
         var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (!status.Equals(FramebufferErrorCode.FramebufferComplete) && !status.Equals(FramebufferErrorCode.FramebufferCompleteExt))
         {
-            Console.WriteLine($"Error creating or resizing framebuffer: {status}");
-            LogHelper.Logger?.LogError($"Error creating or resizing framebuffer: {status}");
+            Logger?.LogCritical($"{forMethodName} error creating or resizing framebuffer: {status}");
+            Console.WriteLine($"{forMethodName} error creating or resizing framebuffer: {status}");
             Thread.Sleep(250);
             Environment.Exit(-1);
         }
@@ -258,22 +268,22 @@ public class GLResourceManager : IDisposable
     private void DestroyResourceGroupsInternal(IReadOnlyList<GLResourceGroup> list)
     {
         var handles = list.Select(i => i.FramebufferHandle).ToArray();
-        LogHelper.Logger?.LogTrace($"   Deleting {handles.Length} framebuffer handles");
+        Logger?.LogTrace($"   Deleting {handles.Length} framebuffer handles");
         GL.DeleteFramebuffers(handles.Length, handles);
 
         handles = list.Select(i => i.TextureHandle).ToArray();
-        LogHelper.Logger?.LogTrace($"   Deleting {handles.Length} texture handles");
+        Logger?.LogTrace($"   Deleting {handles.Length} texture handles");
         GL.DeleteTextures(handles.Length, handles);
 
         handles = list.Select(i => i.TextureUnitOrdinal).ToArray();
-        LogHelper.Logger?.LogTrace($"   Releasing {handles.Length} texture units");
+        Logger?.LogTrace($"   Releasing {handles.Length} texture units");
         AvailableTextureUnits.AddRange(handles.ToList());
     }
 
     private void DestroyLoadedTexturesInternal(IReadOnlyList<GLImageTexture> list)
     {
         var videos = list.Where(i => i.VideoData is not null).ToList();
-        LogHelper.Logger?.LogTrace($"   Releasing {videos.Count} video file resources");
+        Logger?.LogTrace($"   Releasing {videos.Count} video file resources");
         foreach (var video in videos)
         {
             video.VideoData.File?.Dispose();
@@ -281,29 +291,29 @@ public class GLResourceManager : IDisposable
         }
 
         var handles = list.Select(i => i.TextureHandle).ToArray();
-        LogHelper.Logger?.LogTrace($"   Deleting {handles.Length} texture handles");
+        Logger?.LogTrace($"   Deleting {handles.Length} texture handles");
         GL.DeleteTextures(handles.Length, handles);
 
         handles = list.Select(i => i.TextureUnitOrdinal).ToArray();
-        LogHelper.Logger?.LogTrace($"   Releasing {handles.Length} texture units");
+        Logger?.LogTrace($"   Releasing {handles.Length} texture units");
         AvailableTextureUnits.AddRange(handles.ToList());
     }
 
     public void Dispose()
     {
         if (IsDisposed) return;
-        LogHelper.Logger?.LogTrace($"{GetType()}.Dispose() ----------------------------");
+        Logger?.LogTrace("Disposing");
 
         foreach (var kvp in AllocatedResourceGroups)
         {
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ResourceGroup owner {kvp.Key}");
+            Logger?.LogTrace($"  Disposing ResourceGroup owner {kvp.Key}");
             DestroyResourceGroupsInternal(kvp.Value);
         }
         AllocatedResourceGroups.Clear();
 
         foreach(var kvp in AllocatedTextures)
         {
-            LogHelper.Logger?.LogTrace($"  {GetType()}.Dispose() ImageTexture owner {kvp.Key}");
+            Logger?.LogTrace($"  Disposing ImageTexture owner {kvp.Key}");
             DestroyLoadedTexturesInternal(kvp.Value);
         }
         AllocatedTextures.Clear();

@@ -1,7 +1,5 @@
 ﻿
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
-using System.IO.Compression;
 
 namespace mhh;
 
@@ -20,8 +18,15 @@ public class PlaylistManager
     private bool ForceStartFX;
     private int FXAddStartPercent;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(PlaylistManager));
+
+    public PlaylistManager()
+    { }
+
     public string StartNewPlaylist(string playlistConfPathname)
     {
+        Logger?.LogTrace($"{nameof(StartNewPlaylist)} {playlistConfPathname}");
+
         ActivePlaylist = null;
 
         var cfg = new PlaylistConfig(playlistConfPathname);
@@ -30,7 +35,7 @@ public class PlaylistManager
         if (cfg.Order == PlaylistOrder.RandomFavorites && cfg.Favorites.Count == 0) err = "RandomWeighted playlist requires Favorites visualizations, aborted";
         if (err is not null)
         {
-            LogHelper.Logger?.LogError(err);
+            Logger?.LogError(err);
             return $"ERR: {err}";
         }
 
@@ -41,11 +46,14 @@ public class PlaylistManager
 
     public void TerminatePlaylist()
     {
+        Logger?.LogTrace($"{nameof(TerminatePlaylist)}");
         ActivePlaylist = null;
     }
 
     public string NextVisualization(bool temporarilyIgnoreSilence = false)
     {
+        Logger?.LogTrace($"{nameof(NextVisualization)}");
+
         if (ActivePlaylist is null) return "ERR: No playlist is active";
 
         // This only immediately loads an FX if the playlist entry is written
@@ -101,12 +109,12 @@ public class PlaylistManager
             var fadePathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, PathHelper.MakeFragFilename(fadeFile));
             if(!string.IsNullOrEmpty(fadePathname))
             {
-                LogHelper.Logger?.LogTrace($"Playlist queuing crossfade {fadeFile}");
+                Logger?.LogTrace($"Playlist queuing crossfade {fadeFile}");
                 Program.AppWindow.Command_QueueCrossfade(fadePathname);
             }
             else
             {
-                LogHelper.Logger?.LogWarning($"Playlist crossfade not found: {fadeFile}");
+                Logger?.LogWarning($"Playlist crossfade not found: {fadeFile}");
             }
         }
 
@@ -120,7 +128,7 @@ public class PlaylistManager
             if (fxPathname is null) return $"ERR: {fxFile} not found in FX path(s)";
         }
 
-        LogHelper.Logger?.LogTrace($"Playlist queuing viz {Path.GetFileNameWithoutExtension(vizPathname)} with FX {fxPathname}");
+        Logger?.LogTrace($"Playlist queuing viz {Path.GetFileNameWithoutExtension(vizPathname)} with FX {fxPathname}");
 
         var msg = Program.AppWindow.Command_Load(vizPathname, fxPathname, terminatesPlaylist: false);
         return msg;
@@ -133,6 +141,8 @@ public class PlaylistManager
         // be applied here (in StartNewPlaylist, only the visualizer filename was
         // known, the config was not loaded yet; similarly only a pending FX name
         // is known here, if any; the FX config hasn't been loaded yet).
+
+        Logger?.LogTrace($"{nameof(StartingNextVisualization)} {visualizerConfig}");
 
         if (ActivePlaylist is null) return;
 
@@ -160,10 +170,14 @@ public class PlaylistManager
         }
 
         PlaylistAdvanceAt.AddSeconds(Program.AppConfig.CrossfadeSeconds);
+
+        Logger?.LogDebug($"{nameof(PlaylistAdvanceAt)} set to {PlaylistAdvanceAt} sec for switch mode {visualizerConfig.SwitchTimeHint}");
     }
 
     public string ApplyFX()
     {
+        Logger?.LogTrace($"{nameof(ApplyFX)}");
+
         if (ActivePlaylist is null) return "ERR: No playlist is active";
         if (IsFXActive) return "ERR: A post-processing FX is already active";
         if (ActivePlaylist.FX.Count == 0) return "ERR: FX disabled or no configurations were found";

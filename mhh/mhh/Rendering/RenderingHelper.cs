@@ -12,6 +12,9 @@ namespace mhh;
 
 public static class RenderingHelper
 {
+    // created by LogHelper after initialization
+    internal static ILogger Logger;
+
     /// <summary>
     /// When true, GetShader will delete the matching shader key so that a new instance will
     /// be loaded, compiled, and cached. The flag is cleared after processing. This is set by
@@ -87,16 +90,16 @@ public static class RenderingHelper
     public static void DisposeUncachedShader(CachedShader shader)
     {
         if (shader is null) return;
-        LogHelper.Logger?.LogTrace("RenderingHelper.DisposeUncachedShader() ----------------------------");
+        Logger?.LogTrace($"{nameof(DisposeUncachedShader)}");
 
         if (!Caching.VisualizerShaders.ContainsKey(shader.Key) && !Caching.FXShaders.ContainsKey(shader.Key))
         {
-            LogHelper.Logger?.LogTrace($"  Disposed key {shader.Key}");
+            Logger?.LogTrace($"  Disposed shader {shader.Key}");
             shader.Dispose();
         }
         else
         {
-            LogHelper.Logger?.LogTrace($"  Shader key is cached {shader.Key}");
+            Logger?.LogTrace($"  Not disposed; shader {shader.Key} is cached");
         }
     }
 
@@ -113,10 +116,12 @@ public static class RenderingHelper
     /// </summary>
     public static IVertexSource GetVertexSource(IRenderer renderer, string vertexSourceTypeName)
     {
+        Logger?.LogTrace($"{nameof(GetVertexSource)} type {vertexSourceTypeName}");
+
         var vsType = Caching.KnownVertexSources.FindType(vertexSourceTypeName);
         if (vsType is null)
         {
-            LogInvalidReason($"VertexSource type not recognized: {vertexSourceTypeName}", renderer);
+            ShaderInvalid($"VertexSource type not recognized: {vertexSourceTypeName}", renderer);
             return null;
         }
 
@@ -132,6 +137,8 @@ public static class RenderingHelper
     {
         if (!configSource.Content.ContainsKey("textures") && !configSource.Content.ContainsKey("videos")) return null;
 
+        Logger?.LogTrace($"{nameof(GetTextures)} for {ownerName} from {configSource}");
+
         var rand = new Random();
 
         // key is uniform name, List is filenames (>1 means choose one at random)
@@ -144,38 +151,40 @@ public static class RenderingHelper
 
         int resourceIndex = 0;
 
+        // handle images
         if(textureDefs is not null)
         {
             foreach (var tex in textureDefs)
             {
                 var res = resources[resourceIndex++];
 
-                res.Filename = tex.Value[rand.Next(tex.Value.Count)];
-
                 var uniformName = tex.Key;
                 if (uniformName.EndsWith("!"))
                 {
                     res.UniformName = uniformName.Substring(0, uniformName.Length - 1);
-                    res.Loaded = LoadImageFile(res, TextureWrapMode.ClampToEdge);
+                    res.WrapMode = TextureWrapMode.ClampToEdge;
                 }
                 else
                 {
                     res.UniformName = uniformName;
-                    res.Loaded = LoadImageFile(res);
                 }
+
+                res.Filename = tex.Value[rand.Next(tex.Value.Count)];
+                res.Loaded = LoadImageFile(res);
             }
         }
 
+        // handle videos
         if(videoDefs is not null)
         {
             foreach (var vid in videoDefs)
             {
                 var res = resources[resourceIndex++];
 
-                res.Filename = vid.Value[rand.Next(vid.Value.Count)];
-
                 var uniformName = vid.Key;
                 res.UniformName = uniformName;
+
+                res.Filename = vid.Value[rand.Next(vid.Value.Count)];
                 res.Loaded = LoadVideoFile(res);
             }
         }
@@ -186,24 +195,34 @@ public static class RenderingHelper
     /// <summary>
     /// Prepares a texture resource with the file identified in GLImageTexture.
     /// </summary>
-    public static bool LoadImageFile(GLImageTexture tex, TextureWrapMode wrapMode = TextureWrapMode.Repeat, string pathspec = "")
+    public static bool LoadImageFile(GLImageTexture tex, string pathspec = "")
     {
         var paths = (pathspec == "") ? Program.AppConfig.TexturePath : pathspec;
         var pathname = PathHelper.FindFile(paths, tex.Filename);
         if (pathname is null) return false;
 
-        using var stream = File.OpenRead(pathname);
-        StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
-        var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+        Logger?.LogDebug($"{nameof(LoadImageFile)} loading {pathname}");
 
-        GL.ActiveTexture(tex.TextureUnit);
-        GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-        GL.BindTexture(TextureTarget.Texture2D, 0);
+        try
+        {
+            using var stream = File.OpenRead(pathname);
+            StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
+            var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+
+            GL.ActiveTexture(tex.TextureUnit);
+            GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)tex.WrapMode);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)tex.WrapMode);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+            GL.BindTexture(TextureTarget.Texture2D, 0);
+        }
+        catch (Exception ex)
+        {
+            Logger?.LogError($"{nameof(LoadImageFile)}: Error loading image {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
+            return false;
+        }
 
         return true;
     }
@@ -215,18 +234,20 @@ public static class RenderingHelper
     {
         var paths = (pathspec == "") ? Program.AppConfig.TexturePath : pathspec;
         var pathname = PathHelper.FindFile(paths, tex.Filename);
-        if (pathname is null) return false;
+        if (pathname is null) throw new FileNotFoundException();
+
+        Logger?.LogDebug($"{nameof(LoadVideoFile)} loading {pathname}");
 
         try
         {
             tex.VideoData = new();
             tex.VideoData.File = MediaFile.Open(pathname, VideoMediaOptions);
             tex.VideoData.Stream = tex.VideoData.File.Video;
+            tex.VideoData.Pathname = pathname;
 
             if (tex.VideoData.Stream == null)
             {
-                // TODO log the error instead of writing to console
-                Console.WriteLine("No video stream found in the file.");
+                Logger?.LogError($"{nameof(LoadVideoFile)}: No video stream found in the file {tex.Filename}");
                 return false;
             }
 
@@ -245,53 +266,11 @@ public static class RenderingHelper
         }
         catch (Exception ex)
         {
-            // TODO log the error instead of writing to console
-            Console.WriteLine($"Error loading video:\n{ex.Message}\n{ex.InnerException?.Message}");
+            Logger?.LogError($"{nameof(LoadVideoFile)}: Error loading video {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
             return false;
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// This must be called by the renderer before any frame buffer objects are bound. OpenGL's behavior
-    /// is "undefined" if a texture is modified while it is bound to a framebuffer (it is considered "in use"
-    /// by the bound FBO).
-    /// </summary>
-    public static void UpdateVideoTextures(IReadOnlyList<GLImageTexture> textures)
-    {
-        if (textures is null) return;
-
-        // textures should never be updated when a framebuffer is bound (the behavior is "undefined")
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-
-        foreach (var tex in textures)
-        {
-            if (tex.Loaded)
-            {
-                if (tex.VideoData is not null)
-                {
-                    if (Program.AppWindow.Renderer.TimePaused)
-                    {
-                        if (!tex.VideoData.IsPaused)
-                        {
-                            tex.VideoData.IsPaused = true;
-                            tex.VideoData.Clock.Stop();
-                        }
-                    }
-                    else
-                    {
-                        if (tex.VideoData.IsPaused)
-                        {
-                            tex.VideoData.IsPaused = false;
-                            tex.VideoData.Clock.Start();
-                        }
-
-                        DecodeVideoFrame(tex);
-                    }
-                }
-            }
-        }
     }
 
     /// <summary>
@@ -387,7 +366,7 @@ public static class RenderingHelper
         if (string.IsNullOrWhiteSpace(vertexShaderPathname)
             || string.IsNullOrWhiteSpace(fragmentShaderPathname))
         {
-            LogInvalidReason("Invalid shader pathname", renderer);
+            ShaderInvalid("Invalid shader pathname", renderer);
             return null;
         }
 
@@ -408,12 +387,12 @@ public static class RenderingHelper
             shader = new(vertexShaderPathname, fragmentShaderPathname, libraries);
             if (!shader.IsValid)
             {
-                LogInvalidReason("Shader invalid", renderer);
+                ShaderInvalid("Shader invalid", renderer);
                 return null;
             }
 
             var cached = cache.TryAdd(shaderKey, shader);
-            if (!cached && !cache.CachingDisabled) LogHelper.Logger.LogWarning($"{nameof(GetCachedShader)} TryAdd failed to store or find {vertexShaderPathname} and {fragmentShaderPathname}");
+            if (!cached && !cache.CachingDisabled) Logger?.LogWarning($"{nameof(GetCachedShader)} TryAdd failed to store or find {vertexShaderPathname} and {fragmentShaderPathname}");
         }
         return shader;
     }
@@ -431,34 +410,36 @@ public static class RenderingHelper
                 shader = new(libraryConfigs[i]);
                 if(!shader.IsValid)
                 {
-                    LogInvalidReason($"Shader library {libraryConfigs[i].Pathname} invalid", renderer);
+                    ShaderInvalid($"Shader library {libraryConfigs[i].Pathname} invalid", renderer);
                     return null;
                 }
 
                 var cached = Caching.LibraryShaders.TryAdd(libraryConfigs[i], shader);
-                if (!cached && !Caching.LibraryShaders.CachingDisabled) LogHelper.Logger.LogWarning($"{nameof(GetCachedLibraryShaders)} TryAdd failed to store or find {libraryConfigs[i].Pathname}");
+                if (!cached && !Caching.LibraryShaders.CachingDisabled) Logger?.LogWarning($"{nameof(GetCachedLibraryShaders)} TryAdd failed to store or find {libraryConfigs[i].Pathname}");
             }
             libs[i] = shader;
         }
         return libs;
     }
 
-    private static void LogInvalidReason(string reason, IRenderer renderer)
+    private static void ShaderInvalid(string reason, IRenderer renderer)
     {
         renderer.IsValid = false;
         renderer.InvalidReason = reason;
-        LogHelper.Logger.LogError(reason);
+        Logger?.LogError(reason);
     }
 
     private static Dictionary<string, List<string>> LoadTextureDefinitions(ConfigFile configSource, string sectionName)
     {
+        // sectionName is either "textures" or "videos"
         // return dictionary key is uniform name, List is filenames (>1 means choose one at random)
 
         if (!configSource.Content.ContainsKey(sectionName)) return null;
         var definitions = new Dictionary<string, List<string>>();
         foreach (var def in configSource.Content[sectionName])
         {
-            var parts = def.Value.Split(':', Const.SplitOptions);
+            // Split count of 2 means split only on first colon; necessary for URIs
+            var parts = def.Value.Split(':', 2, Const.SplitOptions); 
             if (parts.Length == 2)
             {
                 var uniform = parts[0];
@@ -470,75 +451,17 @@ public static class RenderingHelper
         return definitions;
     }
 
-    private static void DecodeVideoFrame(GLImageTexture tex)
-    {
-        if (tex.VideoData is null || !tex.Loaded || tex.VideoData.Stream is null) return;
-
-        if (!tex.VideoData.Clock.IsRunning)
-        {
-            if (tex.VideoData.IsPaused) return;
-            tex.VideoData.Clock.Start();
-        }
-
-        if (tex.VideoData.Clock.Elapsed == tex.VideoData.LastUpdateTime) return; // abort if time hasn't changed
-
-        if (tex.VideoData.Clock.Elapsed > tex.VideoData.Duration)
-        {
-            tex.VideoData.Clock.Restart(); // always loop
-        }
-
-        try
-        {
-            var frame = tex.VideoData.Stream.GetFrame(tex.VideoData.Clock.Elapsed);
-
-            tex.VideoData.LastUpdateTime = tex.VideoData.Clock.Elapsed;
-
-            if (!frame.Data.IsEmpty && tex.VideoData.Stream.Position != tex.VideoData.LastStreamPosition)
-            {
-                tex.VideoData.LastStreamPosition = tex.VideoData.Stream.Position;
-
-                GLTextureLockMutex.WaitOne();
-                try
-                {
-                    GL.ActiveTexture(tex.TextureUnit);
-                    GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-                    unsafe
-                    {
-                        fixed (byte* ptr = (Program.AppConfig.VideoFlip == VideoFlipMode.Internal) ? FlipVideoFrame(tex.VideoData, frame) : frame.Data)
-                        {
-                            GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, tex.VideoData.Width, tex.VideoData.Height, PixelFormat.Rgba, PixelType.UnsignedByte, (IntPtr)ptr);
-                        }
-                    }
-                    GL.BindTexture(TextureTarget.Texture2D, 0);
-                }
-                finally
-                {
-                    GLTextureLockMutex.ReleaseMutex();
-                }
-            }
-        }
-        catch (EndOfStreamException)
-        {
-            // If we reach the end of the stream, restart the clock to loop the video and abort
-            tex.VideoData.Clock.Restart();
-            return;
-        }
-        catch (Exception ex)
-        {
-            LogHelper.Logger?.LogError(ex, $"Error decoding video stream {tex.Filename}");
-        }
-    }
-
-    private static byte[] FlipVideoFrame(VideoMediaData video, ImageData frame)
-    {
-        int rowBytes = video.Width * 4; // 4 bytes per pixel for RGBA
-        byte[] flippedData = new byte[frame.Data.Length];
-        for (int y = 0; y < video.Height; y++)
-        {
-            int sourceOffset = y * frame.Stride;
-            int destOffset = (video.Height - 1 - y) * rowBytes;
-            frame.Data.Slice(sourceOffset, rowBytes).CopyTo(flippedData.AsSpan(destOffset, rowBytes));
-        }
-        return flippedData;
-    }
+    // 2025-08-20 Replaced with StbImage's faster buffer flip code inside the pinned section in DecodeVideoFrame
+    //private static byte[] FlipVideoFrame(VideoMediaData video, ImageData frame)
+    //{
+    //    int rowBytes = video.Width * 4; // 4 bytes per pixel for RGBA
+    //    byte[] flippedData = new byte[frame.Data.Length];
+    //    for (int y = 0; y < video.Height; y++)
+    //    {
+    //        int sourceOffset = y * frame.Stride;
+    //        int destOffset = (video.Height - 1 - y) * rowBytes;
+    //        frame.Data.Slice(sourceOffset, rowBytes).CopyTo(flippedData.AsSpan(destOffset, rowBytes));
+    //    }
+    //    return flippedData;
+    //}
 }
