@@ -37,7 +37,9 @@ public class GLResourceManager : IDisposable
 
     public GLResourceManager()
     {
-        for(int i = 0; i <= Caching.MaxAvailableTextureUnit; i++)
+        Logger?.LogTrace("Constructor");
+
+        for (int i = 0; i <= Caching.MaxAvailableTextureUnit; i++)
         {
             AvailableTextureUnits.Add(i);
         }
@@ -127,6 +129,8 @@ public class GLResourceManager : IDisposable
     /// </summary>
     public void DestroyAllResources(string ownerName)
     {
+        Logger?.LogTrace($"Destroying all resources for {ownerName}");
+
         if (AllocatedResourceGroups.ContainsKey(ownerName))
         {
             Logger?.LogTrace($"Destroying resource groups for {ownerName}");
@@ -159,7 +163,7 @@ public class GLResourceManager : IDisposable
     {
         if (!AllocatedResourceGroups.ContainsKey(ownerName)) return;
 
-        Logger?.LogTrace($"Resizing framebuffer textures for {ownerName}");
+        Logger?.LogTrace($"Resizing framebuffer viewport textures for {ownerName}");
 
         foreach (var resources in AllocatedResourceGroups[ownerName])
         {
@@ -254,8 +258,8 @@ public class GLResourceManager : IDisposable
         var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (!status.Equals(FramebufferErrorCode.FramebufferComplete) && !status.Equals(FramebufferErrorCode.FramebufferCompleteExt))
         {
-            Console.WriteLine($"Error creating or resizing framebuffer: {status}");
             Logger?.LogError($"Error creating or resizing framebuffer: {status}");
+            Console.WriteLine($"Error creating or resizing framebuffer: {status}");
             Thread.Sleep(250);
             Environment.Exit(-1);
         }

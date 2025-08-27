@@ -47,6 +47,8 @@ public class TextRenderer : IRenderer
 
     public TextRenderer()
     {
+        Logger?.LogTrace("Constructor");
+
         TextShader = Caching.TextShader;
 
         FontTexture = RenderManager.ResourceManager.CreateTextureResources(OwnerName, 1)[0];

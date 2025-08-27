@@ -30,6 +30,8 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
 
     public CacheLRU(int maxSize, IEqualityComparer<TKey> comparer = default)
     {
+        Logger?.LogTrace("Constructor");
+
         if (maxSize < 0) throw new ArgumentOutOfRangeException(nameof(maxSize));
         Storage = new(maxSize + 1, comparer);
         Sequence = new();
@@ -169,7 +171,7 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
             {
                 foreach (var obj in Sequence)
                 {
-                    Logger?.LogTrace($"Disposing key {obj.Key}");
+                    Logger?.LogTrace($"  Disposing key {obj.Key}");
                     (obj.Lazy.Value as IDisposable).Dispose();
                 }
             }

@@ -48,6 +48,8 @@ public class TextManager : IDisposable
 
     public TextManager()
     {
+        Logger?.LogTrace("Constructor");
+
         Dimensions = new(Program.AppConfig.TextBufferX, Program.AppConfig.TextBufferY);
         CharSize = Program.AppConfig.CharacterSize;
         StartPosition = (Program.AppConfig.PositionX, Program.AppConfig.PositionY);

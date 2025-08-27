@@ -94,12 +94,12 @@ public static class RenderingHelper
 
         if (!Caching.VisualizerShaders.ContainsKey(shader.Key) && !Caching.FXShaders.ContainsKey(shader.Key))
         {
-            Logger?.LogTrace($"  Disposed key {shader.Key}");
+            Logger?.LogTrace($"  Disposed shader {shader.Key}");
             shader.Dispose();
         }
         else
         {
-            Logger?.LogTrace($"  Shader key is cached {shader.Key}");
+            Logger?.LogTrace($"  Not disposed; shader {shader.Key} is cached");
         }
     }
 
@@ -116,6 +116,8 @@ public static class RenderingHelper
     /// </summary>
     public static IVertexSource GetVertexSource(IRenderer renderer, string vertexSourceTypeName)
     {
+        Logger?.LogTrace($"{nameof(GetVertexSource)} type {vertexSourceTypeName}");
+
         var vsType = Caching.KnownVertexSources.FindType(vertexSourceTypeName);
         if (vsType is null)
         {
@@ -134,6 +136,8 @@ public static class RenderingHelper
     public static IReadOnlyList<GLImageTexture> GetTextures(string ownerName, ConfigFile configSource)
     {
         if (!configSource.Content.ContainsKey("textures") && !configSource.Content.ContainsKey("videos")) return null;
+
+        Logger?.LogTrace($"{nameof(GetTextures)} for {ownerName} from {configSource}");
 
         var rand = new Random();
 
@@ -419,6 +423,7 @@ public static class RenderingHelper
 
     private static Dictionary<string, List<string>> LoadTextureDefinitions(ConfigFile configSource, string sectionName)
     {
+        // sectionName is either "textures" or "videos"
         // return dictionary key is uniform name, List is filenames (>1 means choose one at random)
 
         if (!configSource.Content.ContainsKey(sectionName)) return null;
@@ -438,7 +443,7 @@ public static class RenderingHelper
         return definitions;
     }
 
-    // 2025-08-20 Replaced with StbImage's buffer flip code inside the pinned section in DecodeVideoFrame
+    // 2025-08-20 Replaced with StbImage's faster buffer flip code inside the pinned section in DecodeVideoFrame
     //private static byte[] FlipVideoFrame(VideoMediaData video, ImageData frame)
     //{
     //    int rowBytes = video.Width * 4; // 4 bytes per pixel for RGBA

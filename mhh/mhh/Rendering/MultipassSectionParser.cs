@@ -40,6 +40,8 @@ public class MultipassSectionParser
 
     public MultipassSectionParser(IRenderer forRenderer, string drawbufferOwnerName, string backbufferOwnerName)
     {
+        Logger?.LogTrace("Constructor");
+
         OwningRenderer = forRenderer;
         DrawbufferOwnerName = drawbufferOwnerName;
         BackbufferOwnerName = backbufferOwnerName;

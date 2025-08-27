@@ -52,6 +52,8 @@ public class CrossfadeRenderer : IRenderer
 
     public CrossfadeRenderer(IRenderer oldRenderer, IRenderer newRenderer, Action completionCallback, string fragPathname = "")
     {
+        Logger?.LogTrace($"Constructor");
+
         // Handle crossfade test mode
         if (Program.AppWindow.Tester is not null && Program.AppWindow.Tester.Mode == TestMode.Fade)
         {

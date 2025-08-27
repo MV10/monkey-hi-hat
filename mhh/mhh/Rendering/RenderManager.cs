@@ -66,6 +66,8 @@ public class RenderManager : IDisposable
 
     public RenderManager()
     {
+        Logger?.LogTrace("Constructor");
+
         ResourceManager = new();
         TextManager = new();
     }
@@ -77,6 +79,8 @@ public class RenderManager : IDisposable
     /// </summary>
     public void PrepareNewRenderer(VisualizerConfig visualizerConfig, string crossfadeFragPathname = "")
     {
+        Logger?.LogTrace($"{nameof(PrepareNewRenderer)} {visualizerConfig.ConfigSource.Pathname}");
+
         IRenderer renderer;
         if (visualizerConfig.ConfigSource.Content.ContainsKey("multipass"))
         {
@@ -122,6 +126,8 @@ public class RenderManager : IDisposable
     /// </summary>
     public bool ApplyFX(FXConfig fxConfig)
     {
+        Logger?.LogTrace($"{nameof(ApplyFX)} {fxConfig.ConfigSource.Pathname}");
+
         if (ActiveRenderer is null) return false;
 
         var primaryRenderer = 
@@ -280,6 +286,8 @@ $@"{primary.Filename.Replace("_", " ")}
 
     private void CrossfadeCompleted()
     {
+        Logger?.LogTrace(nameof(CrossfadeCompleted));
+
         // Upon completion, re-take control of the new one, clean up the
         // old one and the crossfader, and make the new one active
         var crossfader = ActiveRenderer as CrossfadeRenderer;

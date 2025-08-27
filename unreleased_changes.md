@@ -34,7 +34,9 @@ Don't assume anything here is working or will be available in some future releas
 * 4.4.0 released 2025-08-17
 * eyecandy 3.3.0 released 2025-08-17
 
-* 4.4.1 not yet released
+* 4.5.0 not yet released
+* eyecandy 4.0.0 released 2025-08-25
+ 
 * Updated to eyecandy v4.0.0 (logging improvements)
 * Updated to CommandLineSwitchPipe v2.0.0 (logging improvements)
 * Updated to FFMediaToolkit v4.8.0 (cleaner release of some managed resources)
@@ -45,14 +47,14 @@ Don't assume anything here is working or will be available in some future releas
 * Tested background-thread video decode; too much locking overhead required
 * Eyecandy changes to avoid re-allocation of texture buffers
 * Added `ScreenshotPath` to `mhh.conf` (defaults to user's Desktop if no path is provided)
-* Logging improvements (log categories, better output control)
+* Logging improvements (log categories, better control, more trace/info messaging)
+* Added `LogCategories` to `mhh.conf` listing categories to include; all others filtered out
 * Wiki "Appendix: Logging" section lists available log categories
 
 
 ### Work In Progress
 
-* Added `LogSuppress` to `mhh.conf` listing log categories to filter out
-* Added `LogCategories` to `mhh.conf` listing categories to include; all others filtered out
+*
 
 ### MHH TODO
 
@@ -98,8 +100,8 @@ Don't assume anything here is working or will be available in some future releas
 
 ### MHH NON-STARTERS
 
-* Background processing of video decoding (too much locking and thread switching overhead)
-* Image and video retrieval over HTTP (caching is too much bookkeeping, minimal benefits)
+* Video decoding on background thread: too much locking and context-switching overhead
+* Image and video retrieval over HTTP: minimal benefit and caching is too much bookkeeping
 
 ### EYECANDY TODO (MAJOR)
 

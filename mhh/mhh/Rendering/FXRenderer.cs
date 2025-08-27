@@ -55,6 +55,8 @@ public class FXRenderer : IRenderer
 
     public FXRenderer(FXConfig fxConfig, IRenderer primaryRenderer)
     {
+        Logger?.LogTrace("Constructor");
+
         ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
 
         Config = fxConfig;

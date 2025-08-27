@@ -53,6 +53,8 @@ public class MultipassRenderer : IRenderer
 
     public MultipassRenderer(VisualizerConfig visualizerConfig)
     {
+        Logger?.LogTrace("Constructor");
+
         ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
 
         Config = visualizerConfig;

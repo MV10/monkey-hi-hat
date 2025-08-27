@@ -1,7 +1,5 @@
 ﻿
 using Microsoft.Extensions.Logging;
-using System.Diagnostics;
-using System.IO.Compression;
 
 namespace mhh;
 
@@ -27,6 +25,8 @@ public class PlaylistManager
 
     public string StartNewPlaylist(string playlistConfPathname)
     {
+        Logger?.LogTrace($"{nameof(StartNewPlaylist)} {playlistConfPathname}");
+
         ActivePlaylist = null;
 
         var cfg = new PlaylistConfig(playlistConfPathname);
@@ -46,11 +46,14 @@ public class PlaylistManager
 
     public void TerminatePlaylist()
     {
+        Logger?.LogTrace($"{nameof(TerminatePlaylist)}");
         ActivePlaylist = null;
     }
 
     public string NextVisualization(bool temporarilyIgnoreSilence = false)
     {
+        Logger?.LogTrace($"{nameof(NextVisualization)}");
+
         if (ActivePlaylist is null) return "ERR: No playlist is active";
 
         // This only immediately loads an FX if the playlist entry is written
@@ -139,6 +142,8 @@ public class PlaylistManager
         // known, the config was not loaded yet; similarly only a pending FX name
         // is known here, if any; the FX config hasn't been loaded yet).
 
+        Logger?.LogTrace($"{nameof(StartingNextVisualization)} {visualizerConfig}");
+
         if (ActivePlaylist is null) return;
 
         FXAddStartPercent = visualizerConfig.FXAddStartPercent;
@@ -165,10 +170,14 @@ public class PlaylistManager
         }
 
         PlaylistAdvanceAt.AddSeconds(Program.AppConfig.CrossfadeSeconds);
+
+        Logger?.LogDebug($"{nameof(PlaylistAdvanceAt)} set to {PlaylistAdvanceAt} sec for switch mode {visualizerConfig.SwitchTimeHint}");
     }
 
     public string ApplyFX()
     {
+        Logger?.LogTrace($"{nameof(ApplyFX)}");
+
         if (ActivePlaylist is null) return "ERR: No playlist is active";
         if (IsFXActive) return "ERR: A post-processing FX is already active";
         if (ActivePlaylist.FX.Count == 0) return "ERR: FX disabled or no configurations were found";
