@@ -46,13 +46,13 @@ Don't assume anything here is working or will be available in some future releas
 * Eyecandy changes to avoid re-allocation of texture buffers
 * Added `ScreenshotPath` to `mhh.conf` (defaults to user's Desktop if no path is provided)
 * Logging improvements (log categories, better output control)
-* Added `LogSuppress` to `mhh.conf` listing log categories to filter out
 * Wiki "Appendix: Logging" section lists available log categories
 
 
 ### Work In Progress
 
-*
+* Added `LogSuppress` to `mhh.conf` listing log categories to filter out
+* Added `LogCategories` to `mhh.conf` listing categories to include; all others filtered out
 
 ### MHH TODO
 

@@ -6,6 +6,11 @@ namespace mhh
 {
     public class ApplicationConfiguration : IConfigSource
     {
+        //
+        // Not all mhh.conf settings are represented.
+        // Some such as LogLevel are read before config is parsed into this class.
+        //
+
         public static readonly string SectionOS = "windows"; // Linux support removed as of version 4.3.1
         public static readonly string InternalShaderPath = "./InternalShaders/";
         public static readonly string PassthroughVertexPathname = Path.Combine(InternalShaderPath, "passthrough.vert");

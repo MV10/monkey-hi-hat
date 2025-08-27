@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
 using Serilog.Extensions.Logging;
-using Serilog.Filters;
 
 namespace mhh
 {
@@ -52,8 +51,30 @@ namespace mhh
             }
 
             // Log category suppression
-            var suppress = (appConfig.ReadValue("setup", "logsuppress").DefaultString("Eyecandy,CommandLineSwitchPipe,HttpFileCache")).Split(',', StringSplitOptions.TrimEntries);
-            foreach (var s in suppress) cfg.Filter.ByExcluding(Matching.FromSource(s));
+            //var suppress = (appConfig.ReadValue("setup", "logsuppress").DefaultString("Eyecandy,CommandLineSwitchPipe")).Split(',', Const.SplitOptions);
+            //foreach (var cat in suppress) cfg.Filter.ByExcluding(Matching.FromSource(cat));
+
+            // Log category inclusion
+            // https://github.com/serilog/serilog/issues/1191#issuecomment-405914424
+            var allow = (appConfig.ReadValue("setup", "logcategories").DefaultString("MHH,Eyecandy,CommandLineSwitchPipe")).Split(',', Const.SplitOptions);
+            cfg.Filter.ByExcluding(e =>
+            {
+                if (!e.Properties.ContainsKey("SourceContext")) return true;
+                // Substring(1) because it is prefixed with a slash, for some reason...
+                var src = e.Properties["SourceContext"].ToString().Substring(1);
+                foreach (var cat in allow)
+                {
+                    if (src.StartsWith(cat, Const.CompareFlags)) return false;
+                }
+                return true;
+            });
+            //foreach (var cat in allow)
+            //{
+            //    cfg.Filter.ByIncludingOnly(e => 
+            //        e.Properties.ContainsKey("SourceContext") 
+            //        && e.Properties["SourceContext"].ToString()
+            //            .StartsWith(cat, Const.CompareFlags));
+            //}
 
             // Get this party started
             LoggerFactory = new SerilogLoggerFactory(cfg.CreateLogger(), dispose: true);
