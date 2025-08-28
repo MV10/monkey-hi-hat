@@ -141,23 +141,32 @@ public static class RenderingHelper
 
         var rand = new Random();
 
+        // When RandomImageSync is true, image uniforms (in the [textures] section) which
+        // have multiple filenames listed will be assigned the same randomly-chosen index
+        // as long as randSyncCount matches the number of filenames, which is derived from
+        // the first randomized uniform found. Does not apply to [videos] section.
+        bool randomImageSync = configSource.ReadValue("shader", "randomimagesync").ToBool(false);
+        int randSyncCount = -1;
+        int randSyncIndex = -1;
+
         // key is uniform name, List is filenames (>1 means choose one at random)
-        var textureDefs = LoadTextureDefinitions(configSource, "textures");
+        var imageDefs = LoadTextureDefinitions(configSource, "textures");
         var videoDefs = LoadTextureDefinitions(configSource, "videos");
 
-        var totalRequired = (textureDefs?.Count ?? 0) + (videoDefs?.Count ?? 0);
+        var totalRequired = (imageDefs?.Count ?? 0) + (videoDefs?.Count ?? 0);
         if (totalRequired == 0) return null;
         var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, totalRequired);
 
         int resourceIndex = 0;
 
         // handle images
-        if(textureDefs is not null)
+        if(imageDefs is not null)
         {
-            foreach (var tex in textureDefs)
+            foreach (var tex in imageDefs)
             {
                 var res = resources[resourceIndex++];
 
+                // uniform name ending with '!' means clamp to edge rather than repeat
                 var uniformName = tex.Key;
                 if (uniformName.EndsWith("!"))
                 {
@@ -169,7 +178,19 @@ public static class RenderingHelper
                     res.UniformName = uniformName;
                 }
 
-                res.Filename = tex.Value[rand.Next(tex.Value.Count)];
+                // pick a random filename if multiple are listed, with optional sync
+                var index = rand.Next(tex.Value.Count);
+                if (tex.Value.Count > 1 && randomImageSync)
+                {
+                    if(randSyncCount == -1) randSyncCount = tex.Value.Count;
+                    if(tex.Value.Count == randSyncCount)
+                    {
+                        if(randSyncIndex == -1) randSyncIndex = index;
+                        index = randSyncIndex;
+                    }
+                }
+                res.Filename = tex.Value[index];
+
                 res.Loaded = LoadImageFile(res);
             }
         }

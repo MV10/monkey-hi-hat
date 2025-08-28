@@ -3,6 +3,9 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
+// Many config items are not represented here because they
+// are used by code that only receives the raw ConfigFile object.
+
 namespace mhh
 {
     /// <summary>

@@ -33,11 +33,14 @@ Don't assume anything here is working or will be available in some future releas
 
 * 4.5.0 released 2025-08-27
 * eyecandy 4.0.0 released 2025-08-25
+*
+* post-4.5.0 changes not released
+* Viz/FX `RandomImageSync` true/false (good for loading matching masks, filename counts must match)
 
 
 ### Work In Progress
 
-*
+* Convert all to file-level namespaces
 
 ### MHH TODO
 
