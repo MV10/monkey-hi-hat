@@ -145,7 +145,9 @@ public static class RenderingHelper
         // have multiple filenames listed will be assigned the same randomly-chosen index
         // as long as randSyncCount matches the number of filenames, which is derived from
         // the first randomized uniform found. Does not apply to [videos] section.
-        bool randomImageSync = configSource.ReadValue("shader", "randomimagesync").ToBool(false);
+        bool randomImageSync = 
+            configSource.ReadValue("shader", "randomimagesync").ToBool(false) 
+            || configSource.ReadValue("fx", "randomimagesync").ToBool(false);
         int randSyncCount = -1;
         int randSyncIndex = -1;
 
