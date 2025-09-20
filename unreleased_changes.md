@@ -35,16 +35,17 @@ Don't assume anything here is working or will be available in some future releas
 * eyecandy 4.0.0 released 2025-08-25
 *
 * post-4.5.0 changes not released
+* eyecandy 4.1.0 released 2025-09-20
 * Viz/FX `RandomImageSync` true/false; filename counts must match
 * Added "Starship" FX demonstrating `RandomImageSync` (image/mask texture-matching)
 * Improve edge-case startup exception reporting of fatal socket errors (ie. socket-in-use)
 * Migrate all code to file-level namespaces
+* Add cubemap support for viz/fx (new `[cubemap]` section essentially like a texture)
 
 
 ### Work In Progress
 
 * Installer support for content-only versioning / releases
-* Add cubemap support for viz/fx (new `[cubemap]` section essentially like a texture)
 
 ### MHH TODO
 
@@ -79,13 +80,6 @@ Don't assume anything here is working or will be available in some future releas
 * Soundcloud track overlay?
     * https://help.soundcloud.com/hc/en-us/articles/115000182454-SoundCloud-for-Windows
     * msmd to support sending Windows client commands?
-
-* Add cubemap support
-    * face unwrap https://www.shadertoy.com/view/tlyXzG
-    * loading https://stackoverflow.com/a/4985280/152997
-    * usage https://inspirnathan.com/posts/63-shadertoy-tutorial-part-16/
-    * use six separate files? https://ogldev.org/www/tutorial25/tutorial25.html
-    * Emil has lots of HQ skyboxes https://opengameart.org/content/mountain-skyboxes
 
 ### MHH NON-STARTERS
 
@@ -131,6 +125,15 @@ ffmpeg -i c:\users\jon\desktop\mhh.mp4 -vf "scale=trunc(iw/8)*2:trunc(ih/8)*2" -
 
 * Rename and drag-drop into README.md via Github online editor
 * Pull updated content back to the local repo clone
+
+### Old Notes (keepers)
+
+* Cubemap support
+    * face unwrap https://www.shadertoy.com/view/tlyXzG
+    * loading https://stackoverflow.com/a/4985280/152997
+    * usage https://inspirnathan.com/posts/63-shadertoy-tutorial-part-16/
+    * use six separate files? https://ogldev.org/www/tutorial25/tutorial25.html
+    * Emil has lots of HQ skyboxes https://opengameart.org/content/mountain-skyboxes
 
 ### Terminal Path
 

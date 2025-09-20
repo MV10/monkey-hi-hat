@@ -130,12 +130,15 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Maps visualizer config [textures] and [videos] data to GLImageTexture resource assignments
-    /// and loads the indicated files.
+    /// Maps visualizer config [textures], [cubemaps], and [videos] data to GLImageTexture
+    /// resource assignments, and loads the indicated files.
     /// </summary>
     public static IReadOnlyList<GLImageTexture> GetTextures(string ownerName, ConfigFile configSource)
     {
-        if (!configSource.Content.ContainsKey("textures") && !configSource.Content.ContainsKey("videos")) return null;
+        if (!configSource.Content.ContainsKey("textures") 
+            && !configSource.Content.ContainsKey("videos")
+            && !configSource.Content.ContainsKey("cubemaps")) 
+            return null;
 
         Logger?.LogTrace($"{nameof(GetTextures)} for {ownerName} from {configSource}");
 
@@ -144,7 +147,7 @@ public static class RenderingHelper
         // When RandomImageSync is true, image uniforms (in the [textures] section) which
         // have multiple filenames listed will be assigned the same randomly-chosen index
         // as long as randSyncCount matches the number of filenames, which is derived from
-        // the first randomized uniform found. Does not apply to [videos] section.
+        // the first randomized uniform found. Does not apply to other section types.
         bool randomImageSync = 
             configSource.ReadValue("shader", "randomimagesync").ToBool(false) 
             || configSource.ReadValue("fx", "randomimagesync").ToBool(false);
@@ -153,9 +156,10 @@ public static class RenderingHelper
 
         // key is uniform name, List is filenames (>1 means choose one at random)
         var imageDefs = LoadTextureDefinitions(configSource, "textures");
+        var cubeDefs = LoadTextureDefinitions(configSource, "cubemaps");
         var videoDefs = LoadTextureDefinitions(configSource, "videos");
 
-        var totalRequired = (imageDefs?.Count ?? 0) + (videoDefs?.Count ?? 0);
+        var totalRequired = (imageDefs?.Count ?? 0) + (cubeDefs?.Count ?? 0) + (videoDefs?.Count ?? 0);
         if (totalRequired == 0) return null;
         var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, totalRequired);
 
@@ -197,16 +201,26 @@ public static class RenderingHelper
             }
         }
 
+        // handle cubemaps
+        if(cubeDefs is not null)
+        {
+            foreach (var tex in cubeDefs)
+            {
+                var res = resources[resourceIndex++];
+                res.UniformName = tex.Key;
+                res.Filename = tex.Value[rand.Next(tex.Value.Count)];
+                res.TextureTarget = TextureTarget.TextureCubeMap;
+                res.Loaded = LoadImageFile(res);
+            }
+        }
+
         // handle videos
         if(videoDefs is not null)
         {
             foreach (var vid in videoDefs)
             {
                 var res = resources[resourceIndex++];
-
-                var uniformName = vid.Key;
-                res.UniformName = uniformName;
-
+                res.UniformName = vid.Key;
                 res.Filename = vid.Value[rand.Next(vid.Value.Count)];
                 res.Loaded = LoadVideoFile(res);
             }
@@ -232,14 +246,8 @@ public static class RenderingHelper
             StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
             var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
-            GL.ActiveTexture(tex.TextureUnit);
-            GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)tex.WrapMode);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)tex.WrapMode);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-            GL.BindTexture(TextureTarget.Texture2D, 0);
+            if (tex.TextureTarget == TextureTarget.Texture2D) Load2DBuffer(tex, image);
+            if (tex.TextureTarget == TextureTarget.TextureCubeMap) LoadCubemapBuffer(tex, image);
         }
         catch (Exception ex)
         {
@@ -307,7 +315,7 @@ public static class RenderingHelper
         {
             if (tex.Loaded)
             {
-                shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit);
+                shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit, tex.TextureTarget);
                 if (tex.VideoData is not null)
                 {
                     shader.SetUniform($"{tex.UniformName}_duration", (float)tex.VideoData.Duration.TotalSeconds);
@@ -383,6 +391,76 @@ public static class RenderingHelper
     /// </summary>
     public static string MakeOwnerName(string usage, [CallerFilePath] string owner = "")
         => $"{Path.GetFileNameWithoutExtension(owner)} {usage} {DateTime.Now:yyyy-MM-dd HH:mm:ss.ffff}";
+
+    private static void Load2DBuffer(GLImageTexture tex, ImageResult image)
+    {
+        GL.ActiveTexture(tex.TextureUnit);
+        GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)tex.WrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)tex.WrapMode);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
+        GL.BindTexture(TextureTarget.Texture2D, 0);
+    }
+
+    private static void LoadCubemapBuffer(GLImageTexture tex, ImageResult image)
+    {
+        // https://stackoverflow.com/a/4985280/152997
+
+        GL.ActiveTexture(tex.TextureUnit);
+        GL.BindTexture(TextureTarget.TextureCubeMap, tex.TextureHandle);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapR, (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+
+        //
+        // Single-image cubemap layout:
+        // https://en.wikipedia.org/wiki/Cube_mapping#Memory_addressing
+        //
+        //    +Y
+        // -X +Z +X -Z
+        //    -Y
+        //
+
+        int sliceWidth = image.Width / 4;
+        int sliceHeight = image.Height / 3;
+        var faceData = new byte[sliceWidth * sliceHeight * 4];
+
+        GetCubemapFace(sliceWidth, sliceHeight * 2, sliceWidth, sliceHeight, image, faceData);
+        GL.TexImage2D(TextureTarget.TextureCubeMapPositiveY, 0, PixelInternalFormat.Rgba, sliceWidth, sliceHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, faceData);
+
+        GetCubemapFace(0, sliceHeight, sliceWidth, sliceHeight, image, faceData);
+        GL.TexImage2D(TextureTarget.TextureCubeMapNegativeX, 0, PixelInternalFormat.Rgba, sliceWidth, sliceHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, faceData);
+
+        GetCubemapFace(sliceWidth, sliceHeight, sliceWidth, sliceHeight, image, faceData);
+        GL.TexImage2D(TextureTarget.TextureCubeMapPositiveZ, 0, PixelInternalFormat.Rgba, sliceWidth, sliceHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, faceData);
+
+        GetCubemapFace(sliceWidth * 2, sliceHeight, sliceWidth, sliceHeight, image, faceData);
+        GL.TexImage2D(TextureTarget.TextureCubeMapPositiveX, 0, PixelInternalFormat.Rgba, sliceWidth, sliceHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, faceData);
+
+        GetCubemapFace(sliceWidth * 3, sliceHeight, sliceWidth, sliceHeight, image, faceData);
+        GL.TexImage2D(TextureTarget.TextureCubeMapNegativeZ, 0, PixelInternalFormat.Rgba, sliceWidth, sliceHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, faceData);
+
+        GetCubemapFace(sliceWidth, 0, sliceWidth, sliceHeight, image, faceData);
+        GL.TexImage2D(TextureTarget.TextureCubeMapNegativeY, 0, PixelInternalFormat.Rgba, sliceWidth, sliceHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, faceData);
+
+        GL.GenerateMipmap(GenerateMipmapTarget.TextureCubeMap);
+        GL.TexParameter(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.LinearMipmapLinear);
+
+        GL.BindTexture(TextureTarget.TextureCubeMap, 0);
+    }
+
+    private static void GetCubemapFace(int x, int y, int w, int h, ImageResult cubemap, byte[] faceData)
+    {
+        for(int row = 0; row < h; row ++)
+        {
+            int srcOffset = ((y + row) * cubemap.Width + x) * 4;
+            int dstOffset = (h - 1 - row) * w * 4; // vertical flip
+            Array.Copy(cubemap.Data, srcOffset, faceData, dstOffset, w * 4);
+        }
+    }
 
     private static CachedShader GetCachedShader(CacheLRU<string, CachedShader> cache, IRenderer renderer, string vertexShaderPathname, string fragmentShaderPathname, List<LibraryShaderConfig> libraryConfigs = null)
     {
