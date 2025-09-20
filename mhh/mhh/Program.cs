@@ -137,13 +137,7 @@ public class Program
         { } // normal, disregard
         catch (Exception ex)
         {
-            var e = ex;
-            while (e != null)
-            {
-                LogExceptionMessage($"{e.GetType()}: {e.Message}");
-                e = e.InnerException;
-            }
-            LogExceptionMessage(ex.StackTrace);
+            LogExceptionMessage(ex);
         }
         finally
         {
@@ -375,6 +369,14 @@ public class Program
         CommandLineSwitchServer.Options.PipeName = SwitchPipeName;
         var alreadyRunning = await CommandLineSwitchServer.TryConnect().ConfigureAwait(false);
 
+        // Did it fail with an exception?
+        if (CommandLineSwitchServer.TryException is not null)
+        {
+            LogExceptionMessage(CommandLineSwitchServer.TryException);
+            Thread.Sleep(250);
+            return false;
+        }
+
         // Initialize logging (including setting LoggerFactory in libraries)
         LogHelper.Initialize(appConfigFile, alreadyRunning);
         Logger = LogHelper.CreateLogger(nameof(Program));
@@ -406,7 +408,16 @@ public class Program
             Console.WriteLine(CommandLineSwitchServer.QueryResponse);
             return false; // end program
         }
-        // ...or continue running since we're the first instance
+
+        // ...did it fail with an exception?
+        if (CommandLineSwitchServer.TryException is not null)
+        {
+            LogExceptionMessage(CommandLineSwitchServer.TryException);
+            Thread.Sleep(250);
+            return false;
+        }
+
+        // ...or continue running since we're the first instance (send failed)
 
         // Start listening for commands
         ctsSwitchPipe = new();
@@ -490,6 +501,17 @@ public class Program
         Console.WriteLine($"\nMonkey Hi Hat\n");
         Console.WriteLine($"Process ID {Environment.ProcessId}");
         Console.WriteLine($"Listening on TCP port {tcp}");
+    }
+
+    private static void LogExceptionMessage(Exception ex)
+    {
+        var e = ex;
+        while (e != null)
+        {
+            LogExceptionMessage($"{e.GetType()}: {e.Message}");
+            e = e.InnerException;
+        }
+        LogExceptionMessage(ex.StackTrace);
     }
 
     private static void LogExceptionMessage(string message)

@@ -10,6 +10,11 @@ namespace mhh;
 // render as a question-mark. Newlines are handled correctly. Content
 // exceeding the Rows/Columns count is truncated.
 
+// It isn't worth the added complexity to only render the text once
+// (then reuse the buffer) because most MHH text fades in or out
+// requiring re-rendering, and is only static for 2 seconds. While
+// permanent text is supported (such as --test modes) it's uncommon.
+
 public class TextManager : IDisposable
 {
     private static readonly int MinChar = 0;
@@ -213,7 +218,7 @@ public class TextManager : IDisposable
             i = row * Dimensions.X + col;
             if (i >= TextBuffer.Length || row >= Dimensions.Y) return;
         }
-        if(!content.EndsWith("\n")) TextBuffer[i] = NewLineFlag;
+        if(!content.EndsWith('\n')) TextBuffer[i] = NewLineFlag;
     }
 
     public void Dispose()

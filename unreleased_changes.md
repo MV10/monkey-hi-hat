@@ -35,17 +35,20 @@ Don't assume anything here is working or will be available in some future releas
 * eyecandy 4.0.0 released 2025-08-25
 *
 * post-4.5.0 changes not released
-* Viz/FX `RandomImageSync` true/false (good for loading matching masks, filename counts must match)
+* Viz/FX `RandomImageSync` true/false; filename counts must match
+* Added "Starship" FX demonstrating `RandomImageSync` (image/mask texture-matching)
+* Improve edge-case startup exception reporting of fatal socket errors (ie. socket-in-use)
+* Migrate all code to file-level namespaces
 
 
 ### Work In Progress
 
-* Convert all to file-level namespaces
+* Installer support for content-only versioning / releases
+* Add cubemap support for viz/fx (new `[cubemap]` section essentially like a texture)
 
 ### MHH TODO
 
 * RTSP video support? (does FFMediaToolkit support it? see [issue](https://github.com/radek-k/FFMediaToolkit/issues/130))
-* Revisit logging to provide log message context and related configuration
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued
 * Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
@@ -64,9 +67,8 @@ Don't assume anything here is working or will be available in some future releas
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
-* Render the text overlay buffer once instead of running the shader every frame (set a "change" flag)
 * Hotkey to popup list of common hotkeys
-* Startup crashes if no audio device available? (ex. RDP disables audio)
+* Startup crashes if no audio device available? (ex. RDP disables audio); use synthetic audio?
 * Allow aliasing multipass uniform names for reusable utility frag shaders
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
@@ -78,8 +80,9 @@ Don't assume anything here is working or will be available in some future releas
     * https://help.soundcloud.com/hc/en-us/articles/115000182454-SoundCloud-for-Windows
     * msmd to support sending Windows client commands?
 
-* Add cubemap support (cubemap textures not distributed in 3.1.0)
+* Add cubemap support
     * face unwrap https://www.shadertoy.com/view/tlyXzG
+    * loading https://stackoverflow.com/a/4985280/152997
     * usage https://inspirnathan.com/posts/63-shadertoy-tutorial-part-16/
     * use six separate files? https://ogldev.org/www/tutorial25/tutorial25.html
     * Emil has lots of HQ skyboxes https://opengameart.org/content/mountain-skyboxes
@@ -88,6 +91,7 @@ Don't assume anything here is working or will be available in some future releas
 
 * Video decoding on background thread: too much locking and context-switching overhead
 * Image and video retrieval over HTTP: minimal benefit and caching is too much bookkeeping
+* Rendering text once: due to fade re-renders it isn't really worth the effort
 
 ### EYECANDY TODO (MAJOR)
 

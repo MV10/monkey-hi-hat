@@ -19,7 +19,7 @@ uniform sampler2D font;
 // Characters in a flat row,col layout per text dimensions above. Values 32 (space)
 // through 126 (tilde) match the ASCII table. The rest is arbitrary. Refer to the
 // constants defined in the Shadertoy version for details on the others. A value
-// of 0 indicates end of line.
+// of 0 indicates end of line. Character code is stored in the red channel.
 uniform isampler2D text;
 
 // The (columns,rows) dimensions of the data in the fixed-size text array uniform. Not
