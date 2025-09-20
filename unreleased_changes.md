@@ -36,11 +36,11 @@ Don't assume anything here is working or will be available in some future releas
 *
 * post-4.5.0 changes not released
 * eyecandy 4.1.0 released 2025-09-20
+* Add cubemap support for viz/fx (new `[cubemaps]` section just like `[textures]`)
 * Viz/FX `RandomImageSync` true/false; filename counts must match
 * Added "Starship" FX demonstrating `RandomImageSync` (image/mask texture-matching)
 * Improve edge-case startup exception reporting of fatal socket errors (ie. socket-in-use)
 * Migrate all code to file-level namespaces
-* Add cubemap support for viz/fx (new `[cubemap]` section essentially like a texture)
 
 
 ### Work In Progress

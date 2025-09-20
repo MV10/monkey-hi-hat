@@ -22,7 +22,7 @@ See thumbnails like the one below in the Volt's Laboratory [wiki](https://github
 
 Download and run the installer from the [release](https://github.com/MV10/monkey-hi-hat/releases) page, then read the [documentation home page](https://github.com/MV10/monkey-hi-hat/wiki) for a quick step-by-step first-run walk-through. The docs range from basic usage to advanced customization.
 
-This should run on almost any 64-bit Windows 10 or Windows 11 PC with a decent NVIDIA or AMD graphics card and practically any type of audio playback. (As of v4.3.1 there is no support for Linux.) 
+This should run on almost any 64-bit Windows PC with a decent NVIDIA or AMD graphics card and practically any type of audio playback. (Linux support was dropped as of v4.3.1.) 
 
 CPU and memory requirements are minimal, 99% of the work is on the graphics card. If your PC can run [this Shadertoy example](https://www.shadertoy.com/view/mtKfWd) full-screen, which is a Monkey Hi Hat visualization with effects that I back-ported, you should be able to run Monkey Hi Hat just fine. No third-party drivers are required (earlier versions did require one). Overhead is so low, on my desktop PC I often run the program on a second monitor while I do other work. As of version 4.4 it only uses around 110 MB at runtime.
 
