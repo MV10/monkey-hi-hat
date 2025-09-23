@@ -85,5 +85,8 @@ when msbuild decides what constitutes a project change.
   <ItemGroup>
     <UpToDateCheckInput Include="@(Content);@(None)" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\PublishProfiles\" />
+  </ItemGroup>
 
 </Project>

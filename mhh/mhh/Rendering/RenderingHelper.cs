@@ -144,13 +144,13 @@ public static class RenderingHelper
 
         var rand = new Random();
 
-        // When RandomImageSync is true, image uniforms (in the [textures] section) which
+        // When RandomTextureSync is true, uniforms in the [textures] section which
         // have multiple filenames listed will be assigned the same randomly-chosen index
         // as long as randSyncCount matches the number of filenames, which is derived from
         // the first randomized uniform found. Does not apply to other section types.
-        bool randomImageSync = 
-            configSource.ReadValue("shader", "randomimagesync").ToBool(false) 
-            || configSource.ReadValue("fx", "randomimagesync").ToBool(false);
+        bool randomTextureSync = 
+            configSource.ReadValue("shader", "randomtexturesync").ToBool(false) 
+            || configSource.ReadValue("fx", "randomtexturesync").ToBool(false);
         int randSyncCount = -1;
         int randSyncIndex = -1;
 
@@ -186,7 +186,7 @@ public static class RenderingHelper
 
                 // pick a random filename if multiple are listed, with optional sync
                 var index = rand.Next(tex.Value.Count);
-                if (tex.Value.Count > 1 && randomImageSync)
+                if (tex.Value.Count > 1 && randomTextureSync)
                 {
                     if(randSyncCount == -1) randSyncCount = tex.Value.Count;
                     if(tex.Value.Count == randSyncCount)
