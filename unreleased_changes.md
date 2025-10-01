@@ -35,7 +35,9 @@ Don't assume anything here is working or will be available in some future releas
 * eyecandy 4.0.0 released 2025-08-25
 *
 * post-4.5.0 changes not released
-* eyecandy 4.1.0 released 2025-09-20
+* Updated to eyecandy 4.2.0 (shader cubemap uniform support, WASAPI capture device control)
+* Use `CaptureDeviceName` in config with WASAPI to use a specific device (mic, line-in, aux, etc)
+* Use the eyecandy demo utility (command: `demo info`) to list WASAPI audio device names
 * Add cubemap support for viz/fx (new `[cubemaps]` section just like `[textures]`)
 * Viz/FX `RandomTextureSync` true/false; filename counts must match
 * Added "Starship" FX demonstrating `RandomTextureSync` (image/mask texture-matching)
@@ -43,12 +45,23 @@ Don't assume anything here is working or will be available in some future releas
 * Migrate all code to file-level namespaces
 
 
+
 ### Work In Progress
 
-* Installer support for content-only versioning / releases
+* Add NDI support (input and output)
+  * https://github.com/eliaspuurunen/NdiLibDotNetCoreBase
+  * https://ndi.video/tools/
+  * https://docs.ndi.video/all/developing-with-ndi/introduction
+
 
 ### MHH TODO
 
+* New wiki content for DJ / VJ usage scenarios (line-in, Spout, NDI)
+* Add Spout support (input and output)
+  * https://github.com/AWAS666/Spout.NETCore
+  * https://spout.zeal.co/
+  * https://github.com/leadedge/Spout2
+* Installer support for content-only versioning / releases
 * RTSP video support? (does FFMediaToolkit support it? see [issue](https://github.com/radek-k/FFMediaToolkit/issues/130))
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued
