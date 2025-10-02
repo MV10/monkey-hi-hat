@@ -6,6 +6,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using Spout.Interop;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
@@ -104,6 +105,9 @@ public class HostWindow : BaseWindow, IDisposable
     private DateTime NextSpotifyCheck = DateTime.MaxValue;
     private string SpotifyTrackInfo = SpotifyUnavailableMessage;
 
+    private SpoutSender SpoutSender;
+    private const string SpoutSenderName = "Monkey Hi Hat";
+
     private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(HostWindow));
 
     public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
@@ -144,6 +148,12 @@ public class HostWindow : BaseWindow, IDisposable
         Renderer.PrepareNewRenderer(Caching.IdleVisualizer);
         Eyecandy.BeginAudioProcessing();
 
+        if (Program.AppConfig.SpoutSender)
+        {
+            SpoutSender = new();
+            SpoutSender.SetSenderName(SpoutSenderName);
+        }
+
         if (Program.AppConfig.ShowSpotifyTrackPopups) NextSpotifyCheck = DateTime.Now.AddMilliseconds(SpotifyCheckMillisec);
     }
 
@@ -169,6 +179,9 @@ public class HostWindow : BaseWindow, IDisposable
 
         SwapBuffers();
         CalculateFPS();
+
+        // All zeros means use default framebuffer and auto-detect size
+        _ = SpoutSender?.SendFbo(0, 0, 0, true);
 
         // Starts hidden to avoid a white flicker before the first frame is rendered.
         if (!IsVisible) IsVisible = true;
@@ -953,6 +966,8 @@ display res: {ClientSize.X} x {ClientSize.Y}";
         Logger?.LogTrace("Disposing");
 
         base.Dispose();
+
+        SpoutSender?.Dispose();
 
         var success = Eyecandy?.EndAudioProcessing();
         Logger?.LogTrace($"Dispose Eyecandy.EndAudioProcessing success: {success}");

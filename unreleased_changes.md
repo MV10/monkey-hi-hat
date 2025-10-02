@@ -45,8 +45,12 @@ Don't assume anything here is working or will be available in some future releas
 * Migrate all code to file-level namespaces
 
 
-
 ### Work In Progress
+
+* Add Spout support (input and output)
+  * https://github.com/AWAS666/Spout.NETCore
+  * https://spout.zeal.co/
+  * https://github.com/leadedge/Spout2
 
 * Add NDI support (input and output)
   * https://github.com/eliaspuurunen/NdiLibDotNetCoreBase
@@ -56,11 +60,8 @@ Don't assume anything here is working or will be available in some future releas
 
 ### MHH TODO
 
+* Remove `CaptureDriverName` from config (unused)
 * New wiki content for DJ / VJ usage scenarios (line-in, Spout, NDI)
-* Add Spout support (input and output)
-  * https://github.com/AWAS666/Spout.NETCore
-  * https://spout.zeal.co/
-  * https://github.com/leadedge/Spout2
 * Installer support for content-only versioning / releases
 * RTSP video support? (does FFMediaToolkit support it? see [issue](https://github.com/radek-k/FFMediaToolkit/issues/130))
 * Test mode - show keys on screen

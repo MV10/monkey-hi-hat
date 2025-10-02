@@ -85,6 +85,8 @@ public class ApplicationConfiguration : IConfigSource
 
     public readonly bool ShowSpotifyTrackPopups;
 
+    public readonly bool SpoutSender;
+
     public ApplicationConfiguration(ConfigFile appConfigFile)
     {
         ConfigSource = appConfigFile;
@@ -135,10 +137,11 @@ public class ApplicationConfiguration : IConfigSource
         SyntheticDataMinimumLevel = ConfigSource.ReadValue("setup", "syntheticdataminimumlevel").ToFloat(0.1f);
         SyntheticAlgorithm = ConfigSource.ReadValue("setup", "syntheticalgorithm").ToEnum(SyntheticDataAlgorithm.MetronomeBeat);
 
+        LoopbackApi = ConfigSource.ReadValue("windows", "loopbackapi").ToEnum(LoopbackApi.WindowsInternal);
         CaptureDriverName = ConfigSource.ReadValue(SectionOS, "capturedrivername");
         CaptureDeviceName = ConfigSource.ReadValue(SectionOS, "capturedevicename");
 
-        LoopbackApi = ConfigSource.ReadValue("windows", "loopbackapi").ToEnum(LoopbackApi.WindowsInternal);
+        SpoutSender = ConfigSource.ReadValue("windows", "spoutsender").ToBool(false);
 
         ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
         PopupVisibilitySeconds = ConfigSource.ReadValue("text", "PopupVisibilitySeconds").ToInt32(5);
