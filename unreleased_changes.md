@@ -43,6 +43,7 @@ Don't assume anything here is working or will be available in some future releas
 * Added "Starship" FX demonstrating `RandomTextureSync` (image/mask texture-matching)
 * Improve edge-case startup exception reporting of fatal socket errors (ie. socket-in-use)
 * Migrate all code to file-level namespaces
+* Added Spout output for DJ / VJ and video editing scenarios
 
 
 ### Work In Progress
