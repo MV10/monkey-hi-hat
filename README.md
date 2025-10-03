@@ -2,9 +2,11 @@
 
 ## **Streaming Music Visualizer**
 
-Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC's speaker outputs. (Line-in also optionally available.)
+Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC's speaker outputs.
 
-> [2025-AUG-27: Install or update to version 4.5.0](https://github.com/MV10/monkey-hi-hat/releases)!
+> [2025-OCT-05: Install or update to version 5.0.0](https://github.com/MV10/monkey-hi-hat/releases)!
+
+> New DJ / VJ features: Line-in / mic support, Spout output, NDI output
 
 > Subscribe to [Release Notifications](https://github.com/MV10/monkey-hi-hat/issues/3) to find out about updates!
 
@@ -31,7 +33,7 @@ Please understand there is no "user interface" -- the program is designed to run
 The music reactivity responds to _anything_ your PC is playing from _any_ source, whether that is Spotify, Soundcloud, Pandora, an external device connected to the line-in or surround-sound jacks, MP3s, YouTube, etc. If you can hear it from your speakers, the program can "hear" it too. For on-screen track info, only the native Windows Spotify client is supported.
 
 > ### <b>IMPORTANT: Turn Up The Volume!</b>
-> Since the app "hears" everything your computer outputs, meaning it is processing the final mixed results of all possible inputs, the playback volume is also "heard" by the program. If your master volume level is at 50%, the "strength" of the audio signals passed to visualizers will only be half as strong as if your volume level is at 100%. My preference and recommendation is to use an external amplifier to control the volume, and leave your computer set to 100%. All of the content I provide was written / adapted / tested this way.
+> Since the app "hears" everything your computer outputs, meaning it is processing the final mixed results of all possible inputs, the playback volume is also "heard" by the program. If your master volume level is at 50%, the "strength" of the audio signals passed to visualizers will only be half as strong as if your volume level is at 100%. My preference and recommendation is to use an external amplifier to control the volume, and leave your computer set to 100%. All of the content I provide was written / adapted / tested this way. (Line-in / mic audio is not volume-sensitive.)
 
 ## Sample Videos
 
