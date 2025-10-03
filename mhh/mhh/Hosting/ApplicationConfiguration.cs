@@ -85,6 +85,10 @@ public class ApplicationConfiguration : IConfigSource
 
     public readonly bool ShowSpotifyTrackPopups;
 
+    public readonly bool NDISender;
+    public readonly string NDIDeviceName = string.Empty;
+    public readonly string NDIGroupList = string.Empty;
+
     public readonly bool SpoutSender;
 
     public ApplicationConfiguration(ConfigFile appConfigFile)
@@ -141,6 +145,10 @@ public class ApplicationConfiguration : IConfigSource
         CaptureDriverName = ConfigSource.ReadValue(SectionOS, "capturedrivername");
         CaptureDeviceName = ConfigSource.ReadValue(SectionOS, "capturedevicename");
 
+        NDISender = ConfigSource.ReadValue("ndi", "ndisender").ToBool(false);
+        NDIDeviceName = ConfigSource.ReadValue("ndi", "ndidevicename");
+        NDIGroupList = ConfigSource.ReadValue("ndi", "ndigroupList");
+
         SpoutSender = ConfigSource.ReadValue("windows", "spoutsender").ToBool(false);
 
         ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
@@ -191,6 +199,8 @@ public class ApplicationConfiguration : IConfigSource
 
         if (PathHelper.GetIndividualPaths(FFmpegPath).Length > 1) ConfError("Exactly one path is required for FFmpegPath.");
         PathValidation(FFmpegPath);
+
+        if(string.IsNullOrWhiteSpace(NDIDeviceName)) NDIDeviceName = "Monkey Hi Hat";
     }
 
     private void PathValidation(string pathspec)

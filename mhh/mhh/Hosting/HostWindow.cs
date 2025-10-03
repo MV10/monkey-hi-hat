@@ -108,6 +108,8 @@ public class HostWindow : BaseWindow, IDisposable
     private SpoutSender SpoutSender;
     private const string SpoutSenderName = "Monkey Hi Hat";
 
+    private NDISenderManager NDISender;
+
     private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(HostWindow));
 
     public HostWindow(EyeCandyWindowConfig windowConfig, EyeCandyCaptureConfig audioConfig)
@@ -154,6 +156,11 @@ public class HostWindow : BaseWindow, IDisposable
             SpoutSender.SetSenderName(SpoutSenderName);
         }
 
+        if (Program.AppConfig.NDISender)
+        {
+            NDISender = new NDISenderManager(Program.AppConfig.NDIDeviceName, Program.AppConfig.NDIGroupList);
+        }
+
         if (Program.AppConfig.ShowSpotifyTrackPopups) NextSpotifyCheck = DateTime.Now.AddMilliseconds(SpotifyCheckMillisec);
     }
 
@@ -183,6 +190,8 @@ public class HostWindow : BaseWindow, IDisposable
         // All zeros means use default framebuffer and auto-detect size
         _ = SpoutSender?.SendFbo(0, 0, 0, true);
 
+        NDISender?.SendVideoFrame();
+
         // Starts hidden to avoid a white flicker before the first frame is rendered.
         if (!IsVisible) IsVisible = true;
     }
@@ -195,12 +204,14 @@ public class HostWindow : BaseWindow, IDisposable
     {
         base.OnUpdateFrame(e);
 
-        // On Windows, Update/Render events are suspended during resize operations.
+        // On Windows, Update/Render events are suspended during resize operations, so
+        // if this is true, resizing has been completed.
         if (OnResizeFired)
         {
             OnResizeFired = false;
             RenderingHelper.ClientSize = ClientSize;
             Renderer.OnResize();
+            NDISender?.PrepareVideoFrame();
             return;
         }
 
@@ -439,7 +450,7 @@ public class HostWindow : BaseWindow, IDisposable
 
     /// <summary>
     /// Only sets a flag, as this will fire continuously as the user drags the
-    /// window border. During resize, OnUpdateWindow is suspended, so the actual
+    /// window border. During resize, OnUpdateFrame is suspended, so the actual
     /// resize response happens in that event when the flag is set.
     /// </summary>
     protected override void OnResize(ResizeEventArgs e)
@@ -968,6 +979,8 @@ display res: {ClientSize.X} x {ClientSize.Y}";
         base.Dispose();
 
         SpoutSender?.Dispose();
+
+        NDISender?.Dispose();
 
         var success = Eyecandy?.EndAudioProcessing();
         Logger?.LogTrace($"Dispose Eyecandy.EndAudioProcessing success: {success}");
