@@ -55,7 +55,7 @@ Don't assume anything here is working or will be available in some future releas
 * Installer - Start menu link to edit .conf
 * Installer - Start menu link to view mhh.log and msmd.log
 * Installer - Start menu link to notes.txt as viz credits
-* Installer - add eyecandy demo and tcpargs utilities
+* Installer - add tcpargs utility
 * Installer - Use winget to retrieve .NET runtime
 * Installer - winget distro? https://github.com/Belphemur/SoundSwitch/issues/1220
 * Create config GUI (WinForms now available for modern .NET)

@@ -22,6 +22,8 @@ namespace mhhinstall
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+        // Update this when FFMPEG is updated
+        public static readonly string ffmepgUrl = "https://mcguirev10.com/assets/misc/mhh-ffmpeg-7-1-1.bin";
 
         // Update these for dotnet runtime bumps
         public static readonly string dotnetVer = "8";
@@ -32,6 +34,7 @@ namespace mhhinstall
         public static readonly string tempUnzipDir = Path.Combine(temp, "mhh-unzip");
         public static readonly string tempDotnetExe = Path.Combine(temp, "mhh-installer-dotnet.exe");
         public static readonly string tempProgramZip = Path.Combine(temp, "mhh-program.zip");
+        public static readonly string tempFFMPEGZip = Path.Combine(temp, "mhh-ffmpeg.zip");
         public static readonly string tempContentZip = Path.Combine(temp, "mhh-content.zip");
 
         // Any download smaller than 500K is assumed to be bad content (404 HTML page etc)
@@ -200,6 +203,7 @@ namespace mhhinstall
             SilentDeleteFile(tempDotnetExe);
             SilentDeleteFile(tempDriverZip);
             SilentDeleteFile(tempProgramZip);
+            SilentDeleteFile(tempFFMPEGZip);
 
             Output.LogOnly($"Removing temp unzip path: {tempUnzipDir}");
             DeleteUnzipDir();
@@ -227,6 +231,8 @@ namespace mhhinstall
             }
             Output.Write("Application-archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempProgramZip, programPath);
+            Output.Write("FFMPEG-archive extraction");
+            ZipExtensions.ExtractWithOverwrite(tempFFMPEGZip, programPath);
         }
 
         /// <summary>
