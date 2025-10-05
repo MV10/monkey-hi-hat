@@ -235,14 +235,14 @@ LogCategories= MHH, Eyecandy.OpenGL");
 
             AddSection("text", "ndi", $@"
 # SECTION ADDED FOR v5.0.0 UPDATE ON {DateTime.Now}
-#########################################################################
 [ndi]
 # Support for network streaming using the NDI protocol. Refer to the
 # wiki DJ/VJ section for help using these settings.
 NDISender=false
 NDIDeviceName=
 NDIGroupList=
-");
+
+#########################################################################");
 
             AddReplacement("windows", "# These are only valid with OpenALSoft", "updated CaptureDeviceName comment", 
 @"# Leave this blank for WASAPI loopback. Specify a device name for WASAPI line-in
@@ -357,9 +357,13 @@ SpoutSender=false");
                 // Start new section
                 else if (line.Trim().StartsWith("[") && line.Contains("]"))
                 {
+                    // dump what was accumulated (blanks, comments)
+                    newConf.AddRange(nonToken);
+                    nonToken.Clear();
+
                     // token starting a new section, are there any new sections to
                     // insert after the section we're leaving?
-                    if(NewSections.ContainsKey(section))
+                    if (NewSections.ContainsKey(section))
                     {
                         foreach(var newSec in NewSections[section])
                         {
@@ -368,9 +372,7 @@ SpoutSender=false");
                         }
                     }
 
-                    // dump what was accumulated (blanks, comments, and start the next section
-                    newConf.AddRange(nonToken);
-                    nonToken.Clear();
+                    // start the next section
                     newConf.Add(line);
 
                     // extract and store the section name
