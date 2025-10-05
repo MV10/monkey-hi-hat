@@ -27,6 +27,9 @@ namespace mhhinstall
         // outer key is section, inner key is match target, value is (name, content)
         static Dictionary<string, Dictionary<string, (string, string)>> NewSettings;
 
+        // key is section, value is setting name
+        static Dictionary<string, string> RemovedSettings;
+
         // outer key is section, inner key is StartsWith match target, value is (name, content)
         static Dictionary<string, Dictionary<string, (string, string)>> LineReplacements;
 
@@ -112,8 +115,12 @@ namespace mhhinstall
                     From_440_to_450();
                     break;
 
-                //case "4.5.0":
-                //    From_450_to_XXX();
+                case "4.5.0":
+                    From_450_to_500();
+                    break;
+
+                //case "5.0.0":
+                //    From_500_to_XXX();
                 //    break;
 
                 default:
@@ -219,7 +226,39 @@ namespace mhhinstall
 # list of all available log categories.
 LogCategories= MHH, Eyecandy.OpenGL");
 
-            //From_450_to_XXX();
+            From_450_to_500();
+        }
+
+        static void From_450_to_500()
+        {
+            Output.Write("-- v4.5.0 to v5.0.0 changes:");
+
+            AddSection("text", "ndi", $@"
+# SECTION ADDED FOR v5.0.0 UPDATE ON {DateTime.Now}
+#########################################################################
+[ndi]
+# Support for network streaming using the NDI protocol. Refer to the
+# wiki DJ/VJ section for help using these settings.
+NDISender=false
+NDIDeviceName=
+NDIGroupList=
+");
+
+            AddReplacement("windows", "# These are only valid with OpenALSoft", "updated CaptureDeviceName comment", 
+@"# Leave this blank for WASAPI loopback. Specify a device name for WASAPI line-in
+# or microphone input. For OpenALSoft, leave blank to use the default capture
+# device, or specify an exact device name.");
+
+            RemoveSetting("windows", "CaptureDriverName");
+
+            AddSetting("windows", "ShowSpotifyTrackPopups", "Spout support", @"
+
+# Spout is a Windows system used by DJs and VJs for sharing images with other
+# applications running on the same PC. Set SpoutSender to true to enable exposing
+# rendering output as a Spout source. The Spout name is always ""Monkey Hi Hat"".
+SpoutSender=false");
+
+            //From_500_to_XXX();
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -231,6 +270,7 @@ LogCategories= MHH, Eyecandy.OpenGL");
             NewSettings = new Dictionary<string, Dictionary<string, (string, string)>>();
             NewSections = new Dictionary<string, List<(string, string)>>();
             LineReplacements = new Dictionary<string, Dictionary<string, (string, string)>>();
+            RemovedSettings = new Dictionary<string, string>();
         }
 
         static void AddSetting(string section, string afterMatching, string newContentName, string newContent)
@@ -243,12 +283,19 @@ LogCategories= MHH, Eyecandy.OpenGL");
             Output.LogOnly($"-- Registered setting {newContentName} to insert after matching token [{section}] \"{afterMatching}\"");
         }
 
+        static void RemoveSetting(string section, string setting)
+        {
+            if (RemovedSettings is null) ResetContentCaches();
+            var sec = section.ToLowerInvariant();
+            if (!RemovedSettings.ContainsKey(sec)) RemovedSettings.Add(sec, setting);
+        }
+
         static void AddSection(string afterSection, string newSectionName, string newContent)
         {
             if (NewSections is null) ResetContentCaches();
-            var sec = afterSection.ToLowerInvariant();
-            if (!NewSections.ContainsKey(sec)) NewSections.Add(sec, new List<(string, string)>());
-            NewSections[sec].Add((newSectionName, newContent));
+            var after = afterSection.ToLowerInvariant();
+            if (!NewSections.ContainsKey(after)) NewSections.Add(after, new List<(string, string)>());
+            NewSections[after].Add((newSectionName, newContent));
 
             Output.LogOnly($"-- Registered section [{newSectionName}] to insert after section [{afterSection}]");
         }
@@ -341,7 +388,9 @@ LogCategories= MHH, Eyecandy.OpenGL");
                     // any NewSettings matches to emit
                     newConf.AddRange(nonToken);
                     nonToken.Clear();
-                    newConf.Add(line);
+
+                    var key = line.Split('=')[0].Trim().ToLowerInvariant();
+                    if(!RemovedSettings.ContainsKey(key)) newConf.Add(line);
 
                     if(NewSettings.ContainsKey(section))
                     {

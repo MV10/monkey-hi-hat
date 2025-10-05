@@ -30,24 +30,18 @@ Don't assume anything here is working or will be available in some future releas
 ### Post-release changes (not guaranteed to be on the wiki changelog page yet)
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
-
-* 4.5.0 released 2025-08-27
-* eyecandy 4.0.0 released 2025-08-25
-*
-* 5.0.0 release TBD; changes not released and not in changelog yet:
+* 5.0.0 released 2025-10-05
 
 
 ### Work In Progress
 
-* Add NDI output
+*
 
 
 ### MHH TODO
 
 * Add Spout input
 * Add NDI input
-* Remove `CaptureDriverName` from config (unused)
-* New wiki content for DJ / VJ usage scenarios (line-in, Spout, NDI)
 * Installer support for content-only versioning / releases
 * RTSP video support? (does FFMediaToolkit support it? see [issue](https://github.com/radek-k/FFMediaToolkit/issues/130))
 * Test mode - show keys on screen

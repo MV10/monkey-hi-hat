@@ -85,4 +85,3 @@ The automatically-installed shaders, playlists, effects, crossfades, accompanyin
 
 * Visualizers using the playlist `SwitchTimeHint=Half` setting will be cut short
 * The NVIDIA GTX 1070 series may [crash](https://github.com/MV10/monkey-hi-hat/issues/5) when switching to full-screen mode
-
