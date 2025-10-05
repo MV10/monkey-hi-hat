@@ -3,12 +3,10 @@ using CommandLineSwitchPipe;
 using eyecandy;
 using FFMediaToolkit;
 using Microsoft.Extensions.Logging;
+using NAudio.CoreAudioApi;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
-using Serilog;
 using Serilog.Extensions.Logging;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -67,6 +65,9 @@ public class Program
     /// the program to come out of standby then process a command like --load.
     /// </summary>
     public static string[] QueuedArgs;
+
+    // these will be accepted when MHH is not running
+    private static string[] NonRunningCommands = { "--help", "--devices" };
 
     // cancel this to terminate the switch server's named pipe.
     private static CancellationTokenSource ctsSwitchPipe;
@@ -149,6 +150,21 @@ public class Program
 
         // Give the sloooow console time to catch up...
         await Task.Delay(250);
+    }
+
+    public static void ProcessNonRunningSwitches(string[] args)
+    {
+        Logger?.LogInformation($"Processing switches: {string.Join(" ", args)}");
+        switch (args[0].ToLowerInvariant())
+        {
+            case "--devices":
+                ListAudioDevices();
+                break;
+
+            default:
+                Console.WriteLine(ShowHelp());
+                break;
+        }
     }
 
     public static string ProcessSwitches(string[] args)
@@ -381,11 +397,15 @@ public class Program
         LogHelper.Initialize(appConfigFile, alreadyRunning);
         Logger = LogHelper.CreateLogger(nameof(Program));
 
-        // Show help if requested, or if it's already running but no args were provided
-        if ((args.Length == 1 && args[0].ToLowerInvariant().Equals("--help"))
-            || (args.Length == 0 && alreadyRunning))
+        // Process non-running commands
+        if(args.Length == 0 && alreadyRunning)
         {
             Console.WriteLine(ShowHelp());
+            return false; // end program
+        }
+        if (args.Length > 0 && Array.Exists(NonRunningCommands, cmd => cmd.Equals(args[0].ToLowerInvariant())))
+        {
+            ProcessNonRunningSwitches(args);
             return false; // end program
         }
 
@@ -395,7 +415,7 @@ public class Program
         // Disallow other switches at startup of first instance
         if (!alreadyRunning && args.Length > 0)
         {
-            Console.WriteLine("Only the --help switch is accepted if the program is not already running.");
+            Console.WriteLine($"\nOnly these switches are valid when the program is not already running:\n  {string.Join("\n  ", NonRunningCommands)}");
             return false; // end program
         }
 
@@ -609,6 +629,46 @@ public class Program
         return null;
     }
 
+    private static void ListAudioDevices()
+    {
+        Console.WriteLine("\nWASAPI Device Information (excluding \"Not Present\" devices)");
+        Console.WriteLine("---------------------------------------------------------------");
+
+        using var enumerator = new MMDeviceEnumerator();
+
+        var states = DeviceState.Active | DeviceState.Disabled | DeviceState.Unplugged;
+
+        Console.Write("\nPlayback devices:\n  ");
+        var playbackDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, states);
+        if (playbackDevices.Count > 0) Console.WriteLine(string.Join("\n  ", playbackDevices.Select(d => $"{d.FriendlyName} ({d.State})")));
+        if (playbackDevices.Count == 0) Console.WriteLine("  <none>");
+
+        Console.Write("\nCapture devices:\n  ");
+        var captureDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, states);
+        if (captureDevices.Count > 0) Console.WriteLine(string.Join("\n  ", captureDevices.Select(d => $"{d.FriendlyName} ({d.State})")));
+        if (captureDevices.Count == 0) Console.WriteLine("  <none>");
+
+        Console.WriteLine("\nDefault devices:");
+        try
+        {
+            var defaultPlayback = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+            Console.WriteLine($"  Playback: {defaultPlayback.FriendlyName}");
+        }
+        catch
+        {
+            Console.WriteLine("  Playback: <none>");
+        }
+        try
+        {
+            var defaultCapture = enumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Multimedia);
+            Console.WriteLine($"  Capture:  {defaultCapture.FriendlyName}");
+        }
+        catch
+        {
+            Console.WriteLine("  Capture:  <none>");
+        }
+    }
+
     private static string ShowHelp()
         =>
 @$"
@@ -666,5 +726,7 @@ All switches are passed to the already-running instance:
 
 --console                   toggles the visibility of the console window (only minimizes Terminal)
 --cls                       clears the console window of the running instance (useful during debug)
+
+--devices                   list audio device names, can be used when MHH is not running (WASAPI only)
 ";
 }
