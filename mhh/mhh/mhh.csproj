@@ -10,10 +10,18 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <!-- NDI library handling -->
   <ItemGroup>
-    <None Remove="InternalShaders\crossfade.frag" />
-    <None Remove="InternalShaders\text.frag" />
+    <!-- Show directory in Solution Explorer -->
+	<Content Include="Libraries\**\*" /> 
+    <!-- Define for MSBUILD Target operation below -->
+    <LibraryFiles Include="Libraries\**\*" />
   </ItemGroup>
+
+  <!-- Copy NDI libraries to the output target -->
+  <Target Name="CopyLibrariesToOutput" AfterTargets="Build">
+    <Copy SourceFiles="@(LibraryFiles)" DestinationFolder="$(OutputPath)" />
+  </Target>		
 
   <ItemGroup>
     <Content Include="InternalShaders\crossfade.frag">
@@ -23,19 +31,22 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="mhh-icon.ico" />
+    <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineSwitchPipe" Version="2.0.0" />
-    <PackageReference Include="eyecandy" Version="4.0.0" />
+    <PackageReference Include="eyecandy" Version="4.2.0" />
 	<PackageReference Include="FFMediaToolkit" Version="4.8.0" />
 	<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+	<PackageReference Include="NDILibDotNetCoreBase" Version="2024.7.22.1" />
 	<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Serilog" Version="3.1.1" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Spout.NETCore" Version="2.7.15" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
     <PackageReference Include="StbImageWriteSharp" Version="1.16.7" />
   </ItemGroup>
@@ -76,14 +87,13 @@
     </None>
   </ItemGroup>
 
-<!-- 
-You can set shader file properties to Build Action "Content" and "Copy if newer"
-but for an incremental build, if ONLY the shader has changed (no C# code changes),
-the updated content file will not be copied. The setting below includes those files
-when msbuild decides what constitutes a project change.
--->
+  <!-- 
+  You can set shader file properties to Build Action "Content" and "Copy if newer"
+  but for an incremental build, if ONLY the shader has changed (no C# code changes),
+  the updated content file will not be copied. The setting below includes those files
+  when msbuild decides what constitutes a project change.
+  -->
   <ItemGroup>
     <UpToDateCheckInput Include="@(Content);@(None)" />
   </ItemGroup>
-
 </Project>

@@ -30,36 +30,20 @@ Don't assume anything here is working or will be available in some future releas
 ### Post-release changes (not guaranteed to be on the wiki changelog page yet)
 
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
-
-* 4.4.0 released 2025-08-17
-* eyecandy 3.3.0 released 2025-08-17
-
-* 4.5.0 not yet released
-* eyecandy 4.0.0 released 2025-08-25
- 
-* Updated to eyecandy v4.0.0 (logging improvements)
-* Updated to CommandLineSwitchPipe v2.0.0 (logging improvements)
-* Updated to FFMediaToolkit v4.8.0 (cleaner release of some managed resources)
-* Change internal video frame-flip to use StbImage instead of C# loop, ~30% faster
-* Vertically flip screenshots (duh)
-* Set focus after spacebar-to-screenshot `--jpg wait` and `--png wait` commands
-* Improved some video processing error messages
-* Tested background-thread video decode; too much locking overhead required
-* Eyecandy changes to avoid re-allocation of texture buffers
-* Added `ScreenshotPath` to `mhh.conf` (defaults to user's Desktop if no path is provided)
-* Logging improvements (log categories, better control, more trace/info messaging)
-* Added `LogCategories` to `mhh.conf` listing categories to include; all others filtered out
-* Wiki "Appendix: Logging" section lists available log categories
+* 5.0.0 released 2025-10-05
 
 
 ### Work In Progress
 
 *
 
+
 ### MHH TODO
 
+* Add Spout input
+* Add NDI input
+* Installer support for content-only versioning / releases
 * RTSP video support? (does FFMediaToolkit support it? see [issue](https://github.com/radek-k/FFMediaToolkit/issues/130))
-* Revisit logging to provide log message context and related configuration
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued
 * Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
@@ -71,16 +55,15 @@ Don't assume anything here is working or will be available in some future releas
 * Installer - Start menu link to edit .conf
 * Installer - Start menu link to view mhh.log and msmd.log
 * Installer - Start menu link to notes.txt as viz credits
-* Installer - add eyecandy demo and tcpargs utilities
+* Installer - add tcpargs utility
 * Installer - Use winget to retrieve .NET runtime
 * Installer - winget distro? https://github.com/Belphemur/SoundSwitch/issues/1220
 * Create config GUI (WinForms now available for modern .NET)
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
-* Render the text overlay buffer once instead of running the shader every frame (set a "change" flag)
 * Hotkey to popup list of common hotkeys
-* Startup crashes if no audio device available? (ex. RDP disables audio)
+* Startup crashes if no audio device available? (ex. RDP disables audio); use synthetic audio?
 * Allow aliasing multipass uniform names for reusable utility frag shaders
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
@@ -92,16 +75,11 @@ Don't assume anything here is working or will be available in some future releas
     * https://help.soundcloud.com/hc/en-us/articles/115000182454-SoundCloud-for-Windows
     * msmd to support sending Windows client commands?
 
-* Add cubemap support (cubemap textures not distributed in 3.1.0)
-    * face unwrap https://www.shadertoy.com/view/tlyXzG
-    * usage https://inspirnathan.com/posts/63-shadertoy-tutorial-part-16/
-    * use six separate files? https://ogldev.org/www/tutorial25/tutorial25.html
-    * Emil has lots of HQ skyboxes https://opengameart.org/content/mountain-skyboxes
-
 ### MHH NON-STARTERS
 
 * Video decoding on background thread: too much locking and context-switching overhead
 * Image and video retrieval over HTTP: minimal benefit and caching is too much bookkeeping
+* Rendering text once: due to fade re-renders it isn't really worth the effort
 
 ### EYECANDY TODO (MAJOR)
 
@@ -141,6 +119,15 @@ ffmpeg -i c:\users\jon\desktop\mhh.mp4 -vf "scale=trunc(iw/8)*2:trunc(ih/8)*2" -
 
 * Rename and drag-drop into README.md via Github online editor
 * Pull updated content back to the local repo clone
+
+### Old Notes (keepers)
+
+* Cubemap support
+    * face unwrap https://www.shadertoy.com/view/tlyXzG
+    * loading https://stackoverflow.com/a/4985280/152997
+    * usage https://inspirnathan.com/posts/63-shadertoy-tutorial-part-16/
+    * use six separate files? https://ogldev.org/www/tutorial25/tutorial25.html
+    * Emil has lots of HQ skyboxes https://opengameart.org/content/mountain-skyboxes
 
 ### Terminal Path
 

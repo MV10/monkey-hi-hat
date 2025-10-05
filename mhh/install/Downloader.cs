@@ -9,6 +9,9 @@ namespace mhhinstall
         {
             Output.Write("Downloading application archive...");
             GetFile(Installer.programUrl, Installer.tempProgramZip);
+
+            Output.Write("Downloading FFMPEG suport...");
+            GetFile(Installer.ffmepgUrl, Installer.tempFFMPEGZip);
         }
 
         public static void GetContentArchive()

@@ -7,6 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mhh", "mhh\mhh.csproj", "{1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoFiles", "RepoFiles", "{B1FB730B-7B8A-449A-894C-91EEF3972121}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		..\copilot.md = ..\copilot.md
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
@@ -40,6 +41,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "TestContent-Visualizers", "{65165069-6A7C-410C-A703-87D43194725D}"
 	ProjectSection(SolutionItems) = preProject
 		..\testcontent\crossfade_test.frag = ..\testcontent\crossfade_test.frag
+		..\testcontent\cubemap.conf = ..\testcontent\cubemap.conf
+		..\testcontent\cubemap.frag = ..\testcontent\cubemap.frag
 		..\testcontent\doublebuffer.conf = ..\testcontent\doublebuffer.conf
 		..\testcontent\doublebuffer0.frag = ..\testcontent\doublebuffer0.frag
 		..\testcontent\doublebuffer1.frag = ..\testcontent\doublebuffer1.frag

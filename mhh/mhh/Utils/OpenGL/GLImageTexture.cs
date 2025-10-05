@@ -47,6 +47,11 @@ public class GLImageTexture
         => TextureUnit.Texture0 + TextureUnitOrdinal;
 
     /// <summary>
+    /// The type of texture being stored.
+    /// </summary>
+    public TextureTarget TextureTarget = TextureTarget.Texture2D;
+
+    /// <summary>
     /// If the texture is a video, this object stores the FFMediaToolkit references needed for playback.
     /// </summary>
     public VideoMediaData VideoData;

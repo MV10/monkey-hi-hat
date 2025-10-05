@@ -89,7 +89,7 @@ public class VideoMediaProcessor : IDisposable
 
         try
         {
-            var frame = tex.VideoData.Stream.GetFrame(tex.VideoData.Clock.Elapsed);
+            using var frame = tex.VideoData.Stream.GetFrame(tex.VideoData.Clock.Elapsed);
             tex.VideoData.LastUpdateTime = tex.VideoData.Clock.Elapsed;
             if (!frame.Data.IsEmpty && tex.VideoData.Stream.Position != tex.VideoData.LastStreamPosition)
             {
@@ -106,7 +106,6 @@ public class VideoMediaProcessor : IDisposable
                     GL.BindTexture(TextureTarget.Texture2D, 0);
                 }
             }
-            frame.Dispose();
         }
         catch (EndOfStreamException)
         {

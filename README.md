@@ -4,7 +4,9 @@
 
 Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC's speaker outputs.
 
-> [2025-AUG-27: Install or update to version 4.5.0](https://github.com/MV10/monkey-hi-hat/releases)!
+> [2025-OCT-05: Install or update to version 5.0.0](https://github.com/MV10/monkey-hi-hat/releases)!
+
+> New DJ / VJ features: Line-in / mic support, Spout output, NDI output
 
 > Subscribe to [Release Notifications](https://github.com/MV10/monkey-hi-hat/issues/3) to find out about updates!
 
@@ -22,7 +24,7 @@ See thumbnails like the one below in the Volt's Laboratory [wiki](https://github
 
 Download and run the installer from the [release](https://github.com/MV10/monkey-hi-hat/releases) page, then read the [documentation home page](https://github.com/MV10/monkey-hi-hat/wiki) for a quick step-by-step first-run walk-through. The docs range from basic usage to advanced customization.
 
-This should run on almost any 64-bit Windows 10 or Windows 11 PC with a decent NVIDIA or AMD graphics card and practically any type of audio playback. (As of v4.3.1 there is no support for Linux.) 
+This should run on almost any 64-bit Windows PC with a decent NVIDIA or AMD graphics card and practically any type of audio playback. (Linux support was dropped as of v4.3.1.) 
 
 CPU and memory requirements are minimal, 99% of the work is on the graphics card. If your PC can run [this Shadertoy example](https://www.shadertoy.com/view/mtKfWd) full-screen, which is a Monkey Hi Hat visualization with effects that I back-ported, you should be able to run Monkey Hi Hat just fine. No third-party drivers are required (earlier versions did require one). Overhead is so low, on my desktop PC I often run the program on a second monitor while I do other work. As of version 4.4 it only uses around 110 MB at runtime.
 
@@ -31,7 +33,7 @@ Please understand there is no "user interface" -- the program is designed to run
 The music reactivity responds to _anything_ your PC is playing from _any_ source, whether that is Spotify, Soundcloud, Pandora, an external device connected to the line-in or surround-sound jacks, MP3s, YouTube, etc. If you can hear it from your speakers, the program can "hear" it too. For on-screen track info, only the native Windows Spotify client is supported.
 
 > ### <b>IMPORTANT: Turn Up The Volume!</b>
-> Since the app "hears" everything your computer outputs, meaning it is processing the final mixed results of all possible inputs, the playback volume is also "heard" by the program. If your master volume level is at 50%, the "strength" of the audio signals passed to visualizers will only be half as strong as if your volume level is at 100%. My preference and recommendation is to use an external amplifier to control the volume, and leave your computer set to 100%. All of the content I provide was written / adapted / tested this way.
+> Since the app "hears" everything your computer outputs, meaning it is processing the final mixed results of all possible inputs, the playback volume is also "heard" by the program. If your master volume level is at 50%, the "strength" of the audio signals passed to visualizers will only be half as strong as if your volume level is at 100%. My preference and recommendation is to use an external amplifier to control the volume, and leave your computer set to 100%. All of the content I provide was written / adapted / tested this way. (Line-in / mic audio is not volume-sensitive.)
 
 ## Sample Videos
 
@@ -83,4 +85,3 @@ The automatically-installed shaders, playlists, effects, crossfades, accompanyin
 
 * Visualizers using the playlist `SwitchTimeHint=Half` setting will be cut short
 * The NVIDIA GTX 1070 series may [crash](https://github.com/MV10/monkey-hi-hat/issues/5) when switching to full-screen mode
-

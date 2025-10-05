@@ -1,5 +1,4 @@
 ﻿
-using FFMediaToolkit.Graphics;
 using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using StbImageSharp;
@@ -63,7 +62,6 @@ public class ScreenshotWriter
         fixed (byte* pb = buffer)
         {
             var ptr = (IntPtr)pb;
-            //GL.ReadPixels(0, 0, width, height, PixelFormat.Bgr, PixelType.UnsignedByte, ptr);
             GL.ReadPixels(0, 0, width, height, PixelFormat.Rgba, PixelType.UnsignedByte, ptr);
         }
         return buffer;
