@@ -18,13 +18,14 @@ public class ApplicationConfiguration : IConfigSource
 
     public ConfigFile ConfigSource { get; private set; }
 
+    // When implementing a new pathspec, also update the --paths command
     public readonly string VisualizerPath = string.Empty;
     public readonly string PlaylistPath = string.Empty;
     public readonly string TexturePath = string.Empty;
     public readonly string FXPath = string.Empty;
+    public readonly string CrossfadePath = string.Empty;
     public readonly string FFmpegPath = string.Empty;
     public readonly string ScreenshotPath = string.Empty;
-    public readonly string FileCachePath = string.Empty;
 
     public readonly bool StartFullScreen;
     public readonly int StartX;
@@ -126,7 +127,7 @@ public class ApplicationConfiguration : IConfigSource
         FXPath = ConfigSource.ReadValue(SectionOS, "fxpath");
         FFmpegPath = ConfigSource.ReadValue(SectionOS, "ffmpegpath");
         ScreenshotPath = ConfigSource.ReadValue(SectionOS, "screenshotpath");
-        FileCachePath = ConfigSource.ReadValue(SectionOS, "filecachepath");
+        CrossfadePath = ConfigSource.ReadValue(SectionOS, "CrossfadePath");
 
         DetectSilenceSeconds = ConfigSource.ReadValue("setup", "detectsilenceseconds").ToInt32(0);
         DetectSilenceMaxRMS = ConfigSource.ReadValue("setup", "detectsilencemaxrms").ToDouble(1.5d);
@@ -184,18 +185,11 @@ public class ApplicationConfiguration : IConfigSource
         PathValidation(PlaylistPath);
         PathValidation(TexturePath);
         PathValidation(FXPath);
+        PathValidation(CrossfadePath);
 
         if (string.IsNullOrWhiteSpace(ScreenshotPath)) ScreenshotPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
         if (PathHelper.GetIndividualPaths(ScreenshotPath).Length > 1) ConfError("Exactly one path is required for ScreenshotPath.");
         PathValidation(ScreenshotPath);
-
-        if (string.IsNullOrWhiteSpace(FileCachePath))
-        {
-            FileCachePath = Path.Combine(Path.GetTempPath(), "mhh_cache");
-            if(!Directory.Exists(FileCachePath)) Directory.CreateDirectory(FileCachePath);
-        }
-        if (PathHelper.GetIndividualPaths(FileCachePath).Length > 1) ConfError("Exactly one path is required for FileCachePath.");
-        PathValidation(FileCachePath);
 
         if (PathHelper.GetIndividualPaths(FFmpegPath).Length > 1) ConfError("Exactly one path is required for FFmpegPath.");
         PathValidation(FFmpegPath);

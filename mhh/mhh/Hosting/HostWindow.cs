@@ -938,8 +938,11 @@ LINE 15");
 
         if(Program.AppConfig.RandomizeCrossfade)
         {
-            var files = PathHelper.GetWildcardFiles(Program.AppConfig.VisualizerPath, "crossfade_*.frag", returnFullPathname: true);
-            if(files.Count > 0)
+            // in v5.0.0 and earlier, crossfades were stored in the viz path with a crossfade_ prefix
+            //var files = PathHelper.GetWildcardFiles(Program.AppConfig.VisualizerPath, "crossfade_*.frag", returnFullPathname: true);
+
+            var files = PathHelper.GetWildcardFiles(Program.AppConfig.CrossfadePath, "*.frag", returnFullPathname: true);
+            if (files.Count > 0)
             {
                 Caching.CrossfadeShaders = new(files.Count);
                 foreach(var pathname in files)
@@ -956,7 +959,7 @@ LINE 15");
             }
         }
 
-        // see property comments for an explanation
+        // see MaxAvailableTextureUnit property comments for an explanation
         GL.GetInteger(GetPName.MaxCombinedTextureImageUnits, out var maxTU);
         Caching.MaxAvailableTextureUnit = maxTU - 1 - Caching.KnownAudioTextures.Count;
         Logger?.LogInformation($"This GPU supports a combined maximum of {maxTU} TextureUnits.");

@@ -346,7 +346,7 @@ public class Program
 
             case "--paths":
                 if (args.Length > 1) return ShowHelp();
-                return $"\nConfigured paths\n\nVizualization shaders:\n{AppConfig.VisualizerPath.Replace(';','\n')}\n\nPost-processing FX shaders:\n{AppConfig.FXPath.Replace(';', '\n')}\n\nTexure and video files:\n{AppConfig.TexturePath.Replace(';', '\n')}\n\nPlaylists:\n{AppConfig.PlaylistPath.Replace(';', '\n')}\n\nScreenshots:\n{AppConfig.ScreenshotPath}\n\nFile cache:\n{AppConfig.FileCachePath}";
+                return $"\nConfigured paths\n\nVizualization shaders:\n{AppConfig.VisualizerPath.Replace(';','\n')}\n\nPost-processing FX shaders:\n{AppConfig.FXPath.Replace(';', '\n')}\n\nTexure and video files:\n{AppConfig.TexturePath.Replace(';', '\n')}\n\nPlaylists:\n{AppConfig.PlaylistPath.Replace(';', '\n')}\n\nCrossfades:\n{AppConfig.CrossfadePath}\n\nScreenshots:\n{AppConfig.ScreenshotPath}";
 
             case "--cls":
                 return AppWindow.Command_CLS();

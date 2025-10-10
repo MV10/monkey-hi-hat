@@ -11,37 +11,40 @@ Don't assume anything here is working or will be available in some future releas
 
 * Verify `mhh\version.txt` matches release number
 * Verify `install\Installer.cs` has current release number (in all 3 places)
+* If ffmpeg or dotnet was updated (rare), modify those download URLs
 * Add any version-based config changes to `install\ConfigHelper.cs`
 * Build install.exe release build, rename `install-x-x-x.exe` (x-x-x is version)
 * Publish mhh release build
 * Copy monkey-see-monkey-do release build to mhh publish directory
-* Copy ffmpeg files to an ffmpeg directory in the mhh publish directory
 * Archive publish directory into `mhh-app-x-x-x.zip` (x-x-x is version)
 * Archive Volt's Lab files into `mhh-content-x-x-x.zip`
-* No longer distributing this: Copy zip files into one `manual-setup-x-x-x.zip`
+* If ffmpeg was updated, create a new `mhh-ffmpeg-x-x-x.zip` (use ffmpeg version)
 * Rename the app and content zips to a .bin extension
-* Push app and content .bin files to github mcguirev10.com /assets/misc
+* Push app and content .bin files to mv10.github.io repo in /assets/misc
 * Update readme etc, push changes
 * Create new release tag, upload install-x-x-x.exe and manual-setup
 * Update release history, wiki, etc.
 * Update pinned release tracker: https://github.com/MV10/monkey-hi-hat/issues/3
 
 
-### Post-release changes (not guaranteed to be on the wiki changelog page yet)
+### Version and Changelog
 
-* https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 * 5.0.0 released 2025-10-05
+* post 5.0.0 started 2025-10-10
+* https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
 
 ### Work In Progress
 
-*
+* Added dedicated `CrossfadePath` to config and move existing content in Volt's Laboratory
+* Removed requirement for "crossfade" prefix for crossfades in dedicated path
 
 
 ### MHH TODO
 
-* Add Spout input
-* Add NDI input
+* Why did disco_tunnel viz stop working?
+* Add Spout / NDI input and viz / fx (`remotes` texture setting, etc)
+* Add Spout / NDI viz / fx directories to Volt's Lab repo (include in viz / fx paths if used)
 * Installer support for content-only versioning / releases
 * RTSP video support? (does FFMediaToolkit support it? see [issue](https://github.com/radek-k/FFMediaToolkit/issues/130))
 * Test mode - show keys on screen
