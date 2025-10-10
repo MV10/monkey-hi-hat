@@ -21,7 +21,10 @@ public class GLImageTexture
     public string UniformName;
 
     /// <summary>
-    /// Indicates whether the target file was successfully loaded.
+    /// Indicates whether the target file was successfully loaded. When
+    /// false, the program attempts to load the internal missing-texture
+    /// image cached from the InternalShaders directory, so content still
+    /// exists providing a visual clue that a problem exists.
     /// </summary>
     public bool Loaded;
 

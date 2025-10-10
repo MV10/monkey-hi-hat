@@ -7,6 +7,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using StbImageSharp;
 using System.Runtime.CompilerServices;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace mhh;
 
@@ -223,6 +224,13 @@ public static class RenderingHelper
                 res.UniformName = vid.Key;
                 res.Filename = vid.Value[rand.Next(vid.Value.Count)];
                 res.Loaded = LoadVideoFile(res);
+
+                // if loading fails, convert it to the cached bad-image placeholder texture
+                if(!res.Loaded)
+                {
+                    VideoMediaProcessor.DisposeVideoData(res);
+                    Load2DBuffer(res, Caching.BadTexturePlaceholder);
+                }
             }
         }
 
@@ -234,28 +242,32 @@ public static class RenderingHelper
     /// </summary>
     public static bool LoadImageFile(GLImageTexture tex, string pathspec = "")
     {
+        Logger?.LogDebug($"{nameof(LoadImageFile)} loading {tex.Filename}");
+
+        var success = true;
+        var image = Caching.BadTexturePlaceholder;
+
         var paths = (pathspec == "") ? Program.AppConfig.TexturePath : pathspec;
         var pathname = PathHelper.FindFile(paths, tex.Filename);
-        if (pathname is null) return false;
-
-        Logger?.LogDebug($"{nameof(LoadImageFile)} loading {pathname}");
 
         try
         {
+            if (pathname is null) throw new FileNotFoundException();
+
             using var stream = File.OpenRead(pathname);
             StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
-            var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
-
-            if (tex.TextureTarget == TextureTarget.Texture2D) Load2DBuffer(tex, image);
-            if (tex.TextureTarget == TextureTarget.TextureCubeMap) LoadCubemapBuffer(tex, image);
+            image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
         }
         catch (Exception ex)
         {
             Logger?.LogError($"{nameof(LoadImageFile)}: Error loading image {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
-            return false;
+            success = false;
         }
 
-        return true;
+        if (tex.TextureTarget == TextureTarget.Texture2D) Load2DBuffer(tex, image);
+        if (tex.TextureTarget == TextureTarget.TextureCubeMap) LoadCubemapBuffer(tex, image);
+
+        return success;
     }
 
     /// <summary>
@@ -263,43 +275,40 @@ public static class RenderingHelper
     /// </summary>
     public static bool LoadVideoFile(GLImageTexture tex, string pathspec = "")
     {
+        Logger?.LogDebug($"{nameof(LoadVideoFile)} loading {tex.Filename}");
+
         var paths = (pathspec == "") ? Program.AppConfig.TexturePath : pathspec;
         var pathname = PathHelper.FindFile(paths, tex.Filename);
-        if (pathname is null) throw new FileNotFoundException();
-
-        Logger?.LogDebug($"{nameof(LoadVideoFile)} loading {pathname}");
 
         try
         {
+            if (pathname is null) throw new FileNotFoundException();
+
             tex.VideoData = new();
-            tex.VideoData.File = MediaFile.Open(pathname, VideoMediaOptions);
-            tex.VideoData.Stream = tex.VideoData.File.Video;
             tex.VideoData.Pathname = pathname;
+            tex.VideoData.File = MediaFile.Open(tex.VideoData.Pathname, VideoMediaOptions);
 
-            if (tex.VideoData.Stream == null)
-            {
-                Logger?.LogError($"{nameof(LoadVideoFile)}: No video stream found in the file {tex.Filename}");
-                return false;
-            }
+            if (tex.VideoData.File.Video is null) throw new Exception($"{nameof(LoadVideoFile)}: No video stream found in the file {tex.Filename}");
 
+            tex.VideoData.Stream = tex.VideoData.File.Video;
             tex.VideoData.Width = tex.VideoData.Stream.Info.FrameSize.Width;
             tex.VideoData.Height = tex.VideoData.Stream.Info.FrameSize.Height;
             tex.VideoData.Resolution = new(tex.VideoData.Width, tex.VideoData.Height);
-
-            GL.ActiveTexture(tex.TextureUnit);
-            GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, tex.VideoData.Width, tex.VideoData.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-            GL.BindTexture(TextureTarget.Texture2D, 0);
         }
         catch (Exception ex)
         {
             Logger?.LogError($"{nameof(LoadVideoFile)}: Error loading video {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
             return false;
         }
+
+        GL.ActiveTexture(tex.TextureUnit);
+        GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, tex.VideoData.Width, tex.VideoData.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+        GL.BindTexture(TextureTarget.Texture2D, 0);
 
         return true;
     }
@@ -313,8 +322,9 @@ public static class RenderingHelper
 
         foreach (var tex in textures)
         {
-            if (tex.Loaded)
-            {
+            // even if Loaded is false, the bad-file placeholder texture should be present
+            //if (tex.Loaded)
+            //{
                 shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit, tex.TextureTarget);
                 if (tex.VideoData is not null)
                 {
@@ -322,7 +332,7 @@ public static class RenderingHelper
                     shader.SetUniform($"{tex.UniformName}_progress", (float)tex.VideoData.Clock.Elapsed.TotalSeconds / (float)tex.VideoData.Duration.TotalSeconds);
                     shader.SetUniform($"{tex.UniformName}_resolution", tex.VideoData.Resolution);
                 }
-            }
+            //}
         }
     }
 

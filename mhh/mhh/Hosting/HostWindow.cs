@@ -7,6 +7,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Spout.Interop;
+using StbImageSharp;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
@@ -958,6 +959,10 @@ LINE 15");
                 Program.AppConfig.RandomizeCrossfade = false;
             }
         }
+
+        using var stream = File.OpenRead(Path.Combine(ApplicationConfiguration.InternalShaderPath, "badtexture.jpg"));
+        StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
+        Caching.BadTexturePlaceholder = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
 
         // see MaxAvailableTextureUnit property comments for an explanation
         GL.GetInteger(GetPName.MaxCombinedTextureImageUnits, out var maxTU);

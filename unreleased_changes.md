@@ -36,15 +36,14 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Work In Progress
 
-* Added dedicated `CrossfadePath` to config and move existing content in Volt's Laboratory
-* Removed requirement for "crossfade" prefix for crossfades in dedicated path
+* Added `SpoutReceiveFrom` and `NDIReceiveFrom` to config file
+* Added `[streaming]` texture support to viz / fx for Spout / NDI
+* Added `streaming\fx` and `streaming\shaders` paths to content repo
 
 
 ### MHH TODO
 
 * Why did disco_tunnel viz stop working?
-* Add Spout / NDI input and viz / fx (`remotes` texture setting, etc)
-* Add Spout / NDI viz / fx directories to Volt's Lab repo (include in viz / fx paths if used)
 * Installer support for content-only versioning / releases
 * RTSP video support? (does FFMediaToolkit support it? see [issue](https://github.com/radek-k/FFMediaToolkit/issues/130))
 * Test mode - show keys on screen
