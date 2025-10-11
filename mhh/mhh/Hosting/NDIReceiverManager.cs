@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using NewTek;
 using OpenTK.Graphics.OpenGL;
 using StbImageSharp;
+using StbImageResizeSharp;
 using System.Runtime.InteropServices;
 
 namespace mhh;
@@ -21,11 +22,15 @@ public class NDIReceiverManager : StreamingReceiverBase
     private CancellationTokenSource CaptureCTS = new();
     private Task FrameCaptureTask;
 
+    // for resizing VideoFrameBuffer within UpdateTexture
+    private int FinalBufferWidth = 0;
+    private int FinalBufferHeight = 0;
+
     // must be protected by a lock, used by foreground and background threads
     private object VideoFrameLock = new object();
     private int VideoFrameWidth = 0;
     private int VideoFrameHeight = 0;
-    private byte[] VideoFrame;
+    private byte[] VideoFrameBuffer;
     private long ForegroundPreviousTimecode = long.MinValue;
     private long VideoFrameTimecode;
 
@@ -75,33 +80,82 @@ public class NDIReceiverManager : StreamingReceiverBase
     public override unsafe void UpdateTexture()
     {
         if (Receiver == nint.Zero || Texture is null) return;
-        if (VideoFrame is null || VideoFrame.Length == 0) return;
+        if (VideoFrameBuffer is null || VideoFrameBuffer.Length == 0) return;
         if (ForegroundPreviousTimecode >= VideoFrameTimecode) return;
 
         ForegroundPreviousTimecode = VideoFrameTimecode;
 
-        if (Texture.TextureHandle == -1 || TextureWidth != VideoFrameWidth || TextureHeight != VideoFrameHeight)
+        // did the video frame dimensions change?
+        if (StoredWidth != VideoFrameWidth || StoredHeight != VideoFrameHeight)
         {
-            TextureWidth = VideoFrameWidth;
-            TextureHeight = VideoFrameHeight;
-            //Allocate();
+            StoredWidth = VideoFrameWidth;
+            StoredHeight = VideoFrameHeight;
+
+            switch (ResizeMode)
+            {
+                case ResizeContentMode.Viewport:
+                    FinalBufferWidth = Program.AppWindow.ClientSize.X;
+                    FinalBufferHeight = Program.AppWindow.ClientSize.Y;
+                    break;
+
+                case ResizeContentMode.Source:
+                    FinalBufferWidth = VideoFrameWidth;
+                    FinalBufferHeight = VideoFrameHeight;
+                    break;
+
+                case ResizeContentMode.Scaled:
+                    if(VideoFrameWidth > VideoFrameHeight)
+                    {
+                        FinalBufferWidth = MaxSize;
+                        FinalBufferHeight = (int)((double)VideoFrameHeight * ((double)MaxSize / (double)VideoFrameWidth));
+                    }
+                    else
+                    {
+                        FinalBufferHeight = MaxSize;
+                        FinalBufferWidth = (int)((double)VideoFrameWidth * ((double)MaxSize / (double)VideoFrameHeight));
+                    }
+                    break;
+            }
         }
+
+        // resize required?
+        var buffer = (FinalBufferWidth != VideoFrameWidth || FinalBufferHeight != VideoFrameHeight) 
+            ? ResizeBuffer(VideoFrameBuffer, VideoFrameWidth, VideoFrameHeight, FinalBufferWidth, FinalBufferHeight)
+            : VideoFrameBuffer;
 
         GL.ActiveTexture(Texture.TextureUnit);
         GL.BindTexture(TextureTarget.Texture2D, Texture.TextureHandle);
         lock (VideoFrameLock)
         {
-            fixed (byte* ptr = VideoFrame)
+            fixed (byte* ptr = buffer)
             {
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, TextureWidth, TextureHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, VideoFrame);
-                //GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, TextureWidth, TextureHeight, PixelFormat.Rgba, PixelType.UnsignedByte, (nint)ptr);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, FinalBufferWidth, FinalBufferHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, buffer);
             }
         }
         GL.BindTexture(TextureTarget.Texture2D, 0);
     }
 
+    private byte[] ResizeBuffer(byte[] source, int sourceWidth, int sourceHeight, int targetWidth, int targetHeight)
+    {
+        var output = new byte[targetWidth * targetHeight * 4];
+
+        _ = StbImageResize.stbir_resize_uint8(
+            source,             // Input byte array
+            sourceWidth,        // Input width
+            sourceHeight,       // Input height
+            0,                  // Input stride (0 for tightly packed)
+            output,             // Output byte array
+            targetWidth,        // Output width
+            targetHeight,       // Output height
+            0,                  // Output stride (0 for tightly packed)
+            4                   // Number of channels (RGBA = 4)
+        );
+
+        return output;
+    }
+
     // this runs on a background thread
-    internal unsafe void ReceiveVideoFrames(CancellationToken cancellationToken)
+    private unsafe void ReceiveVideoFrames(CancellationToken cancellationToken)
     {
         Logger?.LogTrace("Receive thread started");
 
@@ -137,9 +191,9 @@ public class NDIReceiverManager : StreamingReceiverBase
                             VideoFrameWidth = VideoFrameData.xres;
                             VideoFrameHeight = VideoFrameData.yres;
                             var bufferLen = VideoFrameData.xres * VideoFrameData.yres * 4;
-                            if (VideoFrame is null || VideoFrame.Length != bufferLen) VideoFrame = new byte[bufferLen];
+                            if (VideoFrameBuffer is null || VideoFrameBuffer.Length != bufferLen) VideoFrameBuffer = new byte[bufferLen];
                             if (Invert) StbImage.stbi__vertical_flip((void*)VideoFrameData.p_data, VideoFrameData.xres, VideoFrameData.yres, 4);
-                            Marshal.Copy(VideoFrameData.p_data, VideoFrame, 0, bufferLen);
+                            Marshal.Copy(VideoFrameData.p_data, VideoFrameBuffer, 0, bufferLen);
                             Interlocked.Exchange(ref VideoFrameTimecode, VideoFrameData.timecode);
                         }
                     }

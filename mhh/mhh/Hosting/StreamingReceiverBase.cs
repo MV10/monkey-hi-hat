@@ -32,14 +32,14 @@ public abstract class StreamingReceiverBase : IDisposable
         get;
         set
         {
-            TextureWidth = 0;
-            TextureHeight = 0;
+            StoredWidth = 0;
+            StoredHeight = 0;
             field = value;
         }
     }
 
-    private protected int TextureWidth = 0;
-    private protected int TextureHeight = 0;
+    private protected int StoredWidth = 0;
+    private protected int StoredHeight = 0;
 
     private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(StreamingReceiverBase));
 

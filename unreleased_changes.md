@@ -16,7 +16,7 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Work In Progress
 
-*
+* Added `--spout` and `--ndi` switches to connect, disconnect, etc.
 
 
 ### MHH TODO

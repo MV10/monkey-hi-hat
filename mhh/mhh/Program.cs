@@ -714,7 +714,7 @@ All switches are passed to the already-running instance:
 --fps [0|1-9999]            sets a frame rate (FPS) target, or 0 to disable (some shaders may require 60 FPS)
 --nocache                   disables shader viz/FX caching for the remainder of the session (good for testing)
 
---test [viz|fx|fade] [file] Enters test mode, use +/- to cycle through content
+--test [viz|fx|fade] [file] Enters test mode, +/- cycles through content, Q to quit, R to reload
 --endtest                   Exits test mode (loads the idle visualizer)
 
 --standby                   toggles between standby mode and active mode
