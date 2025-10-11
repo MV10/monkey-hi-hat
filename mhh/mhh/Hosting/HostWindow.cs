@@ -37,6 +37,11 @@ public class HostWindow : BaseWindow, IDisposable
     public TestModeManager Tester;
 
     /// <summary>
+    /// Handles streaming texture content.
+    /// </summary>
+    public StreamingReceiverBase StreamReceiver;
+
+    /// <summary>
     /// Audio and texture processing by the eyecandy library.
     /// </summary>
     public AudioTextureEngine Eyecandy;
@@ -73,8 +78,8 @@ public class HostWindow : BaseWindow, IDisposable
     /// </summary>
     public float UniformSilenceDetected;
 
-    private MethodInfo EyecandyEnableMethod;
-    private MethodInfo EyecandyDisableMethod;
+    //private MethodInfo EyecandyEnableMethod;
+    //private MethodInfo EyecandyDisableMethod;
     // Example of how to invoke generic method
     //    // AudioTextureEngine.Create<TextureType>(uniform, assignedTextureUnit, multiplier, enabled)
     //    var method = EyecandyCreateMethod.MakeGenericMethod(TextureType);
@@ -108,7 +113,6 @@ public class HostWindow : BaseWindow, IDisposable
 
     private SpoutSender SpoutSender;
     private const string SpoutSenderName = "Monkey Hi Hat";
-
     private NDISenderManager NDISender;
 
     private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(HostWindow));
@@ -119,8 +123,8 @@ public class HostWindow : BaseWindow, IDisposable
         Logger?.LogTrace(nameof(HostWindow));
 
         Eyecandy = new(audioConfig);
-        EyecandyEnableMethod = Eyecandy.GetType().GetMethod("Enable");
-        EyecandyDisableMethod = Eyecandy.GetType().GetMethod("Disable");
+        //EyecandyEnableMethod = Eyecandy.GetType().GetMethod("Enable");
+        //EyecandyDisableMethod = Eyecandy.GetType().GetMethod("Disable");
 
         // TODO default these to enabled: false
         Eyecandy.Create<AudioTextureWaveHistory>("eyecandyWave", enabled: true);
@@ -147,19 +151,38 @@ public class HostWindow : BaseWindow, IDisposable
     protected override void OnLoad()
     {
         base.OnLoad();
+        
         GL.Enable(EnableCap.ProgramPointSize);
+        
         Renderer.PrepareNewRenderer(Caching.IdleVisualizer);
+        
         Eyecandy.BeginAudioProcessing();
 
+        // send via Spout
         if (Program.AppConfig.SpoutSender)
         {
             SpoutSender = new();
             SpoutSender.SetSenderName(SpoutSenderName);
         }
 
+        // receive via Spout
+        if(!string.IsNullOrWhiteSpace(Program.AppConfig.SpoutReceiveFrom))
+        {
+            StreamReceiver = new SpoutReceiverManager();
+            StreamReceiver.Connect(Program.AppConfig.SpoutReceiveFrom, Program.AppConfig.SpoutReceiveInvert);
+        }
+
+        // send via NDI
         if (Program.AppConfig.NDISender)
         {
             NDISender = new NDISenderManager(Program.AppConfig.NDIDeviceName, Program.AppConfig.NDIGroupList);
+        }
+
+        // receive via NDI
+        if (!string.IsNullOrWhiteSpace(Program.AppConfig.NDIReceiveFrom))
+        {
+            StreamReceiver = new NDIReceiverManager();
+            StreamReceiver.Connect(Program.AppConfig.NDIReceiveFrom, Program.AppConfig.NDIReceiveInvert);
         }
 
         if (Program.AppConfig.ShowSpotifyTrackPopups) NextSpotifyCheck = DateTime.Now.AddMilliseconds(SpotifyCheckMillisec);
@@ -177,6 +200,8 @@ public class HostWindow : BaseWindow, IDisposable
 
         Eyecandy.UpdateTextures();
 
+        StreamReceiver?.UpdateTexture();
+
         UniformRandomNumber = (float)RNG.NextDouble();
         UniformDate = new(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, (float)DateTime.Now.TimeOfDay.TotalSeconds);
         UniformClockTime = new(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTime.UtcNow.Hour);
@@ -188,9 +213,7 @@ public class HostWindow : BaseWindow, IDisposable
         SwapBuffers();
         CalculateFPS();
 
-        // All zeros means use default framebuffer and auto-detect size
-        _ = SpoutSender?.SendFbo(0, 0, 0, true);
-
+        _ = SpoutSender?.SendFbo(0, 0, 0, true); // zeros: use default framebuffer, auto-detect size
         NDISender?.SendVideoFrame();
 
         // Starts hidden to avoid a white flicker before the first frame is rendered.
@@ -987,8 +1010,8 @@ display res: {ClientSize.X} x {ClientSize.Y}";
         base.Dispose();
 
         SpoutSender?.Dispose();
-
         NDISender?.Dispose();
+        StreamReceiver?.Dispose();
 
         var success = Eyecandy?.EndAudioProcessing();
         Logger?.LogTrace($"Dispose Eyecandy.EndAudioProcessing success: {success}");

@@ -1,30 +1,10 @@
 ### About this TO-DO list
 
-I will not accept a PR which alters this file (other than my own, obviously).
+I will not accept a PR which alters this file.
 
-However, if you see something that interests you and you want to tackle it, please open an Issue and we'll discuss the details.
+If you see something that interests you, open an Issue to discuss the details.
 
 Don't assume anything here is working or will be available in some future release. Previously this was not pushed to the repo, but since I'd hate to lose it, I added it to source control. It describes things I've only done locally so far, or unreleased changes, ideas, plans, wishlist items, and so on.
-
-
-### Release Process
-
-* Verify `mhh\version.txt` matches release number
-* Verify `install\Installer.cs` has current release number (in all 3 places)
-* If ffmpeg or dotnet was updated (rare), modify those download URLs
-* Add any version-based config changes to `install\ConfigHelper.cs`
-* Build install.exe release build, rename `install-x-x-x.exe` (x-x-x is version)
-* Publish mhh release build
-* Copy monkey-see-monkey-do release build to mhh publish directory
-* Archive publish directory into `mhh-app-x-x-x.zip` (x-x-x is version)
-* Archive Volt's Lab files into `mhh-content-x-x-x.zip`
-* If ffmpeg was updated, create a new `mhh-ffmpeg-x-x-x.zip` (use ffmpeg version)
-* Rename the app and content zips to a .bin extension
-* Push app and content .bin files to mv10.github.io repo in /assets/misc
-* Update readme etc, push changes
-* Create new release tag, upload install-x-x-x.exe and manual-setup
-* Update release history, wiki, etc.
-* Update pinned release tracker: https://github.com/MV10/monkey-hi-hat/issues/3
 
 
 ### Version and Changelog
@@ -36,18 +16,18 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Work In Progress
 
-* Added `SpoutReceiveFrom` and `NDIReceiveFrom` to config file
-* Added `[streaming]` texture support to viz / fx for Spout / NDI
-* Added `streaming\fx` and `streaming\shaders` paths to content repo
+*
 
 
 ### MHH TODO
 
 * Why did disco_tunnel viz stop working?
+* When Spout is updated, support different texture size on receiver
 * Installer support for content-only versioning / releases
-* RTSP video support? (does FFMediaToolkit support it? see [issue](https://github.com/radek-k/FFMediaToolkit/issues/130))
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued
+* Use Spout sender to debug intermediate buffers?
+* Document using VLC / NDI (or VLC / Spout?) to create an RTSP feed
 * Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
@@ -77,15 +57,39 @@ Don't assume anything here is working or will be available in some future releas
     * https://help.soundcloud.com/hc/en-us/articles/115000182454-SoundCloud-for-Windows
     * msmd to support sending Windows client commands?
 
+
+### Release Process
+
+* Verify `mhh\version.txt` matches release number
+* Verify `install\Installer.cs` has current release number (in all 3 places)
+* If ffmpeg or dotnet was updated (rare), modify those download URLs
+* Add any version-based config changes to `install\ConfigHelper.cs`
+* Build install.exe release build, rename `install-x-x-x.exe` (x-x-x is version)
+* Publish mhh release build
+* Copy monkey-see-monkey-do release build to mhh publish directory
+* Archive publish directory into `mhh-app-x-x-x.zip` (x-x-x is version)
+* Archive Volt's Lab files into `mhh-content-x-x-x.zip`
+* If ffmpeg was updated, create a new `mhh-ffmpeg-x-x-x.zip` (use ffmpeg version)
+* Rename .zip files to .bin extensions
+* Push .bin files to mv10.github.io repo in /assets/misc
+* Update readme etc, push changes
+* Create new release tag, upload install-x-x-x.exe
+* Update release history, wiki, etc.
+* Update pinned release tracker: https://github.com/MV10/monkey-hi-hat/issues/3
+* Merge dev branch into master (do not delete dev), pull new master locally
+
+
 ### MHH NON-STARTERS
 
 * Video decoding on background thread: too much locking and context-switching overhead
 * Image and video retrieval over HTTP: minimal benefit and caching is too much bookkeeping
 * Rendering text once: due to fade re-renders it isn't really worth the effort
 
+
 ### EYECANDY TODO (MAJOR)
 
 * Nuthin' here boss
+
 
 ### MONKEY-DROID TODO
 
@@ -101,6 +105,7 @@ Don't assume anything here is working or will be available in some future releas
     * `--fullscreen`
     * `--standby`
     * `--console`
+
 
 ### Posting Demo Videos
 
@@ -122,6 +127,7 @@ ffmpeg -i c:\users\jon\desktop\mhh.mp4 -vf "scale=trunc(iw/8)*2:trunc(ih/8)*2" -
 * Rename and drag-drop into README.md via Github online editor
 * Pull updated content back to the local repo clone
 
+
 ### Old Notes (keepers)
 
 * Cubemap support
@@ -130,6 +136,7 @@ ffmpeg -i c:\users\jon\desktop\mhh.mp4 -vf "scale=trunc(iw/8)*2:trunc(ih/8)*2" -
     * usage https://inspirnathan.com/posts/63-shadertoy-tutorial-part-16/
     * use six separate files? https://ogldev.org/www/tutorial25/tutorial25.html
     * Emil has lots of HQ skyboxes https://opengameart.org/content/mountain-skyboxes
+
 
 ### Terminal Path
 

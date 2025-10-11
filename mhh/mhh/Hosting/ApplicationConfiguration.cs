@@ -89,8 +89,12 @@ public class ApplicationConfiguration : IConfigSource
     public readonly bool NDISender;
     public readonly string NDIDeviceName = string.Empty;
     public readonly string NDIGroupList = string.Empty;
+    public readonly string NDIReceiveFrom = string.Empty;
+    public readonly bool NDIReceiveInvert = true;
 
     public readonly bool SpoutSender;
+    public readonly string SpoutReceiveFrom = string.Empty;
+    public readonly bool SpoutReceiveInvert = true;
 
     public ApplicationConfiguration(ConfigFile appConfigFile)
     {
@@ -149,8 +153,12 @@ public class ApplicationConfiguration : IConfigSource
         NDISender = ConfigSource.ReadValue("ndi", "ndisender").ToBool(false);
         NDIDeviceName = ConfigSource.ReadValue("ndi", "ndidevicename");
         NDIGroupList = ConfigSource.ReadValue("ndi", "ndigroupList");
+        NDIReceiveFrom = ConfigSource.ReadValue("ndi", "NDIReceiveFrom");
+        NDIReceiveInvert = ConfigSource.ReadValue("ndi", "NDIReceiveInvert").ToBool(true);
 
         SpoutSender = ConfigSource.ReadValue("windows", "spoutsender").ToBool(false);
+        SpoutReceiveFrom = ConfigSource.ReadValue("windows", "SpoutReceiveFrom");
+        SpoutReceiveInvert = ConfigSource.ReadValue("windows", "SpoutReceiveInvert").ToBool(true);
 
         ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
         PopupVisibilitySeconds = ConfigSource.ReadValue("text", "PopupVisibilitySeconds").ToInt32(5);
@@ -194,7 +202,10 @@ public class ApplicationConfiguration : IConfigSource
         if (PathHelper.GetIndividualPaths(FFmpegPath).Length > 1) ConfError("Exactly one path is required for FFmpegPath.");
         PathValidation(FFmpegPath);
 
-        if(string.IsNullOrWhiteSpace(NDIDeviceName)) NDIDeviceName = "Monkey Hi Hat";
+        if (!string.IsNullOrWhiteSpace(NDIReceiveFrom) && !string.IsNullOrWhiteSpace(SpoutReceiveFrom)) ConfError("Only one streaming source can be specified (SpoutReceiveFrom or NDIReceiveFrom)");
+
+        if (string.IsNullOrWhiteSpace(NDIDeviceName)) NDIDeviceName = "Monkey Hi Hat";
+        if (!string.IsNullOrWhiteSpace(NDIReceiveFrom) && (NDIReceiveFrom.IndexOf("(") == -1 || NDIReceiveFrom.IndexOf(")") == -1)) ConfError("NDIReceiveFrom must be in the format MACHINE_NAME (SENDER NAME)");
     }
 
     private void PathValidation(string pathspec)

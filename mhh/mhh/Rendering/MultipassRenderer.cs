@@ -206,6 +206,8 @@ public class MultipassRenderer : IRenderer
         VideoProcessor?.Dispose();
         VideoProcessor = null;
 
+        Program.AppWindow.StreamReceiver?.TryDetachTexture(Textures);
+
         if (ShaderPasses is not null)
         {
             foreach (var pass in ShaderPasses)

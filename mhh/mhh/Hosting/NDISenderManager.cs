@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Extensions.Logging;
 using NewTek;
 using OpenTK.Graphics.OpenGL;
 using StbImageSharp;
@@ -12,8 +13,12 @@ internal class NDISenderManager : IDisposable
     private NDIlib.video_frame_v2_t videoFrameDescriptor;
     private byte[] videoFrameData;
 
+    private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(NDISenderManager));
+
     public NDISenderManager(string name, string groups)
     {
+        Logger?.LogTrace("Constructor");
+
         nint ptrName = nint.Zero;
         nint ptrGroups = nint.Zero;
 
@@ -76,8 +81,17 @@ internal class NDISenderManager : IDisposable
 
     public void Dispose()
     {
-        if (!IsValid) return;
-        NDIlib.send_destroy(sender);
-        sender = nint.Zero;
+        if (IsDisposed) return;
+        Logger?.LogTrace("Disposing");
+
+        if (IsValid)
+        {
+            NDIlib.send_destroy(sender);
+            sender = nint.Zero;
+        }
+
+        IsDisposed = true;
+        GC.SuppressFinalize(true);
     }
+    private bool IsDisposed = false;
 }

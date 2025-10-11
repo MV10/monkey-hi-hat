@@ -95,3 +95,13 @@ public enum VideoFlipMode
     Internal = 1,
     FFmpeg = 2,
 }
+
+/// <summary>
+/// Specifies how external content should be resized.
+/// </summary>
+public enum ResizeContentMode
+{
+    Source = 0,
+    Viewport = 1,
+    Scaled = 3,
+}

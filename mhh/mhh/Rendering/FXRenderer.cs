@@ -320,6 +320,8 @@ public class FXRenderer : IRenderer
         VideoProcessor?.Dispose();
         VideoProcessor = null;
 
+        Program.AppWindow.StreamReceiver?.TryDetachTexture(Textures);
+
         PrimaryRenderer?.Dispose();
 
         if (ShaderPasses is not null)

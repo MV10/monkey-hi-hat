@@ -7,7 +7,6 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using StbImageSharp;
 using System.Runtime.CompilerServices;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace mhh;
 
@@ -131,14 +130,17 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Maps visualizer config [textures], [cubemaps], and [videos] data to GLImageTexture
-    /// resource assignments, and loads the indicated files.
+    /// Maps visualizer config [textures], [cubemaps], [videos] and [streaming] data
+    /// to GLImageTexture resource assignments, and loads the indicated files (except streaming)
     /// </summary>
     public static IReadOnlyList<GLImageTexture> GetTextures(string ownerName, ConfigFile configSource)
     {
+        var hasStreamingTexture = configSource.Content.ContainsKey("streaming");
+
         if (!configSource.Content.ContainsKey("textures") 
             && !configSource.Content.ContainsKey("videos")
-            && !configSource.Content.ContainsKey("cubemaps")) 
+            && !configSource.Content.ContainsKey("cubemaps")
+            && !hasStreamingTexture)
             return null;
 
         Logger?.LogTrace($"{nameof(GetTextures)} for {ownerName} from {configSource}");
@@ -160,13 +162,13 @@ public static class RenderingHelper
         var cubeDefs = LoadTextureDefinitions(configSource, "cubemaps");
         var videoDefs = LoadTextureDefinitions(configSource, "videos");
 
-        var totalRequired = (imageDefs?.Count ?? 0) + (cubeDefs?.Count ?? 0) + (videoDefs?.Count ?? 0);
+        var totalRequired = (imageDefs?.Count ?? 0) + (cubeDefs?.Count ?? 0) + (videoDefs?.Count ?? 0) + (hasStreamingTexture ? 1 : 0);
         if (totalRequired == 0) return null;
         var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, totalRequired);
 
         int resourceIndex = 0;
 
-        // handle images
+        // [textures]
         if(imageDefs is not null)
         {
             foreach (var tex in imageDefs)
@@ -202,7 +204,7 @@ public static class RenderingHelper
             }
         }
 
-        // handle cubemaps
+        // [cubemaps]
         if(cubeDefs is not null)
         {
             foreach (var tex in cubeDefs)
@@ -215,7 +217,7 @@ public static class RenderingHelper
             }
         }
 
-        // handle videos
+        // [videos]
         if(videoDefs is not null)
         {
             foreach (var vid in videoDefs)
@@ -233,6 +235,9 @@ public static class RenderingHelper
                 }
             }
         }
+
+        // [streaming]
+        if(hasStreamingTexture) LoadStreamingTextureDefinition(configSource, resources[resourceIndex]);
 
         return resources;
     }
@@ -542,7 +547,7 @@ public static class RenderingHelper
 
     private static Dictionary<string, List<string>> LoadTextureDefinitions(ConfigFile configSource, string sectionName)
     {
-        // sectionName is either "textures" or "videos"
+        // for sectionName values of "textures", "videos" or "cubemaps"
         // return dictionary key is uniform name, List is filenames (>1 means choose one at random)
 
         if (!configSource.Content.ContainsKey(sectionName)) return null;
@@ -560,6 +565,79 @@ public static class RenderingHelper
             }
         }
         return definitions;
+    }
+
+    private static void LoadStreamingTextureDefinition(ConfigFile configSource, GLImageTexture tex)
+    {
+        tex.Loaded = true;
+
+        var receiver = Program.AppWindow.StreamReceiver;
+
+        // if streaming isn't enabled in mhh.conf, always use the bad texture placeholder
+        if (receiver is null)
+        {
+            Load2DBuffer(tex, Caching.BadTexturePlaceholder);
+        }
+        else
+        {
+            // this should be nulled in every renderer's Dispose
+            receiver.Texture = tex;
+        }
+
+        if (configSource.Content["streaming"].TryGetValue("uniform", out string uniform))
+        {
+            tex.UniformName = uniform;
+        }
+        else
+        {
+            tex.UniformName = "streaming";
+        }
+
+        if (configSource.Content["streaming"].TryGetValue("size", out string sizeSetting))
+        {
+            switch (sizeSetting.ToLower())
+            {
+                case "source":
+                    receiver.ResizeMode = ResizeContentMode.Source;
+                    break;
+
+                case "viewport":
+                    receiver.ResizeMode = ResizeContentMode.Viewport;
+                    break;
+
+                default:
+                    if (int.TryParse(sizeSetting, out int size))
+                    {
+                        receiver.ResizeMode |= ResizeContentMode.Scaled;
+                        receiver.MaxSize = size;
+                    }
+                    else
+                    {
+                        receiver.ResizeMode = ResizeContentMode.Source;
+                        Logger?.LogWarning($"{nameof(LoadStreamingTextureDefinition)}: Invalid streaming size value {sizeSetting}; using source size");
+                    }
+                    break;
+            }
+        }
+
+        if (configSource.Content["streaming"].TryGetValue("standby", out string standbyFilename))
+        {
+            var pathname = PathHelper.FindFile(Program.AppConfig.TexturePath, standbyFilename);
+            try
+            {
+                if (pathname is null) throw new FileNotFoundException();
+
+                using var stream = File.OpenRead(pathname);
+                StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
+                var standby = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+                Load2DBuffer(tex, standby);
+            }
+            catch (Exception ex)
+            {
+                Logger?.LogError($"{nameof(LoadStreamingTextureDefinition)}: Error loading image {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
+                Load2DBuffer(tex, Caching.BadTexturePlaceholder);
+            }
+        }
     }
 
     // 2025-08-20 Replaced with StbImage's faster buffer flip code inside the pinned section in DecodeVideoFrame

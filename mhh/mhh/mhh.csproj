@@ -8,6 +8,7 @@
     <ApplicationIcon>mhh-icon.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <!-- NDI library handling -->

@@ -176,6 +176,8 @@ public class SimpleRenderer : IRenderer
         VideoProcessor?.Dispose();
         VideoProcessor = null;
 
+        Program.AppWindow.StreamReceiver?.TryDetachTexture(Textures);
+
         VertexSource?.Dispose();
         VertexSource = null;
 
