@@ -184,6 +184,11 @@ public class MultipassRenderer : IRenderer
         }
     }
 
+    public GLImageTexture GetStreamingTexture()
+    {
+        return Textures.FirstOrDefault(t => t.ResizeMode != StreamingResizeContentMode.NotStreaming);
+    }
+
     public void StartClock()
         => Clock.Start();
 

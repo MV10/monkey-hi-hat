@@ -12,10 +12,9 @@ public class NDIReceiverManager : StreamingReceiverBase
 {
     private string SenderName;
     private readonly string ReceiverName = "Monkey Hi Hat";
-    private bool Invert;
 
     private nint Receiver = nint.Zero;
-    private nint ptrName = nint.Zero;
+    private nint ptrSenderName = nint.Zero;
     private nint ptrReceiverName = nint.Zero;
 
     private bool IsCapturing = false;
@@ -50,20 +49,19 @@ public class NDIReceiverManager : StreamingReceiverBase
     }
 
     /// <inheritdoc/>
-    public override void Connect(string source, bool invert)
+    public override void Connect(string source)
     {
         Logger?.LogTrace("Connect");
 
         SenderName = source;
-        Invert = invert;
 
-        ptrName = Marshal.StringToHGlobalAnsi(SenderName);
+        ptrSenderName = Marshal.StringToHGlobalAnsi(SenderName);
         ptrReceiverName = Marshal.StringToHGlobalAnsi(ReceiverName);
 
         var config = new NDIlib.recv_create_v3_t
         {
             p_ndi_recv_name = ptrReceiverName,
-            source_to_connect_to = new NDIlib.source_t { p_ndi_name = ptrName },
+            source_to_connect_to = new NDIlib.source_t { p_ndi_name = ptrSenderName },
             allow_video_fields = false, // NDI will de-interlace from interlaced sources
             bandwidth = NDIlib.recv_bandwidth_e.recv_bandwidth_highest,
             color_format = NDIlib.recv_color_format_e.recv_color_format_RGBX_RGBA
@@ -91,28 +89,28 @@ public class NDIReceiverManager : StreamingReceiverBase
             StoredWidth = VideoFrameWidth;
             StoredHeight = VideoFrameHeight;
 
-            switch (ResizeMode)
+            switch (Texture.ResizeMode)
             {
-                case ResizeContentMode.Viewport:
+                case StreamingResizeContentMode.Viewport:
                     FinalBufferWidth = Program.AppWindow.ClientSize.X;
                     FinalBufferHeight = Program.AppWindow.ClientSize.Y;
                     break;
 
-                case ResizeContentMode.Source:
+                case StreamingResizeContentMode.Source:
                     FinalBufferWidth = VideoFrameWidth;
                     FinalBufferHeight = VideoFrameHeight;
                     break;
 
-                case ResizeContentMode.Scaled:
+                case StreamingResizeContentMode.Scaled:
                     if(VideoFrameWidth > VideoFrameHeight)
                     {
-                        FinalBufferWidth = MaxSize;
-                        FinalBufferHeight = (int)((double)VideoFrameHeight * ((double)MaxSize / (double)VideoFrameWidth));
+                        FinalBufferWidth = Texture.ResizeMaxDimension;
+                        FinalBufferHeight = (int)((double)VideoFrameHeight * ((double)Texture.ResizeMaxDimension / (double)VideoFrameWidth));
                     }
                     else
                     {
-                        FinalBufferHeight = MaxSize;
-                        FinalBufferWidth = (int)((double)VideoFrameWidth * ((double)MaxSize / (double)VideoFrameHeight));
+                        FinalBufferHeight = Texture.ResizeMaxDimension;
+                        FinalBufferWidth = (int)((double)VideoFrameWidth * ((double)Texture.ResizeMaxDimension / (double)VideoFrameHeight));
                     }
                     break;
             }
@@ -245,7 +243,7 @@ public class NDIReceiverManager : StreamingReceiverBase
             Thread.Sleep((int)FRAME_WAIT_TIME_MS * 2);
         }
 
-        if (ptrName != nint.Zero) Marshal.FreeHGlobal(ptrName);
+        if (ptrSenderName != nint.Zero) Marshal.FreeHGlobal(ptrSenderName);
 
         if (ptrReceiverName != nint.Zero) Marshal.FreeHGlobal(ptrReceiverName);
 

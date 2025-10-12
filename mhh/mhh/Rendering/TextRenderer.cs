@@ -121,6 +121,11 @@ public class TextRenderer : IRenderer
         LastUpdateCopied = DateTime.MinValue;
     }
 
+    public GLImageTexture GetStreamingTexture()
+    {
+        return null;
+    }
+
     public void StartClock()
     { }
 

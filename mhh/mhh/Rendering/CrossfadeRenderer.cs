@@ -196,6 +196,11 @@ public class CrossfadeRenderer : IRenderer
         CreateResourceGroups();
     }
 
+    public GLImageTexture GetStreamingTexture()
+    { 
+        return null; 
+    }
+
     public void StartClock()
     {
         Clock.Start();

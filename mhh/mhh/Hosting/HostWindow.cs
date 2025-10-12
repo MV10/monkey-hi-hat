@@ -1,6 +1,8 @@
 ﻿
 using eyecandy;
+using FFMediaToolkit.Decoding;
 using Microsoft.Extensions.Logging;
+using NewTek.NDI;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -11,6 +13,7 @@ using StbImageSharp;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using static NewTek.NDIlib;
 
 namespace mhh;
 
@@ -169,7 +172,8 @@ public class HostWindow : BaseWindow, IDisposable
         if(!string.IsNullOrWhiteSpace(Program.AppConfig.SpoutReceiveFrom))
         {
             StreamReceiver = new SpoutReceiverManager();
-            StreamReceiver.Connect(Program.AppConfig.SpoutReceiveFrom, Program.AppConfig.SpoutReceiveInvert);
+            StreamReceiver.Invert = Program.AppConfig.SpoutReceiveInvert;
+            StreamReceiver.Connect(Program.AppConfig.SpoutReceiveFrom);
         }
 
         // send via NDI
@@ -182,7 +186,8 @@ public class HostWindow : BaseWindow, IDisposable
         if (!string.IsNullOrWhiteSpace(Program.AppConfig.NDIReceiveFrom))
         {
             StreamReceiver = new NDIReceiverManager();
-            StreamReceiver.Connect(Program.AppConfig.NDIReceiveFrom, Program.AppConfig.NDIReceiveInvert);
+            StreamReceiver.Invert = Program.AppConfig.NDIReceiveInvert;
+            StreamReceiver.Connect(Program.AppConfig.NDIReceiveFrom);
         }
 
         if (Program.AppConfig.ShowSpotifyTrackPopups) NextSpotifyCheck = DateTime.Now.AddMilliseconds(SpotifyCheckMillisec);
@@ -836,6 +841,107 @@ LINE 15");
     {
         Console.Clear();
         return "ACK";
+    }
+
+    /// <summary>
+    /// Handler for the --streaming command-line switches: <br />
+    /// --streaming status <br />
+    /// --streaming send spout|ndi ["sender name"] <br />
+    /// --streaming receive spout "source name" <br />
+    /// --streaming receive ndi "machine(source name)" ["group1, group2, ...groupN"]
+    /// --streaming stop send|receive <br />
+    /// </summary>
+    public string Command_Streaming(string[] args)
+    {
+        for(int i = 1; i < args.Length; i++) args[i] = args[i].Trim().ToLowerInvariant();
+
+        switch (args[1])
+        {
+            case "status":
+                if (SpoutSender is not null && NDISender is not null) return "Spout and NDI senders are active";
+                if (SpoutSender is not null) return "Spout sender is active";
+                if (NDISender is not null) return "NDI sender is active";
+                if (StreamReceiver is SpoutReceiverManager) return "Spout receiver is active";
+                if (StreamReceiver is NDIReceiverManager) return "NDI receiver is active";
+                return "Streaming is not active";
+
+            case "send":
+                if (args.Length < 3) return "ERR: Specify Spout or NDI for send mode";
+                var senderName = (args.Length == 4) ? args[3] : string.Empty;
+                if (args[2] == "spout")
+                {
+                    if (SpoutSender is not null)
+                    {
+                        SpoutSender.SetSenderName(args[3]);
+                    }
+                    else
+                    {
+                        SpoutSender = new();
+                        SpoutSender.SetSenderName(args[3]);
+                    }
+                    return "ACK";
+                }
+                else if (args[2] == "ndi")
+                {
+                    if (NDISender is not null)
+                    {
+                        NDISender.Dispose();
+                        NDISender = null;
+                    }
+                    var groups = (args.Length == 5) ? args[4] : string.Empty;
+                    NDISender = new NDISenderManager(args[3], groups);
+                    return "ACK";
+                }
+                return "ERR: Specify Spout or NDI for send mode";
+
+            case "receive":
+                if (args.Length < 4) return "ERR: Specify Spout or NDI and source for receiver mode";
+                var fromName = (args.Length == 4) ? args[3] : string.Empty;
+
+                StreamReceiver?.Dispose();
+                StreamReceiver = null;
+
+                if (args[2] == "spout")
+                {
+                    StreamReceiver = new SpoutReceiverManager();
+                    StreamReceiver.Connect(fromName);
+                    StreamReceiver.FindStreamingTexture();
+                    return "ACK";
+                }
+
+                if (args[2] == "ndi")
+                {
+                    StreamReceiver = new NDIReceiverManager();
+                    StreamReceiver.Connect(fromName);
+                    StreamReceiver.FindStreamingTexture();
+                    return "ACK";
+                }
+
+                return "ERR: Specify Spout or NDI and source name for receiver mode";
+
+            case "stop":
+                if (args.Length < 3) return "ERR: Specify send or receive mode to stop";
+                switch (args[2])
+                {
+                    case "send":
+                        SpoutSender?.Dispose();
+                        SpoutSender = null;
+                        NDISender?.Dispose();
+                        NDISender = null;
+                        return "ACK";
+
+                    case "receive":
+                        StreamReceiver?.Dispose();
+                        StreamReceiver = null;
+                        return "ACK";
+
+                    default:
+                        return "ERR: Specify send or receive mode to stop";
+                }
+
+            default:
+                return "ERR:invalid command";
+        }
     }
 
     /// <summary>

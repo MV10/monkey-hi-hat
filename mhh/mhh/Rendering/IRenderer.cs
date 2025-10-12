@@ -64,6 +64,12 @@ public interface IRenderer : IConfigSource, IDisposable
     public bool OutputIntercepted { set; }
 
     /// <summary>
+    /// Returns null or a Texture where ResizeMode is anything other than NotStreaming.
+    /// </summary>
+    /// <returns></returns>
+    public GLImageTexture GetStreamingTexture();
+
+    /// <summary>
     /// Renderers should maintain an internal Stopwatch and set a float uniform named "time".
     /// The renderer should not automatically start the clock; the RenderManager should control
     /// start / stop activity.

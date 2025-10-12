@@ -292,6 +292,11 @@ public class FXRenderer : IRenderer
         FXCrossfadeVerts?.BindBuffers(FXCrossfadeShader);
     }
 
+    public GLImageTexture GetStreamingTexture()
+    {
+        return Textures.FirstOrDefault(t => t.ResizeMode != StreamingResizeContentMode.NotStreaming);
+    }
+
     public void StartClock()
     {
         Clock.Start();

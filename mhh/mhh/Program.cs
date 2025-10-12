@@ -362,6 +362,10 @@ public class Program
                 OnStandby = !OnStandby;
                 return "ACK";
 
+            case "--streaming":
+                if (OnStandby) return "ERR: Application is in standby";
+                return AppWindow?.Command_Streaming(args);
+
             default:
                 return ShowHelp();
         }
@@ -728,5 +732,12 @@ All switches are passed to the already-running instance:
 --cls                       clears the console window of the running instance (useful during debug)
 
 --devices                   list audio device names, can be used when MHH is not running (WASAPI only)
+
+--streaming                 streaming commands control Spout / NDI; refer to the wiki for details
+--streaming status
+--streaming send spout|ndi [""sender name""]
+--streaming receive spout ""source name""
+--streaming receive ndi ""machine (source name)"" [""group1,group2,...groupN""]
+--streaming stop send|receive
 ";
 }

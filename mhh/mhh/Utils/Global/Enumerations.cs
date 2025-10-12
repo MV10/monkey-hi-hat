@@ -97,11 +97,12 @@ public enum VideoFlipMode
 }
 
 /// <summary>
-/// Specifies how external content should be resized.
+/// Specifies how streaming content should be resized.
 /// </summary>
-public enum ResizeContentMode
+public enum StreamingResizeContentMode
 {
-    Source = 0,
-    Viewport = 1,
+    NotStreaming = 0,
+    Source = 1,
+    Viewport = 2,
     Scaled = 3,
 }

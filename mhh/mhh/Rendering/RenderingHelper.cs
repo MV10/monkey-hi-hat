@@ -571,19 +571,6 @@ public static class RenderingHelper
     {
         tex.Loaded = true;
 
-        var receiver = Program.AppWindow.StreamReceiver;
-
-        // if streaming isn't enabled in mhh.conf, always use the bad texture placeholder
-        if (receiver is null)
-        {
-            Load2DBuffer(tex, Caching.BadTexturePlaceholder);
-        }
-        else
-        {
-            // this should be nulled in every renderer's Dispose
-            receiver.Texture = tex;
-        }
-
         if (configSource.Content["streaming"].TryGetValue("uniform", out string uniform))
         {
             tex.UniformName = uniform;
@@ -591,33 +578,6 @@ public static class RenderingHelper
         else
         {
             tex.UniformName = "streaming";
-        }
-
-        if (configSource.Content["streaming"].TryGetValue("size", out string sizeSetting))
-        {
-            switch (sizeSetting.ToLower())
-            {
-                case "source":
-                    receiver.ResizeMode = ResizeContentMode.Source;
-                    break;
-
-                case "viewport":
-                    receiver.ResizeMode = ResizeContentMode.Viewport;
-                    break;
-
-                default:
-                    if (int.TryParse(sizeSetting, out int size))
-                    {
-                        receiver.ResizeMode |= ResizeContentMode.Scaled;
-                        receiver.MaxSize = size;
-                    }
-                    else
-                    {
-                        receiver.ResizeMode = ResizeContentMode.Source;
-                        Logger?.LogWarning($"{nameof(LoadStreamingTextureDefinition)}: Invalid streaming size value {sizeSetting}; using source size");
-                    }
-                    break;
-            }
         }
 
         if (configSource.Content["streaming"].TryGetValue("standby", out string standbyFilename))
@@ -638,6 +598,40 @@ public static class RenderingHelper
                 Load2DBuffer(tex, Caching.BadTexturePlaceholder);
             }
         }
+        else
+        {
+            Load2DBuffer(tex, Caching.BadTexturePlaceholder);
+        }
+
+        if (configSource.Content["streaming"].TryGetValue("size", out string sizeSetting))
+        {
+            switch (sizeSetting.ToLower())
+            {
+                case "source":
+                    tex.ResizeMode = StreamingResizeContentMode.Source;
+                    break;
+
+                case "viewport":
+                    tex.ResizeMode = StreamingResizeContentMode.Viewport;
+                    break;
+
+                default:
+                    if (int.TryParse(sizeSetting, out int size))
+                    {
+                        tex.ResizeMode = StreamingResizeContentMode.Scaled;
+                        tex.ResizeMaxDimension = size;
+                    }
+                    else
+                    {
+                        tex.ResizeMode = StreamingResizeContentMode.Source;
+                        Logger?.LogWarning($"{nameof(LoadStreamingTextureDefinition)}: Invalid streaming size value {sizeSetting}; using source size");
+                    }
+                    break;
+            }
+        }
+
+        // this should be nulled in every renderer's Dispose
+        Program.AppWindow.StreamReceiver?.Texture = tex;
     }
 
     // 2025-08-20 Replaced with StbImage's faster buffer flip code inside the pinned section in DecodeVideoFrame

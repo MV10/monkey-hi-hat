@@ -6,21 +6,6 @@ namespace mhh;
 
 public abstract class StreamingReceiverBase : IDisposable
 {
-    /////////////////////////////////////////////////////////////////
-    // Properties initialized by RenderingHelper.GetTextures
-
-    /// <summary>
-    /// Sizing behavior for the texture.
-    /// Set by the Renderer when a streaming viz/FX is loaded.
-    /// </summary>
-    public ResizeContentMode ResizeMode { get; set; }
-
-    /// <summary>
-    /// Maximum dimension size for scaling the texture.
-    /// Set by the Renderer when a streaming viz/FX is loaded.
-    /// </summary>
-    public int MaxSize { get; set; }
-
     /// <summary>
     /// The Texture object to update when ReceiveTexture is called.
     /// When null, simply return from ReceiveTexture.
@@ -38,6 +23,11 @@ public abstract class StreamingReceiverBase : IDisposable
         }
     }
 
+    /// <summary>
+    /// Controls whether the incoming texture is vertically flipped.
+    /// </summary>
+    public bool Invert { get; set; } = true;
+
     private protected int StoredWidth = 0;
     private protected int StoredHeight = 0;
 
@@ -46,7 +36,7 @@ public abstract class StreamingReceiverBase : IDisposable
     /// <summary>
     /// Connect to the stream source and begin receiving data.
     /// </summary>
-    public abstract void Connect(string source, bool invert);
+    public abstract void Connect(string source);
 
     /// <summary>
     /// Updates the Texture property with the latest frame data
@@ -66,6 +56,14 @@ public abstract class StreamingReceiverBase : IDisposable
     {
         if (Texture is null || textureList is null) return;
         if (textureList.Any(t => t.TextureHandle == Texture.TextureHandle)) Texture = null;
+    }
+
+    /// <summary>
+    /// Checks the current visualizer and FX for a streaming texture and attaches to that.
+    /// </summary>
+    public void FindStreamingTexture()
+    {
+        Texture = Program.AppWindow.Renderer.NewRenderer?.GetStreamingTexture() ?? Program.AppWindow.Renderer.ActiveRenderer?.GetStreamingTexture();
     }
 
     public virtual void Dispose()

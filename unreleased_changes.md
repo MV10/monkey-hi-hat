@@ -16,19 +16,20 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Work In Progress
 
-* Added `--spout` and `--ndi` switches to connect, disconnect, etc.
+*
 
 
 ### MHH TODO
 
 * Why did disco_tunnel viz stop working?
+* Refuse to run a streaming-oriented FX if a streaming viz is running?
 * When Spout is updated, support different texture size on receiver
 * Installer support for content-only versioning / releases
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued
 * Use Spout sender to debug intermediate buffers?
 * Document using VLC / NDI (or VLC / Spout?) to create an RTSP feed
-* Modernize GL usage such as Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
+* Modernize with GL Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
 * monkey-see-monkey-do - relay delay time

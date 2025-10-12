@@ -10,7 +10,6 @@ public class SpoutReceiverManager : StreamingReceiverBase
     private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(SpoutReceiverManager));
 
     private SpoutReceiver Receiver;
-    private bool Invert;
 
     public SpoutReceiverManager()
     {
@@ -18,10 +17,9 @@ public class SpoutReceiverManager : StreamingReceiverBase
     }
 
     /// <inheritdoc/>
-    public override void Connect(string source, bool invert)
+    public override void Connect(string source)
     {
         Logger?.LogTrace("Connect");
-        Invert = invert;
         Receiver = new();
         Receiver.SetActiveSender(source);
     }

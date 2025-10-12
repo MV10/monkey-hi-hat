@@ -154,6 +154,11 @@ public class SimpleRenderer : IRenderer
         VertexSource.BindBuffers(Shader);
     }
 
+    public GLImageTexture GetStreamingTexture()
+    {
+        return Textures.FirstOrDefault(t => t.ResizeMode != StreamingResizeContentMode.NotStreaming);
+    }
+
     public void StartClock()
         => Clock.Start();
 
