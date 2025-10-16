@@ -21,17 +21,13 @@ public class NDIReceiverManager : StreamingReceiverBase
     private CancellationTokenSource CaptureCTS = new();
     private Task FrameCaptureTask;
 
-    // for resizing VideoFrameBuffer within UpdateTexture
-    private int FinalBufferWidth = 0;
-    private int FinalBufferHeight = 0;
-
     // must be protected by a lock, used by foreground and background threads
-    private object VideoFrameLock = new object();
-    private int VideoFrameWidth = 0;
-    private int VideoFrameHeight = 0;
-    private byte[] VideoFrameBuffer;
-    private long ForegroundPreviousTimecode = long.MinValue;
-    private long VideoFrameTimecode;
+    private object IncomingBufferLock = new object();
+    private int IncomingBufferWidth = 0;
+    private int IncomingBufferHeight = 0;
+    private byte[] IncomingBuffer;
+    private long IncomingTimecode;
+    private long LastUpdateTimecode = long.MinValue;
 
     // used by the background thread
     private uint FRAME_WAIT_TIME_MS = 100;
@@ -78,56 +74,31 @@ public class NDIReceiverManager : StreamingReceiverBase
     public override unsafe void UpdateTexture()
     {
         if (Receiver == nint.Zero || Texture is null) return;
-        if (VideoFrameBuffer is null || VideoFrameBuffer.Length == 0) return;
-        if (ForegroundPreviousTimecode >= VideoFrameTimecode) return;
+        if (IncomingBuffer is null || IncomingBuffer.Length == 0) return;
+        if (LastUpdateTimecode >= IncomingTimecode) return;
 
-        ForegroundPreviousTimecode = VideoFrameTimecode;
+        LastUpdateTimecode = IncomingTimecode;
 
         // did the video frame dimensions change?
-        if (StoredWidth != VideoFrameWidth || StoredHeight != VideoFrameHeight)
+        if (SenderWidth != IncomingBufferWidth || SenderHeight != IncomingBufferHeight)
         {
-            StoredWidth = VideoFrameWidth;
-            StoredHeight = VideoFrameHeight;
-
-            switch (Texture.ResizeMode)
-            {
-                case StreamingResizeContentMode.Viewport:
-                    FinalBufferWidth = Program.AppWindow.ClientSize.X;
-                    FinalBufferHeight = Program.AppWindow.ClientSize.Y;
-                    break;
-
-                case StreamingResizeContentMode.Source:
-                    FinalBufferWidth = VideoFrameWidth;
-                    FinalBufferHeight = VideoFrameHeight;
-                    break;
-
-                case StreamingResizeContentMode.Scaled:
-                    if(VideoFrameWidth > VideoFrameHeight)
-                    {
-                        FinalBufferWidth = Texture.ResizeMaxDimension;
-                        FinalBufferHeight = (int)((double)VideoFrameHeight * ((double)Texture.ResizeMaxDimension / (double)VideoFrameWidth));
-                    }
-                    else
-                    {
-                        FinalBufferHeight = Texture.ResizeMaxDimension;
-                        FinalBufferWidth = (int)((double)VideoFrameWidth * ((double)Texture.ResizeMaxDimension / (double)VideoFrameHeight));
-                    }
-                    break;
-            }
+            SenderWidth = IncomingBufferWidth;
+            SenderHeight = IncomingBufferHeight;
         }
 
-        // resize required?
-        var buffer = (FinalBufferWidth != VideoFrameWidth || FinalBufferHeight != VideoFrameHeight) 
-            ? ResizeBuffer(VideoFrameBuffer, VideoFrameWidth, VideoFrameHeight, FinalBufferWidth, FinalBufferHeight)
-            : VideoFrameBuffer;
+        // use incoming buffer directly, or resize the contents before uploading to GL?
+        UpdateLocalDimensions();
+        var buffer = (LocalWidth != IncomingBufferWidth || LocalHeight != IncomingBufferHeight) 
+            ? ResizeBuffer(IncomingBuffer, IncomingBufferWidth, IncomingBufferHeight, LocalWidth, LocalHeight)
+            : IncomingBuffer;
 
         GL.ActiveTexture(Texture.TextureUnit);
         GL.BindTexture(TextureTarget.Texture2D, Texture.TextureHandle);
-        lock (VideoFrameLock)
+        lock (IncomingBufferLock)
         {
             fixed (byte* ptr = buffer)
             {
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, FinalBufferWidth, FinalBufferHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, buffer);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, LocalWidth, LocalHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, buffer);
             }
         }
         GL.BindTexture(TextureTarget.Texture2D, 0);
@@ -184,15 +155,15 @@ public class NDIReceiverManager : StreamingReceiverBase
                     if (BackgroundPreviousTimecode < VideoFrameData.timecode)
                     {
                         BackgroundPreviousTimecode = VideoFrameData.timecode;
-                        lock (VideoFrameLock)
+                        lock (IncomingBufferLock)
                         {
-                            VideoFrameWidth = VideoFrameData.xres;
-                            VideoFrameHeight = VideoFrameData.yres;
+                            IncomingBufferWidth = VideoFrameData.xres;
+                            IncomingBufferHeight = VideoFrameData.yres;
                             var bufferLen = VideoFrameData.xres * VideoFrameData.yres * 4;
-                            if (VideoFrameBuffer is null || VideoFrameBuffer.Length != bufferLen) VideoFrameBuffer = new byte[bufferLen];
+                            if (IncomingBuffer is null || IncomingBuffer.Length != bufferLen) IncomingBuffer = new byte[bufferLen];
                             if (Invert) StbImage.stbi__vertical_flip((void*)VideoFrameData.p_data, VideoFrameData.xres, VideoFrameData.yres, 4);
-                            Marshal.Copy(VideoFrameData.p_data, VideoFrameBuffer, 0, bufferLen);
-                            Interlocked.Exchange(ref VideoFrameTimecode, VideoFrameData.timecode);
+                            Marshal.Copy(VideoFrameData.p_data, IncomingBuffer, 0, bufferLen);
+                            Interlocked.Exchange(ref IncomingTimecode, VideoFrameData.timecode);
                         }
                     }
                     NDIlib.recv_free_video_v2(Receiver, ref VideoFrameData);

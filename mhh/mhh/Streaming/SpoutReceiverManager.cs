@@ -39,18 +39,21 @@ public class SpoutReceiverManager : StreamingReceiverBase
 
             GL.ActiveTexture(Texture.TextureUnit);
             GL.BindTexture(TextureTarget.Texture2D, Texture.TextureHandle);
-            if (StoredWidth == 0 || StoredHeight == 0)
+            if (SenderWidth == 0 || SenderHeight == 0)
             {
-                GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureWidth, out StoredWidth);
-                GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureHeight, out StoredHeight);
+                GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureWidth, out SenderWidth);
+                GL.GetTexLevelParameter(TextureTarget.Texture2D, 0, GetTextureParameter.TextureHeight, out SenderHeight);
             }
-            if (StoredWidth > 0 && StoredHeight > 0 && (width != StoredWidth || height != StoredHeight))
+            if (SenderWidth > 0 && SenderHeight > 0 && (width != SenderWidth || height != SenderHeight))
             {
-                // currently Spout can only receive into a sender-sized texture, create a blank one;
-                // maintainer says next version will be able to blit into the receiver's texture size
-                StoredWidth = width;
-                StoredHeight = height;
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+                SenderWidth = width;
+                SenderHeight = height;
+            }
+
+            if (UpdateLocalDimensions())
+            {
+                // resize the buffer, Spout will FBO blit to match
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, LocalWidth, LocalHeight, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
             }
             GL.BindTexture(TextureTarget.Texture2D, 0);
 

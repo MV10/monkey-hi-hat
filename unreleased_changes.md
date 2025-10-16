@@ -16,12 +16,15 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Work In Progress
 
-*
+* When Spout.NETCore with spout 2.007.17 is out, apply receiver scaling
 
 
 ### MHH TODO
 
 * Why did disco_tunnel viz stop working?
+* On-screen warning when log file reaches a certain size (with persistence options)
+* Limit maximum log file size
+* Add eyecandy `ErrorContext` static class to improve error logging
 * Refuse to run a streaming-oriented FX if a streaming viz is running?
 * When Spout is updated, support different texture size on receiver
 * Installer support for content-only versioning / releases

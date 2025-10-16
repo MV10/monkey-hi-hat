@@ -17,8 +17,8 @@ public abstract class StreamingReceiverBase : IDisposable
         get;
         set
         {
-            StoredWidth = 0;
-            StoredHeight = 0;
+            SenderWidth = 0;
+            SenderHeight = 0;
             field = value;
         }
     }
@@ -28,8 +28,13 @@ public abstract class StreamingReceiverBase : IDisposable
     /// </summary>
     public bool Invert { get; set; } = true;
 
-    private protected int StoredWidth = 0;
-    private protected int StoredHeight = 0;
+    // Stores the most recently seen dimensions of the source image
+    private protected int SenderWidth = 0;
+    private protected int SenderHeight = 0;
+
+    // Locally-allocated image dimensions
+    private protected int LocalWidth = 0;
+    private protected int LocalHeight = 0;
 
     private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(StreamingReceiverBase));
 
@@ -64,6 +69,45 @@ public abstract class StreamingReceiverBase : IDisposable
     public void FindStreamingTexture()
     {
         Texture = Program.AppWindow.Renderer.NewRenderer?.GetStreamingTexture() ?? Program.AppWindow.Renderer.ActiveRenderer?.GetStreamingTexture();
+    }
+
+    /// <summary>
+    /// Sets LocalWidth / LocalHeight based on on the Texture.ResizeMode
+    /// versus either viewport diemsions or SenderWidth / SenderHeight.
+    /// Returns true if the local dimensions changed.
+    /// </summary>
+    public bool UpdateLocalDimensions()
+    {
+        var prevWidth = LocalWidth;
+        var prevHeight = LocalHeight;
+
+        switch (Texture.ResizeMode)
+        {
+            case StreamingResizeContentMode.Viewport:
+                LocalWidth = Program.AppWindow.ClientSize.X;
+                LocalHeight = Program.AppWindow.ClientSize.Y;
+                break;
+
+            case StreamingResizeContentMode.Source:
+                LocalWidth = SenderWidth;
+                LocalHeight = SenderHeight;
+                break;
+
+            case StreamingResizeContentMode.Scaled:
+                if (SenderWidth > SenderHeight)
+                {
+                    LocalWidth = Texture.ResizeMaxDimension;
+                    LocalHeight = (int)((double)SenderHeight * ((double)Texture.ResizeMaxDimension / (double)SenderWidth));
+                }
+                else
+                {
+                    LocalHeight = Texture.ResizeMaxDimension;
+                    LocalWidth = (int)((double)SenderWidth * ((double)Texture.ResizeMaxDimension / (double)SenderHeight));
+                }
+                break;
+        }
+
+        return (LocalWidth != prevWidth || LocalHeight != prevHeight);
     }
 
     public virtual void Dispose()
