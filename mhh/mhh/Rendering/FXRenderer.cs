@@ -18,8 +18,8 @@ public class FXRenderer : IRenderer
     public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
     private GLResourceGroup FinalDrawbuffers;
     
-    public Vector2 Resolution { get => ViewportResolution; }
-    private Vector2 ViewportResolution;
+    public Vector2 Resolution { get => OutputResolution; }
+    private Vector2 OutputResolution;
 
     public ConfigFile ConfigSource { get => Config.ConfigSource; }
     public FXConfig Config;
@@ -55,12 +55,13 @@ public class FXRenderer : IRenderer
 
     public FXRenderer(FXConfig fxConfig, IRenderer primaryRenderer)
     {
-        Logger?.LogTrace("Constructor");
-
-        ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
-
         Config = fxConfig;
         Filename = Path.GetFileNameWithoutExtension(Config.ConfigSource.Pathname);
+
+        Logger?.LogTrace($"Constructor {Filename}");
+
+        OutputResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
+
         Description = fxConfig.Description;
         PrimaryRenderer = primaryRenderer;
         PrimaryFXUniforms = PrimaryRenderer.GetFXUniforms(Filename);
@@ -87,7 +88,7 @@ public class FXRenderer : IRenderer
 
             // if primary doesn't have buffers, ShaderPass[0] needs to match the primary's resolution (assuming it differs from the FX buffer resolution)
             if (PrimaryRenderer is not null && PrimaryRenderer.OutputBuffers is null
-                && (PrimaryRenderer.Resolution.X != ViewportResolution.X || PrimaryRenderer.Resolution.Y != ViewportResolution.Y))
+                && (PrimaryRenderer.Resolution.X != OutputResolution.X || PrimaryRenderer.Resolution.Y != OutputResolution.Y))
             {
                 RenderManager.ResourceManager.ResizeFramebufferTexture(ShaderPasses[0].Drawbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
                 if (ShaderPasses[0].Backbuffers is not null) RenderManager.ResourceManager.ResizeFramebufferTexture(ShaderPasses[0].Backbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
@@ -102,10 +103,11 @@ public class FXRenderer : IRenderer
                 FXCrossfadeShader = Caching.InternalCrossfadeShader;
                 FXCrossfadeVerts = new VertexQuad();
                 FXCrossfadeVerts.Initialize(null, FXCrossfadeShader); // null is safe, fragquad has no viz/fx settings and crossfade doesn't support textures/videos
-                FXCrossfadeResources = RenderManager.ResourceManager.CreateResourceGroups(FXCrossfadeOwnerName, 1, ViewportResolution)[0];
+                FXCrossfadeResources = RenderManager.ResourceManager.CreateResourceGroups(FXCrossfadeOwnerName, 1, OutputResolution)[0];
                 FXCrossfadeDurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
             }
 
+            Logger?.LogTrace("Parsing texture declarations");
             Textures = RenderingHelper.GetTextures(DrawbufferOwnerName, Config.ConfigSource);
             if (Textures?.Any(t => t.Loaded && t.VideoData is not null) ?? false) VideoProcessor = new(Textures);
         }
@@ -142,7 +144,7 @@ public class FXRenderer : IRenderer
             if (PrimaryRenderer.OutputBuffers is null)
             {
                 GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, ShaderPasses[0].Drawbuffers.FramebufferHandle);
-                GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
+                GL.Viewport(0, 0, (int)OutputResolution.X, (int)OutputResolution.Y);
             }
             else
             {
@@ -159,7 +161,7 @@ public class FXRenderer : IRenderer
                 GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, PrimaryRenderer.OutputBuffers.FramebufferHandle);
                 GL.BlitFramebuffer(
                     0, 0, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y,
-                    0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y,
+                    0, 0, (int)OutputResolution.X, (int)OutputResolution.Y,
                     ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
             }
         }
@@ -172,7 +174,7 @@ public class FXRenderer : IRenderer
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
             RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms, PrimaryFXUniforms);
             RenderingHelper.SetTextureUniforms(Textures, pass.Shader);
-            pass.Shader.SetUniform("resolution", ViewportResolution);
+            pass.Shader.SetUniform("resolution", OutputResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);
             pass.Shader.SetUniform("randomrun", RandomRun);
@@ -191,7 +193,7 @@ public class FXRenderer : IRenderer
             }
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, pass.Drawbuffers.FramebufferHandle);
-            GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
+            GL.Viewport(0, 0, (int)OutputResolution.X, (int)OutputResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             pass.VertexSource.RenderFrame(pass.Shader);
@@ -202,7 +204,7 @@ public class FXRenderer : IRenderer
         var lastPass = ShaderPasses[ShaderPasses.Count - 1];
         FinalDrawbuffers = lastPass.Drawbuffers;
 
-        screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
+        screenshotHandler?.SaveFramebuffer((int)OutputResolution.X, (int)OutputResolution.Y, FinalDrawbuffers.FramebufferHandle);
 
         // is FX crossfade active?
         float fadeLevel = (float)Clock.ElapsedMilliseconds / FXCrossfadeDurationMS;
@@ -221,7 +223,7 @@ public class FXRenderer : IRenderer
         if (FXCrossfadeShader is not null)
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, FXCrossfadeResources.FramebufferHandle);
-            GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
+            GL.Viewport(0, 0, (int)OutputResolution.X, (int)OutputResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
             FXCrossfadeShader.Use();
             FXCrossfadeShader.ResetUniforms();
@@ -240,7 +242,7 @@ public class FXRenderer : IRenderer
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, FinalDrawbuffers.FramebufferHandle);
             GL.BlitFramebuffer(
-                0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y,
+                0, 0, (int)OutputResolution.X, (int)OutputResolution.Y,
                 0, 0, RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y,
                 ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
 
@@ -262,23 +264,25 @@ public class FXRenderer : IRenderer
 
     public void OnResize()
     {
-        var oldResolution = ViewportResolution;
-        (ViewportResolution, _) = RenderingHelper.CalculateViewportResolution(Config.RenderResolutionLimit);
+        Logger?.LogTrace($"OnResize {Filename}");
+
+        var oldResolution = OutputResolution;
+        (OutputResolution, _) = RenderingHelper.CalculateOutputResolution(Config.RenderResolutionLimit);
 
         // we own the primary now, make sure it gets resized, and apply any defined FXResolutionLimit
         PrimaryRenderer?.OnResize();
 
         // abort if the constructor called this, or if nothing changed
-        if (ShaderPasses is null || oldResolution.X == ViewportResolution.X && oldResolution.Y == ViewportResolution.Y) return;
+        if (ShaderPasses is null || oldResolution.X == OutputResolution.X && oldResolution.Y == OutputResolution.Y) return;
 
         // resize draw buffers, and resize/copy back buffers
-        RenderManager.ResourceManager.ResizeTexturesForViewport(DrawbufferOwnerName, ViewportResolution);
-        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTexturesForViewport(BackbufferOwnerName, ViewportResolution, true);
-        if (Config.Crossfade) RenderManager.ResourceManager.ResizeTexturesForViewport(FXCrossfadeOwnerName, ViewportResolution);
+        RenderManager.ResourceManager.ResizeFramebufferTextures(DrawbufferOwnerName, OutputResolution);
+        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeFramebufferTextures(BackbufferOwnerName, OutputResolution, true);
+        if (Config.Crossfade) RenderManager.ResourceManager.ResizeFramebufferTextures(FXCrossfadeOwnerName, OutputResolution);
 
         // if primary doesn't have buffers, ShaderPass[0] needs to match the primary's resolution (assuming it differs from the FX buffer resolution)
         if(PrimaryRenderer is not null && PrimaryRenderer.OutputBuffers is null
-            && (PrimaryRenderer.Resolution.X != ViewportResolution.X || PrimaryRenderer.Resolution.Y != ViewportResolution.Y))
+            && (PrimaryRenderer.Resolution.X != OutputResolution.X || PrimaryRenderer.Resolution.Y != OutputResolution.Y))
         {
             RenderManager.ResourceManager.ResizeFramebufferTexture(ShaderPasses[0].Drawbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y);
             if (ShaderPasses[0].Backbuffers is not null) RenderManager.ResourceManager.ResizeFramebufferTexture(ShaderPasses[0].Backbuffers, (int)PrimaryRenderer.Resolution.X, (int)PrimaryRenderer.Resolution.Y, true);
@@ -318,7 +322,7 @@ public class FXRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
-        Logger?.LogTrace("Disposing");
+        Logger?.LogTrace($"Disposing {Filename}");
 
         RenderingHelper.UseFXResolutionLimit = false;
 

@@ -99,13 +99,13 @@ public class CrossfadeRenderer : IRenderer
 
         VertQuad = new VertexQuad(); 
         VertQuad.Initialize(null, CrossfadeShader); // null is safe, fragquad has no viz/fx settings and crossfade doesn't support textures/videos
-        
+
         OldRenderer = oldRenderer;
         NewRenderer = newRenderer;
         CreateResourceGroups();
 
-        Logger?.LogDebug($"Crossfading old, filename: {OldRenderer.Filename}, multipass? {OldRenderer.OutputBuffers is not null}");
-        Logger?.LogDebug($"Crossfading new, filename: {NewRenderer.Filename}, multipass? {NewRenderer.OutputBuffers is not null}");
+        Logger?.LogDebug($"Old filename: {OldRenderer.Filename}, multipass? {OldRenderer.OutputBuffers is not null}");
+        Logger?.LogDebug($"New filename: {NewRenderer.Filename}, multipass? {NewRenderer.OutputBuffers is not null}");
 
         CompletionCallback = completionCallback;
         DurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
@@ -191,6 +191,8 @@ public class CrossfadeRenderer : IRenderer
 
     public void OnResize()
     {
+        Logger?.LogTrace("OnResize");
+        
         OldRenderer?.OnResize();
         NewRenderer?.OnResize();
         CreateResourceGroups();
@@ -221,9 +223,16 @@ public class CrossfadeRenderer : IRenderer
 
     private void CreateResourceGroups()
     {
+        Logger?.LogTrace($"{nameof(CreateResourceGroups)} destroying old renderer local framebuffers");
         RenderManager.ResourceManager.DestroyAllResources(OldOwnerName);
+
+        Logger?.LogTrace($"{nameof(CreateResourceGroups)} destroying new renderer local framebuffers");
         RenderManager.ResourceManager.DestroyAllResources(NewOwnerName);
+
+        Logger?.LogTrace($"{nameof(CreateResourceGroups)} creating updated old renderer local framebuffers");
         if (OldRenderer.OutputBuffers is null) OldResourceGroup = RenderManager.ResourceManager.CreateResourceGroups(OldOwnerName, 1, OldRenderer.Resolution)[0];
+
+        Logger?.LogTrace($"{nameof(CreateResourceGroups)} creating updated new renderer local framebuffers");
         if (NewRenderer.OutputBuffers is null) NewResourceGroup = RenderManager.ResourceManager.CreateResourceGroups(NewOwnerName, 1, NewRenderer.Resolution)[0];
     }
 
@@ -236,7 +245,10 @@ public class CrossfadeRenderer : IRenderer
 
         VertQuad?.Dispose();
 
+        Logger?.LogTrace("Disposing old renderer local framebuffers");
         RenderManager.ResourceManager.DestroyAllResources(OldOwnerName);
+
+        Logger?.LogTrace("Disposing new renderer local framebuffers");
         RenderManager.ResourceManager.DestroyAllResources(NewOwnerName);
 
         OldResourceGroup = null;

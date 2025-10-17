@@ -90,16 +90,17 @@ public static class RenderingHelper
     public static void DisposeUncachedShader(CachedShader shader)
     {
         if (shader is null) return;
+
         Logger?.LogTrace($"{nameof(DisposeUncachedShader)}");
 
         if (!Caching.VisualizerShaders.ContainsKey(shader.Key) && !Caching.FXShaders.ContainsKey(shader.Key))
         {
-            Logger?.LogTrace($"  Disposed shader {shader.Key}");
+            Logger?.LogTrace($"...Disposing shader {shader.Key}");
             shader.Dispose();
         }
         else
         {
-            Logger?.LogTrace($"  Not disposed; shader {shader.Key} is cached");
+            Logger?.LogTrace($"...Not disposed; shader {shader.Key} is cached");
         }
     }
 
@@ -164,7 +165,7 @@ public static class RenderingHelper
 
         var totalRequired = (imageDefs?.Count ?? 0) + (cubeDefs?.Count ?? 0) + (videoDefs?.Count ?? 0) + (hasStreamingTexture ? 1 : 0);
         if (totalRequired == 0) return null;
-        var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, totalRequired);
+        var resources = RenderManager.ResourceManager.CreateContentTextures(ownerName, totalRequired);
 
         int resourceIndex = 0;
 
@@ -173,6 +174,7 @@ public static class RenderingHelper
         {
             foreach (var tex in imageDefs)
             {
+                Logger?.LogTrace($"...texture: resource index {resourceIndex}");
                 var res = resources[resourceIndex++];
 
                 // uniform name ending with '!' means clamp to edge rather than repeat
@@ -201,6 +203,8 @@ public static class RenderingHelper
                 res.Filename = tex.Value[index];
 
                 res.Loaded = LoadImageFile(res);
+
+                Logger?.LogTrace($"...uniform:{res.UniformName}, unit:{res.TextureUnit}, handle:{res.TextureHandle} loaded:{res.Loaded}");
             }
         }
 
@@ -209,11 +213,14 @@ public static class RenderingHelper
         {
             foreach (var tex in cubeDefs)
             {
+                Logger?.LogTrace($"...cubemap: resource index {resourceIndex}");
                 var res = resources[resourceIndex++];
                 res.UniformName = tex.Key;
                 res.Filename = tex.Value[rand.Next(tex.Value.Count)];
                 res.TextureTarget = TextureTarget.TextureCubeMap;
                 res.Loaded = LoadImageFile(res);
+
+                Logger?.LogTrace($"...uniform:{res.UniformName}, unit:{res.TextureUnit}, handle:{res.TextureHandle} loaded:{res.Loaded}");
             }
         }
 
@@ -222,6 +229,7 @@ public static class RenderingHelper
         {
             foreach (var vid in videoDefs)
             {
+                Logger?.LogTrace($"...video: resource index {resourceIndex}");
                 var res = resources[resourceIndex++];
                 res.UniformName = vid.Key;
                 res.Filename = vid.Value[rand.Next(vid.Value.Count)];
@@ -233,11 +241,19 @@ public static class RenderingHelper
                     VideoMediaProcessor.DisposeVideoData(res);
                     Load2DBuffer(res, Caching.BadTexturePlaceholder);
                 }
+
+                Logger?.LogTrace($"...uniform:{res.UniformName}, unit:{res.TextureUnit}, handle:{res.TextureHandle} loaded:{res.Loaded}");
             }
         }
 
         // [streaming]
-        if(hasStreamingTexture) LoadStreamingTextureDefinition(configSource, resources[resourceIndex]);
+        if (hasStreamingTexture)
+        {
+            Logger?.LogTrace($"...streaming: resource index {resourceIndex}");
+            var res = resources[resourceIndex];
+            LoadStreamingTextureDefinition(configSource, res);
+            Logger?.LogTrace($"...uniform:{res.UniformName}, unit:{res.TextureUnit}, handle:{res.TextureHandle} loaded:{res.Loaded}");
+        }
 
         return resources;
     }
@@ -372,8 +388,10 @@ public static class RenderingHelper
     /// the resulting viewport/render-target resolution should be. Any FX limit is applied
     /// if the active renderer is either the FXRenderer or Crossfade.
     /// </summary>
-    public static (Vector2 resolution, bool isFullResolution) CalculateViewportResolution(int renderResolutionLimit, int fxResolutionLimit = 0)
+    public static (Vector2 outputResolution, bool isViewportResolution) CalculateOutputResolution(int renderResolutionLimit, int fxResolutionLimit = 0)
     {
+        Logger?.LogTrace($"{nameof(CalculateOutputResolution)}: renderResolutionLimit: {renderResolutionLimit}, fxResolutionLimit: {fxResolutionLimit}");
+
         var w = ClientSize.X;
         var h = ClientSize.Y;
 
@@ -381,23 +399,30 @@ public static class RenderingHelper
             ? renderResolutionLimit
             : fxResolutionLimit;
 
+        bool fullRes = true;
         double larger = Math.Max(w, h);
         double smaller = Math.Min(w, h);
-        if(limit == 0 || larger <= limit) return (new(w, h), true);
 
-        double aspect = smaller / larger;
-        var scaled = (int)(limit * aspect);
-        if(w > h)
+        if(limit != 0 && larger > limit)
         {
-            w = limit;
-            h = scaled;
+            fullRes = false;
+            double aspect = smaller / larger;
+            var scaled = (int)(limit * aspect);
+            if (w > h)
+            {
+                w = limit;
+                h = scaled;
+            }
+            else
+            {
+                w = scaled;
+                h = limit;
+            }
         }
-        else
-        {
-            w = scaled;
-            h = limit;
-        }
-        return (new(w, h), false);
+
+        Logger?.LogTrace($"...outputResolution: {w}x{h}, isFullResolution: {fullRes}");
+
+        return (new(w, h), fullRes);
     }
 
     /// <summary>
@@ -564,11 +589,16 @@ public static class RenderingHelper
                 if (!definitions[uniform].Contains(filename)) definitions[uniform].Add(filename);
             }
         }
+
+        Logger?.LogTrace($"...{nameof(LoadTextureDefinitions)}: section [{sectionName}] has {definitions.Count} uniforms");
+
         return definitions;
     }
 
     private static void LoadStreamingTextureDefinition(ConfigFile configSource, GLImageTexture tex)
     {
+        Logger?.LogTrace(nameof(LoadStreamingTextureDefinition));
+
         tex.Loaded = true;
 
         if (configSource.Content["streaming"].TryGetValue("uniform", out string uniform))
