@@ -22,7 +22,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 ### Work In Progress
 
 * local packages
-  * eyecandy local v4.3.0
   * Spout.NETCore local v2.007.017
 
 
