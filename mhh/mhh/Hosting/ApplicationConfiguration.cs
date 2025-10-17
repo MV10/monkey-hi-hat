@@ -55,7 +55,7 @@ public class ApplicationConfiguration : IConfigSource
     
     public readonly OpenGLErrorLogFlags OpenGLErrorLogging;
     public readonly bool OpenGLErrorBreakpoint;
-    public readonly long OpenGLErrorInterval;
+    public readonly long OpenGLErrorThrottle;
 
     public readonly string CaptureDriverName = string.Empty;
     public readonly string CaptureDeviceName = string.Empty;
@@ -112,7 +112,7 @@ public class ApplicationConfiguration : IConfigSource
 
         OpenGLErrorLogging = ConfigSource.ReadValue("setup", "openglerrorlogging").ToEnum(OpenGLErrorLogFlags.Normal);
         OpenGLErrorBreakpoint = ConfigSource.ReadValue("setup", "openglerrorbreakpoint").ToBool(false);
-        OpenGLErrorInterval = ConfigSource.ReadValue("setup", "openglerrorinterval").ToLong(36000);
+        OpenGLErrorThrottle = ConfigSource.ReadValue("setup", "openglerrorthrottle").ToLong(60000);
 
         StartX = ConfigSource.ReadValue("setup", "startx").ToInt32(100);
         StartY = ConfigSource.ReadValue("setup", "starty").ToInt32(100);

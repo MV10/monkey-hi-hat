@@ -15,7 +15,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 ### Version and Changelog
 
 * 5.0.0 released 2025-10-05
-* post 5.0.0 started 2025-10-10
+* 5.1.0 TBD
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
 
@@ -25,11 +25,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
   * eyecandy local v4.3.0
   * Spout.NETCore local v2.007.017
 
-* Spout receiver scaling added (requires release of spout 2.007.017)
-* Populates the eyecandy OpenGL error logging app context object
-* MHH config `OpenGLErrorLogging` for controlling OpenGL error detail-level
-* MHH config `OpenGLErrorInterval` for throttling duplicate log entries
-* MHH config `OpenGLErrorBreakpoint` for triggering debugger breakpoints
 
 
 ### MHH TODO

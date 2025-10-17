@@ -494,7 +494,7 @@ public class Program
                 HideMousePointer = AppConfig.HideMousePointer,
                 OpenGLErrorLogging = AppConfig.OpenGLErrorLogging,
                 OpenGLErrorBreakpoint = AppConfig.OpenGLErrorBreakpoint,
-                OpenGLErrorInterval = AppConfig.OpenGLErrorInterval,
+                OpenGLErrorThrottle = AppConfig.OpenGLErrorThrottle,
             };
             WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
             WindowConfig.OpenTKNativeWindowSettings.Location = (AppConfig.StartX, AppConfig.StartY);
