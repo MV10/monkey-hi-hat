@@ -97,7 +97,7 @@ public class Program
     private static bool OnStandby = false;
 
     // only valid after InitializeAndWait
-    private static Microsoft.Extensions.Logging.ILogger Logger;
+    private static ILogger Logger;
 
     public static async Task Main(string[] args)
     {
@@ -492,6 +492,9 @@ public class Program
             {
                 StartFullScreen = AppConfig.StartFullScreen,
                 HideMousePointer = AppConfig.HideMousePointer,
+                OpenGLErrorLogging = AppConfig.OpenGLErrorLogging,
+                OpenGLErrorBreakpoint = AppConfig.OpenGLErrorBreakpoint,
+                OpenGLErrorInterval = AppConfig.OpenGLErrorInterval,
             };
             WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
             WindowConfig.OpenTKNativeWindowSettings.Location = (AppConfig.StartX, AppConfig.StartY);

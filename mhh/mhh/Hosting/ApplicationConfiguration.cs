@@ -52,6 +52,10 @@ public class ApplicationConfiguration : IConfigSource
     public readonly bool CloseToStandby;
     public readonly bool WindowsHideConsoleAtStartup;
     public readonly bool WindowsHideConsoleInStandby;
+    
+    public readonly OpenGLErrorLogFlags OpenGLErrorLogging;
+    public readonly bool OpenGLErrorBreakpoint;
+    public readonly long OpenGLErrorInterval;
 
     public readonly string CaptureDriverName = string.Empty;
     public readonly string CaptureDeviceName = string.Empty;
@@ -105,6 +109,11 @@ public class ApplicationConfiguration : IConfigSource
         CloseToStandby = ConfigSource.ReadValue("setup", "closetostandby").ToBool(false);
         WindowsHideConsoleAtStartup = ConfigSource.ReadValue("windows", "hideconsoleatstartup").ToBool(false);
         WindowsHideConsoleInStandby = ConfigSource.ReadValue("windows", "hideconsoleinstandby").ToBool(true);
+
+        OpenGLErrorLogging = ConfigSource.ReadValue("setup", "openglerrorlogging").ToEnum(OpenGLErrorLogFlags.Normal);
+        OpenGLErrorBreakpoint = ConfigSource.ReadValue("setup", "openglerrorbreakpoint").ToBool(false);
+        OpenGLErrorInterval = ConfigSource.ReadValue("setup", "openglerrorinterval").ToLong(36000);
+
         StartX = ConfigSource.ReadValue("setup", "startx").ToInt32(100);
         StartY = ConfigSource.ReadValue("setup", "starty").ToInt32(100);
         SizeX = ConfigSource.ReadValue("setup", "sizex").ToInt32(960);

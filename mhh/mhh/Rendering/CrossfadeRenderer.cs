@@ -196,10 +196,8 @@ public class CrossfadeRenderer : IRenderer
         CreateResourceGroups();
     }
 
-    public GLImageTexture GetStreamingTexture()
-    { 
-        return null; 
-    }
+    // IRenderer requirement which is not applicable to this renderer.
+    public GLImageTexture GetStreamingTexture() => null;
 
     public void StartClock()
     {

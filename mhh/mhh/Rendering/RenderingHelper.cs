@@ -319,7 +319,7 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Called by IVertexSource RenderFrame to set any loaded image/video texture uniforms before drawing.
+    /// Called by IRenderer RenderFrame to set any loaded image/video texture uniforms before drawing.
     /// </summary>
     public static void SetTextureUniforms(IReadOnlyList<GLImageTexture> textures, Shader shader)
     {
