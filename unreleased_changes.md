@@ -21,13 +21,13 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### Work In Progress
 
-* local packages
-  * Spout.NETCore local v2.007.017
+*
 
 
 
 ### MHH TODO
 
+* eyecandy - if no OpenGL errors were throttled, do not output summary at close
 * OMT Streaming https://github.com/openmediatransport
 * On-screen warning when log file reaches a certain size (with persistence options)
 * Limit maximum log file size
