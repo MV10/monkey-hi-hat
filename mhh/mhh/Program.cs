@@ -97,7 +97,7 @@ public class Program
     private static bool OnStandby = false;
 
     // only valid after InitializeAndWait
-    private static Microsoft.Extensions.Logging.ILogger Logger;
+    private static ILogger Logger;
 
     public static async Task Main(string[] args)
     {
@@ -346,7 +346,7 @@ public class Program
 
             case "--paths":
                 if (args.Length > 1) return ShowHelp();
-                return $"\nConfigured paths\n\nVizualization shaders:\n{AppConfig.VisualizerPath.Replace(';','\n')}\n\nPost-processing FX shaders:\n{AppConfig.FXPath.Replace(';', '\n')}\n\nTexure and video files:\n{AppConfig.TexturePath.Replace(';', '\n')}\n\nPlaylists:\n{AppConfig.PlaylistPath.Replace(';', '\n')}\n\nScreenshots:\n{AppConfig.ScreenshotPath}\n\nFile cache:\n{AppConfig.FileCachePath}";
+                return $"\nConfigured paths\n\nVizualization shaders:\n{AppConfig.VisualizerPath.Replace(';','\n')}\n\nPost-processing FX shaders:\n{AppConfig.FXPath.Replace(';', '\n')}\n\nTexure and video files:\n{AppConfig.TexturePath.Replace(';', '\n')}\n\nPlaylists:\n{AppConfig.PlaylistPath.Replace(';', '\n')}\n\nCrossfades:\n{AppConfig.CrossfadePath}\n\nScreenshots:\n{AppConfig.ScreenshotPath}";
 
             case "--cls":
                 return AppWindow.Command_CLS();
@@ -361,6 +361,10 @@ public class Program
                 AppWindow?.Command_Quit();
                 OnStandby = !OnStandby;
                 return "ACK";
+
+            case "--streaming":
+                if (OnStandby) return "ERR: Application is in standby";
+                return AppWindow?.Command_Streaming(args);
 
             default:
                 return ShowHelp();
@@ -488,6 +492,9 @@ public class Program
             {
                 StartFullScreen = AppConfig.StartFullScreen,
                 HideMousePointer = AppConfig.HideMousePointer,
+                OpenGLErrorLogging = AppConfig.OpenGLErrorLogging,
+                OpenGLErrorBreakpoint = AppConfig.OpenGLErrorBreakpoint,
+                OpenGLErrorThrottle = AppConfig.OpenGLErrorThrottle,
             };
             WindowConfig.OpenTKNativeWindowSettings.Title = "monkey-hi-hat";
             WindowConfig.OpenTKNativeWindowSettings.Location = (AppConfig.StartX, AppConfig.StartY);
@@ -714,7 +721,7 @@ All switches are passed to the already-running instance:
 --fps [0|1-9999]            sets a frame rate (FPS) target, or 0 to disable (some shaders may require 60 FPS)
 --nocache                   disables shader viz/FX caching for the remainder of the session (good for testing)
 
---test [viz|fx|fade] [file] Enters test mode, use +/- to cycle through content
+--test [viz|fx|fade] [file] Enters test mode, +/- cycles through content, Q to quit, R to reload
 --endtest                   Exits test mode (loads the idle visualizer)
 
 --standby                   toggles between standby mode and active mode
@@ -728,5 +735,12 @@ All switches are passed to the already-running instance:
 --cls                       clears the console window of the running instance (useful during debug)
 
 --devices                   list audio device names, can be used when MHH is not running (WASAPI only)
+
+--streaming                 streaming commands control Spout / NDI; refer to the wiki for details
+--streaming status
+--streaming send spout|ndi [""sender name""]
+--streaming receive spout ""source name""
+--streaming receive ndi ""machine (source name)"" [""group1,group2,...groupN""]
+--streaming stop send|receive
 ";
 }

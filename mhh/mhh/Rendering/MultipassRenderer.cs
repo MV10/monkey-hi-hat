@@ -25,8 +25,8 @@ public class MultipassRenderer : IRenderer
     public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
     private GLResourceGroup FinalDrawbuffers;
 
-    public Vector2 Resolution { get => ViewportResolution;  }
-    private Vector2 ViewportResolution;
+    public Vector2 Resolution { get => OutputResolution;  }
+    private Vector2 OutputResolution;
 
     public bool OutputIntercepted { set => IsOutputIntercepted = value; }
     private bool IsOutputIntercepted = false;
@@ -53,16 +53,17 @@ public class MultipassRenderer : IRenderer
 
     public MultipassRenderer(VisualizerConfig visualizerConfig)
     {
-        Logger?.LogTrace("Constructor");
-
-        ViewportResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
-
         Config = visualizerConfig;
         Filename = Path.GetFileNameWithoutExtension(Config.ConfigSource.Pathname);
+
+        Logger?.LogTrace($"Constructor {Filename}");
+
+        OutputResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
+
         Description = visualizerConfig.Description;
         if (Config.RandomTimeOffset != 0) ClockOffset = RNG.Next(0, Math.Abs(Config.RandomTimeOffset) + 1) * Math.Sign(Config.RandomTimeOffset);
 
-        // only calculates ViewportResolution when called from the constructor
+        // only calculates ViewportResolution when called from the constructor (ShaderPasses must be null)
         OnResize();
 
         try
@@ -79,6 +80,7 @@ public class MultipassRenderer : IRenderer
             // initialize the output buffer info
             FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
 
+            Logger?.LogTrace("Parsing texture declarations");
             Textures = RenderingHelper.GetTextures(DrawbufferOwnerName, Config.ConfigSource);
             if (Textures?.Any(t => t.Loaded && t.VideoData is not null) ?? false) VideoProcessor = new(Textures);
         }
@@ -109,7 +111,7 @@ public class MultipassRenderer : IRenderer
             Program.AppWindow.Eyecandy.SetTextureUniforms(pass.Shader);
             RenderingHelper.SetGlobalUniforms(pass.Shader, Config.Uniforms, pass.Uniforms);
             RenderingHelper.SetTextureUniforms(Textures, pass.Shader);
-            pass.Shader.SetUniform("resolution", ViewportResolution);
+            pass.Shader.SetUniform("resolution", OutputResolution);
             pass.Shader.SetUniform("time", timeUniform);
             pass.Shader.SetUniform("frame", FrameCount);
             pass.Shader.SetUniform("randomrun", RandomRun);
@@ -128,7 +130,7 @@ public class MultipassRenderer : IRenderer
             }
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, pass.Drawbuffers.FramebufferHandle);
-            GL.Viewport(0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y);
+            GL.Viewport(0, 0, (int)OutputResolution.X, (int)OutputResolution.Y);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             pass.VertexSource.RenderFrame(pass.Shader);
@@ -138,7 +140,7 @@ public class MultipassRenderer : IRenderer
         // changed from the previous frame if that pass has a front/back buffer swap)
         FinalDrawbuffers = ShaderPasses[ShaderPasses.Count - 1].Drawbuffers;
 
-        screenshotHandler?.SaveFramebuffer((int)ViewportResolution.X, (int)ViewportResolution.Y, FinalDrawbuffers.FramebufferHandle);
+        screenshotHandler?.SaveFramebuffer((int)OutputResolution.X, (int)OutputResolution.Y, FinalDrawbuffers.FramebufferHandle);
 
         // blit drawbuffer to OpenGL's backbuffer unless Crossfade or FXRenderer is intercepting the final draw buffer
         if (!IsOutputIntercepted)
@@ -146,7 +148,7 @@ public class MultipassRenderer : IRenderer
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, FinalDrawbuffers.FramebufferHandle);
             GL.BlitFramebuffer(
-                0, 0, (int)ViewportResolution.X, (int)ViewportResolution.Y,
+                0, 0, (int)OutputResolution.X, (int)OutputResolution.Y,
                 0, 0, RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y,
                 ClearBufferMask.ColorBufferBit, BlitFramebufferFilter.Linear);
 
@@ -168,20 +170,27 @@ public class MultipassRenderer : IRenderer
 
     public void OnResize()
     {
-        var oldResolution = ViewportResolution;
-        (ViewportResolution, _) = RenderingHelper.CalculateViewportResolution(Config.RenderResolutionLimit, Config.FXResolutionLimit);
+        Logger?.LogTrace($"OnResize {Filename}");
+
+        var oldResolution = OutputResolution;
+        (OutputResolution, _) = RenderingHelper.CalculateOutputResolution(Config.RenderResolutionLimit, Config.FXResolutionLimit);
 
         // abort if the constructor called this, or if nothing changed
-        if (ShaderPasses is null || oldResolution.X == ViewportResolution.X && oldResolution.Y == ViewportResolution.Y) return;
+        if (ShaderPasses is null || oldResolution.X == OutputResolution.X && oldResolution.Y == OutputResolution.Y) return;
 
         // resize draw buffers, and resize/copy back buffers
-        RenderManager.ResourceManager.ResizeTexturesForViewport(DrawbufferOwnerName, ViewportResolution);
-        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeTexturesForViewport(BackbufferOwnerName, ViewportResolution, true);
+        RenderManager.ResourceManager.ResizeFramebufferTextures(DrawbufferOwnerName, OutputResolution);
+        if (BackbufferResources?.Count > 0) RenderManager.ResourceManager.ResizeFramebufferTextures(BackbufferOwnerName, OutputResolution, true);
 
         foreach (var pass in ShaderPasses)
         {
             pass.VertexSource.BindBuffers(pass.Shader);
         }
+    }
+
+    public GLImageTexture GetStreamingTexture()
+    {
+        return Textures.FirstOrDefault(t => t.ResizeMode != StreamingResizeContentMode.NotStreaming);
     }
 
     public void StartClock()
@@ -201,10 +210,12 @@ public class MultipassRenderer : IRenderer
     public void Dispose()
     {
         if (IsDisposed) return;
-        Logger?.LogTrace("Disposing");
+        Logger?.LogTrace($"Disposing {Filename}");
 
         VideoProcessor?.Dispose();
         VideoProcessor = null;
+
+        Program.AppWindow.StreamReceiver?.TryDetachTexture(Textures);
 
         if (ShaderPasses is not null)
         {

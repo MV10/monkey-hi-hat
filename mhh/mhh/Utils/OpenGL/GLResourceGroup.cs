@@ -22,8 +22,9 @@ public class GLResourceGroup
     public int DrawPassIndex;
 
     /// <summary>
-    /// The resource owner should set this. Note this can change when
-    /// the owner is swapping draw-buffers and back-buffers.
+    /// Initially set by AllocateResources in MultipassSectionParser. Note
+    /// this can change when the owner (FXRenderer or MultipassRenderer)
+    /// is swapping draw-buffers and back-buffers.
     /// </summary>
     public string UniformName;
 

@@ -8,7 +8,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoFiles", "RepoFiles", "{B1FB730B-7B8A-449A-894C-91EEF3972121}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
-		..\copilot.md = ..\copilot.md
 		..\LICENSE = ..\LICENSE
 		..\README.md = ..\README.md
 		..\unreleased_changes.md = ..\unreleased_changes.md
@@ -40,6 +39,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Playlist", "Tes
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "TestContent-Visualizers", "{65165069-6A7C-410C-A703-87D43194725D}"
 	ProjectSection(SolutionItems) = preProject
+		..\testcontent\badcontent.conf = ..\testcontent\badcontent.conf
 		..\testcontent\crossfade_test.frag = ..\testcontent\crossfade_test.frag
 		..\testcontent\cubemap.conf = ..\testcontent\cubemap.conf
 		..\testcontent\cubemap.frag = ..\testcontent\cubemap.frag
@@ -64,6 +64,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "
 		..\testcontent\resolutionlimit.frag = ..\testcontent\resolutionlimit.frag
 		..\testcontent\staticimage.conf = ..\testcontent\staticimage.conf
 		..\testcontent\staticimage.frag = ..\testcontent\staticimage.frag
+		..\testcontent\streaming.conf = ..\testcontent\streaming.conf
 		..\testcontent\texture.conf = ..\testcontent\texture.conf
 		..\testcontent\texture.frag = ..\testcontent\texture.frag
 		..\testcontent\uniforms.conf = ..\testcontent\uniforms.conf

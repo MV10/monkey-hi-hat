@@ -1,15 +1,19 @@
 ﻿
 using eyecandy;
+using FFMediaToolkit.Decoding;
 using Microsoft.Extensions.Logging;
+using NewTek.NDI;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Spout.Interop;
+using StbImageSharp;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using static NewTek.NDIlib;
 
 namespace mhh;
 
@@ -34,6 +38,11 @@ public class HostWindow : BaseWindow, IDisposable
     /// Handles test-mode content.
     /// </summary>
     public TestModeManager Tester;
+
+    /// <summary>
+    /// Handles streaming texture content.
+    /// </summary>
+    public StreamingReceiverBase StreamReceiver;
 
     /// <summary>
     /// Audio and texture processing by the eyecandy library.
@@ -72,8 +81,8 @@ public class HostWindow : BaseWindow, IDisposable
     /// </summary>
     public float UniformSilenceDetected;
 
-    private MethodInfo EyecandyEnableMethod;
-    private MethodInfo EyecandyDisableMethod;
+    //private MethodInfo EyecandyEnableMethod;
+    //private MethodInfo EyecandyDisableMethod;
     // Example of how to invoke generic method
     //    // AudioTextureEngine.Create<TextureType>(uniform, assignedTextureUnit, multiplier, enabled)
     //    var method = EyecandyCreateMethod.MakeGenericMethod(TextureType);
@@ -107,7 +116,6 @@ public class HostWindow : BaseWindow, IDisposable
 
     private SpoutSender SpoutSender;
     private const string SpoutSenderName = "Monkey Hi Hat";
-
     private NDISenderManager NDISender;
 
     private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(HostWindow));
@@ -118,8 +126,8 @@ public class HostWindow : BaseWindow, IDisposable
         Logger?.LogTrace(nameof(HostWindow));
 
         Eyecandy = new(audioConfig);
-        EyecandyEnableMethod = Eyecandy.GetType().GetMethod("Enable");
-        EyecandyDisableMethod = Eyecandy.GetType().GetMethod("Disable");
+        //EyecandyEnableMethod = Eyecandy.GetType().GetMethod("Enable");
+        //EyecandyDisableMethod = Eyecandy.GetType().GetMethod("Disable");
 
         // TODO default these to enabled: false
         Eyecandy.Create<AudioTextureWaveHistory>("eyecandyWave", enabled: true);
@@ -146,19 +154,40 @@ public class HostWindow : BaseWindow, IDisposable
     protected override void OnLoad()
     {
         base.OnLoad();
+        
         GL.Enable(EnableCap.ProgramPointSize);
+        
         Renderer.PrepareNewRenderer(Caching.IdleVisualizer);
+        
         Eyecandy.BeginAudioProcessing();
 
+        // send via Spout
         if (Program.AppConfig.SpoutSender)
         {
             SpoutSender = new();
             SpoutSender.SetSenderName(SpoutSenderName);
         }
 
+        // receive via Spout
+        if(!string.IsNullOrWhiteSpace(Program.AppConfig.SpoutReceiveFrom))
+        {
+            StreamReceiver = new SpoutReceiverManager();
+            StreamReceiver.Invert = Program.AppConfig.SpoutReceiveInvert;
+            StreamReceiver.Connect(Program.AppConfig.SpoutReceiveFrom);
+        }
+
+        // send via NDI
         if (Program.AppConfig.NDISender)
         {
             NDISender = new NDISenderManager(Program.AppConfig.NDIDeviceName, Program.AppConfig.NDIGroupList);
+        }
+
+        // receive via NDI
+        if (!string.IsNullOrWhiteSpace(Program.AppConfig.NDIReceiveFrom))
+        {
+            StreamReceiver = new NDIReceiverManager();
+            StreamReceiver.Invert = Program.AppConfig.NDIReceiveInvert;
+            StreamReceiver.Connect(Program.AppConfig.NDIReceiveFrom);
         }
 
         if (Program.AppConfig.ShowSpotifyTrackPopups) NextSpotifyCheck = DateTime.Now.AddMilliseconds(SpotifyCheckMillisec);
@@ -176,6 +205,8 @@ public class HostWindow : BaseWindow, IDisposable
 
         Eyecandy.UpdateTextures();
 
+        StreamReceiver?.UpdateTexture();
+
         UniformRandomNumber = (float)RNG.NextDouble();
         UniformDate = new(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, (float)DateTime.Now.TimeOfDay.TotalSeconds);
         UniformClockTime = new(DateTime.Now.Hour, DateTime.Now.Minute, DateTime.Now.Second, DateTime.UtcNow.Hour);
@@ -187,9 +218,7 @@ public class HostWindow : BaseWindow, IDisposable
         SwapBuffers();
         CalculateFPS();
 
-        // All zeros means use default framebuffer and auto-detect size
-        _ = SpoutSender?.SendFbo(0, 0, 0, true);
-
+        _ = SpoutSender?.SendFbo(0, 0, 0, true); // zeros: use default framebuffer, auto-detect size
         NDISender?.SendVideoFrame();
 
         // Starts hidden to avoid a white flicker before the first frame is rendered.
@@ -815,6 +844,107 @@ LINE 15");
     }
 
     /// <summary>
+    /// Handler for the --streaming command-line switches: <br />
+    /// --streaming status <br />
+    /// --streaming send spout|ndi ["sender name"] <br />
+    /// --streaming receive spout "source name" <br />
+    /// --streaming receive ndi "machine(source name)" ["group1, group2, ...groupN"]
+    /// --streaming stop send|receive <br />
+    /// </summary>
+    public string Command_Streaming(string[] args)
+    {
+        for(int i = 1; i < args.Length; i++) args[i] = args[i].Trim().ToLowerInvariant();
+
+        switch (args[1])
+        {
+            case "status":
+                if (SpoutSender is not null && NDISender is not null) return "Spout and NDI senders are active";
+                if (SpoutSender is not null) return "Spout sender is active";
+                if (NDISender is not null) return "NDI sender is active";
+                if (StreamReceiver is SpoutReceiverManager) return "Spout receiver is active";
+                if (StreamReceiver is NDIReceiverManager) return "NDI receiver is active";
+                return "Streaming is not active";
+
+            case "send":
+                if (args.Length < 3) return "ERR: Specify Spout or NDI for send mode";
+                var senderName = (args.Length == 4) ? args[3] : string.Empty;
+                if (args[2] == "spout")
+                {
+                    if (SpoutSender is not null)
+                    {
+                        SpoutSender.SetSenderName(args[3]);
+                    }
+                    else
+                    {
+                        SpoutSender = new();
+                        SpoutSender.SetSenderName(args[3]);
+                    }
+                    return "ACK";
+                }
+                else if (args[2] == "ndi")
+                {
+                    if (NDISender is not null)
+                    {
+                        NDISender.Dispose();
+                        NDISender = null;
+                    }
+                    var groups = (args.Length == 5) ? args[4] : string.Empty;
+                    NDISender = new NDISenderManager(args[3], groups);
+                    return "ACK";
+                }
+                return "ERR: Specify Spout or NDI for send mode";
+
+            case "receive":
+                if (args.Length < 4) return "ERR: Specify Spout or NDI and source for receiver mode";
+                var fromName = (args.Length == 4) ? args[3] : string.Empty;
+
+                StreamReceiver?.Dispose();
+                StreamReceiver = null;
+
+                if (args[2] == "spout")
+                {
+                    StreamReceiver = new SpoutReceiverManager();
+                    StreamReceiver.Connect(fromName);
+                    StreamReceiver.FindStreamingTexture();
+                    return "ACK";
+                }
+
+                if (args[2] == "ndi")
+                {
+                    StreamReceiver = new NDIReceiverManager();
+                    StreamReceiver.Connect(fromName);
+                    StreamReceiver.FindStreamingTexture();
+                    return "ACK";
+                }
+
+                return "ERR: Specify Spout or NDI and source name for receiver mode";
+
+            case "stop":
+                if (args.Length < 3) return "ERR: Specify send or receive mode to stop";
+                switch (args[2])
+                {
+                    case "send":
+                        SpoutSender?.Dispose();
+                        SpoutSender = null;
+                        NDISender?.Dispose();
+                        NDISender = null;
+                        return "ACK";
+
+                    case "receive":
+                        StreamReceiver?.Dispose();
+                        StreamReceiver = null;
+                        return "ACK";
+
+                    default:
+                        return "ERR: Specify send or receive mode to stop";
+                }
+
+            default:
+                return "ERR:invalid command";
+        }
+    }
+
+    /// <summary>
     /// Queues a new visualizer to send to the RenderManager on the next OnUpdateFrame pass.
     /// </summary>
     private void QueueVisualization(VisualizerConfig newVisualizerConfig, bool replaceCachedShader = false)
@@ -938,8 +1068,11 @@ LINE 15");
 
         if(Program.AppConfig.RandomizeCrossfade)
         {
-            var files = PathHelper.GetWildcardFiles(Program.AppConfig.VisualizerPath, "crossfade_*.frag", returnFullPathname: true);
-            if(files.Count > 0)
+            // in v5.0.0 and earlier, crossfades were stored in the viz path with a crossfade_ prefix
+            //var files = PathHelper.GetWildcardFiles(Program.AppConfig.VisualizerPath, "crossfade_*.frag", returnFullPathname: true);
+
+            var files = PathHelper.GetWildcardFiles(Program.AppConfig.CrossfadePath, "*.frag", returnFullPathname: true);
+            if (files.Count > 0)
             {
                 Caching.CrossfadeShaders = new(files.Count);
                 foreach(var pathname in files)
@@ -956,7 +1089,11 @@ LINE 15");
             }
         }
 
-        // see property comments for an explanation
+        using var stream = File.OpenRead(Path.Combine(ApplicationConfiguration.InternalShaderPath, "badtexture.jpg"));
+        StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
+        Caching.BadTexturePlaceholder = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+
+        // see MaxAvailableTextureUnit property comments for an explanation
         GL.GetInteger(GetPName.MaxCombinedTextureImageUnits, out var maxTU);
         Caching.MaxAvailableTextureUnit = maxTU - 1 - Caching.KnownAudioTextures.Count;
         Logger?.LogInformation($"This GPU supports a combined maximum of {maxTU} TextureUnits.");
@@ -979,8 +1116,8 @@ display res: {ClientSize.X} x {ClientSize.Y}";
         base.Dispose();
 
         SpoutSender?.Dispose();
-
         NDISender?.Dispose();
+        StreamReceiver?.Dispose();
 
         var success = Eyecandy?.EndAudioProcessing();
         Logger?.LogTrace($"Dispose Eyecandy.EndAudioProcessing success: {success}");

@@ -126,15 +126,19 @@ public class VideoMediaProcessor : IDisposable
 
         foreach(var tex in VideoTextures)
         {
-            if (!tex.Loaded || tex.VideoData is null) continue;
-            tex.VideoData.Stream.Dispose();
-            tex.VideoData.Stream = null;
-            tex.VideoData.File.Dispose();
-            tex.VideoData.File = null;
+            DisposeVideoData(tex);
         }
 
         IsDisposed = true;
         GC.SuppressFinalize(this);
     }
     private bool IsDisposed = false;
+
+    public static void DisposeVideoData(GLImageTexture tex)
+    {
+        if(!tex.Loaded || tex.VideoData is null) return;
+        tex.VideoData.Stream.Dispose();
+        tex.VideoData.File.Dispose();
+        tex.VideoData = null;
+    }
 }

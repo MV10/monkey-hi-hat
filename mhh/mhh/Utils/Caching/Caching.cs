@@ -1,5 +1,6 @@
 ﻿
 using eyecandy;
+using StbImageSharp;
 
 namespace mhh;
 
@@ -60,6 +61,11 @@ public static class Caching
     /// TextManager potentially shows text every frame. Not stored in LRU cache.
     /// </summary>
     public static Shader TextShader;
+
+    /// <summary>
+    /// Replacement content used when a requested texture (of any kind) is not found or is invalid.
+    /// </summary>
+    public static ImageResult BadTexturePlaceholder;
 
     /// <summary>
     /// Indicates the highest 0-based TextureUnit which can be assigned by FramebufferManager.

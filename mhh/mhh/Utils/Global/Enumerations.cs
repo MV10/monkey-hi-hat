@@ -95,3 +95,14 @@ public enum VideoFlipMode
     Internal = 1,
     FFmpeg = 2,
 }
+
+/// <summary>
+/// Specifies how streaming content should be resized.
+/// </summary>
+public enum StreamingResizeContentMode
+{
+    NotStreaming = 0,
+    Source = 1,
+    Viewport = 2,
+    Scaled = 3,
+}

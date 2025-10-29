@@ -28,8 +28,8 @@ public class ConfigFile
 
     private Random RNG = new();
 
-    // Can't be readonly or static because Program.FindAppConfig creates a ConfigFile
-    // before logging is initialized, but later ConfigFile instances need a valid Logger.
+    // Can't be readonly because Program.FindAppConfig creates a ConfigFile before
+    // logging is initialized, but later ConfigFile instances need a valid Logger.
     private static ILogger Logger;
 
     public ConfigFile(string confPathname)

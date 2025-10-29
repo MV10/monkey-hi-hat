@@ -51,7 +51,7 @@ public class TextRenderer : IRenderer
 
         TextShader = Caching.TextShader;
 
-        FontTexture = RenderManager.ResourceManager.CreateTextureResources(OwnerName, 1)[0];
+        FontTexture = RenderManager.ResourceManager.CreateContentTextures(OwnerName, 1)[0];
         FontTexture.Filename = "font.png";
         FontTexture.UniformName = "font";
         FontTexture.WrapMode = TextureWrapMode.ClampToEdge;
@@ -113,12 +113,17 @@ public class TextRenderer : IRenderer
         }
         else
         {
-            RenderManager.ResourceManager.ResizeTexturesForViewport(OwnerName, Resolution);
+            RenderManager.ResourceManager.ResizeFramebufferTextures(OwnerName, Resolution);
         }
 
         VertQuad.BindBuffers(TextShader);
 
         LastUpdateCopied = DateTime.MinValue;
+    }
+
+    public GLImageTexture GetStreamingTexture()
+    {
+        return null;
     }
 
     public void StartClock()

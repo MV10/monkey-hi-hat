@@ -75,6 +75,12 @@ public static class Extensions
     /// <summary>
     /// String-conversion helper
     /// </summary>
+    public static long ToLong(this string textValue, long defaultValue)
+        => long.TryParse(textValue, out var parsed) ? parsed : defaultValue;
+
+    /// <summary>
+    /// String-conversion helper
+    /// </summary>
     public static float ToFloat(this string textValue, float defaultValue)
         => float.TryParse(textValue, out var parsed) ? parsed : defaultValue;
 

@@ -18,13 +18,14 @@ public class ApplicationConfiguration : IConfigSource
 
     public ConfigFile ConfigSource { get; private set; }
 
+    // When implementing a new pathspec, also update the --paths command
     public readonly string VisualizerPath = string.Empty;
     public readonly string PlaylistPath = string.Empty;
     public readonly string TexturePath = string.Empty;
     public readonly string FXPath = string.Empty;
+    public readonly string CrossfadePath = string.Empty;
     public readonly string FFmpegPath = string.Empty;
     public readonly string ScreenshotPath = string.Empty;
-    public readonly string FileCachePath = string.Empty;
 
     public readonly bool StartFullScreen;
     public readonly int StartX;
@@ -51,6 +52,10 @@ public class ApplicationConfiguration : IConfigSource
     public readonly bool CloseToStandby;
     public readonly bool WindowsHideConsoleAtStartup;
     public readonly bool WindowsHideConsoleInStandby;
+    
+    public readonly OpenGLErrorLogFlags OpenGLErrorLogging;
+    public readonly bool OpenGLErrorBreakpoint;
+    public readonly long OpenGLErrorThrottle;
 
     public readonly string CaptureDriverName = string.Empty;
     public readonly string CaptureDeviceName = string.Empty;
@@ -88,8 +93,12 @@ public class ApplicationConfiguration : IConfigSource
     public readonly bool NDISender;
     public readonly string NDIDeviceName = string.Empty;
     public readonly string NDIGroupList = string.Empty;
+    public readonly string NDIReceiveFrom = string.Empty;
+    public readonly bool NDIReceiveInvert = true;
 
     public readonly bool SpoutSender;
+    public readonly string SpoutReceiveFrom = string.Empty;
+    public readonly bool SpoutReceiveInvert = true;
 
     public ApplicationConfiguration(ConfigFile appConfigFile)
     {
@@ -100,6 +109,11 @@ public class ApplicationConfiguration : IConfigSource
         CloseToStandby = ConfigSource.ReadValue("setup", "closetostandby").ToBool(false);
         WindowsHideConsoleAtStartup = ConfigSource.ReadValue("windows", "hideconsoleatstartup").ToBool(false);
         WindowsHideConsoleInStandby = ConfigSource.ReadValue("windows", "hideconsoleinstandby").ToBool(true);
+
+        OpenGLErrorLogging = ConfigSource.ReadValue("setup", "openglerrorlogging").ToEnum(OpenGLErrorLogFlags.Normal);
+        OpenGLErrorBreakpoint = ConfigSource.ReadValue("setup", "openglerrorbreakpoint").ToBool(false);
+        OpenGLErrorThrottle = ConfigSource.ReadValue("setup", "openglerrorthrottle").ToLong(60000);
+
         StartX = ConfigSource.ReadValue("setup", "startx").ToInt32(100);
         StartY = ConfigSource.ReadValue("setup", "starty").ToInt32(100);
         SizeX = ConfigSource.ReadValue("setup", "sizex").ToInt32(960);
@@ -126,7 +140,7 @@ public class ApplicationConfiguration : IConfigSource
         FXPath = ConfigSource.ReadValue(SectionOS, "fxpath");
         FFmpegPath = ConfigSource.ReadValue(SectionOS, "ffmpegpath");
         ScreenshotPath = ConfigSource.ReadValue(SectionOS, "screenshotpath");
-        FileCachePath = ConfigSource.ReadValue(SectionOS, "filecachepath");
+        CrossfadePath = ConfigSource.ReadValue(SectionOS, "CrossfadePath");
 
         DetectSilenceSeconds = ConfigSource.ReadValue("setup", "detectsilenceseconds").ToInt32(0);
         DetectSilenceMaxRMS = ConfigSource.ReadValue("setup", "detectsilencemaxrms").ToDouble(1.5d);
@@ -148,8 +162,12 @@ public class ApplicationConfiguration : IConfigSource
         NDISender = ConfigSource.ReadValue("ndi", "ndisender").ToBool(false);
         NDIDeviceName = ConfigSource.ReadValue("ndi", "ndidevicename");
         NDIGroupList = ConfigSource.ReadValue("ndi", "ndigroupList");
+        NDIReceiveFrom = ConfigSource.ReadValue("ndi", "NDIReceiveFrom");
+        NDIReceiveInvert = ConfigSource.ReadValue("ndi", "NDIReceiveInvert").ToBool(true);
 
         SpoutSender = ConfigSource.ReadValue("windows", "spoutsender").ToBool(false);
+        SpoutReceiveFrom = ConfigSource.ReadValue("windows", "SpoutReceiveFrom");
+        SpoutReceiveInvert = ConfigSource.ReadValue("windows", "SpoutReceiveInvert").ToBool(true);
 
         ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
         PopupVisibilitySeconds = ConfigSource.ReadValue("text", "PopupVisibilitySeconds").ToInt32(5);
@@ -184,23 +202,19 @@ public class ApplicationConfiguration : IConfigSource
         PathValidation(PlaylistPath);
         PathValidation(TexturePath);
         PathValidation(FXPath);
+        PathValidation(CrossfadePath);
 
         if (string.IsNullOrWhiteSpace(ScreenshotPath)) ScreenshotPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
         if (PathHelper.GetIndividualPaths(ScreenshotPath).Length > 1) ConfError("Exactly one path is required for ScreenshotPath.");
         PathValidation(ScreenshotPath);
 
-        if (string.IsNullOrWhiteSpace(FileCachePath))
-        {
-            FileCachePath = Path.Combine(Path.GetTempPath(), "mhh_cache");
-            if(!Directory.Exists(FileCachePath)) Directory.CreateDirectory(FileCachePath);
-        }
-        if (PathHelper.GetIndividualPaths(FileCachePath).Length > 1) ConfError("Exactly one path is required for FileCachePath.");
-        PathValidation(FileCachePath);
-
         if (PathHelper.GetIndividualPaths(FFmpegPath).Length > 1) ConfError("Exactly one path is required for FFmpegPath.");
         PathValidation(FFmpegPath);
 
-        if(string.IsNullOrWhiteSpace(NDIDeviceName)) NDIDeviceName = "Monkey Hi Hat";
+        if (!string.IsNullOrWhiteSpace(NDIReceiveFrom) && !string.IsNullOrWhiteSpace(SpoutReceiveFrom)) ConfError("Only one streaming source can be specified (SpoutReceiveFrom or NDIReceiveFrom)");
+
+        if (string.IsNullOrWhiteSpace(NDIDeviceName)) NDIDeviceName = "Monkey Hi Hat";
+        if (!string.IsNullOrWhiteSpace(NDIReceiveFrom) && (NDIReceiveFrom.IndexOf("(") == -1 || NDIReceiveFrom.IndexOf(")") == -1)) ConfError("NDIReceiveFrom must be in the format MACHINE_NAME (SENDER NAME)");
     }
 
     private void PathValidation(string pathspec)

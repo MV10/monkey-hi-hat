@@ -90,16 +90,17 @@ public static class RenderingHelper
     public static void DisposeUncachedShader(CachedShader shader)
     {
         if (shader is null) return;
+
         Logger?.LogTrace($"{nameof(DisposeUncachedShader)}");
 
         if (!Caching.VisualizerShaders.ContainsKey(shader.Key) && !Caching.FXShaders.ContainsKey(shader.Key))
         {
-            Logger?.LogTrace($"  Disposed shader {shader.Key}");
+            Logger?.LogTrace($"...Disposing shader {shader.Key}");
             shader.Dispose();
         }
         else
         {
-            Logger?.LogTrace($"  Not disposed; shader {shader.Key} is cached");
+            Logger?.LogTrace($"...Not disposed; shader {shader.Key} is cached");
         }
     }
 
@@ -130,14 +131,17 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Maps visualizer config [textures], [cubemaps], and [videos] data to GLImageTexture
-    /// resource assignments, and loads the indicated files.
+    /// Maps visualizer config [textures], [cubemaps], [videos] and [streaming] data
+    /// to GLImageTexture resource assignments, and loads the indicated files (except streaming)
     /// </summary>
     public static IReadOnlyList<GLImageTexture> GetTextures(string ownerName, ConfigFile configSource)
     {
+        var hasStreamingTexture = configSource.Content.ContainsKey("streaming");
+
         if (!configSource.Content.ContainsKey("textures") 
             && !configSource.Content.ContainsKey("videos")
-            && !configSource.Content.ContainsKey("cubemaps")) 
+            && !configSource.Content.ContainsKey("cubemaps")
+            && !hasStreamingTexture)
             return null;
 
         Logger?.LogTrace($"{nameof(GetTextures)} for {ownerName} from {configSource}");
@@ -159,17 +163,18 @@ public static class RenderingHelper
         var cubeDefs = LoadTextureDefinitions(configSource, "cubemaps");
         var videoDefs = LoadTextureDefinitions(configSource, "videos");
 
-        var totalRequired = (imageDefs?.Count ?? 0) + (cubeDefs?.Count ?? 0) + (videoDefs?.Count ?? 0);
+        var totalRequired = (imageDefs?.Count ?? 0) + (cubeDefs?.Count ?? 0) + (videoDefs?.Count ?? 0) + (hasStreamingTexture ? 1 : 0);
         if (totalRequired == 0) return null;
-        var resources = RenderManager.ResourceManager.CreateTextureResources(ownerName, totalRequired);
+        var resources = RenderManager.ResourceManager.CreateContentTextures(ownerName, totalRequired);
 
         int resourceIndex = 0;
 
-        // handle images
+        // [textures]
         if(imageDefs is not null)
         {
             foreach (var tex in imageDefs)
             {
+                Logger?.LogTrace($"...texture: resource index {resourceIndex}");
                 var res = resources[resourceIndex++];
 
                 // uniform name ending with '!' means clamp to edge rather than repeat
@@ -198,32 +203,56 @@ public static class RenderingHelper
                 res.Filename = tex.Value[index];
 
                 res.Loaded = LoadImageFile(res);
+
+                Logger?.LogTrace($"...uniform:{res.UniformName}, unit:{res.TextureUnit}, handle:{res.TextureHandle} loaded:{res.Loaded}");
             }
         }
 
-        // handle cubemaps
+        // [cubemaps]
         if(cubeDefs is not null)
         {
             foreach (var tex in cubeDefs)
             {
+                Logger?.LogTrace($"...cubemap: resource index {resourceIndex}");
                 var res = resources[resourceIndex++];
                 res.UniformName = tex.Key;
                 res.Filename = tex.Value[rand.Next(tex.Value.Count)];
                 res.TextureTarget = TextureTarget.TextureCubeMap;
                 res.Loaded = LoadImageFile(res);
+
+                Logger?.LogTrace($"...uniform:{res.UniformName}, unit:{res.TextureUnit}, handle:{res.TextureHandle} loaded:{res.Loaded}");
             }
         }
 
-        // handle videos
+        // [videos]
         if(videoDefs is not null)
         {
             foreach (var vid in videoDefs)
             {
+                Logger?.LogTrace($"...video: resource index {resourceIndex}");
                 var res = resources[resourceIndex++];
                 res.UniformName = vid.Key;
                 res.Filename = vid.Value[rand.Next(vid.Value.Count)];
                 res.Loaded = LoadVideoFile(res);
+
+                // if loading fails, convert it to the cached bad-image placeholder texture
+                if(!res.Loaded)
+                {
+                    VideoMediaProcessor.DisposeVideoData(res);
+                    Load2DBuffer(res, Caching.BadTexturePlaceholder);
+                }
+
+                Logger?.LogTrace($"...uniform:{res.UniformName}, unit:{res.TextureUnit}, handle:{res.TextureHandle} loaded:{res.Loaded}");
             }
+        }
+
+        // [streaming]
+        if (hasStreamingTexture)
+        {
+            Logger?.LogTrace($"...streaming: resource index {resourceIndex}");
+            var res = resources[resourceIndex];
+            LoadStreamingTextureDefinition(configSource, res);
+            Logger?.LogTrace($"...uniform:{res.UniformName}, unit:{res.TextureUnit}, handle:{res.TextureHandle} loaded:{res.Loaded}");
         }
 
         return resources;
@@ -234,28 +263,32 @@ public static class RenderingHelper
     /// </summary>
     public static bool LoadImageFile(GLImageTexture tex, string pathspec = "")
     {
+        Logger?.LogDebug($"{nameof(LoadImageFile)} loading {tex.Filename}");
+
+        var success = true;
+        var image = Caching.BadTexturePlaceholder;
+
         var paths = (pathspec == "") ? Program.AppConfig.TexturePath : pathspec;
         var pathname = PathHelper.FindFile(paths, tex.Filename);
-        if (pathname is null) return false;
-
-        Logger?.LogDebug($"{nameof(LoadImageFile)} loading {pathname}");
 
         try
         {
+            if (pathname is null) throw new FileNotFoundException();
+
             using var stream = File.OpenRead(pathname);
             StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
-            var image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
-
-            if (tex.TextureTarget == TextureTarget.Texture2D) Load2DBuffer(tex, image);
-            if (tex.TextureTarget == TextureTarget.TextureCubeMap) LoadCubemapBuffer(tex, image);
+            image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
         }
         catch (Exception ex)
         {
             Logger?.LogError($"{nameof(LoadImageFile)}: Error loading image {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
-            return false;
+            success = false;
         }
 
-        return true;
+        if (tex.TextureTarget == TextureTarget.Texture2D) Load2DBuffer(tex, image);
+        if (tex.TextureTarget == TextureTarget.TextureCubeMap) LoadCubemapBuffer(tex, image);
+
+        return success;
     }
 
     /// <summary>
@@ -263,37 +296,25 @@ public static class RenderingHelper
     /// </summary>
     public static bool LoadVideoFile(GLImageTexture tex, string pathspec = "")
     {
+        Logger?.LogDebug($"{nameof(LoadVideoFile)} loading {tex.Filename}");
+
         var paths = (pathspec == "") ? Program.AppConfig.TexturePath : pathspec;
         var pathname = PathHelper.FindFile(paths, tex.Filename);
-        if (pathname is null) throw new FileNotFoundException();
-
-        Logger?.LogDebug($"{nameof(LoadVideoFile)} loading {pathname}");
 
         try
         {
+            if (pathname is null) throw new FileNotFoundException();
+
             tex.VideoData = new();
-            tex.VideoData.File = MediaFile.Open(pathname, VideoMediaOptions);
-            tex.VideoData.Stream = tex.VideoData.File.Video;
             tex.VideoData.Pathname = pathname;
+            tex.VideoData.File = MediaFile.Open(tex.VideoData.Pathname, VideoMediaOptions);
 
-            if (tex.VideoData.Stream == null)
-            {
-                Logger?.LogError($"{nameof(LoadVideoFile)}: No video stream found in the file {tex.Filename}");
-                return false;
-            }
+            if (tex.VideoData.File.Video is null) throw new Exception($"{nameof(LoadVideoFile)}: No video stream found in the file {tex.Filename}");
 
+            tex.VideoData.Stream = tex.VideoData.File.Video;
             tex.VideoData.Width = tex.VideoData.Stream.Info.FrameSize.Width;
             tex.VideoData.Height = tex.VideoData.Stream.Info.FrameSize.Height;
             tex.VideoData.Resolution = new(tex.VideoData.Width, tex.VideoData.Height);
-
-            GL.ActiveTexture(tex.TextureUnit);
-            GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, tex.VideoData.Width, tex.VideoData.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-            GL.BindTexture(TextureTarget.Texture2D, 0);
         }
         catch (Exception ex)
         {
@@ -301,11 +322,20 @@ public static class RenderingHelper
             return false;
         }
 
+        GL.ActiveTexture(tex.TextureUnit);
+        GL.BindTexture(TextureTarget.Texture2D, tex.TextureHandle);
+        GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, tex.VideoData.Width, tex.VideoData.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
+        GL.BindTexture(TextureTarget.Texture2D, 0);
+
         return true;
     }
 
     /// <summary>
-    /// Called by IVertexSource RenderFrame to set any loaded image/video texture uniforms before drawing.
+    /// Called by IRenderer RenderFrame to set any loaded image/video texture uniforms before drawing.
     /// </summary>
     public static void SetTextureUniforms(IReadOnlyList<GLImageTexture> textures, Shader shader)
     {
@@ -313,8 +343,9 @@ public static class RenderingHelper
 
         foreach (var tex in textures)
         {
-            if (tex.Loaded)
-            {
+            // even if Loaded is false, the bad-file placeholder texture should be present
+            //if (tex.Loaded)
+            //{
                 shader.SetTexture(tex.UniformName, tex.TextureHandle, tex.TextureUnit, tex.TextureTarget);
                 if (tex.VideoData is not null)
                 {
@@ -322,7 +353,7 @@ public static class RenderingHelper
                     shader.SetUniform($"{tex.UniformName}_progress", (float)tex.VideoData.Clock.Elapsed.TotalSeconds / (float)tex.VideoData.Duration.TotalSeconds);
                     shader.SetUniform($"{tex.UniformName}_resolution", tex.VideoData.Resolution);
                 }
-            }
+            //}
         }
     }
 
@@ -357,8 +388,10 @@ public static class RenderingHelper
     /// the resulting viewport/render-target resolution should be. Any FX limit is applied
     /// if the active renderer is either the FXRenderer or Crossfade.
     /// </summary>
-    public static (Vector2 resolution, bool isFullResolution) CalculateViewportResolution(int renderResolutionLimit, int fxResolutionLimit = 0)
+    public static (Vector2 outputResolution, bool isViewportResolution) CalculateOutputResolution(int renderResolutionLimit, int fxResolutionLimit = 0)
     {
+        Logger?.LogTrace($"{nameof(CalculateOutputResolution)}: renderResolutionLimit: {renderResolutionLimit}, fxResolutionLimit: {fxResolutionLimit}");
+
         var w = ClientSize.X;
         var h = ClientSize.Y;
 
@@ -366,23 +399,30 @@ public static class RenderingHelper
             ? renderResolutionLimit
             : fxResolutionLimit;
 
+        bool fullRes = true;
         double larger = Math.Max(w, h);
         double smaller = Math.Min(w, h);
-        if(limit == 0 || larger <= limit) return (new(w, h), true);
 
-        double aspect = smaller / larger;
-        var scaled = (int)(limit * aspect);
-        if(w > h)
+        if(limit != 0 && larger > limit)
         {
-            w = limit;
-            h = scaled;
+            fullRes = false;
+            double aspect = smaller / larger;
+            var scaled = (int)(limit * aspect);
+            if (w > h)
+            {
+                w = limit;
+                h = scaled;
+            }
+            else
+            {
+                w = scaled;
+                h = limit;
+            }
         }
-        else
-        {
-            w = scaled;
-            h = limit;
-        }
-        return (new(w, h), false);
+
+        Logger?.LogTrace($"...outputResolution: {w}x{h}, isFullResolution: {fullRes}");
+
+        return (new(w, h), fullRes);
     }
 
     /// <summary>
@@ -532,7 +572,7 @@ public static class RenderingHelper
 
     private static Dictionary<string, List<string>> LoadTextureDefinitions(ConfigFile configSource, string sectionName)
     {
-        // sectionName is either "textures" or "videos"
+        // for sectionName values of "textures", "videos" or "cubemaps"
         // return dictionary key is uniform name, List is filenames (>1 means choose one at random)
 
         if (!configSource.Content.ContainsKey(sectionName)) return null;
@@ -549,7 +589,79 @@ public static class RenderingHelper
                 if (!definitions[uniform].Contains(filename)) definitions[uniform].Add(filename);
             }
         }
+
+        Logger?.LogTrace($"...{nameof(LoadTextureDefinitions)}: section [{sectionName}] has {definitions.Count} uniforms");
+
         return definitions;
+    }
+
+    private static void LoadStreamingTextureDefinition(ConfigFile configSource, GLImageTexture tex)
+    {
+        Logger?.LogTrace(nameof(LoadStreamingTextureDefinition));
+
+        tex.Loaded = true;
+
+        if (configSource.Content["streaming"].TryGetValue("uniform", out string uniform))
+        {
+            tex.UniformName = uniform;
+        }
+        else
+        {
+            tex.UniformName = "streaming";
+        }
+
+        if (configSource.Content["streaming"].TryGetValue("standby", out string standbyFilename))
+        {
+            var pathname = PathHelper.FindFile(Program.AppConfig.TexturePath, standbyFilename);
+            try
+            {
+                if (pathname is null) throw new FileNotFoundException();
+
+                using var stream = File.OpenRead(pathname);
+                StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
+                var standby = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+                Load2DBuffer(tex, standby);
+            }
+            catch (Exception ex)
+            {
+                Logger?.LogError($"{nameof(LoadStreamingTextureDefinition)}: Error loading image {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
+                Load2DBuffer(tex, Caching.BadTexturePlaceholder);
+            }
+        }
+        else
+        {
+            Load2DBuffer(tex, Caching.BadTexturePlaceholder);
+        }
+
+        if (configSource.Content["streaming"].TryGetValue("size", out string sizeSetting))
+        {
+            switch (sizeSetting.ToLower())
+            {
+                case "source":
+                    tex.ResizeMode = StreamingResizeContentMode.Source;
+                    break;
+
+                case "viewport":
+                    tex.ResizeMode = StreamingResizeContentMode.Viewport;
+                    break;
+
+                default:
+                    if (int.TryParse(sizeSetting, out int size))
+                    {
+                        tex.ResizeMode = StreamingResizeContentMode.Scaled;
+                        tex.ResizeMaxDimension = size;
+                    }
+                    else
+                    {
+                        tex.ResizeMode = StreamingResizeContentMode.Source;
+                        Logger?.LogWarning($"{nameof(LoadStreamingTextureDefinition)}: Invalid streaming size value {sizeSetting}; using source size");
+                    }
+                    break;
+            }
+        }
+
+        // this should be nulled in every renderer's Dispose
+        Program.AppWindow.StreamReceiver?.Texture = tex;
     }
 
     // 2025-08-20 Replaced with StbImage's faster buffer flip code inside the pinned section in DecodeVideoFrame

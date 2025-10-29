@@ -21,7 +21,10 @@ public class GLImageTexture
     public string UniformName;
 
     /// <summary>
-    /// Indicates whether the target file was successfully loaded.
+    /// Indicates whether the target file was successfully loaded. When
+    /// false, the program attempts to load the internal missing-texture
+    /// image cached from the InternalShaders directory, so content still
+    /// exists providing a visual clue that a problem exists.
     /// </summary>
     public bool Loaded;
 
@@ -50,6 +53,16 @@ public class GLImageTexture
     /// The type of texture being stored.
     /// </summary>
     public TextureTarget TextureTarget = TextureTarget.Texture2D;
+
+    /// <summary>
+    /// For streaming content, determines if or how to resize incoming frames.
+    /// </summary>
+    public StreamingResizeContentMode ResizeMode = StreamingResizeContentMode.NotStreaming;
+
+    /// <summary>
+    /// When streaming resize mode is Scaled, this specifies the largest dimension.
+    /// </summary>
+    public int ResizeMaxDimension;
 
     /// <summary>
     /// If the texture is a video, this object stores the FFMediaToolkit references needed for playback.

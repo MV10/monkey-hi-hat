@@ -8,6 +8,7 @@
     <ApplicationIcon>mhh-icon.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <!-- NDI library handling -->
@@ -21,11 +22,49 @@
   <!-- Copy NDI libraries to the output target -->
   <Target Name="CopyLibrariesToOutput" AfterTargets="Build">
     <Copy SourceFiles="@(LibraryFiles)" DestinationFolder="$(OutputPath)" />
-  </Target>		
+  </Target>
+  <ItemGroup>
+    <None Remove="InternalShaders\badtexture.jpg" />
+    <None Remove="InternalShaders\blank.conf" />
+    <None Remove="InternalShaders\blank.frag" />
+    <None Remove="InternalShaders\blank.vert" />
+    <None Remove="InternalShaders\font.png" />
+    <None Remove="InternalShaders\idle.conf" />
+    <None Remove="InternalShaders\idle.vert" />
+    <None Remove="InternalShaders\passthrough.frag" />
+    <None Remove="InternalShaders\passthrough.vert" />
+  </ItemGroup>		
 
   <ItemGroup>
+    <Content Include="InternalShaders\badtexture.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="InternalShaders\blank.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="InternalShaders\blank.frag">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="InternalShaders\blank.vert">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="InternalShaders\crossfade.frag">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="InternalShaders\font.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="InternalShaders\idle.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="InternalShaders\idle.vert">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="InternalShaders\passthrough.frag">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="InternalShaders\passthrough.vert">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="InternalShaders\text.frag">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -36,7 +75,7 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineSwitchPipe" Version="2.0.0" />
-    <PackageReference Include="eyecandy" Version="4.2.0" />
+    <PackageReference Include="eyecandy" Version="4.3.1" />
 	<PackageReference Include="FFMediaToolkit" Version="4.8.0" />
 	<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
 	<PackageReference Include="NDILibDotNetCoreBase" Version="2024.7.22.1" />
@@ -46,37 +85,14 @@
     <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-    <PackageReference Include="Spout.NETCore" Version="2.7.15" />
+    <PackageReference Include="Spout.NETCore" Version="2.7.17" />
+    <PackageReference Include="StbImageResizeSharp" Version="0.97.1" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
     <PackageReference Include="StbImageWriteSharp" Version="1.16.7" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="ConfigFiles\version.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="InternalShaders\blank.conf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="InternalShaders\blank.frag">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="InternalShaders\blank.vert">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="InternalShaders\font.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="InternalShaders\passthrough.vert">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="InternalShaders\passthrough.frag">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="InternalShaders\idle.conf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="InternalShaders\idle.vert">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="ConfigFiles\mhh.debug.conf">
