@@ -44,15 +44,17 @@ namespace mhhinstall
             Output.Write("-- Adding references to viz content directories");
 
             var vizPath = Path.Combine(Installer.contentPath, "shaders");
-            var fxPath = Path.Combine(Installer.contentPath, "fx");
             var libPath = Path.Combine(Installer.contentPath, "libraries");
+            var fxPath = Path.Combine(Installer.contentPath, "fx");
             var playlistPath = Path.Combine(Installer.contentPath, "playlists");
             var texturePath = Path.Combine(Installer.contentPath, "textures");
+            var crossfadePath = Path.Combine(Installer.contentPath, "crossfades");
 
             AddReplacement("windows", "#VisualizerPath=", "Visualizer Paths", $"VisualizerPath={vizPath};{libPath}");
+            AddReplacement("windows", "#FXPath=", "FX Paths", $"FXPath={fxPath};{libPath}");
             AddReplacement("windows", "#PlaylistPath=", "Playlist Path", $"PlaylistPath={playlistPath}");
             AddReplacement("windows", "#TexturePath=", "Texture Path", $"TexturePath={texturePath}");
-            AddReplacement("windows", "#FXPath=", "FX Paths", $"FXPath={fxPath};{libPath}");
+            AddReplacement("windows", "#CrossfadePath=", "Crossfade Path", $"CrossfadePath={crossfadePath}");
             AddReplacement("windows", "#FFmpegPath=", "FFmpeg Path", $"FFmpegPath={Installer.ffmpegPath}");
 
             ApplyChanges();
@@ -119,8 +121,12 @@ namespace mhhinstall
                     From_450_to_500();
                     break;
 
-                //case "5.0.0":
-                //    From_500_to_XXX();
+                case "5.0.0":
+                    From_500_to_510();
+                    break;
+
+                //case "5.1.0":
+                //    From_510_to_XXX();
                 //    break;
 
                 default:
@@ -258,20 +264,60 @@ NDIGroupList=
 # rendering output as a Spout source. The Spout name is always ""Monkey Hi Hat"".
 SpoutSender=false");
 
+            From_500_to_510();
+        }
+
+        static void From_500_to_510()
+        {
+            Output.Write("-- v5.0.0 to v5.1.0 changes:");
+
+            AddSetting("setup", "LogCategories", "OpenGL error logging", @"
+# Because OpenGL errors can be logged at very high frequency, this
+# setting limits how often a given error is actually output to the
+# log. The default is 1 minute in milliseconds. When the window is
+# closed, the log is updated with each rate-limited entry and the
+# total number of times the error was raised.
+OpenGLErrorThrottle= 60000
+
+# Controls how OpenGL error logging works. Behaviors and any impact
+# on performance is driver-specific.
+# Normal         Some errors and content suppressed
+# DebugContext   Maximum detail, may impact performance
+# LowDetail      Normal, single-line output, no execution details
+# Disabled       Blocks all OpenGL error logging
+OpenGLErrorLogging= Normal
+
+# App developer setting. If true when a debugger is attached,
+# a break is triggered if the OpenGL error callback is invoked.
+OpenGLErrorBreakpoint= false");
+
+            AddSetting("ndi", "NDIGroupList", "NDI receiver support", @"
+# This should be the sender name of an NDI stream source. It can be used with
+# [streaming] texture uniforms in visuzliation or FX config files. The value
+# must include the machine name followed by the sender name in parenthesis:
+#   MACHINE_NAME (SENDER NAME)
+# To flip the incoming frames, set NDIReceiveInvert to true (the default).
+NDIReceiveFrom=
+NDIRecieveInvert=true");
+
+            var crossfadePath = Path.Combine(Installer.contentPath, "crossfades");
+            AddSetting("windows", "FXPath=", "Crossfade path", $@"
+# location of crossfade shader frag files
+CrossfadePath={crossfadePath}");
+
+            AddSetting("windows", "SpoutSender", "Spout receiver support", @"
+# This should be the sender name of a Spout stream source. It can be used with
+# [streaming] texture uniforms in visuzliation or FX config files. To flip the
+# incoming frames, set SpoutReceiveInvert to true (which is the default).
+SpoutReceiveFrom=
+SpoutReceiveInvert=true");
+
             //From_500_to_XXX();
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////
         // These define the change operations that the update functions can register to apply.
         /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        static void ResetContentCaches()
-        {
-            NewSettings = new Dictionary<string, Dictionary<string, (string, string)>>();
-            NewSections = new Dictionary<string, List<(string, string)>>();
-            LineReplacements = new Dictionary<string, Dictionary<string, (string, string)>>();
-            RemovedSettings = new Dictionary<string, string>();
-        }
 
         static void AddSetting(string section, string afterMatching, string newContentName, string newContent)
         {
@@ -428,6 +474,14 @@ SpoutSender=false");
             NewSettings = null;
             NewSections = null;
             LineReplacements = null;
+        }
+
+        static void ResetContentCaches()
+        {
+            NewSettings = new Dictionary<string, Dictionary<string, (string, string)>>();
+            NewSections = new Dictionary<string, List<(string, string)>>();
+            LineReplacements = new Dictionary<string, Dictionary<string, (string, string)>>();
+            RemovedSettings = new Dictionary<string, string>();
         }
     }
 }

@@ -4,9 +4,9 @@
 
 Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC's speaker outputs.
 
-> [2025-OCT-05: Install or update to version 5.0.0](https://github.com/MV10/monkey-hi-hat/releases)!
+> [2025-OCT-29: Install or update to version 5.1.0](https://github.com/MV10/monkey-hi-hat/releases)!
 
-> New DJ / VJ features: Line-in / mic support, Spout output, NDI output
+> New DJ / VJ features: Line-in / mic support, Spout and NDI send / receive
 
 > Subscribe to [Release Notifications](https://github.com/MV10/monkey-hi-hat/issues/3) to find out about updates!
 
@@ -24,7 +24,7 @@ See thumbnails like the one below in the Volt's Laboratory [wiki](https://github
 
 Download and run the installer from the [release](https://github.com/MV10/monkey-hi-hat/releases) page, then read the [documentation home page](https://github.com/MV10/monkey-hi-hat/wiki) for a quick step-by-step first-run walk-through. The docs range from basic usage to advanced customization.
 
-This should run on almost any 64-bit Windows PC with a decent NVIDIA or AMD graphics card and practically any type of audio playback. (Linux support was dropped as of v4.3.1.) 
+This should run on almost any 64-bit Windows PC with a decent NVIDIA or AMD graphics card and practically any type of audio playback. (Linux support was temporarily dropped, but will be re-added soon.)
 
 CPU and memory requirements are minimal, 99% of the work is on the graphics card. If your PC can run [this Shadertoy example](https://www.shadertoy.com/view/mtKfWd) full-screen, which is a Monkey Hi Hat visualization with effects that I back-ported, you should be able to run Monkey Hi Hat just fine. No third-party drivers are required (earlier versions did require one). Overhead is so low, on my desktop PC I often run the program on a second monitor while I do other work. As of version 4.4 it only uses around 110 MB at runtime.
 
@@ -83,5 +83,4 @@ The automatically-installed shaders, playlists, effects, crossfades, accompanyin
 
 ## Known issues
 
-* Visualizers using the playlist `SwitchTimeHint=Half` setting will be cut short
 * The NVIDIA GTX 1070 series may [crash](https://github.com/MV10/monkey-hi-hat/issues/5) when switching to full-screen mode

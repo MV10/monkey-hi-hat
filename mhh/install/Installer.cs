@@ -11,16 +11,15 @@ namespace mhhinstall
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Update these for each release
 
-        public static readonly Version appVersion = new Version("5.0.0");
+        public static readonly Version appVersion = new Version("5.1.0");
         //                                                       ^ update version
 
-        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-5-0-0.bin";
+        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-5-1-0.bin";
         //                                                                                     ^ update version
 
-        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-5-0-0.bin";
+        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-5-1-0.bin";
         //                                                                                         ^ update version
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
         // Update this when FFMPEG is updated
         public static readonly string ffmepgUrl = "https://mcguirev10.com/assets/misc/mhh-ffmpeg-7-1-1.bin";

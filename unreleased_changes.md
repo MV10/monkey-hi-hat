@@ -14,8 +14,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### Version and Changelog
 
-* 5.0.0 released 2025-10-05
-* 5.1.0 TBD
+* 5.1.0 released 2025-10-29
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
 
@@ -27,7 +26,10 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### MHH TODO
 
-* eyecandy - if no OpenGL errors were throttled, do not output summary at close
+* Re-add Linux support
+  * Basics (paths etc)
+  * OpenTK not Wayland-compatible? XWayland?
+  * Native Linux Spotify track info
 * OMT Streaming https://github.com/openmediatransport
 * On-screen warning when log file reaches a certain size (with persistence options)
 * Limit maximum log file size
@@ -77,10 +79,12 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Add any version-based config changes to `install\ConfigHelper.cs`
 * Build install.exe release build, rename `install-x-x-x.exe` (x-x-x is version)
 * Publish mhh release build
-* Copy monkey-see-monkey-do release build to mhh publish directory
+* Under the runtimes directory, delete all except win-x64
+* Copy monkey-see-monkey-do release build to mhh publish directory (exclude dirs)
 * Archive publish directory into `mhh-app-x-x-x.zip` (x-x-x is version)
 * Archive Volt's Lab files into `mhh-content-x-x-x.zip`
 * If ffmpeg was updated, create a new `mhh-ffmpeg-x-x-x.zip` (use ffmpeg version)
+* No archive may exceed 100 MB due to GitHub limits (installer changes needed)
 * Rename .zip files to .bin extensions
 * Push .bin files to mv10.github.io repo in /assets/misc
 * Update readme etc, push changes
