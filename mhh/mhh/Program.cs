@@ -10,13 +10,14 @@ using Serilog.Extensions.Logging;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 /*
 Program.Main primarily does two things:
 -- sets up and runs the VisualizerHostWindow
--- processes switches / args recieved at runtime
+-- processes switches / args received at runtime
 
-There are no startup switches. Only --help and --filecache can be used without
+There are no startup switches. Only --help and --devices can be used without
 another instance already running.
 
 The last part is accomplished by my CommandLineSwitchPipe library. At startup it
@@ -44,8 +45,11 @@ public class Program
     // for Linux was dropped as of MHH version 4.3.1.
     // https://www.khronos.org/opengl/wiki/History_of_OpenGL#OpenGL_4.6_(2017)
     static readonly Version OpenGLVersion = new(4, 5);
-    
-    static readonly string ConfigLocationEnvironmentVariable = "monkey-hi-hat-config"; // set in Debug Launch Profile dialog
+
+    private static readonly string ConfigLocationEnvironmentVariable =
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "monkey-hi-hat-config"
+            : "MONKEY_HI_HAT_CONFIG";
 
     /// <summary>
     /// Content parsed from the mhh.conf configuration file and the
@@ -66,32 +70,19 @@ public class Program
     /// </summary>
     public static string[] QueuedArgs;
 
+    /// <summary>
+    /// Provides OS-specific features.
+    /// </summary>
+    public static readonly IOSInterop OSInterop = 
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? new OSInteropWindows()
+            : new OSInteropLinux();
+    
     // these will be accepted when MHH is not running
     private static string[] NonRunningCommands = { "--help", "--devices" };
 
     // cancel this to terminate the switch server's named pipe.
     private static CancellationTokenSource ctsSwitchPipe;
-
-    [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
-    [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-    static readonly int SW_HIDE = 0;
-    static readonly int SW_SHOW = 5;
-    private static bool ConsoleVisible = true;
-
-    // Currently Windows Terminal will only minimize, not hide. Microsoft
-    // is debating whether and how to fix that (not just about Powershell):
-    // https://github.com/microsoft/terminal/issues/12464
-    private static bool IsConsoleVisible
-    {
-        get => ConsoleVisible;
-        set
-        {
-            ConsoleVisible = value;
-            var hwnd = GetConsoleWindow();
-            var flag = ConsoleVisible ? SW_SHOW : SW_HIDE;
-            ShowWindow(hwnd, flag);
-        }
-    }
 
     internal static bool AppRunning = true; // the window can change this
     private static bool OnStandby = false;
@@ -105,7 +96,7 @@ public class Program
         {
             if(await InitializeAndWait(args))
             {
-                IsConsoleVisible = !AppConfig.WindowsHideConsoleAtStartup || (AppConfig.StartInStandby && AppConfig.WindowsHideConsoleInStandby);
+                OSInterop.IsConsoleVisible = !AppConfig.HideConsoleAtStartup || (AppConfig.StartInStandby && AppConfig.HideConsoleInStandby);
 
                 AppRunning = true;
                 OnStandby = AppConfig.StartInStandby;
@@ -341,8 +332,8 @@ public class Program
                 return AppWindow.Command_Test(TestMode.None);
 
             case "--console":
-                IsConsoleVisible = !IsConsoleVisible;
-                return "ACK";
+                 OSInterop.IsConsoleVisible = !OSInterop.IsConsoleVisible;
+                 return "ACK";
 
             case "--paths":
                 if (args.Length > 1) return ShowHelp();
@@ -416,6 +407,16 @@ public class Program
         // Parse the application configuration file
         AppConfig = new ApplicationConfiguration(appConfigFile);
 
+        // Currently GLFW is only compatible with X11.
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !AppConfig.LinuxSkipX11Check)
+        {
+            var desktop = Environment.GetEnvironmentVariable("XDG_SESSION_TYPE") ?? string.Empty;
+            if (desktop.ToLowerInvariant() != "x11")
+            {
+                throw new GLFWException("Monkey Hi Hat on Linux requires X11. This check can be disabled in config.");
+            }
+        }
+
         // Disallow other switches at startup of first instance
         if (!alreadyRunning && args.Length > 0)
         {
@@ -465,6 +466,7 @@ public class Program
             var AudioConfig = new EyeCandyCaptureConfig()
             {
                 LoopbackApi = AppConfig.LoopbackApi,
+                OpenALContextDeviceName = AppConfig.OpenALContextDeviceName,
                 CaptureDeviceName = AppConfig.CaptureDeviceName,
                 
                 DetectSilence = true, // always detect, playlists may need it
@@ -610,6 +612,7 @@ public class Program
         var pathname = Environment.GetEnvironmentVariable(ConfigLocationEnvironmentVariable);
         if(!string.IsNullOrEmpty(pathname))
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) PathHelper.ExpandLinuxHomeDirectory(ref pathname);
             pathname = Path.GetFullPath(pathname);
             if (!File.Exists(pathname) && Directory.Exists(pathname)) pathname = Path.Combine(pathname, filename);
             if (File.Exists(pathname))
@@ -731,7 +734,7 @@ All switches are passed to the already-running instance:
 --log [level]               shows or sets log-level (None, Trace, Debug, Information, Warning, Error, Critical)
 --paths                     shows the configured content paths (viz, FX, etc.)
 
---console                   toggles the visibility of the console window (only minimizes Terminal)
+--console                   toggles the console window visibility
 --cls                       clears the console window of the running instance (useful during debug)
 
 --devices                   list audio device names, can be used when MHH is not running (WASAPI only)

@@ -3,6 +3,8 @@ namespace mhh;
 
 internal static class PathHelper
 {
+    private static readonly string LinuxHomeDirectory = Environment.GetEnvironmentVariable("HOME"); 
+
     public static string[] GetIndividualPaths(string pathspec)
         => pathspec.Split(Path.PathSeparator, Const.SplitOptions);
 
@@ -54,5 +56,8 @@ internal static class PathHelper
 
     public static string MakeFragFilename(string filename)
         => (!filename.EndsWith(".frag", Const.CompareFlags)) ? filename += ".frag" : filename;
+
+    public static string ExpandLinuxHomeDirectory(ref string pathspec)
+        => pathspec.Replace("~", LinuxHomeDirectory);
 }
 

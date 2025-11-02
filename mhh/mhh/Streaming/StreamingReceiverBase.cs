@@ -14,7 +14,7 @@ public abstract class StreamingReceiverBase : IDisposable
     /// </summary>
     public GLImageTexture Texture
     {
-        get;
+        get => field;
         set
         {
             SenderWidth = 0;
@@ -22,6 +22,19 @@ public abstract class StreamingReceiverBase : IDisposable
             field = value;
         }
     }
+    private GLImageTexture field;
+
+    // TODO Use this syntax after migrating to .NET 10
+    // public GLImageTexture Texture
+    // {
+    //     get;
+    //     set
+    //     {
+    //         SenderWidth = 0;
+    //         SenderHeight = 0;
+    //         field = value;
+    //     }
+    // }
 
     /// <summary>
     /// Controls whether the incoming texture is vertically flipped.

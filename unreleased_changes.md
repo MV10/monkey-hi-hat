@@ -10,7 +10,7 @@ Don't assume anything here is working or will be available in some future releas
 ### Terminal Path
 
 C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
-
+/media/windowsC/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net8.0
 
 ### Version and Changelog
 
@@ -20,16 +20,29 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### Work In Progress
 
-*
+* mhh.conf
+  * Added [linux] section 
+  * Fixed typo: migrate NDIRecieveInvert to NDIReceiveInvert
+  * Removed [windows] comment about not supporting Linux
+  * Add [windows] `OpenALContextDeviceName`
+  * Add [windows] note about `SyntheticData` for `LoopbackApi`
+* Maps Linux ~ path segment to `$HOME` directory 
+* Linux requires X11 (OpenTK / GLFW is not Wayland-compatible)
+* Isolated Windows and Linux interop features
+* Linux-legal environment variable `MONKEY_HI_HAT_CONFIG`
+* Windows environment variable is `monkey-hi-hat-config`
 
+* Linux (X11) terminal hiding support
+* Read media info from native Linux client (X11 DBUS MPRIS)
+* Rider build config for .NET Framework 4.7.2 installer.csproj
+* Linux installer shell script
 
+* Test line-in / mic on Linux
+* Confirm Windows NDI streaming works without 32 bit DLL
+* Move NDI binaries to separate installer download
 
 ### MHH TODO
 
-* Re-add Linux support
-  * Basics (paths etc)
-  * OpenTK not Wayland-compatible? XWayland?
-  * Native Linux Spotify track info
 * OMT Streaming https://github.com/openmediatransport
 * On-screen warning when log file reaches a certain size (with persistence options)
 * Limit maximum log file size

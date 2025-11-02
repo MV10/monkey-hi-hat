@@ -661,7 +661,9 @@ public static class RenderingHelper
         }
 
         // this should be nulled in every renderer's Dispose
-        Program.AppWindow.StreamReceiver?.Texture = tex;
+        // TODO Use this syntax after migrating to .NET 10
+        //Program.AppWindow.StreamReceiver?.Texture = tex;
+        if (Program.AppWindow.StreamReceiver is not null) Program.AppWindow.StreamReceiver.Texture = tex;
     }
 
     // 2025-08-20 Replaced with StbImage's faster buffer flip code inside the pinned section in DecodeVideoFrame
