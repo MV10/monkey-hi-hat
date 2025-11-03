@@ -41,8 +41,8 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Dev config for Linux Rider building install.exe (.NET Framework 4.7.2)
   * Added .NET Framework Reference Assemblies
   * Replace IWshRuntimeLibrary with shell32.dll ShellLinkObject
+* Linux line-in / mic-in confirmed working
  
-* Test line-in / mic on Linux
 * Test Linux NDI send/receive
 * Confirm Windows NDI streaming works without 32 bit DLL
 * Move NDI binaries to separate installer download

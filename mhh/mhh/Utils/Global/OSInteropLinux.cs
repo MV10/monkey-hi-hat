@@ -17,10 +17,10 @@ public class OSInteropLinux :IOSInterop
         Console.WriteLine("---------------------------------------------------------------");
 
         var contextDevices = ALC.GetStringList(GetEnumerationStringList.DeviceSpecifier);
-        Console.WriteLine($"\n\nContext devices:\n  {string.Join("\n  ", contextDevices)}");
+        Console.WriteLine($"\nContext devices:\n  {string.Join("\n  ", contextDevices)}");
 
         var defaultContext = ALC.GetString(ALDevice.Null, AlcGetString.DefaultDeviceSpecifier);
-        Console.WriteLine($"\n\nDefault context device:\n  {defaultContext}");
+        Console.WriteLine($"\nDefault context device:\n  {defaultContext}");
         foreach (var d in contextDevices)
         {
             if (d.Contains("OpenAL Soft"))
@@ -31,14 +31,14 @@ public class OSInteropLinux :IOSInterop
         }
 
         var allDevices = ALC.EnumerateAll.GetStringList(GetEnumerateAllContextStringList.AllDevicesSpecifier);
-        Console.WriteLine($"\n\nPlayback devices:\n  {string.Join("\n  ", allDevices)}");
+        Console.WriteLine($"\nPlayback devices:\n  {string.Join("\n  ", allDevices)}");
 
         var list = ALC.GetStringList(GetEnumerationStringList.CaptureDeviceSpecifier);
-        Console.WriteLine($"\n\nCapture devices:\n  {string.Join("\n  ", list)}");
+        Console.WriteLine($"\nCapture devices:\n  {string.Join("\n  ", list)}");
 
         var defaultPlayback = ALC.GetString(ALDevice.Null, AlcGetString.DefaultAllDevicesSpecifier);
         var defaultCapture = ALC.GetString(ALDevice.Null, AlcGetString.CaptureDefaultDeviceSpecifier);
-        Console.WriteLine($"\n\nDefault  devices:\n  Playback: {defaultPlayback}\n  Capture: {defaultCapture}");
+        Console.WriteLine($"\nDefault  devices:\n  Playback: {defaultPlayback}\n  Capture: {defaultCapture}");
 
         Console.WriteLine("---------------------------------------------------------------\n");
     }

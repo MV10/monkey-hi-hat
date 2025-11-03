@@ -696,7 +696,7 @@ All switches are passed to the already-running instance:
 --console                   toggles the console window visibility
 --cls                       clears the console window of the running instance (useful during debug)
 
---devices                   list audio device names, can be used when MHH is not running (WASAPI only)
+--devices                   list audio device names, can be used when MHH is not running
 
 --streaming                 streaming commands control Spout / NDI; refer to the wiki for details
 --streaming status
