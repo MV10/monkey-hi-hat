@@ -1,6 +1,5 @@
-﻿using IWshRuntimeLibrary;
+﻿
 using System;
-using System.Globalization;
 using System.IO;
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -142,6 +141,37 @@ namespace mhhinstall
         {
             Output.LogOnly($"-- Creating shortcut {linkPathname}");
 
+            // F10 is 0x0079... ask Grok.
+            ushort key = useF10Hotkey ? (ushort)0x0079 : (ushort)0x0;
+            
+            ShortcutCreator.CreateShortcut(
+                linkPath: linkPathname,
+                targetPath: command,
+                arguments: commandArgs,
+                workingDirectory: workingDirectory,
+                description: Installer.wikiUrl,
+                hotkey: key);
+            
+            /*
+             This works on Windows using the Windows Scripting Host, but is apparently considered
+             old-fashioned or obsolete, and since WSH doesn't exist on Linux, Rider can't compile
+             the installer. The replacement is shell32.dll-based and only needs interop declarations.
+             This code required this COM reference in csproj:
+             
+               <ItemGroup>
+                 <COMReference Include="IWshRuntimeLibrary">
+                   <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
+                   <VersionMajor>1</VersionMajor>
+                   <VersionMinor>0</VersionMinor>
+                   <Lcid>0</Lcid>
+                   <WrapperTool>tlbimp</WrapperTool>
+                   <Isolated>False</Isolated>
+                   <EmbedInteropTypes>True</EmbedInteropTypes>
+                 </COMReference>
+               </ItemGroup>
+
+            using IWshRuntimeLibrary;
+             
             var link = new WshShell().CreateShortcut(linkPathname);
             link.Description = Installer.wikiUrl;
             link.TargetPath = command;
@@ -149,6 +179,7 @@ namespace mhhinstall
             link.WorkingDirectory = workingDirectory;
             if (useF10Hotkey) link.HotKey = "F10";
             link.Save();
+            */
         }
     }
 }

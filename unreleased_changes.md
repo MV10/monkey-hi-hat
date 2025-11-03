@@ -38,14 +38,16 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Implemented `--devices` switch for Linux to list audio devices
 * Linux media track popups not yet implemented (needs DBus support)
 * Linux terminal hiding not yet implemented
-* 
-* Rider build config for .NET Framework 4.7.2 installer.csproj
-* Linux installer shell script
-
+* Dev config for Linux Rider building install.exe (.NET Framework 4.7.2)
+  * Added .NET Framework Reference Assemblies
+  * Replace IWshRuntimeLibrary with shell32.dll ShellLinkObject
+ 
 * Test line-in / mic on Linux
 * Test Linux NDI send/receive
 * Confirm Windows NDI streaming works without 32 bit DLL
 * Move NDI binaries to separate installer download
+
+* Linux installer shell script
 
 ### MHH TODO
 
