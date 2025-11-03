@@ -13,6 +13,11 @@ public interface IOSInterop
     public bool IsConsoleVisible { get; set; }
 
     /// <summary>
+    /// Writes audio device information to the console. Called by Program class.
+    /// </summary>
+    public void ListAudioDevices();
+    
+    /// <summary>
     /// Current media track formatted for rendering (ie. with music-note symbol)
     /// </summary>
     public string GetMediaTrackForDisplay { get; }

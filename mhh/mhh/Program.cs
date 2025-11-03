@@ -3,7 +3,6 @@ using CommandLineSwitchPipe;
 using eyecandy;
 using FFMediaToolkit;
 using Microsoft.Extensions.Logging;
-using NAudio.CoreAudioApi;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using Serilog.Extensions.Logging;
@@ -13,7 +12,8 @@ using System.Text;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 /*
-Program.Main primarily does two things:
+Program.Main primarily does these things:
+-- reads config, prepares logging, goes into standby or starts immediately
 -- sets up and runs the VisualizerHostWindow
 -- processes switches / args received at runtime
 
@@ -41,8 +41,7 @@ public class Program
 
     // Previously MHH only supported core API v4.6, the "final" OpenGL, but Linux MESA
     // drivers apparently only support v4.5 (according to "glxinfo -B" from mesa-utils)
-    // and 4.6 features aren't important to MHH, so post-3.1 was reverted to v4.5. Support
-    // for Linux was dropped as of MHH version 4.3.1.
+    // and 4.6 features aren't important to MHH, so post-3.1 was reverted to v4.5.
     // https://www.khronos.org/opengl/wiki/History_of_OpenGL#OpenGL_4.6_(2017)
     static readonly Version OpenGLVersion = new(4, 5);
 
@@ -149,7 +148,7 @@ public class Program
         switch (args[0].ToLowerInvariant())
         {
             case "--devices":
-                ListAudioDevices();
+                OSInterop.ListAudioDevices();
                 break;
 
             default:
@@ -637,46 +636,6 @@ public class Program
         }
 
         return null;
-    }
-
-    private static void ListAudioDevices()
-    {
-        Console.WriteLine("\nWASAPI Device Information (excluding \"Not Present\" devices)");
-        Console.WriteLine("---------------------------------------------------------------");
-
-        using var enumerator = new MMDeviceEnumerator();
-
-        var states = DeviceState.Active | DeviceState.Disabled | DeviceState.Unplugged;
-
-        Console.Write("\nPlayback devices:\n  ");
-        var playbackDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, states);
-        if (playbackDevices.Count > 0) Console.WriteLine(string.Join("\n  ", playbackDevices.Select(d => $"{d.FriendlyName} ({d.State})")));
-        if (playbackDevices.Count == 0) Console.WriteLine("  <none>");
-
-        Console.Write("\nCapture devices:\n  ");
-        var captureDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, states);
-        if (captureDevices.Count > 0) Console.WriteLine(string.Join("\n  ", captureDevices.Select(d => $"{d.FriendlyName} ({d.State})")));
-        if (captureDevices.Count == 0) Console.WriteLine("  <none>");
-
-        Console.WriteLine("\nDefault devices:");
-        try
-        {
-            var defaultPlayback = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
-            Console.WriteLine($"  Playback: {defaultPlayback.FriendlyName}");
-        }
-        catch
-        {
-            Console.WriteLine("  Playback: <none>");
-        }
-        try
-        {
-            var defaultCapture = enumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Multimedia);
-            Console.WriteLine($"  Capture:  {defaultCapture.FriendlyName}");
-        }
-        catch
-        {
-            Console.WriteLine("  Capture:  <none>");
-        }
     }
 
     private static string ShowHelp()

@@ -7,10 +7,14 @@ If you see something that interests you, open an Issue to discuss the details.
 Don't assume anything here is working or will be available in some future release. Previously this was not pushed to the repo, but since I'd hate to lose it, I added it to source control. It describes things I've only done locally so far, or unreleased changes, ideas, plans, wishlist items, and so on.
 
 
-### Terminal Path
+### Terminal Paths
+
+Remember to set an env var to always use `mhh.debug.conf`
 
 C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
+
 /media/windowsC/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net8.0
+
 
 ### Version and Changelog
 
@@ -26,23 +30,28 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
   * Removed [windows] comment about not supporting Linux
   * Add [windows] `OpenALContextDeviceName`
   * Add [windows] note about `SyntheticData` for `LoopbackApi`
-* Maps Linux ~ path segment to `$HOME` directory 
-* Linux requires X11 (OpenTK / GLFW is not Wayland-compatible)
-* Isolated Windows and Linux interop features
+* Maps Linux `~` path segment to `$HOME` directory 
+* Linux checks for X11, OpenTK's GLFW is not Wayland-compatible
+* Isolated OS-specific interop features
 * Linux-legal environment variable `MONKEY_HI_HAT_CONFIG`
-* Windows environment variable is `monkey-hi-hat-config`
-
-* Linux (X11) terminal hiding support
-* Read media info from native Linux client (X11 DBUS MPRIS)
+* Windows environment variable is still `monkey-hi-hat-config`
+* Implemented `--devices` switch for Linux to list audio devices
+* Linux media track popups not yet implemented (needs DBus support)
+* Linux terminal hiding not yet implemented
+* 
 * Rider build config for .NET Framework 4.7.2 installer.csproj
 * Linux installer shell script
 
 * Test line-in / mic on Linux
+* Test Linux NDI send/receive
 * Confirm Windows NDI streaming works without 32 bit DLL
 * Move NDI binaries to separate installer download
 
 ### MHH TODO
 
+* Linux (X11) terminal hiding support
+* Read media info from native Linux client (X11 DBUS MPRIS)
+    * https://github.com/tmds/Tmds.DBus
 * OMT Streaming https://github.com/openmediatransport
 * On-screen warning when log file reaches a certain size (with persistence options)
 * Limit maximum log file size
