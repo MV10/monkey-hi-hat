@@ -93,6 +93,7 @@ public class ApplicationConfiguration : IConfigSource
 
     public readonly bool WindowsSpotifyTrackPopups;
     public readonly bool LinuxMediaPopups;
+    public readonly string LinuxMediaService = string.Empty;
 
     public readonly bool NDISender;
     public readonly string NDIDeviceName = string.Empty;
@@ -193,6 +194,8 @@ public class ApplicationConfiguration : IConfigSource
 
         LinuxMediaPopups = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) &&
                            ConfigSource.ReadValue("linux", "showmediapopups").ToBool(false);
+
+        LinuxMediaService = ConfigSource.ReadValue("linux", "LinuxMediaService");
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
         {

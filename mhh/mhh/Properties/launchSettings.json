@@ -2,6 +2,7 @@
   "profiles": {
     "mhh": {
       "commandName": "Project",
+      "commandLineArgs": ""
     }
   }
 }

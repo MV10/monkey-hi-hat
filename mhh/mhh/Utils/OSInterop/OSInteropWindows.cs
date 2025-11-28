@@ -1,4 +1,5 @@
 
+using Microsoft.Extensions.Logging;
 using NAudio.CoreAudioApi;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -6,7 +7,7 @@ using System.Runtime.InteropServices;
 namespace mhh;
 
 /// <inheritdocs/>
-public class OSInteropWindows : IOSInterop
+public class OSInteropWindows :  IOSInteropFactory<OSInteropWindows>, IOSInterop
 {
     // Currently Windows Terminal will only minimize, not hide. Microsoft
     // is debating whether and how to fix that (not just about Powershell):
@@ -19,6 +20,24 @@ public class OSInteropWindows : IOSInterop
    
     private const string SpotifyProcessName = "SPOTIFY";
     private string MediaTrackMessage = Const.MediaTrackUnavailable;
+
+    private static OSInteropWindows Instance;
+
+    private static ILogger Logger;
+
+    /// <inheritdocs/>
+    public static OSInteropWindows Create()
+    {
+        if (Instance is null) Instance = new OSInteropWindows();
+        return Instance;
+    }
+
+    /// <inheritdocs/>
+    public static Task<OSInteropWindows> CreateAsync()
+        => Task.FromResult(Create());
+    
+    private OSInteropWindows() 
+    {}
     
     /// <inheritdocs/>
     public bool IsConsoleVisible
@@ -106,4 +125,18 @@ public class OSInteropWindows : IOSInterop
             MediaTrackMessage = Const.MediaTrackUnavailable;
         }
     }
+
+    /// <inheritdocs/>
+    public void CreateLogger()
+    {
+        Logger = LogHelper.CreateLogger(nameof(IOSInterop));
+    }
+    
+    /// <inheritdocs/>
+    public void Dispose()
+    {
+        bool IsDisposed = true;
+        GC.SuppressFinalize(this);
+    }
+    private bool IsDisposed = false;
 }

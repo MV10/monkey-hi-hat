@@ -1,9 +1,7 @@
+
 namespace mhh;
 
-/// <summary>
-/// OS-specific feature support.
-/// </summary>
-public interface IOSInterop
+public interface IOSInterop : IDisposable
 {
     /// <summary>
     /// Indicates whether the app's console window is currently visible.
@@ -18,7 +16,9 @@ public interface IOSInterop
     public void ListAudioDevices();
     
     /// <summary>
-    /// Current media track formatted for rendering (ie. with music-note symbol)
+    /// Current media track formatted for rendering (ie. with music-note symbol).
+    /// On Windows this will be two lines (Spotify artist and track).
+    /// On Linux this will be up to three lines (artist, album, and track).
     /// </summary>
     public string GetMediaTrackForDisplay { get; }
     
@@ -27,4 +27,10 @@ public interface IOSInterop
     /// or the DBUS media metadata on Linux).
     /// </summary>
     public void UpdateMediaTrackInfo();
+
+    /// <summary>
+    /// Interop objects are created and used before logging is ready for use,
+    /// so this is called when LogHelper.CreateLogger can be invoked.
+    /// </summary>
+    public void CreateLogger();
 }

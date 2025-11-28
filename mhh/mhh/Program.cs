@@ -72,10 +72,7 @@ public class Program
     /// <summary>
     /// Provides OS-specific features.
     /// </summary>
-    public static readonly IOSInterop OSInterop = 
-        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-            ? new OSInteropWindows()
-            : new OSInteropLinux();
+    public static IOSInterop OSInterop;
     
     // these will be accepted when MHH is not running
     private static string[] NonRunningCommands = { "--help", "--devices" };
@@ -91,6 +88,10 @@ public class Program
 
     public static async Task Main(string[] args)
     {
+        OSInterop = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? OSInteropWindows.Create()
+            : await OSInteropLinux.CreateAsync();
+        
         try
         {
             if(await InitializeAndWait(args))
@@ -136,6 +137,7 @@ public class Program
             ctsSwitchPipe?.Cancel();
             AppWindow?.Dispose();
             LogHelper.Dispose();
+            OSInterop.Dispose();
         }
 
         // Give the sloooow console time to catch up...
@@ -390,6 +392,7 @@ public class Program
         // Initialize logging (including setting LoggerFactory in libraries)
         LogHelper.Initialize(appConfigFile, alreadyRunning);
         Logger = LogHelper.CreateLogger(nameof(Program));
+        OSInterop.CreateLogger();
 
         // Process non-running commands
         if(args.Length == 0 && alreadyRunning)

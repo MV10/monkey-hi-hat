@@ -13,7 +13,7 @@ Remember to set an env var to always use `mhh.debug.conf`
 
 C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
-/media/windowsC/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net8.0
+/data/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net8.0
 
 
 ### Version and Changelog
@@ -31,36 +31,49 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
   * Add [windows] `OpenALContextDeviceName`
   * Add [windows] note about `SyntheticData` for `LoopbackApi`
 * Maps Linux `~` path segment to `$HOME` directory 
-* Linux checks for X11, OpenTK's GLFW is not Wayland-compatible
-* Isolated OS-specific interop features
+* Linux option to check for X11 (NVIDIA drivers have problems with Wayland)
+* Isolated OS-specific interop features into dedicated classes
 * Linux-legal environment variable `MONKEY_HI_HAT_CONFIG`
 * Windows environment variable is still `monkey-hi-hat-config`
 * Implemented `--devices` switch for Linux to list audio devices
-* Linux media track popups not yet implemented (needs DBus support)
-* Linux terminal hiding not yet implemented
 * Dev config for Linux Rider building install.exe (.NET Framework 4.7.2)
   * Added .NET Framework Reference Assemblies
   * Replace IWshRuntimeLibrary with shell32.dll ShellLinkObject
 * Linux line-in / mic-in confirmed working
+* Reads Linux media player info ([DBus MPRIS](https://github.com/tmds/Tmds.DBus))
+* Linux terminal-hiding not yet implemented
  
 * Test Linux NDI send/receive
-* Confirm Windows NDI streaming works without 32 bit DLL
-* Move NDI binaries to separate installer download
 
-* Linux installer shell script
+* Create dedicated MHH site for storing downloads (monkeyhihat.com)
+
+* Confirm Windows NDI streaming works without 32 bit DLL
+* Move Windows NDI binaries to separate installer download
+* Create scripts to automate Windows release packaging
+  * Manually run a release build of mhh and install projects
+  * Copy Linux files from publish and other locations to archives
+
+* Create scripts for Linux .deb release packaging
+  * Manually run a release build of the mhh project
+  * Remove and re-create package build directory structures
+  * Copy Linux files from publish and other locations to build dirs
+  * Run the build
+  * Cleanup
+ 
 
 ### MHH TODO
 
-* Linux (X11) terminal hiding support
-* Read media info from native Linux client (X11 DBUS MPRIS)
-    * https://github.com/tmds/Tmds.DBus
+* Linux - change to event model for track changes?
+* Windows - https://github.com/DubyaDude/WindowsMediaController
+* Linux - detect when media player changes
+* Linux - terminal-hiding support (X11 only?)
 * OMT Streaming https://github.com/openmediatransport
 * On-screen warning when log file reaches a certain size (with persistence options)
 * Limit maximum log file size
 * Refuse to run a streaming-oriented FX if a streaming viz is running?
 * Global error logger via system.appdomain.unhandledexception event
 * eyecandy - use glDebugMessageControl to exclude certain message IDs
-* Installer support for content-only versioning / releases
+* Installer support for content-only versioning / releases? How on Linux, content .deb?
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued
 * Use Spout sender to debug intermediate buffers?
@@ -77,7 +90,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Installer - add tcpargs utility
 * Installer - Use winget to retrieve .NET runtime
 * Installer - winget distro? https://github.com/Belphemur/SoundSwitch/issues/1220
-* Create config GUI (WinForms now available for modern .NET)
+* Create config GUI (WinForms now available for modern .NET; Qt or GTK for Linux?)
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
@@ -95,7 +108,12 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
     * msmd to support sending Windows client commands?
 
 
-### Release Process
+### Linux Release Process
+
+* TBD (produce .deb package)
+
+
+### Windows Release Process
 
 * Verify `mhh\version.txt` matches release number
 * Verify `install\Installer.cs` has current release number (in all 3 places)
