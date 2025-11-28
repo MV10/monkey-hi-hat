@@ -11,18 +11,18 @@ namespace mhhinstall
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Update these for each release
 
-        public static readonly Version appVersion = new Version("5.1.0");
+        public static readonly Version appVersion = new Version("5.2.0");
         //                                                       ^ update version
 
-        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-5-1-0.bin";
-        //                                                                                     ^ update version
+        public static readonly string programUrl = "https://www.monkeyhihat.com/installer_assets/mhh-app-5-2-0.bin";
+        //                                                                                               ^ update version
 
-        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-5-1-0.bin";
-        //                                                                                         ^ update version
+        public static readonly string contentUrl = "https://www.monkeyhihat.com/installer_assets/mhh-content-5-2-0.bin";
+        //                                                                                                   ^ update version
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Update this when FFMPEG is updated
-        public static readonly string ffmepgUrl = "https://mcguirev10.com/assets/misc/mhh-ffmpeg-7-1-1.bin";
+        public static readonly string ffmepgUrl = "https://www.monkeyhihat.com/installer_assets/mhh-ffmpeg-7-1-1.bin";
 
         // Update these for dotnet runtime bumps
         public static readonly string dotnetVer = "8";

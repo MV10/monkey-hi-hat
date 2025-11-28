@@ -35,17 +35,16 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Isolated OS-specific interop features into dedicated classes
 * Linux-legal environment variable `MONKEY_HI_HAT_CONFIG`
 * Windows environment variable is still `monkey-hi-hat-config`
-* Implemented `--devices` switch for Linux to list audio devices
+* Implemented `--devices` switch for Linux to list audio devices and media players
 * Dev config for Linux Rider building install.exe (.NET Framework 4.7.2)
   * Added .NET Framework Reference Assemblies
   * Replace IWshRuntimeLibrary with shell32.dll ShellLinkObject
 * Linux line-in / mic-in confirmed working
 * Reads Linux media player info ([DBus MPRIS](https://github.com/tmds/Tmds.DBus))
-* Linux terminal-hiding not yet implemented
+* Dedicated site for installer content (https://monkeyhihat.com)
  
 * Test Linux NDI send/receive
 
-* Create dedicated MHH site for storing downloads (monkeyhihat.com)
 
 * Confirm Windows NDI streaming works without 32 bit DLL
 * Move Windows NDI binaries to separate installer download
