@@ -55,7 +55,7 @@ internal class MediaPlayer
     /// </summary>
     public async Task<(string title, string album, string artist)> GetPlaybackDetails(bool refresh = false)
     {
-        var title = await GetMetadata(Const.DBusMediaPlayer2MetadataKeys["title"]);
+        var title = await GetMetadata(Const.DBusMediaPlayer2MetadataKeys["title"], refresh);
         var album = await GetMetadata(Const.DBusMediaPlayer2MetadataKeys["album"]);
         var artist = await GetMetadata(Const.DBusMediaPlayer2MetadataKeys["artist"]);
         return (title, album, artist);

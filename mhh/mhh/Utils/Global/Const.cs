@@ -42,5 +42,4 @@ public static class Const
         {"album", "xesam:album"},
         {"artist", "xesam:artist"},
     };
-
 }

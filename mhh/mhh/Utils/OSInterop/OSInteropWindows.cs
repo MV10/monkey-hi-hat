@@ -1,4 +1,5 @@
 
+using Microsoft.Extensions.Logging;
 using NAudio.CoreAudioApi;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -21,6 +22,8 @@ public class OSInteropWindows :  IOSInteropFactory<OSInteropWindows>, IOSInterop
     private string MediaTrackMessage = Const.MediaTrackUnavailable;
 
     private static OSInteropWindows Instance;
+
+    private static ILogger Logger;
 
     /// <inheritdocs/>
     public static OSInteropWindows Create()
@@ -121,6 +124,12 @@ public class OSInteropWindows :  IOSInteropFactory<OSInteropWindows>, IOSInterop
         {
             MediaTrackMessage = Const.MediaTrackUnavailable;
         }
+    }
+
+    /// <inheritdocs/>
+    public void CreateLogger()
+    {
+        Logger = LogHelper.CreateLogger(nameof(IOSInterop));
     }
     
     /// <inheritdocs/>

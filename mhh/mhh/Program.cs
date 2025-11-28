@@ -392,6 +392,7 @@ public class Program
         // Initialize logging (including setting LoggerFactory in libraries)
         LogHelper.Initialize(appConfigFile, alreadyRunning);
         Logger = LogHelper.CreateLogger(nameof(Program));
+        OSInterop.CreateLogger();
 
         // Process non-running commands
         if(args.Length == 0 && alreadyRunning)

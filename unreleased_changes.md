@@ -13,7 +13,7 @@ Remember to set an env var to always use `mhh.debug.conf`
 
 C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
-/media/windowsC/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net8.0
+/data/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net8.0
 
 
 ### Version and Changelog
@@ -63,6 +63,8 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### MHH TODO
 
+* Windows - https://github.com/DubyaDude/WindowsMediaController
+* Linux - detect when media player changes
 * Linux (X11) terminal hiding support
 * OMT Streaming https://github.com/openmediatransport
 * On-screen warning when log file reaches a certain size (with persistence options)

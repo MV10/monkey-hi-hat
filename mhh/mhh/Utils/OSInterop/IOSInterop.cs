@@ -1,3 +1,4 @@
+
 namespace mhh;
 
 public interface IOSInterop : IDisposable
@@ -26,4 +27,10 @@ public interface IOSInterop : IDisposable
     /// or the DBUS media metadata on Linux).
     /// </summary>
     public void UpdateMediaTrackInfo();
+
+    /// <summary>
+    /// Interop objects are created and used before logging is ready for use,
+    /// so this is called when LogHelper.CreateLogger can be invoked.
+    /// </summary>
+    public void CreateLogger();
 }

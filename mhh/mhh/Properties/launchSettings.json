@@ -2,7 +2,7 @@
   "profiles": {
     "mhh": {
       "commandName": "Project",
-      "commandLineArgs": "--devices"
+      "commandLineArgs": ""
     }
   }
 }
