@@ -32,8 +32,12 @@
     <None Remove="InternalShaders\idle.vert" />
     <None Remove="InternalShaders\passthrough.frag" />
     <None Remove="InternalShaders\passthrough.vert" />
-  </ItemGroup>		
+  </ItemGroup>
 
+  <PropertyGroup>
+      <NoWarn>CS8632</NoWarn> <!-- nullable ref type annotation noise from Linux Mpris.DBus -->
+  </PropertyGroup>    
+    
   <ItemGroup>
     <Content Include="InternalShaders\badtexture.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -88,6 +92,8 @@
     <PackageReference Include="StbImageResizeSharp" Version="0.97.1" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
     <PackageReference Include="StbImageWriteSharp" Version="1.16.7" />
+    <PackageReference Include="Tmds.DBus" Version="0.21.2" />
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.2" />
   </ItemGroup>
 
   <ItemGroup>

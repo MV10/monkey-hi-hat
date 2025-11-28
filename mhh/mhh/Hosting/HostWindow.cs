@@ -447,8 +447,7 @@ public class HostWindow : BaseWindow, IDisposable
 
         if(DateTime.Now >= NextMediaCheck)
         {
-            if (Program.AppConfig.WindowsSpotifyTrackPopups) Program.OSInterop.UpdateMediaTrackInfo();
-            if (Program.AppConfig.LinuxMediaPopups) Program.OSInterop.UpdateMediaTrackInfo();
+            if (Program.AppConfig.WindowsSpotifyTrackPopups || Program.AppConfig.LinuxMediaPopups) Program.OSInterop.UpdateMediaTrackInfo();
             NextMediaCheck = DateTime.Now.AddMilliseconds(MediaCheckMillisec);
         }
     }
