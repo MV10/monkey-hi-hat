@@ -627,18 +627,18 @@ public class Program
                 return new(pathname);
             }
         }
-
+        
         pathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}", filename));
         if(File.Exists(pathname))
         {
-            Console.WriteLine($"Loading configuration from application directory:\n  {pathname}");
+            Console.WriteLine($"Loading configuration from application directory:\n  {pathname}\n");
             return new(pathname);
         }
 
         pathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}ConfigFiles", filename));
         if (File.Exists(pathname))
         {
-            Console.WriteLine($"Loading configuration from ConfigFiles sub-directory:\n  {pathname}");
+            Console.WriteLine($"WARNING:\nLoading DEFAULT CONFIGURATION from ConfigFiles sub-directory:\n  {pathname}\n");
             return new(pathname);
         }
 

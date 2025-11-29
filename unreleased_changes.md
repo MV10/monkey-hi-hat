@@ -33,7 +33,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
   * Add [windows] `OpenALContextDeviceName`
   * Add [windows] note about `SyntheticData` for `LoopbackApi`
 * Maps Linux `~` path segment to `$HOME` directory 
-* Linux option to check for X11 (NVIDIA drivers have problems with Wayland)
+* Linux option to check for X11 (NVIDIA has problems with Wayland)
 * Isolated OS-specific interop features into dedicated classes
 * Linux-legal environment variable `MONKEY_HI_HAT_CONFIG`
 * Windows environment variable is still `monkey-hi-hat-config`
@@ -47,14 +47,16 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Dedicated site for installer content (https://monkeyhihat.com)
 * Show app version at startup
 
+* Figure out multi-platform builds in Rider
+* https://rider-support.jetbrains.com/hc/en-us/community/posts/4416225504274-Configure-Rider-to-build-for-multiple-platforms
 
 * Confirm Windows NDI streaming works without 32 bit DLL
 * Move Windows NDI binaries to separate installer download
-* Create scripts to automate Windows release packaging
+* Create scripts to automate Windows release packaging (windowspkg README)
   * Manually run a release build of mhh and install projects
   * Copy Linux files from publish and other locations to archives
 
-* Create scripts for Linux .deb release packaging
+* Create scripts for Linux .deb release packaging (linuxpkg README)
   * Manually run a release build of the mhh project
   * Remove and re-create package build directory structures
   * Copy Linux files from publish and other locations to build dirs
@@ -64,10 +66,13 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### MHH TODO
 
+* Local - why does living room PC no longer see Spotify tracks?
+* Local - check living room PC's TCP relay service
 * Linux - change to event model for track changes?
 * Windows - https://github.com/DubyaDude/WindowsMediaController
 * Linux - detect when media player changes
 * Linux - terminal-hiding support (X11 only?)
+* Linux - TCP relay service?
 * OMT Streaming https://github.com/openmediatransport
 * On-screen warning when log file reaches a certain size (with persistence options)
 * Limit maximum log file size

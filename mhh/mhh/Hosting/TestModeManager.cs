@@ -55,7 +55,7 @@ public class TestModeManager : IDisposable
 
             case TestMode.Fade:
             {
-                if (string.IsNullOrEmpty(PathHelper.FindFile(Program.AppConfig.VisualizerPath, PathHelper.MakeFragFilename(filename)))) return "ERR: Crossfade .frag not found";
+                if (string.IsNullOrEmpty(PathHelper.FindFile(Program.AppConfig.CrossfadePath, PathHelper.MakeFragFilename(filename)))) return "ERR: Crossfade .frag not found";
                 break;
             }
         }
@@ -87,7 +87,7 @@ public class TestModeManager : IDisposable
 
             case TestMode.Fade:
             {
-                var fragPathname = PathHelper.FindFile(Program.AppConfig.VisualizerPath, PathHelper.MakeFragFilename(filename));
+                var fragPathname = PathHelper.FindFile(Program.AppConfig.CrossfadePath, PathHelper.MakeFragFilename(filename));
                 if (string.IsNullOrEmpty(fragPathname))
                 {
                     mode = TestMode.None;
