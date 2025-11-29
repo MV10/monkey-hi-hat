@@ -50,6 +50,8 @@ public class Program
             ? "monkey-hi-hat-config"
             : "MONKEY_HI_HAT_CONFIG";
 
+    private static string VersionNumber;
+    
     /// <summary>
     /// Content parsed from the mhh.conf configuration file and the
     /// default idle shader conf file.
@@ -91,6 +93,8 @@ public class Program
         OSInterop = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? OSInteropWindows.Create()
             : await OSInteropLinux.CreateAsync();
+        
+        VersionNumber = await File.ReadAllTextAsync(Path.Combine(".", "ConfigFiles", "version.txt"));
         
         try
         {
@@ -367,7 +371,7 @@ public class Program
     private static async Task<bool> InitializeAndWait(string[] args)
     {
         Console.Clear();
-        Console.WriteLine($"Monkey Hi Hat");
+        Console.WriteLine($"Monkey Hi Hat {VersionNumber}");
 
         var appConfigFile = FindAppConfig();
         if(appConfigFile is null)
@@ -529,7 +533,7 @@ public class Program
     {
         var tcp = (AppConfig.UnsecuredPort == 0) ? "disabled" : AppConfig.UnsecuredPort.ToString();
         Console.Clear();
-        Console.WriteLine($"\nMonkey Hi Hat\n");
+        Console.WriteLine($"\nMonkey Hi Hat {VersionNumber}\n");
         Console.WriteLine($"Process ID {Environment.ProcessId}");
         Console.WriteLine($"Listening on TCP port {tcp}");
     }

@@ -9,10 +9,12 @@ Don't assume anything here is working or will be available in some future releas
 
 ### Terminal Paths
 
-Remember to set an env var to always use `mhh.debug.conf`
+Remember to set an env var to always use `mhh.debug.conf`:
+  sudo nano /etc/profile.d/monkeyhihat-dev.sh
+  export MONKEY_HI_HAT_CONFIG=/data/Source/monkey-hi-hat/mhh/mhh/ConfigFiles/mhh.debug.conf
+  (logout)
 
 C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
-
 /data/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net8.0
 
 
@@ -41,9 +43,9 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
   * Replace IWshRuntimeLibrary with shell32.dll ShellLinkObject
 * Linux line-in / mic-in confirmed working
 * Reads Linux media player info ([DBus MPRIS](https://github.com/tmds/Tmds.DBus))
+* Added Linux NDI send/receive support
 * Dedicated site for installer content (https://monkeyhihat.com)
- 
-* Test Linux NDI send/receive
+* Show app version at startup
 
 
 * Confirm Windows NDI streaming works without 32 bit DLL
