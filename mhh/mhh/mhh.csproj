@@ -12,8 +12,9 @@
 
   <!-- NDI library handling -->
   <ItemGroup>
-    <!-- Show directory in Solution Explorer -->
+    <!-- Show directory in VS Solution Explorer
 	<Content Include="Libraries\**\*" /> 
+    -->
     <!-- Define for MSBUILD Target operation below -->
     <LibraryFiles Include="Libraries\**\*" />
   </ItemGroup>
@@ -22,6 +23,7 @@
   <Target Name="CopyLibrariesToOutput" AfterTargets="Build">
     <Copy SourceFiles="@(LibraryFiles)" DestinationFolder="$(OutputPath)" />
   </Target>
+    
   <ItemGroup>
     <None Remove="InternalShaders\badtexture.jpg" />
     <None Remove="InternalShaders\blank.conf" />

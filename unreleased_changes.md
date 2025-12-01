@@ -38,34 +38,28 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Linux-legal environment variable `MONKEY_HI_HAT_CONFIG`
 * Windows environment variable is still `monkey-hi-hat-config`
 * Implemented `--devices` switch for Linux to list audio devices and media players
-* Dev config for Linux Rider building install.exe (.NET Framework 4.7.2)
-  * Added .NET Framework Reference Assemblies
+* Dev config for Linux Rider
+  * Added .NET Framework 4.7.2 Reference Assemblies to build install.exe
   * Replace IWshRuntimeLibrary with shell32.dll ShellLinkObject
+  * Defined Windows/Linux mhh publish-to-folder profiles
 * Linux line-in / mic-in confirmed working
 * Reads Linux media player info ([DBus MPRIS](https://github.com/tmds/Tmds.DBus))
 * Added Linux NDI send/receive support
 * Dedicated site for installer content (https://monkeyhihat.com)
 * Show app version at startup
-
-* Figure out multi-platform builds in Rider
-* https://rider-support.jetbrains.com/hc/en-us/community/posts/4416225504274-Configure-Rider-to-build-for-multiple-platforms
-
-* Confirm Windows NDI streaming works without 32 bit DLL
-* Move Windows NDI binaries to separate installer download
-* Create scripts to automate Windows release packaging (windowspkg README)
-  * Manually run a release build of mhh and install projects
-  * Copy Linux files from publish and other locations to archives
-
-* Create scripts for Linux .deb release packaging (linuxpkg README)
-  * Manually run a release build of the mhh project
-  * Remove and re-create package build directory structures
-  * Copy Linux files from publish and other locations to build dirs
-  * Run the build
-  * Cleanup
+* Crossfade testing bugfixes
+* Created release-packaging scripts (see packaging/README)
+* Confirmed Windows NDI streaming works without 32 bit DLL
  
 
 ### MHH TODO
 
+* Releases - can ALL platform-specific files be pruned based on target OS?
+* config - `DisableCrossfadeCache` option (vs cache size for other shader types)
+* Better on-screen instructions for test mode
+* Test mode - Failed crossfade compile crashes test mode; finds config but not cached
+* Re-think "skipviz" count for dev-only content; use dev-only paths?
+* GLFW - add window icon (NativeWindowSettings.Icon = Image @ 256x256 RGBA)
 * Local - why does living room PC no longer see Spotify tracks?
 * Local - check living room PC's TCP relay service
 * Linux - change to event model for track changes?
@@ -78,8 +72,8 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Limit maximum log file size
 * Refuse to run a streaming-oriented FX if a streaming viz is running?
 * Global error logger via system.appdomain.unhandledexception event
-* eyecandy - use glDebugMessageControl to exclude certain message IDs
-* Installer support for content-only versioning / releases? How on Linux, content .deb?
+* eyecandy - add Eyecandy.ShaderCompiler error logging category
+* repo - rework TestContent layout
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued
 * Use Spout sender to debug intermediate buffers?
@@ -88,7 +82,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
 * monkey-see-monkey-do - relay delay time
-* monkey-see-monkey-do - utility command(s) (fixsound.ps1 for VBAudio bugs)
+* monkey-see-monkey-do - add utility command(s)
 * Logo overlay support (random and playlist)
 * Installer - Start menu link to edit .conf
 * Installer - Start menu link to view mhh.log and msmd.log
@@ -109,37 +103,12 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Use FontAtlasFilename? (update Wiki with info about generating new ones)
 * Video generation? Step-wise clocks and timers?
 
-* Soundcloud track overlay?
-    * https://help.soundcloud.com/hc/en-us/articles/115000182454-SoundCloud-for-Windows
-    * msmd to support sending Windows client commands?
-
 
 ### Linux Release Process
 
 * TBD (produce .deb package)
 
 
-### Windows Release Process
-
-* Verify `mhh\version.txt` matches release number
-* Verify `install\Installer.cs` has current release number (in all 3 places)
-* If ffmpeg or dotnet was updated (rare), modify those download URLs
-* Add any version-based config changes to `install\ConfigHelper.cs`
-* Build install.exe release build, rename `install-x-x-x.exe` (x-x-x is version)
-* Publish mhh release build
-* Under the runtimes directory, delete all except win-x64
-* Copy monkey-see-monkey-do release build to mhh publish directory (exclude dirs)
-* Archive publish directory into `mhh-app-x-x-x.zip` (x-x-x is version)
-* Archive Volt's Lab files into `mhh-content-x-x-x.zip`
-* If ffmpeg was updated, create a new `mhh-ffmpeg-x-x-x.zip` (use ffmpeg version)
-* No archive may exceed 100 MB due to GitHub limits (installer changes needed)
-* Rename .zip files to .bin extensions
-* Push .bin files to mv10.github.io repo in /assets/misc
-* Update readme etc, push changes
-* Create new release tag, upload install-x-x-x.exe
-* Update release history, wiki, etc.
-* Update pinned release tracker: https://github.com/MV10/monkey-hi-hat/issues/3
-* Merge dev branch into master (do not delete dev), pull new master locally
 
 
 ### MHH NON-STARTERS
