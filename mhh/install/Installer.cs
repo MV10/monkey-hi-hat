@@ -9,7 +9,7 @@ namespace mhhinstall
     public class Installer
     {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Update these for each release
+        // Update these for each app release (content and/or texture version can lag app version)
 
         public static readonly Version appVersion = new Version("5.2.0");
         //                                                       ^ update version
@@ -19,7 +19,11 @@ namespace mhhinstall
 
         public static readonly string contentUrl = "https://www.monkeyhihat.com/installer_assets/mhh-content-5-2-0.bin";
         //                                                                                                   ^ update version
+
+        public static readonly string textureUrl = "https://www.monkeyhihat.com/installer_assets/mhh-texture-5-2-0.bin";
+        //                                                                                                   ^ update version
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
         // Update this when FFMPEG is updated
         public static readonly string ffmepgUrl = "https://www.monkeyhihat.com/installer_assets/mhh-ffmpeg-7-1-1.bin";
@@ -35,6 +39,7 @@ namespace mhhinstall
         public static readonly string tempProgramZip = Path.Combine(temp, "mhh-program.zip");
         public static readonly string tempFFMPEGZip = Path.Combine(temp, "mhh-ffmpeg.zip");
         public static readonly string tempContentZip = Path.Combine(temp, "mhh-content.zip");
+        public static readonly string tempTextureZip = Path.Combine(temp, "mhh-content.zip");
 
         // Any download smaller than 500K is assumed to be bad content (404 HTML page etc)
         public static readonly long minDownloadSize = 500 * 1024;
@@ -199,6 +204,7 @@ namespace mhhinstall
 
             Output.LogOnly("Removing temporary files.");
             SilentDeleteFile(tempContentZip);
+            SilentDeleteFile(tempTextureZip);
             SilentDeleteFile(tempDotnetExe);
             SilentDeleteFile(tempDriverZip);
             SilentDeleteFile(tempProgramZip);
@@ -248,6 +254,7 @@ namespace mhhinstall
             Directory.CreateDirectory(contentPath);
             Output.Write("Content-archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempContentZip, contentPath);
+            ZipExtensions.ExtractWithOverwrite(tempTextureZip, contentPath);
         }
 
         /// <summary>

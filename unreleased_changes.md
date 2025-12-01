@@ -26,39 +26,16 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### Work In Progress
 
-* mhh.conf
-  * Added [linux] section 
-  * Fixed typo: migrate NDIRecieveInvert to NDIReceiveInvert
-  * Removed [windows] comment about not supporting Linux
-  * Add [windows] `OpenALContextDeviceName`
-  * Add [windows] note about `SyntheticData` for `LoopbackApi`
-* Maps Linux `~` path segment to `$HOME` directory 
-* Linux option to check for X11 (NVIDIA has problems with Wayland)
-* Isolated OS-specific interop features into dedicated classes
-* Linux-legal environment variable `MONKEY_HI_HAT_CONFIG`
-* Windows environment variable is still `monkey-hi-hat-config`
-* Implemented `--devices` switch for Linux to list audio devices and media players
-* Dev config for Linux Rider
-  * Added .NET Framework 4.7.2 Reference Assemblies to build install.exe
-  * Replace IWshRuntimeLibrary with shell32.dll ShellLinkObject
-  * Defined Windows/Linux mhh publish-to-folder profiles
-* Linux line-in / mic-in confirmed working
-* Reads Linux media player info ([DBus MPRIS](https://github.com/tmds/Tmds.DBus))
-* Added Linux NDI send/receive support
-* Dedicated site for installer content (https://monkeyhihat.com)
-* Show app version at startup
-* Crossfade testing bugfixes
-* Created release-packaging scripts (see packaging/README)
-* Confirmed Windows NDI streaming works without 32 bit DLL
+* v5.2.0 packaging release
  
 
 ### MHH TODO
 
-* Releases - can ALL platform-specific files be pruned based on target OS?
+* Releases - csproj conditional copy based on OS build target
 * config - `DisableCrossfadeCache` option (vs cache size for other shader types)
 * Better on-screen instructions for test mode
 * Test mode - Failed crossfade compile crashes test mode; finds config but not cached
-* Re-think "skipviz" count for dev-only content; use dev-only paths?
+* Re-think skip-counts for dev content; exclude paths? (count fails, non-sequential on Linux)
 * GLFW - add window icon (NativeWindowSettings.Icon = Image @ 256x256 RGBA)
 * Local - why does living room PC no longer see Spotify tracks?
 * Local - check living room PC's TCP relay service

@@ -18,6 +18,7 @@ namespace mhhinstall
         {
             Output.Write("Downloading visualization content archive...");
             GetFile(Installer.contentUrl, Installer.tempContentZip);
+            GetFile(Installer.textureUrl, Installer.tempTextureZip);
         }
 
         public static void GetDotnetInstaller()
