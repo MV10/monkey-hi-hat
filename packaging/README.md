@@ -35,7 +35,6 @@ These are instructions and scripts to prep the files for uploading to monkeyhiha
 * Add any new-install config changes to `ConfigHelper.NewInstall`
 * Add any version-based config changes to `ConfigHelper.Update`
 * Build `install.exe` (Release build)
-* Rename to `install-x-x-x.exe` where x-x-x is version
 * Publishing (Solution -> mhh -> right click -> Publish)
   * Publish mhh Windows release build (`bin/Release/net8.0/win-x64`)
   * Publish mnn Linux release build (`bin/Release/net8.0/linux-x64`)
@@ -45,17 +44,15 @@ These are instructions and scripts to prep the files for uploading to monkeyhiha
 * Open a terminal and `cd /data/Source/monkey-hi-hat/packaging`
 * Execute `./windows.sh a-a-a b-b-b c-c-c` (versions: a=app, b=content, c=textures)
 * This performs the following operations:
-  * Under the `runtimes` directory, deletes all dirs except `win-x64`
-  * Deletes third-party dependencies which (reduce package size; downloaded by install)
-  * Copies monkey-see-monkey-do release build to mhh publish directory (excluding dirs)
-  * Deletes `libndi.so` and `Processing.NDI.Lib.x64.dll` from Win Release directory
-  * _TODO_ delete `Tmds.DBus*.dll`?
-  * Archives `bin/Release/net8.0/win-x64` directory into `mhh-app-x-x-x.zip` (x-x-x is version)
-  * If changed, archives Volt's Lab files into `mhh-content-x-x-x.zip` (excluding textures)
-  * If changed, archives Volt's Lab files into `mhh-texture-x-x-x.zip` (textures only)
-  * Renames .zip files to .bin extensions
+  * Renames `install.exe` to `install-a-a-a.exe`
+  * Deletes third-party dependencies which are downloaded by installer
+  * Deletes Linux-related libraries
+  * Merges monkey-see-monkey-do published build into mhh publish directory
+  * Archives `bin/Release/net8.0/win-x64` directory into `mhh-app-a-a-a.bin` (x-x-x is version)
+  * Archives Volt's Lab shaders into `mhh-content-b-b-b.bin`
+  * Archives Volt's Lab textures into `mhh-texture-c-c-c.bin`
   * All content is stored in `/tmp/mhhpkg/`
-* Execute `./linux-deb.sh`
+* Execute `./linux-deb.sh a-a-a b-b-b c-c-c` (versions: a=app, b=content, c=textures)
 * This performs the following operations:
   * _TODO_ How hard can it be?
   * _TODO_ delete `Processing.NDI.Lib.x64.dll` from Linux Release directory
