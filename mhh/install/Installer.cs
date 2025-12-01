@@ -25,9 +25,12 @@ namespace mhhinstall
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-        // Update this when FFMPEG is updated
+        // Update this when FFmpeg is updated
         public static readonly string ffmepgUrl = "https://www.monkeyhihat.com/installer_assets/mhh-ffmpeg-7-1-1.bin";
 
+        // Update this when NDI is updated
+        public static readonly string ndiUrl = "https://www.monkeyhihat.com/installer_assets/ndi-win-6-2-1.bin";
+        
         // Update these for dotnet runtime bumps
         public static readonly string dotnetVer = "8";
         public static readonly string dotnetUrl = "https://builds.dotnet.microsoft.com/dotnet/Runtime/8.0.16/dotnet-runtime-8.0.16-win-x64.exe";
@@ -38,6 +41,7 @@ namespace mhhinstall
         public static readonly string tempDotnetExe = Path.Combine(temp, "mhh-installer-dotnet.exe");
         public static readonly string tempProgramZip = Path.Combine(temp, "mhh-program.zip");
         public static readonly string tempFFMPEGZip = Path.Combine(temp, "mhh-ffmpeg.zip");
+        public static readonly string tempNDIZip = Path.Combine(temp, "ndi-win.zip");
         public static readonly string tempContentZip = Path.Combine(temp, "mhh-content.zip");
         public static readonly string tempTextureZip = Path.Combine(temp, "mhh-content.zip");
 
@@ -209,6 +213,7 @@ namespace mhhinstall
             SilentDeleteFile(tempDriverZip);
             SilentDeleteFile(tempProgramZip);
             SilentDeleteFile(tempFFMPEGZip);
+            SilentDeleteFile(tempNDIZip);
 
             Output.LogOnly($"Removing temp unzip path: {tempUnzipDir}");
             DeleteUnzipDir();
@@ -234,10 +239,15 @@ namespace mhhinstall
                 Output.Write($"Creating directory {programPath}");
                 Directory.CreateDirectory(programPath);
             }
+            
             Output.Write("Application-archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempProgramZip, programPath);
+            
             Output.Write("FFMPEG-archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempFFMPEGZip, programPath);
+            
+            Output.Write("NDI-archive extraction");
+            ZipExtensions.ExtractWithOverwrite(tempNDIZip, programPath);
         }
 
         /// <summary>
@@ -250,8 +260,10 @@ namespace mhhinstall
                 Output.Write($"Clearing directory {contentPath}");
                 Directory.Delete(contentPath, recursive: true);
             }
+
             Output.Write($"Creating directory {contentPath}");
             Directory.CreateDirectory(contentPath);
+
             Output.Write("Content-archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempContentZip, contentPath);
             ZipExtensions.ExtractWithOverwrite(tempTextureZip, contentPath);

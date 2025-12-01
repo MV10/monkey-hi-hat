@@ -5,9 +5,7 @@
 These are instructions and scripts to prep the files for uploading to monkeyhihat.com (both Windows and Linux). Because Linux is my primary OS now, the scripts are bash .sh files. Since I'll be the only person actually publishing releases, that shouldn't matter to anybody still fighting to keep their Windows OS alive despite Microsoft's best efforts to wreck your day. (Ask me how I really feel.) I suppose I should screw around with Github builds, but every time I've done that, something eventually becomes outdated, and frankly, again, nobody but me will create releases anyway, so this is Good Enough.
 
 ## TODO
-* Make Windows installer download NDI binaries
 * Figure out Linux .deb packaging
-* Separate versioning of content shaders and binaries
 * Linux .deb post-init scripting to retrieve content packages
 * Linux .deb post-init scripting of NDI binary downloads?
 * Linux .deb post-init scripting of config modification? (shared code)
@@ -25,7 +23,7 @@ These are instructions and scripts to prep the files for uploading to monkeyhiha
     * Upload .bin file to monkeyhihat.com in `public_html/installer_assets` via cpanel File Manager
   * Linux:
     * _TODO_ 
-    * no action? (library .so files are included in the package, or download?)
+    * no action? (library .so files are included in the package, or downloaded post-install?)
 * For any updates (including dotnet):
   * Windows: update the download URLs in `Installer.cs`
   * Linux: update the packaging file dependencies? post-init downloads?

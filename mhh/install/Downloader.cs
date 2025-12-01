@@ -12,6 +12,9 @@ namespace mhhinstall
 
             Output.Write("Downloading FFMPEG suport...");
             GetFile(Installer.ffmepgUrl, Installer.tempFFMPEGZip);
+            
+            Output.Write("Downloading NDI suport...");
+            GetFile(Installer.ndiUrl, Installer.tempNDIZip);
         }
 
         public static void GetContentArchive()
