@@ -150,7 +150,7 @@ namespace mhhinstall
             // Under .NET Framework, for some reason Environment.OSVersion.Version.Major doesn't work right. Sigh.
             if (!Environment.Is64BitOperatingSystem)
             {
-                Output.Write("The application requires 64-bit Windows 10 or Windows 11.");
+                Output.Write("The application requires 64-bit Windows 11.");
                 PauseExit();
             }
 

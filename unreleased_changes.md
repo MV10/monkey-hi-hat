@@ -31,6 +31,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### MHH TODO
 
+* Linux - figure out .deb packaging and hosting a package repo
 * Releases - csproj conditional copy based on OS build target
 * config - `DisableCrossfadeCache` option (vs cache size for other shader types)
 * Better on-screen instructions for test mode
@@ -61,6 +62,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * monkey-see-monkey-do - relay delay time
 * monkey-see-monkey-do - add utility command(s)
 * Logo overlay support (random and playlist)
+* Installer - configtest switch (creates sample conf)
 * Installer - Start menu link to edit .conf
 * Installer - Start menu link to view mhh.log and msmd.log
 * Installer - Start menu link to notes.txt as viz credits
@@ -79,13 +81,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Add test content to intentionally generate errors
 * Use FontAtlasFilename? (update Wiki with info about generating new ones)
 * Video generation? Step-wise clocks and timers?
-
-
-### Linux Release Process
-
-* TBD (produce .deb package)
-
-
 
 
 ### MHH NON-STARTERS

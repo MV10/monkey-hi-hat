@@ -1,12 +1,17 @@
 #!/bin/bash
 
+#
+# Stages the Windows-based install program and all content that the installer
+# downloads in the /tmp/mhhpkg directory. See the packaging README for details.
+# 
 # Requires three x-x-x version number arguments (app, content, textures)
 # Parenthesis makes the commands temporary (ie. temporary change directory)
+#
 
 if [ "$#" -ne 3 ]; then
   echo ""
   echo "Usage: $0 <app-ver> <content-ver> <textures-ver>"
-  echo "Versions should be x.y.z format, all three are required."
+  echo "Versions should be x-y-z format. All three are required."
   echo ""
   exit 1
 fi
@@ -57,14 +62,14 @@ echo "Copying install program"
 cp "$INSTALLER" "$TARGET/install-$1.exe"
 
 echo "Deleting downloaded third-party dependencies and non-Windows libraries"
-rm "$PUBLISH/README_LIBS.md" || true
-rm "$PUBLISH/Processing.NDI.Lib.x64.dll" || true
-rm "$PUBLISH/libndi.so" || true
-rm "$PUBLISH/Tmds.DBus.dll" || true
-rm "$PUBLISH/Tmds.DBus.Protocol.dll" || true
+rm "$PUBLISH"/README_LIBS.md || true
+rm "$PUBLISH"/Processing.NDI.Lib.x64.dll || true
+rm "$PUBLISH"/libndi.so || true
+rm "$PUBLISH"/Tmds.DBus.dll || true
+rm "$PUBLISH"/Tmds.DBus.Protocol.dll || true
 
 echo "Merging monkey-see-monkey-do published build into mhh publish directory"
-cp --update=none "$MSMD/*" "$PUBLISH/"
+cp --update=none $MSMD/* $PUBLISH/
 
 echo "Creating application download archive"
 echo "Source: $PUBLISH"
