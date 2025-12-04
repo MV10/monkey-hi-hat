@@ -10,10 +10,11 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
 
 * Working, reasonably well-automated
 * No major issues or planned changes
+* Zip files are renamed to .bin for historical reasons
 
 ## Linux Status
 
-* Initially just doing an archive-based manual install
+* Initially just doing an archive-based manual install script
 * TODO: Figure out Linux .deb packaging
 * TODO: Host a package source on monkeyhihat.com?
 
@@ -62,13 +63,15 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
   * Deletes third-party dependencies which are downloaded by installer
   * Deletes Linux-related libraries
   * Merges monkey-see-monkey-do published build into mhh publish directory
-  * Archives `bin/Release/net8.0/win-x64` directory into `mhh-app-a-a-a.bin` (x-x-x is version)
+  * Archives `bin/Release/net8.0/win-x64` directory into `mhh-app-a-a-a.bin`
   * Archives Volt's Lab shaders into `mhh-content-b-b-b.bin`
   * Archives Volt's Lab textures into `mhh-texture-c-c-c.bin`
   * All content is stored in `/tmp/mhhpkg`
 * Execute `./linux-tgz.sh a-a-a b-b-b c-c-c` (versions: a=app, b=content, c=textures)
 * This performs the following operations:
   * Deletes Windows-related libraries
+  * Renames `install.sh` to `install-a-a-a.sh` and injects version number variables
+  * Renames `update.sh` to `update-a-a-a.sh` and injects version number variables
   * Archives `bin/Release/net8.0/linux-x64` directory into `monkeyhihat-a-a-a.tgz`
   * Archives Volt's Lab shaders into `mhh-content-b-b-b.tgz`
   * Archives Volt's Lab textures into `mhh-texture-c-c-c.tgz`
@@ -76,18 +79,19 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
 
 ## Manual Post-Packaging Steps
 
-* Upload `/tmp/mhhpkg/*.bin` and `/tmp/mhhpkg/mhh*.tgz` files to `monkeyhihat.com/public_html/installer_assets`
+* Upload `/tmp/mhhpkg/*.bin` and `/tmp/mhhpkg/*.tgz` files to `monkeyhihat.com/public_html/installer_assets`
 * Update main README etc, push changes
 * PR and merge dev branch into master (do not delete dev)
 * Create new Release:
   * Copy / update previous release verbiage
   * Create new vx.x.x tag
-  * Upload `/tmp/mhhpkg/install-x-x-x.exe`
-  * Upload `/tmp/mhhpkg/monkeyhihat-x-x-x.tgz`
+  * Upload `/tmp/mhhpkg/install-a-a-a.exe`
+  * Upload `/tmp/mhhpkg/install-a-a-a.sh`
+  * Upload `/tmp/mhhpkg/update-a-a-a.sh`
   * Upload `/tmp/mhhpkg/com.mindmagma.monkeydroid.apk`
   * Upload `/tmp/mhhpkg/monkeydroid_1.0.1.0_x86.msix`
   * Publish release
-* Delete `/tmp/mhhpkg/`
+* Delete temp: `rm -rf /tmp/mhhpkg`
 * Update wiki release history (and other wiki content)
 * Update [pinned release tracker](https://github.com/MV10/monkey-hi-hat/issues/3)
 * Pull new master locally

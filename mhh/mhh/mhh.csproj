@@ -76,6 +76,10 @@
     </Content>
     <Content Include="mhh-icon.ico" />
     <Folder Include="Properties\PublishProfiles\" />
+    <None Remove="mhh-icon.png" />
+    <Content Include="mhh-icon.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

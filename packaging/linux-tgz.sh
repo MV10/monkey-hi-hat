@@ -2,9 +2,9 @@
 
 #
 # Until I figure out how .deb packaging works, Linux releases will
-# be a manual installation process from an archive file.
+# be a manual installation process using install.sh or update.sh.
 #
-# Stages the Windows-based install program and all content that the installer
+# Stages the install scripts and all archived content that the installer
 # downloads in the /tmp/mhhpkg directory. See the packaging README for details.
 # 
 # Requires three x-x-x version number arguments (app, content, textures)
@@ -22,6 +22,15 @@ fi
 TARGET="/tmp/mhhpkg"
 PUBLISH="/data/Source/monkey-hi-hat/mhh/mhh/bin/Release/net8.0/linux-x64"
 CONTENT="/data/Source/volts-laboratory"
+INSTALLER="$TARGET/install-$1.sh"
+UPDATER="$TARGET/update-$1.sh"
+
+VERSIONMARKER="# BUILD SCRIPT ADDS VERSION VARIABLES BELOW"
+read -d '' VERSIONVARS << EOF
+APPVERSION="$1"
+CONTENTVERSION="$2"
+TEXTUREVERSION="$3"
+EOF
 
 if [ ! -d "$PUBLISH" ]; then
   echo ""
@@ -54,6 +63,12 @@ rm "$PUBLISH"/libCppSharp*.so || true
 rm "$PUBLISH"/libStd-symbols.so || true
 rm "$PUBLISH"/NAudio*.dll || true
 rm "$PUBLISH"/Spout*.dll || true
+
+echo "Copying install and update scripts..."
+cp install.sh "$INSTALLER"
+cp update.sh "$UPDATER"
+sed -i "/^${VERSIONMARKER}$/r /dev/stdin" "$INSTALLER" <<< "$VERSIONVARS"
+sed -i "/^${VERSIONMARKER}$/r /dev/stdin" "$UPDATER" <<< "$VERSIONVARS"
 
 echo "Creating application download archive"
 echo "Source: $PUBLISH"
