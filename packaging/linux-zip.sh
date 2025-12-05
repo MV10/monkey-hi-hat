@@ -1,22 +1,9 @@
 #!/bin/bash
 
-#
-# Until I figure out how .deb packaging works, Linux releases will
-# be a manual installation process using install.sh or update.sh.
-#
-# Stages the install scripts and all archived content that the installer
-# downloads in the /tmp/mhhpkg directory. See the packaging README for details.
-# 
-# Requires three x-x-x version number arguments (app, content, textures)
-# Parenthesis makes the commands temporary (ie. temporary change directory)
-#
-
-if [ "$#" -ne 3 ]; then
-  echo ""
-  echo "Usage: $0 <app-ver> <content-ver> <textures-ver>"
-  echo "Versions should be x-y-z format. All three are required."
-  echo ""
-  exit 1
+# abort if not invoked by package.sh
+if [[ -z "$INVOKED_BY_PACKAGE" ]]; then
+    echo "Please execute ./package.sh instead." >&2
+    exit 1
 fi
 
 TARGET="/tmp/mhhpkg"
@@ -52,7 +39,7 @@ fi
 
 echo ""
 echo "======================================================="
-echo "Packaging Monkey Hi Hat v$1 (Linux build)"
+echo "Packaging Monkey Hi Hat v$1 (Linux build)" | sed 's/-/./g'
 echo "======================================================="
 
 echo "Deleting non-Linux libraries"
@@ -72,17 +59,9 @@ sed -i "/^${VERSIONMARKER}$/r /dev/stdin" "$UPDATER" <<< "$VERSIONVARS"
 
 echo "Creating application download archive"
 echo "Source: $PUBLISH"
-( cd "$PUBLISH" ; tar -czf "$TARGET/monkeyhihat-$1.tgz" ./* >/dev/null )
-
-echo "Creating shader content download archive"
-( cd /data/Source/volts-laboratory ; \
-tar -czf "$TARGET/mhh-content-$2.tgz" ./crossfades/* ./fx/* ./libraries/* ./playlists/* ./shaders/* ./templates/* notes.txt >/dev/null )
-
-echo "Creating shader texture download archive"
-( cd /data/Source/volts-laboratory ; tar -czf "$TARGET/mhh-texture-$3.tgz" ./textures/* >/dev/null )
+( cd "$PUBLISH" ; zip -9q "$TARGET/mhh-linux-$1.zip" ./* )
 
 echo "======================================================="
 echo "Linux packaging completed"
-echo "Location: $TARGET"
 echo "======================================================="
 echo ""

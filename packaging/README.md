@@ -23,22 +23,20 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
 * If FFmpeg was updated:
   * Windows: 
     * Create a new `mhh-ffmpeg-x-x-x.zip` where x-x-x is FFmpeg version
-    * Rename the .zip to .bin
-    * Upload .bin file to monkeyhihat.com in `public_html/installer_assets` via cpanel File Manager
+    * Upload .zip file to `monkeyhihat.com/public_html/installer_assets` via cpanel File Manager
   * Linux:
-    * Manual installation required; update the instructions 
+    * User-installed as a dependency (apt install ffmpeg, not version-specific) 
  
 * If NDI is updated:
   * Windows: 
     * Zip `Processing.NDI.Lib.x64.dll` to `ndi-win-x.x.x.zip` (version on NDI Tools page)
-    * Rename the .zip to .bin
-    * Upload .bin file to monkeyhihat.com in `public_html/installer_assets` via cpanel File Manager
+    * Upload .zip file to `monkeyhihat.com/public_html/installer_assets` via cpanel File Manager
   * Linux:
-    * `libndi.so` is included in the manual-install archive  
+    * `libndi.so` is included in the install archive
 
 * For any updates (including dotnet):
   * Windows: update the download URLs in `Installer.cs`
-  * Linux: manual installation required; update the instructions
+  * Linux: user installs dependencies; update the instructions
 
 ## Manual Pre-Packaging Steps
 
@@ -56,30 +54,27 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
 > Always run the Windows script first, followed by the Linux script. The Windows script creates a new empty target directory, and the Linux script adds files to that. 
 
 * Open a terminal and `cd /data/Source/monkey-hi-hat/packaging`
-* Execute `./windows.sh a-a-a b-b-b c-c-c` (versions: a=app, b=content, c=textures)
-* This performs the following operations:
+* Execute `./package.sh a-a-a b-b-b c-c-c` (versions: a=app, b=content, c=textures)
+* This performs the following operations via `windows.sh`:
   * Deletes any old `/tmp/mhhpkg` directory and creates a new one 
   * Renames `install.exe` to `install-a-a-a.exe`
   * Deletes third-party dependencies which are downloaded by installer
   * Deletes Linux-related libraries
   * Merges monkey-see-monkey-do published build into mhh publish directory
-  * Archives `bin/Release/net8.0/win-x64` directory into `mhh-app-a-a-a.bin`
-  * Archives Volt's Lab shaders into `mhh-content-b-b-b.bin`
-  * Archives Volt's Lab textures into `mhh-texture-c-c-c.bin`
+  * Archives `bin/Release/net8.0/win-x64` directory into `mhh-win-a-a-a.zip`
+  * Archives Volt's Lab shaders into `mhh-content-b-b-b.zip`
+  * Archives Volt's Lab textures into `mhh-texture-c-c-c.zip`
   * All content is stored in `/tmp/mhhpkg`
-* Execute `./linux-tgz.sh a-a-a b-b-b c-c-c` (versions: a=app, b=content, c=textures)
-* This performs the following operations:
+* This performs the following operations via `linux-zip.sh`:
   * Deletes Windows-related libraries
   * Renames `install.sh` to `install-a-a-a.sh` and injects version number variables
   * Renames `update.sh` to `update-a-a-a.sh` and injects version number variables
-  * Archives `bin/Release/net8.0/linux-x64` directory into `monkeyhihat-a-a-a.tgz`
-  * Archives Volt's Lab shaders into `mhh-content-b-b-b.tgz`
-  * Archives Volt's Lab textures into `mhh-texture-c-c-c.tgz`
+  * Archives `bin/Release/net8.0/linux-x64` directory into `mhh-linux-a-a-a.zip`
   * All content is stored in `/tmp/mhhpkg`
 
 ## Manual Post-Packaging Steps
 
-* Upload `/tmp/mhhpkg/*.bin` and `/tmp/mhhpkg/*.tgz` files to `monkeyhihat.com/public_html/installer_assets`
+* Upload `/tmp/mhhpkg/*.zip` files to `monkeyhihat.com/public_html/installer_assets`
 * Update main README etc, push changes
 * PR and merge dev branch into master (do not delete dev)
 * Create new Release:

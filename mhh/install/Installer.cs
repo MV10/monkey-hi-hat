@@ -14,22 +14,22 @@ namespace mhhinstall
         public static readonly Version appVersion = new Version("5.2.0");
         //                                                       ^ update version
 
-        public static readonly string programUrl = "https://www.monkeyhihat.com/installer_assets/mhh-app-5-2-0.bin";
+        public static readonly string programUrl = "https://www.monkeyhihat.com/installer_assets/mhh-win-5-2-0.zip";
         //                                                                                               ^ update version
 
-        public static readonly string contentUrl = "https://www.monkeyhihat.com/installer_assets/mhh-content-5-2-0.bin";
+        public static readonly string contentUrl = "https://www.monkeyhihat.com/installer_assets/mhh-content-5-2-0.zip";
         //                                                                                                   ^ update version
 
-        public static readonly string textureUrl = "https://www.monkeyhihat.com/installer_assets/mhh-texture-5-2-0.bin";
+        public static readonly string textureUrl = "https://www.monkeyhihat.com/installer_assets/mhh-texture-5-2-0.zip";
         //                                                                                                   ^ update version
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
         // Update this when FFmpeg is updated
-        public static readonly string ffmepgUrl = "https://www.monkeyhihat.com/installer_assets/mhh-ffmpeg-7-1-1.bin";
+        public static readonly string ffmepgUrl = "https://www.monkeyhihat.com/installer_assets/mhh-ffmpeg-7-1-1.zip";
 
         // Update this when NDI is updated
-        public static readonly string ndiUrl = "https://www.monkeyhihat.com/installer_assets/ndi-win-6-2-1.bin";
+        public static readonly string ndiUrl = "https://www.monkeyhihat.com/installer_assets/ndi-win-6-2-1.zip";
         
         // Update these for dotnet runtime bumps
         public static readonly string dotnetVer = "8";

@@ -1,19 +1,9 @@
 #!/bin/bash
 
-#
-# Stages the Windows-based install program and all content that the installer
-# downloads in the /tmp/mhhpkg directory. See the packaging README for details.
-# 
-# Requires three x-x-x version number arguments (app, content, textures)
-# Parenthesis makes the commands temporary (ie. temporary change directory)
-#
-
-if [ "$#" -ne 3 ]; then
-  echo ""
-  echo "Usage: $0 <app-ver> <content-ver> <textures-ver>"
-  echo "Versions should be x-y-z format. All three are required."
-  echo ""
-  exit 1
+# abort if not invoked by package.sh
+if [[ -z "$INVOKED_BY_PACKAGE" ]]; then
+    echo "Please execute ./package.sh instead." >&2
+    exit 1
 fi
 
 TARGET="/tmp/mhhpkg"
@@ -51,7 +41,7 @@ fi
 
 echo ""
 echo "======================================================="
-echo "Packaging Monkey Hi Hat v$1 (Windows build)"
+echo "Packaging Monkey Hi Hat v$1 (Windows build)" | sed 's/-/./g'
 echo "======================================================="
 
 echo "Preparing target directory"
@@ -73,17 +63,16 @@ cp --update=none $MSMD/* $PUBLISH/
 
 echo "Creating application download archive"
 echo "Source: $PUBLISH"
-( cd "$PUBLISH" ; zip -q "$TARGET/mhh-app-$1.bin" ./* )
+( cd "$PUBLISH" ; zip -9q "$TARGET/mhh-win-$1.zip" ./* )
 
 echo "Creating shader content download archive"
 ( cd /data/Source/volts-laboratory ; \
-zip -q "$TARGET/mhh-content-$2.bin" ./crossfades/* ./fx/* ./libraries/* ./playlists/* ./shaders/* ./templates/* notes.txt )
+zip -9q "$TARGET/mhh-content-$2.zip" ./crossfades/* ./fx/* ./libraries/* ./playlists/* ./shaders/* ./templates/* notes.txt )
 
 echo "Creating shader texture download archive"
-( cd /data/Source/volts-laboratory ; zip -q "$TARGET/mhh-texture-$3.bin" ./textures/* )
+( cd /data/Source/volts-laboratory ; zip -9q "$TARGET/mhh-texture-$3.zip" ./textures/* )
 
 echo "======================================================="
 echo "Windows packaging completed"
-echo "Location: $TARGET"
 echo "======================================================="
 echo ""
