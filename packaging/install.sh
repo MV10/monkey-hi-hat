@@ -15,7 +15,7 @@
 # TEXTUREVERSION="5-2-0"
 #
 
-# DO NOT MODIFY THE FOLLOWING COMMENT; IT'S A MARKER FOR linux-tgz.sh:
+# DO NOT MODIFY THE FOLLOWING COMMENT; IT'S A MARKER FOR linux-zip.sh:
 # BUILD SCRIPT ADDS VERSION VARIABLES BELOW
 
 # hard-coded variables
@@ -23,7 +23,7 @@ APPDIR="$HOME/monkeyhihat"
 CONTENTDIR="$HOME/mhh-content"
 SOURCE="https://www.monkeyhihat.com/public_html/installer_assets"
 TARGET="/tmp/mhhpkg"
-APPARCHIVE="monkeyhihat-$APPVERSION.zip"
+APPARCHIVE="mhh-linux-$APPVERSION.zip"
 CONTENTARCHIVE="mhh-content-$CONTENTVERSION.zip"
 TEXTUREARCHIVE="mhh-texture-$TEXTUREVERSION.zip"
 DOTNETVERSION="8"
@@ -40,7 +40,7 @@ FFmpegPath=/usr/lib/x86_64-linux-gnu
 EOF
 
 # abort if app / content directories exist
-if [ -D "$APPDIR" ] || [ -D "$CONTENTDIR" ]; then
+if [ -d "$APPDIR" ] || [ -d "$CONTENTDIR" ]; then
   echo "App and/or content directories found. Delete them or use 'update.sh' instead."
   echo "App: $APPDIR"
   echo "Content: $CONTENTDIR"
@@ -49,13 +49,13 @@ fi
 
 # abort if wget is not installed
 if [ ! -x /usr/bin/wget ]; then
-    # additional check if wget is not installed at the usual place                                                                           
+    # additional check if wget is not installed at the usual place
     command -v wget >/dev/null 2>&1 || { echo >&2 "Please install wget, then run install again."; exit 1; }
 fi
 
 # abort if unzip is not installed
 if [ ! -x /usr/bin/unzip ]; then
-    # additional check if wget is not installed at the usual place                                                                           
+    # additional check if wget is not installed at the usual place
     command -v unzip >/dev/null 2>&1 || { echo >&2 "Please install unzip, then run install again."; exit 1; }
 fi
 
@@ -72,7 +72,7 @@ check_dotnet() {
     fi
     return 1
 }
-if ! check_dotnet_8; then
+if ! check_dotnet; then
   echo "Please install the .NET ${DOTNETVERSION}.x runtime (or SDK), then run install again:" >&2
   echo "https://learn.microsoft.com/en-us/dotnet/core/install/linux"
   exit 1
@@ -84,6 +84,9 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
     echo "sudo apt-get update && sudo apt-get install -y ffmpeg"
     exit 1
 fi
+
+# abort if any command fails
+set -e
 
 # all checks passed, begin installation
 echo ""
