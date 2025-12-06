@@ -25,8 +25,9 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
   * Create a local copy in `/data/Source/_dev_utils_standalone/ffmpeg_date_ver_bin/`
   * Zip the files into `ffmpeg-win-x-x-x.zip` where x-x-x is FFmpeg version
   * Upload .zip file to `monkeyhihat.com/public_html/installer_assets` via cpanel File Manager
+  * Update the versioned filename in `Installer.cs`
 * Linux:
-  * User-installed as a dependency (`sudo apt update ffmpeg`, not version-specific) 
+  * Update docs; user-installed dependency (`sudo apt update ffmpeg`, not version-specific) 
  
 ### NDI
 * Update the NuGet package
@@ -34,6 +35,7 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
   * `Processing.NDI.Lib.x64.dll`
   * `libndi.so`
 * Upload .zip file to `monkeyhihat.com/public_html/installer_assets` via cpanel File Manager
+* Update the versioned filenames in `Installer.cs`, `install.sh`, and `update.sh`
 
 ### Spout
 * Update the NuGet package
@@ -41,10 +43,13 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
 * Zip the `CppSharp*.dll` files into `spout-x-x-x.zip` (use Spout.NetCore version)
 * Spout isn't Linux-compatible so we don't include `libCppSharp.CppParser.so` from a Linux build
 * Upload .zip file to `monkeyhihat.com/public_html/installer_assets` via cpanel File Manager
+* Update the versioned filename in `Installer.cs`
 
 ### .NET
-  * Windows: update the download URLs in `Installer.cs`
-  * Linux: user installs dependencies; update the instructions
+  * Windows: update version-check and download URL in `Installer.cs`
+  * Linux: 
+    * Update version-check in `install.sh` and `update.sh` 
+    * Update docs; user-installed dependency
 
 ## Manual Pre-Packaging Steps
 

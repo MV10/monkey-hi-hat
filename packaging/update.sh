@@ -17,6 +17,7 @@ TARGET="/tmp/mhhpkg"
 APPARCHIVE="mhh-linux-$APPVERSION.zip"
 CONTENTARCHIVE="mhh-content-$CONTENTVERSION.zip"
 TEXTUREARCHIVE="mhh-texture-$TEXTUREVERSION.zip"
+NDIARCHIVE="ndi-6-2-1.zip"
 DOTNETVERSION="8"
 
 # abort if app / content directories do not exist
@@ -81,6 +82,9 @@ mkdir "$TARGET"
 echo "Downloading app archive..."
 ( cd $TARGET ; wget "$SOURCE/$APPARCHIVE" )
 
+echo "Downloading streaming support..."
+( cd $TARGET ; wget "$SOURCE/$NDIARCHIVE" )
+
 echo "Downloading content archive..."
 ( cd $TARGET ; wget "$SOURCE/$CONTENTARCHIVE" )
 
@@ -91,6 +95,7 @@ echo "Expanding archives..."
 mkdir "$APPDIR"
 mkdir "$CONTENTDIR"
 ( cd $APPDIR ; unzip -oqq "$TARGET/$APPARCHIVE" )
+( cd $APPDIR ; unzip -oqq "$TARGET/$NDIARCHIVE" )
 ( cd $CONTENTDIR ; unzip -oqq  "$TARGET/$CONTENTARCHIVE")
 ( cd $CONTENTDIR ; unzip -oqq "$TARGET/$TEXTUREARCHIVE")
 
