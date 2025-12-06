@@ -12,7 +12,7 @@
 # hard-coded variables
 APPDIR="$HOME/monkeyhihat"
 CONTENTDIR="$HOME/mhh-content"
-SOURCE="https://www.monkeyhihat.com/public_html/installer_assets"
+SOURCE="https://www.monkeyhihat.com/installer_assets"
 TARGET="/tmp/mhhpkg"
 APPARCHIVE="mhh-linux-$APPVERSION.zip"
 CONTENTARCHIVE="mhh-content-$CONTENTVERSION.zip"

@@ -6,7 +6,7 @@
 # Requires three x-x-x version number arguments (app, content, textures)
 # Parenthesis makes the commands temporary (ie. temporary change directory)
 #
-# This merely invokes windows.sh and linux-zip.sh, in that order.
+# This merely invokes media.sh, windows.sh and linux-zip.sh, in that order.
 #
 # Stages the Windows-based install program and all content that the installer
 # downloads in the /tmp/mhhpkg directory. For Linux, until I figure out how
@@ -29,7 +29,11 @@ set -e
 # tells the child scripts it's ok to run
 export INVOKED_BY_PACKAGE=1
 
-# must be invoked in this sequence; windows.sh clears/creates temp directory
+# Must be invoked in this sequence; content.sh clears/creates temp directory.
+# Even though windows.sh and linux-zip.sh don't package content files, they need
+# to know the version numbers for downloading dependencies. (Technically only
+# linux needs it at this time.)
+./media.sh $2 $3
 ./windows.sh $1 $2 $3
 ./linux-zip.sh $1 $2 $3
 
@@ -39,3 +43,4 @@ echo "======================================================="
 echo ""
 ls -lh /tmp/mhhpkg
 echo ""
+echo "ls -lh /tmp/mhhpkg"

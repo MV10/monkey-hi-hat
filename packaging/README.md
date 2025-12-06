@@ -18,23 +18,31 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
 * TODO: Figure out Linux .deb packaging
 * TODO: Host a package source on monkeyhihat.com?
 
-## Third-Party Dependencies
+## Updating Third-Party Dependencies
 
-* If FFmpeg was updated:
-  * Windows: 
-    * Create a new `mhh-ffmpeg-x-x-x.zip` where x-x-x is FFmpeg version
-    * Upload .zip file to `monkeyhihat.com/public_html/installer_assets` via cpanel File Manager
-  * Linux:
-    * User-installed as a dependency (apt install ffmpeg, not version-specific) 
+### FFmpeg
+* Windows: 
+  * Create a local copy in `/data/Source/_dev_utils_standalone/ffmpeg_date_ver_bin/`
+  * Zip the files into `ffmpeg-win-x-x-x.zip` where x-x-x is FFmpeg version
+  * Upload .zip file to `monkeyhihat.com/public_html/installer_assets` via cpanel File Manager
+* Linux:
+  * User-installed as a dependency (`sudo apt update ffmpeg`, not version-specific) 
  
-* If NDI is updated:
-  * Windows: 
-    * Zip `Processing.NDI.Lib.x64.dll` to `ndi-win-x.x.x.zip` (version on NDI Tools page)
-    * Upload .zip file to `monkeyhihat.com/public_html/installer_assets` via cpanel File Manager
-  * Linux:
-    * `libndi.so` is included in the install archive
+### NDI
+* Update the NuGet package
+* Zip the following files into `ndi-x.x.x.zip` (version on NDI Tools page)
+  * `Processing.NDI.Lib.x64.dll`
+  * `libndi.so`
+* Upload .zip file to `monkeyhihat.com/public_html/installer_assets` via cpanel File Manager
 
-* For any updates (including dotnet):
+### Spout
+* Update the NuGet package
+* Run a Windows publish build
+* Zip the `CppSharp*.dll` files into `spout-x-x-x.zip` (use Spout.NetCore version)
+* Spout isn't Linux-compatible so we don't include `libCppSharp.CppParser.so` from a Linux build
+* Upload .zip file to `monkeyhihat.com/public_html/installer_assets` via cpanel File Manager
+
+### .NET
   * Windows: update the download URLs in `Installer.cs`
   * Linux: user installs dependencies; update the instructions
 
@@ -51,26 +59,24 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
 
 ## Scripted Packaging Steps
 
-> Always run the Windows script first, followed by the Linux script. The Windows script creates a new empty target directory, and the Linux script adds files to that. 
-
-* Open a terminal and `cd /data/Source/monkey-hi-hat/packaging`
+* Open a terminal and `cd` to `/data/Source/monkey-hi-hat/packaging`
 * Execute `./package.sh a-a-a b-b-b c-c-c` (versions: a=app, b=content, c=textures)
-* This performs the following operations via `windows.sh`:
-  * Deletes any old `/tmp/mhhpkg` directory and creates a new one 
-  * Renames `install.exe` to `install-a-a-a.exe`
-  * Deletes third-party dependencies which are downloaded by installer
-  * Deletes Linux-related libraries
-  * Merges monkey-see-monkey-do published build into mhh publish directory
-  * Archives `bin/Release/net8.0/win-x64` directory into `mhh-win-a-a-a.zip`
+  * Note: For app-only changes, specify the most recent content versions, ignore the .zips 
+* This performs the following operations via `media.sh`:
+  * Deletes any old `/tmp/mhhpkg` directory and creates a new one
   * Archives Volt's Lab shaders into `mhh-content-b-b-b.zip`
   * Archives Volt's Lab textures into `mhh-texture-c-c-c.zip`
-  * All content is stored in `/tmp/mhhpkg`
+* This performs the following operations via `windows.sh`:
+  * Renames `install.exe` to `install-a-a-a.exe`
+  * Deletes separately-packaged content (NDI, Spout, etc.)
+  * Merges monkey-see-monkey-do published build into mhh publish directory
+  * Archives `bin/Release/net8.0/win-x64` directory into `mhh-win-a-a-a.zip`
 * This performs the following operations via `linux-zip.sh`:
-  * Deletes Windows-related libraries
-  * Renames `install.sh` to `install-a-a-a.sh` and injects version number variables
-  * Renames `update.sh` to `update-a-a-a.sh` and injects version number variables
+  * Deletes separately-packaged content (NDI, Spout, etc.)
+  * Renames `install.sh` to `install-a-a-a.sh` and injects media version variables
+  * Renames `update.sh` to `update-a-a-a.sh` and injects media version variables
   * Archives `bin/Release/net8.0/linux-x64` directory into `mhh-linux-a-a-a.zip`
-  * All content is stored in `/tmp/mhhpkg`
+* All content is stored in `/tmp/mhhpkg`
 
 ## Manual Post-Packaging Steps
 
@@ -83,8 +89,8 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
   * Upload `/tmp/mhhpkg/install-a-a-a.exe`
   * Upload `/tmp/mhhpkg/install-a-a-a.sh`
   * Upload `/tmp/mhhpkg/update-a-a-a.sh`
-  * Upload `/tmp/mhhpkg/com.mindmagma.monkeydroid.apk`
-  * Upload `/tmp/mhhpkg/monkeydroid_1.0.1.0_x86.msix`
+  * Upload `/tmp/mhhpkg/com.mindmagma.monkeydroid.apk` (from `/data/Source/_mhh_release_files`)
+  * Upload `/tmp/mhhpkg/monkeydroid_1.0.1.0_x86.msix` (from `/data/Source/_mhh_release_files`)
   * Publish release
 * Delete temp: `rm -rf /tmp/mhhpkg`
 * Update wiki release history (and other wiki content)

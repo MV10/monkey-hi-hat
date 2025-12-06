@@ -26,10 +26,13 @@ namespace mhhinstall
 
 
         // Update this when FFmpeg is updated
-        public static readonly string ffmepgUrl = "https://www.monkeyhihat.com/installer_assets/mhh-ffmpeg-7-1-1.zip";
+        public static readonly string ffmepgUrl = "https://www.monkeyhihat.com/installer_assets/ffmpeg-win-7-1-1.zip";
 
         // Update this when NDI is updated
-        public static readonly string ndiUrl = "https://www.monkeyhihat.com/installer_assets/ndi-win-6-2-1.zip";
+        public static readonly string ndiUrl = "https://www.monkeyhihat.com/installer_assets/ndi-6-2-1.zip";
+        
+        // Update this when Spout is updated
+        public static readonly string spoutUrl = "https://www.monkeyhihat.com/installer_assets/spout-2-007-17.zip";
         
         // Update these for dotnet runtime bumps
         public static readonly string dotnetVer = "8";
@@ -42,6 +45,7 @@ namespace mhhinstall
         public static readonly string tempProgramZip = Path.Combine(temp, "mhh-program.zip");
         public static readonly string tempFFMPEGZip = Path.Combine(temp, "mhh-ffmpeg.zip");
         public static readonly string tempNDIZip = Path.Combine(temp, "ndi-win.zip");
+        public static readonly string tempSpoutZip = Path.Combine(temp, "spout.zip");
         public static readonly string tempContentZip = Path.Combine(temp, "mhh-content.zip");
         public static readonly string tempTextureZip = Path.Combine(temp, "mhh-content.zip");
 
@@ -214,6 +218,7 @@ namespace mhhinstall
             SilentDeleteFile(tempProgramZip);
             SilentDeleteFile(tempFFMPEGZip);
             SilentDeleteFile(tempNDIZip);
+            SilentDeleteFile(tempSpoutZip);
 
             Output.LogOnly($"Removing temp unzip path: {tempUnzipDir}");
             DeleteUnzipDir();
@@ -246,8 +251,9 @@ namespace mhhinstall
             Output.Write("FFMPEG-archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempFFMPEGZip, programPath);
             
-            Output.Write("NDI-archive extraction");
+            Output.Write("Streaming archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempNDIZip, programPath);
+            ZipExtensions.ExtractWithOverwrite(tempSpoutZip, programPath);
         }
 
         /// <summary>

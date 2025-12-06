@@ -28,28 +28,17 @@ if [ ! -d "$PUBLISH" ]; then
   exit 1
 fi
 
-if [ ! -d "$TARGET" ]; then
-  echo ""
-  echo "ERROR:"
-  echo "Packaging staging directory not found; run Windows packaging first."
-  echo "Expected: $TARGET"
-  echo ""
-  exit 1
-fi
-
 echo ""
 echo "======================================================="
 echo "Packaging Monkey Hi Hat v$1 (Linux build)" | sed 's/-/./g'
 echo "======================================================="
 
-echo "Deleting non-Linux libraries"
-rm "$PUBLISH"/README_LIBS.md || true
+echo "Deleting separately-packaged libraries"
 rm "$PUBLISH"/Processing.NDI.Lib.x64.dll || true
+rm "$PUBLISH"/libndi.so || true
 rm "$PUBLISH"/CppSharp*.dll || true
 rm "$PUBLISH"/libCppSharp*.so || true
-rm "$PUBLISH"/libStd-symbols.so || true
-rm "$PUBLISH"/NAudio*.dll || true
-rm "$PUBLISH"/Spout*.dll || true
+rm "$PUBLISH"/README_LIBS.md || true
 
 echo "Copying install and update scripts..."
 cp install.sh "$INSTALLER"
@@ -59,7 +48,7 @@ sed -i "/^${VERSIONMARKER}$/r /dev/stdin" "$UPDATER" <<< "$VERSIONVARS"
 
 echo "Creating application download archive"
 echo "Source: $PUBLISH"
-( cd "$PUBLISH" ; zip -9q "$TARGET/mhh-linux-$1.zip" ./* )
+( cd "$PUBLISH" ; zip -9qr "$TARGET/mhh-linux-$1.zip" ./* )
 
 echo "======================================================="
 echo "Linux packaging completed"

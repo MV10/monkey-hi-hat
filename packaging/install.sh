@@ -21,7 +21,7 @@
 # hard-coded variables
 APPDIR="$HOME/monkeyhihat"
 CONTENTDIR="$HOME/mhh-content"
-SOURCE="https://www.monkeyhihat.com/public_html/installer_assets"
+SOURCE="https://www.monkeyhihat.com/installer_assets"
 TARGET="/tmp/mhhpkg"
 APPARCHIVE="mhh-linux-$APPVERSION.zip"
 CONTENTARCHIVE="mhh-content-$CONTENTVERSION.zip"
@@ -120,18 +120,18 @@ sed -i "/^${CONFIGMARKER}$/r /dev/stdin" "$APPDIR/mhh.conf" <<< "$CONFIG"
 
 echo "Creating launcher link..."
 mkdir -p "$HOME/.local/share/applications"
-cat > "$HOME/.local/share/applications/mhh.desktop" << EOF
+cat > "$HOME/.local/share/applications/mv10-monkeyhihat.desktop" << EOF
 [Desktop Entry]
 Type=Application
 Name=Monkey Hi Hat
 Comment=Music visualizer
 Exec=$APPDIR/mhh %U
+Path=$APPDIR
 Icon=$APPDIR/mhh-icon.png
-Categories=AudioVideo
+Categories=AudioVideo;Graphics
 Terminal=true
-StartupNotify=true
 EOF
-update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+xdg-desktop-menu install "$HOME/.local/share/applications/mv10-monkeyhihat.desktop" 2>/dev/null || true
 
 echo "Cleaning up temporary files..."
 rm -rf "$TARGET"
