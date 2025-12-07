@@ -55,7 +55,7 @@ namespace mhhinstall
             AddReplacement("windows", "#PlaylistPath=", "Playlist Path", $"PlaylistPath={playlistPath}");
             AddReplacement("windows", "#TexturePath=", "Texture Path", $"TexturePath={texturePath}");
             AddReplacement("windows", "#CrossfadePath=", "Crossfade Path", $"CrossfadePath={crossfadePath}");
-            AddReplacement("windows", "#FFmpegPath=", "FFmpeg Path", $"FFmpegPath={Installer.ffmpegPath}");
+            AddReplacement("windows", "#FFmpegPath=", "FFmpeg Path", $"FFmpegPath={Installer.FFmpegPath}");
 
             ApplyChanges();
         }
@@ -195,7 +195,7 @@ namespace mhhinstall
 
             AddSetting("windows", "FXPath", "FFmpegPath",
                 $"\n# SETTING ADDED FOR v4.3.0 UPDATE ON {DateTime.Now}" +
-                $"\n# location of the FFmpeg binaries; normally the ffmpeg subdirectory under the app install directory\nFFmpegPath={Installer.ffmpegPath}");
+                $"\n# location of the FFmpeg binaries; normally the ffmpeg subdirectory under the app install directory\nFFmpegPath={Installer.FFmpegPath}");
 
         
             From_430_to_431();

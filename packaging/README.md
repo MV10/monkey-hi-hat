@@ -31,7 +31,7 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
  
 ### NDI
 * Update the NuGet package
-* Zip the following files into `ndi-x.x.x.zip` (version on NDI Tools page)
+* Zip the following files into `ndi-x-x-x.zip` (version on NDI Tools page)
   * `Processing.NDI.Lib.x64.dll`
   * `libndi.so`
 * Upload .zip file to `monkeyhihat.com/public_html/installer_assets` via cpanel File Manager

@@ -26,7 +26,7 @@ namespace mhhinstall
 
 
         // Update this when FFmpeg is updated
-        public static readonly string ffmepgUrl = "https://www.monkeyhihat.com/installer_assets/ffmpeg-win-7-1-1.zip";
+        public static readonly string FFmepgUrl = "https://www.monkeyhihat.com/installer_assets/ffmpeg-win-7-1-1.zip";
 
         // Update this when NDI is updated
         public static readonly string ndiUrl = "https://www.monkeyhihat.com/installer_assets/ndi-6-2-1.zip";
@@ -43,8 +43,8 @@ namespace mhhinstall
         public static readonly string tempUnzipDir = Path.Combine(temp, "mhh-unzip");
         public static readonly string tempDotnetExe = Path.Combine(temp, "mhh-installer-dotnet.exe");
         public static readonly string tempProgramZip = Path.Combine(temp, "mhh-program.zip");
-        public static readonly string tempFFMPEGZip = Path.Combine(temp, "mhh-ffmpeg.zip");
-        public static readonly string tempNDIZip = Path.Combine(temp, "ndi-win.zip");
+        public static readonly string FFmpegZip = Path.Combine(temp, "mhh-ffmpeg.zip");
+        public static readonly string tempNDIZip = Path.Combine(temp, "ndi.zip");
         public static readonly string tempSpoutZip = Path.Combine(temp, "spout.zip");
         public static readonly string tempContentZip = Path.Combine(temp, "mhh-content.zip");
         public static readonly string tempTextureZip = Path.Combine(temp, "mhh-content.zip");
@@ -54,7 +54,7 @@ namespace mhhinstall
 
         public static readonly string programPath = "C:\\Program Files\\mhh";
         public static readonly string contentPath = "C:\\ProgramData\\mhh-content";
-        public static readonly string ffmpegPath = $"{programPath}\\ffmpeg";
+        public static readonly string FFmpegPath = $"{programPath}\\ffmpeg";
 
         public static readonly string wikiUrl = "https://github.com/MV10/monkey-hi-hat/wiki/";
         public static readonly string postInstallUrl = "https://github.com/MV10/monkey-hi-hat/wiki/Post%E2%80%90Install%E2%80%90Instructions";
@@ -216,7 +216,7 @@ namespace mhhinstall
             SilentDeleteFile(tempDotnetExe);
             SilentDeleteFile(tempDriverZip);
             SilentDeleteFile(tempProgramZip);
-            SilentDeleteFile(tempFFMPEGZip);
+            SilentDeleteFile(FFmpegZip);
             SilentDeleteFile(tempNDIZip);
             SilentDeleteFile(tempSpoutZip);
 
@@ -245,11 +245,11 @@ namespace mhhinstall
                 Directory.CreateDirectory(programPath);
             }
             
-            Output.Write("Application-archive extraction");
+            Output.Write("Application archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempProgramZip, programPath);
             
-            Output.Write("FFMPEG-archive extraction");
-            ZipExtensions.ExtractWithOverwrite(tempFFMPEGZip, programPath);
+            Output.Write("FFmpeg archive extraction");
+            ZipExtensions.ExtractWithOverwrite(FFmpegZip, programPath);
             
             Output.Write("Streaming archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempNDIZip, programPath);

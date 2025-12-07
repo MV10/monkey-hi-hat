@@ -10,8 +10,8 @@ namespace mhhinstall
             Output.Write("Downloading application archive...");
             GetFile(Installer.programUrl, Installer.tempProgramZip);
 
-            Output.Write("Downloading FFMPEG suport...");
-            GetFile(Installer.ffmepgUrl, Installer.tempFFMPEGZip);
+            Output.Write("Downloading FFmpeg suport...");
+            GetFile(Installer.FFmepgUrl, Installer.FFmpegZip);
             
             Output.Write("Downloading streaming suport...");
             GetFile(Installer.ndiUrl, Installer.tempNDIZip);
