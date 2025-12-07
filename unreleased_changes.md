@@ -26,7 +26,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### Work In Progress
 
-* v5.2.0 test Windows install / update
+* v5.2.0 fix starship texture masks, release
  
 
 ### MHH TODO

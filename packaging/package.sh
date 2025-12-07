@@ -41,6 +41,6 @@ echo "======================================================="
 echo "All packaging completed."
 echo "======================================================="
 echo ""
+echo "ls -lh /tmp/mhhpkg"
 ls -lh /tmp/mhhpkg
 echo ""
-echo "ls -lh /tmp/mhhpkg"

@@ -4,11 +4,12 @@
 
 Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC's speaker outputs.
 
-> [2025-OCT-29: Install or update to version 5.1.0](https://github.com/MV10/monkey-hi-hat/releases)!
-
-> New DJ / VJ features: Line-in / mic support, Spout and NDI send / receive
-
-> Subscribe to [Release Notifications](https://github.com/MV10/monkey-hi-hat/issues/3) to find out about updates!
+> * 2025-DEC-07 [Install or Update to v5.2.0](https://github.com/MV10/monkey-hi-hat/releases)
+> * Subscribe to [Release Notifications](https://github.com/MV10/monkey-hi-hat/issues/3) to find out about updates!
+> * New: Full Linux support
+> * New: DJ / VJ features (line-in / mic support, send / receive via Spout or NDI)
+> * New: Faster dedicated install archive download via [MonkeyHiHat.com](https://www.monkeyhihat.com)
+> * More visualizers, effects, and crossfades!
 
 As of the latest release, there are around _**4,000 combinations**_ of visualizations and effects, plus 17 transition (crossfade) effects! Great for DJs, parties and other events!
 
@@ -16,7 +17,7 @@ Playlists and many of the visualizations are customizable. The program and all c
 
 I encourage shader programmers to contribute new visualizations; see [Creating Visualizations](https://github.com/MV10/monkey-hi-hat/wiki/05.-Creating-Visualizations) in the wiki. If you're a .NET programmer and want to work on bugs or features, see [Contributor's Getting Started](https://github.com/MV10/monkey-hi-hat/wiki/13.-Contributor's-Getting-Started) in the wiki.
 
-See thumbnails like the one below in the Volt's Laboratory [wiki](https://github.com/MV10/volts-laboratory/wiki).
+See thumbnails like the one below in the Volt's Laboratory [wiki](https://github.com/MV10/volts-laboratory/wiki):
 
 ![color_skein](https://raw.githubusercontent.com/MV10/volts-laboratory/refs/heads/master/thumbnails/color_skein.jpg)
 
