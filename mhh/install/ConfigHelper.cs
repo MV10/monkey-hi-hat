@@ -331,7 +331,8 @@ SpoutReceiveInvert=true");
             AddReplacement("windows", "# This is a separate section because", "obsolete Linux comments", "");
             AddReplacement("windows", "# degree of Linux support.", "obsolete Linux comments", "");
 
-            AddSetting("windows", "# loopback driver", "note about SyntheticData", "# SyntheticData will generate data using a sine wave signal.");
+            // This doesn't work because AddSetting only evaluates key=value lines, it won't match on a comment line.
+            //AddSetting("windows", "# loopback driver", "note about SyntheticData", "# SyntheticData will generate data using a sine wave signal.");
             
             AddSetting("windows", "LoopbackApi", "OpenALContextDeviceName", @"
 # Leave this blank for WASAPI. For OpenALSoft, leave it blank to use the default

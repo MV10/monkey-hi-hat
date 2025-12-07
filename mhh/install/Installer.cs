@@ -47,10 +47,11 @@ namespace mhhinstall
         public static readonly string tempNDIZip = Path.Combine(temp, "ndi.zip");
         public static readonly string tempSpoutZip = Path.Combine(temp, "spout.zip");
         public static readonly string tempContentZip = Path.Combine(temp, "mhh-content.zip");
-        public static readonly string tempTextureZip = Path.Combine(temp, "mhh-content.zip");
+        public static readonly string tempTextureZip = Path.Combine(temp, "mhh-texture.zip");
 
-        // Any download smaller than 500K is assumed to be bad content (404 HTML page etc)
-        public static readonly long minDownloadSize = 500 * 1024;
+        // Any download smaller than 390K is assumed to be bad content (404 HTML page etc)
+        // As of 12-2025 mhh-content-5-2-0.zip is 396K (shader files, all text)
+        public static readonly long minDownloadSize = 390 * 1024;
 
         public static readonly string programPath = "C:\\Program Files\\mhh";
         public static readonly string contentPath = "C:\\ProgramData\\mhh-content";
@@ -266,11 +267,13 @@ namespace mhhinstall
                 Output.Write($"Clearing directory {contentPath}");
                 Directory.Delete(contentPath, recursive: true);
             }
+            else
+            {
+                Output.Write($"Creating directory {contentPath}");
+                Directory.CreateDirectory(contentPath);
+            }
 
-            Output.Write($"Creating directory {contentPath}");
-            Directory.CreateDirectory(contentPath);
-
-            Output.Write("Content-archive extraction");
+            Output.Write("Content archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempContentZip, contentPath);
             ZipExtensions.ExtractWithOverwrite(tempTextureZip, contentPath);
         }
