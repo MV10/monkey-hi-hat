@@ -1,8 +1,6 @@
 ﻿
 using eyecandy;
-using FFMediaToolkit.Decoding;
 using Microsoft.Extensions.Logging;
-using NewTek.NDI;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -10,10 +8,7 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using Spout.Interop;
 using StbImageSharp;
-using System.Diagnostics;
-using System.Reflection;
 using System.Text;
-using static NewTek.NDIlib;
 
 namespace mhh;
 
@@ -107,12 +102,8 @@ public class HostWindow : BaseWindow, IDisposable
 
     private Random RNG = new();
 
-    private const int SpotifyCheckMillisec = 500;
-    private const string SpotifyProcessName = "SPOTIFY";
-    private const string SpotifyUnavailableMessage = "Spotify information is not available";
-    private const char MusicNote = (char)11;
-    private DateTime NextSpotifyCheck = DateTime.MaxValue;
-    private string SpotifyTrackInfo = SpotifyUnavailableMessage;
+    private const int MediaCheckMillisec = 500;
+    private DateTime NextMediaCheck = DateTime.MaxValue;
 
     private SpoutSender SpoutSender;
     private const string SpoutSenderName = "Monkey Hi Hat";
@@ -190,7 +181,10 @@ public class HostWindow : BaseWindow, IDisposable
             StreamReceiver.Connect(Program.AppConfig.NDIReceiveFrom);
         }
 
-        if (Program.AppConfig.ShowSpotifyTrackPopups) NextSpotifyCheck = DateTime.Now.AddMilliseconds(SpotifyCheckMillisec);
+        if (Program.AppConfig.WindowsSpotifyTrackPopups || Program.AppConfig.LinuxMediaPopups)
+        {
+            NextMediaCheck = DateTime.Now.AddMilliseconds(MediaCheckMillisec);
+        }
     }
 
     /// <summary>
@@ -451,29 +445,10 @@ public class HostWindow : BaseWindow, IDisposable
             return;
         }
 
-        if(Program.AppConfig.ShowSpotifyTrackPopups && DateTime.Now >= NextSpotifyCheck)
+        if(DateTime.Now >= NextMediaCheck)
         {
-            var p = Process.GetProcessesByName(SpotifyProcessName);
-            if(p.Length > 0)
-            {
-                if (p[0].MainWindowTitle != SpotifyTrackInfo)
-                {
-                    SpotifyTrackInfo = p[0].MainWindowTitle;
-                    if (SpotifyTrackInfo.StartsWith("Spotify"))
-                    {
-                        SpotifyTrackInfo = SpotifyUnavailableMessage;
-                    }
-                    else
-                    {
-                        RenderManager.TextManager.SetPopupText(GetTrackForDisplay());
-                    }
-                }
-            }
-            else
-            {
-                SpotifyTrackInfo = SpotifyUnavailableMessage;
-            }
-            NextSpotifyCheck = DateTime.Now.AddMilliseconds(SpotifyCheckMillisec);
+            if (Program.AppConfig.WindowsSpotifyTrackPopups || Program.AppConfig.LinuxMediaPopups) Program.OSInterop.UpdateMediaTrackInfo();
+            NextMediaCheck = DateTime.Now.AddMilliseconds(MediaCheckMillisec);
         }
     }
 
@@ -753,7 +728,7 @@ LINE 15");
                 break;
 
             case "track":
-                RenderManager.TextManager.SetPopupText(GetTrackForDisplay());
+                RenderManager.TextManager.SetPopupText(Program.OSInterop.GetMediaTrackForDisplay);
                 break;
 
             case "popups":
@@ -1104,9 +1079,6 @@ $@"frame rate : {FramesPerSecond}
 average fps: {AverageFramesPerSecond} (past {AverageFPSTimeframeSeconds} sec)
 target fps : {(UpdateFrequency == 0 ? "unlimited" : UpdateFrequency)}
 display res: {ClientSize.X} x {ClientSize.Y}";
-
-    private string GetTrackForDisplay()
-        => $"{MusicNote} {SpotifyTrackInfo.Replace(" - ", $"\n{MusicNote} ")}";
 
     public new void Dispose()
     {

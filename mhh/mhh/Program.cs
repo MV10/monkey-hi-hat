@@ -3,20 +3,21 @@ using CommandLineSwitchPipe;
 using eyecandy;
 using FFMediaToolkit;
 using Microsoft.Extensions.Logging;
-using NAudio.CoreAudioApi;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using Serilog.Extensions.Logging;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 /*
-Program.Main primarily does two things:
+Program.Main primarily does these things:
+-- reads config, prepares logging, goes into standby or starts immediately
 -- sets up and runs the VisualizerHostWindow
--- processes switches / args recieved at runtime
+-- processes switches / args received at runtime
 
-There are no startup switches. Only --help and --filecache can be used without
+There are no startup switches. Only --help and --devices can be used without
 another instance already running.
 
 The last part is accomplished by my CommandLineSwitchPipe library. At startup it
@@ -40,13 +41,17 @@ public class Program
 
     // Previously MHH only supported core API v4.6, the "final" OpenGL, but Linux MESA
     // drivers apparently only support v4.5 (according to "glxinfo -B" from mesa-utils)
-    // and 4.6 features aren't important to MHH, so post-3.1 was reverted to v4.5. Support
-    // for Linux was dropped as of MHH version 4.3.1.
+    // and 4.6 features aren't important to MHH, so post-3.1 was reverted to v4.5.
     // https://www.khronos.org/opengl/wiki/History_of_OpenGL#OpenGL_4.6_(2017)
     static readonly Version OpenGLVersion = new(4, 5);
-    
-    static readonly string ConfigLocationEnvironmentVariable = "monkey-hi-hat-config"; // set in Debug Launch Profile dialog
 
+    private static readonly string ConfigLocationEnvironmentVariable =
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "monkey-hi-hat-config"
+            : "MONKEY_HI_HAT_CONFIG";
+
+    private static string VersionNumber;
+    
     /// <summary>
     /// Content parsed from the mhh.conf configuration file and the
     /// default idle shader conf file.
@@ -66,32 +71,16 @@ public class Program
     /// </summary>
     public static string[] QueuedArgs;
 
+    /// <summary>
+    /// Provides OS-specific features.
+    /// </summary>
+    public static IOSInterop OSInterop;
+    
     // these will be accepted when MHH is not running
     private static string[] NonRunningCommands = { "--help", "--devices" };
 
     // cancel this to terminate the switch server's named pipe.
     private static CancellationTokenSource ctsSwitchPipe;
-
-    [DllImport("kernel32.dll")] static extern IntPtr GetConsoleWindow();
-    [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-    static readonly int SW_HIDE = 0;
-    static readonly int SW_SHOW = 5;
-    private static bool ConsoleVisible = true;
-
-    // Currently Windows Terminal will only minimize, not hide. Microsoft
-    // is debating whether and how to fix that (not just about Powershell):
-    // https://github.com/microsoft/terminal/issues/12464
-    private static bool IsConsoleVisible
-    {
-        get => ConsoleVisible;
-        set
-        {
-            ConsoleVisible = value;
-            var hwnd = GetConsoleWindow();
-            var flag = ConsoleVisible ? SW_SHOW : SW_HIDE;
-            ShowWindow(hwnd, flag);
-        }
-    }
 
     internal static bool AppRunning = true; // the window can change this
     private static bool OnStandby = false;
@@ -101,11 +90,17 @@ public class Program
 
     public static async Task Main(string[] args)
     {
+        OSInterop = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? OSInteropWindows.Create()
+            : await OSInteropLinux.CreateAsync();
+        
+        VersionNumber = await File.ReadAllTextAsync(Path.Combine(".", "ConfigFiles", "version.txt"));
+        
         try
         {
             if(await InitializeAndWait(args))
             {
-                IsConsoleVisible = !AppConfig.WindowsHideConsoleAtStartup || (AppConfig.StartInStandby && AppConfig.WindowsHideConsoleInStandby);
+                OSInterop.IsConsoleVisible = !AppConfig.HideConsoleAtStartup || (AppConfig.StartInStandby && AppConfig.HideConsoleInStandby);
 
                 AppRunning = true;
                 OnStandby = AppConfig.StartInStandby;
@@ -146,6 +141,7 @@ public class Program
             ctsSwitchPipe?.Cancel();
             AppWindow?.Dispose();
             LogHelper.Dispose();
+            OSInterop.Dispose();
         }
 
         // Give the sloooow console time to catch up...
@@ -158,7 +154,7 @@ public class Program
         switch (args[0].ToLowerInvariant())
         {
             case "--devices":
-                ListAudioDevices();
+                OSInterop.ListAudioDevices();
                 break;
 
             default:
@@ -341,8 +337,8 @@ public class Program
                 return AppWindow.Command_Test(TestMode.None);
 
             case "--console":
-                IsConsoleVisible = !IsConsoleVisible;
-                return "ACK";
+                 OSInterop.IsConsoleVisible = !OSInterop.IsConsoleVisible;
+                 return "ACK";
 
             case "--paths":
                 if (args.Length > 1) return ShowHelp();
@@ -375,7 +371,7 @@ public class Program
     private static async Task<bool> InitializeAndWait(string[] args)
     {
         Console.Clear();
-        Console.WriteLine($"Monkey Hi Hat");
+        Console.WriteLine($"Monkey Hi Hat {VersionNumber}");
 
         var appConfigFile = FindAppConfig();
         if(appConfigFile is null)
@@ -400,6 +396,7 @@ public class Program
         // Initialize logging (including setting LoggerFactory in libraries)
         LogHelper.Initialize(appConfigFile, alreadyRunning);
         Logger = LogHelper.CreateLogger(nameof(Program));
+        OSInterop.CreateLogger();
 
         // Process non-running commands
         if(args.Length == 0 && alreadyRunning)
@@ -415,6 +412,16 @@ public class Program
 
         // Parse the application configuration file
         AppConfig = new ApplicationConfiguration(appConfigFile);
+
+        // Currently GLFW is only compatible with X11.
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !AppConfig.LinuxSkipX11Check)
+        {
+            var desktop = Environment.GetEnvironmentVariable("XDG_SESSION_TYPE") ?? string.Empty;
+            if (desktop.ToLowerInvariant() != "x11")
+            {
+                throw new GLFWException("Monkey Hi Hat on Linux requires X11. This check can be disabled in config.");
+            }
+        }
 
         // Disallow other switches at startup of first instance
         if (!alreadyRunning && args.Length > 0)
@@ -465,6 +472,7 @@ public class Program
             var AudioConfig = new EyeCandyCaptureConfig()
             {
                 LoopbackApi = AppConfig.LoopbackApi,
+                OpenALContextDeviceName = AppConfig.OpenALContextDeviceName,
                 CaptureDeviceName = AppConfig.CaptureDeviceName,
                 
                 DetectSilence = true, // always detect, playlists may need it
@@ -525,7 +533,7 @@ public class Program
     {
         var tcp = (AppConfig.UnsecuredPort == 0) ? "disabled" : AppConfig.UnsecuredPort.ToString();
         Console.Clear();
-        Console.WriteLine($"\nMonkey Hi Hat\n");
+        Console.WriteLine($"\nMonkey Hi Hat {VersionNumber}\n");
         Console.WriteLine($"Process ID {Environment.ProcessId}");
         Console.WriteLine($"Listening on TCP port {tcp}");
     }
@@ -610,6 +618,7 @@ public class Program
         var pathname = Environment.GetEnvironmentVariable(ConfigLocationEnvironmentVariable);
         if(!string.IsNullOrEmpty(pathname))
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) PathHelper.ExpandLinuxHomeDirectory(ref pathname);
             pathname = Path.GetFullPath(pathname);
             if (!File.Exists(pathname) && Directory.Exists(pathname)) pathname = Path.Combine(pathname, filename);
             if (File.Exists(pathname))
@@ -618,62 +627,22 @@ public class Program
                 return new(pathname);
             }
         }
-
+        
         pathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}", filename));
         if(File.Exists(pathname))
         {
-            Console.WriteLine($"Loading configuration from application directory:\n  {pathname}");
+            Console.WriteLine($"Loading configuration from application directory:\n  {pathname}\n");
             return new(pathname);
         }
 
         pathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}ConfigFiles", filename));
         if (File.Exists(pathname))
         {
-            Console.WriteLine($"Loading configuration from ConfigFiles sub-directory:\n  {pathname}");
+            Console.WriteLine($"WARNING:\nLoading DEFAULT CONFIGURATION from ConfigFiles sub-directory:\n  {pathname}\n");
             return new(pathname);
         }
 
         return null;
-    }
-
-    private static void ListAudioDevices()
-    {
-        Console.WriteLine("\nWASAPI Device Information (excluding \"Not Present\" devices)");
-        Console.WriteLine("---------------------------------------------------------------");
-
-        using var enumerator = new MMDeviceEnumerator();
-
-        var states = DeviceState.Active | DeviceState.Disabled | DeviceState.Unplugged;
-
-        Console.Write("\nPlayback devices:\n  ");
-        var playbackDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Render, states);
-        if (playbackDevices.Count > 0) Console.WriteLine(string.Join("\n  ", playbackDevices.Select(d => $"{d.FriendlyName} ({d.State})")));
-        if (playbackDevices.Count == 0) Console.WriteLine("  <none>");
-
-        Console.Write("\nCapture devices:\n  ");
-        var captureDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, states);
-        if (captureDevices.Count > 0) Console.WriteLine(string.Join("\n  ", captureDevices.Select(d => $"{d.FriendlyName} ({d.State})")));
-        if (captureDevices.Count == 0) Console.WriteLine("  <none>");
-
-        Console.WriteLine("\nDefault devices:");
-        try
-        {
-            var defaultPlayback = enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
-            Console.WriteLine($"  Playback: {defaultPlayback.FriendlyName}");
-        }
-        catch
-        {
-            Console.WriteLine("  Playback: <none>");
-        }
-        try
-        {
-            var defaultCapture = enumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Multimedia);
-            Console.WriteLine($"  Capture:  {defaultCapture.FriendlyName}");
-        }
-        catch
-        {
-            Console.WriteLine("  Capture:  <none>");
-        }
     }
 
     private static string ShowHelp()
@@ -731,10 +700,10 @@ All switches are passed to the already-running instance:
 --log [level]               shows or sets log-level (None, Trace, Debug, Information, Warning, Error, Critical)
 --paths                     shows the configured content paths (viz, FX, etc.)
 
---console                   toggles the visibility of the console window (only minimizes Terminal)
+--console                   toggles the console window visibility
 --cls                       clears the console window of the running instance (useful during debug)
 
---devices                   list audio device names, can be used when MHH is not running (WASAPI only)
+--devices                   list audio device names, can be used when MHH is not running
 
 --streaming                 streaming commands control Spout / NDI; refer to the wiki for details
 --streaming status

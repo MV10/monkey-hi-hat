@@ -9,21 +9,31 @@ namespace mhhinstall
     public class Installer
     {
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Update these for each release
+        // Update these for each app release (content and/or texture version can lag app version)
 
-        public static readonly Version appVersion = new Version("5.1.0");
+        public static readonly Version appVersion = new Version("5.2.0");
         //                                                       ^ update version
 
-        public static readonly string programUrl = "https://mcguirev10.com/assets/misc/mhh-app-5-1-0.bin";
-        //                                                                                     ^ update version
+        public static readonly string programUrl = "https://www.monkeyhihat.com/installer_assets/mhh-win-5-2-0.zip";
+        //                                                                                               ^ update version
 
-        public static readonly string contentUrl = "https://mcguirev10.com/assets/misc/mhh-content-5-1-0.bin";
-        //                                                                                         ^ update version
+        public static readonly string contentUrl = "https://www.monkeyhihat.com/installer_assets/mhh-content-5-2-0.zip";
+        //                                                                                                   ^ update version
+
+        public static readonly string textureUrl = "https://www.monkeyhihat.com/installer_assets/mhh-texture-5-2-0.zip";
+        //                                                                                                   ^ update version
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        // Update this when FFMPEG is updated
-        public static readonly string ffmepgUrl = "https://mcguirev10.com/assets/misc/mhh-ffmpeg-7-1-1.bin";
 
+        // Update this when FFmpeg is updated
+        public static readonly string FFmepgUrl = "https://www.monkeyhihat.com/installer_assets/ffmpeg-win-7-1-1.zip";
+
+        // Update this when NDI is updated
+        public static readonly string ndiUrl = "https://www.monkeyhihat.com/installer_assets/ndi-6-2-1.zip";
+        
+        // Update this when Spout is updated
+        public static readonly string spoutUrl = "https://www.monkeyhihat.com/installer_assets/spout-2-007-17.zip";
+        
         // Update these for dotnet runtime bumps
         public static readonly string dotnetVer = "8";
         public static readonly string dotnetUrl = "https://builds.dotnet.microsoft.com/dotnet/Runtime/8.0.16/dotnet-runtime-8.0.16-win-x64.exe";
@@ -33,15 +43,19 @@ namespace mhhinstall
         public static readonly string tempUnzipDir = Path.Combine(temp, "mhh-unzip");
         public static readonly string tempDotnetExe = Path.Combine(temp, "mhh-installer-dotnet.exe");
         public static readonly string tempProgramZip = Path.Combine(temp, "mhh-program.zip");
-        public static readonly string tempFFMPEGZip = Path.Combine(temp, "mhh-ffmpeg.zip");
+        public static readonly string FFmpegZip = Path.Combine(temp, "mhh-ffmpeg.zip");
+        public static readonly string tempNDIZip = Path.Combine(temp, "ndi.zip");
+        public static readonly string tempSpoutZip = Path.Combine(temp, "spout.zip");
         public static readonly string tempContentZip = Path.Combine(temp, "mhh-content.zip");
+        public static readonly string tempTextureZip = Path.Combine(temp, "mhh-texture.zip");
 
-        // Any download smaller than 500K is assumed to be bad content (404 HTML page etc)
-        public static readonly long minDownloadSize = 500 * 1024;
+        // Any download smaller than 390K is assumed to be bad content (404 HTML page etc)
+        // As of 12-2025 mhh-content-5-2-0.zip is 396K (shader files, all text)
+        public static readonly long minDownloadSize = 390 * 1024;
 
         public static readonly string programPath = "C:\\Program Files\\mhh";
         public static readonly string contentPath = "C:\\ProgramData\\mhh-content";
-        public static readonly string ffmpegPath = $"{programPath}\\ffmpeg";
+        public static readonly string FFmpegPath = $"{programPath}\\ffmpeg";
 
         public static readonly string wikiUrl = "https://github.com/MV10/monkey-hi-hat/wiki/";
         public static readonly string postInstallUrl = "https://github.com/MV10/monkey-hi-hat/wiki/Post%E2%80%90Install%E2%80%90Instructions";
@@ -141,7 +155,7 @@ namespace mhhinstall
             // Under .NET Framework, for some reason Environment.OSVersion.Version.Major doesn't work right. Sigh.
             if (!Environment.Is64BitOperatingSystem)
             {
-                Output.Write("The application requires 64-bit Windows 10 or Windows 11.");
+                Output.Write("The application requires 64-bit Windows 11.");
                 PauseExit();
             }
 
@@ -199,10 +213,13 @@ namespace mhhinstall
 
             Output.LogOnly("Removing temporary files.");
             SilentDeleteFile(tempContentZip);
+            SilentDeleteFile(tempTextureZip);
             SilentDeleteFile(tempDotnetExe);
             SilentDeleteFile(tempDriverZip);
             SilentDeleteFile(tempProgramZip);
-            SilentDeleteFile(tempFFMPEGZip);
+            SilentDeleteFile(FFmpegZip);
+            SilentDeleteFile(tempNDIZip);
+            SilentDeleteFile(tempSpoutZip);
 
             Output.LogOnly($"Removing temp unzip path: {tempUnzipDir}");
             DeleteUnzipDir();
@@ -228,10 +245,16 @@ namespace mhhinstall
                 Output.Write($"Creating directory {programPath}");
                 Directory.CreateDirectory(programPath);
             }
-            Output.Write("Application-archive extraction");
+            
+            Output.Write("Application archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempProgramZip, programPath);
-            Output.Write("FFMPEG-archive extraction");
-            ZipExtensions.ExtractWithOverwrite(tempFFMPEGZip, programPath);
+            
+            Output.Write("FFmpeg archive extraction");
+            ZipExtensions.ExtractWithOverwrite(FFmpegZip, programPath);
+            
+            Output.Write("Streaming archive extraction");
+            ZipExtensions.ExtractWithOverwrite(tempNDIZip, programPath);
+            ZipExtensions.ExtractWithOverwrite(tempSpoutZip, programPath);
         }
 
         /// <summary>
@@ -244,10 +267,15 @@ namespace mhhinstall
                 Output.Write($"Clearing directory {contentPath}");
                 Directory.Delete(contentPath, recursive: true);
             }
-            Output.Write($"Creating directory {contentPath}");
-            Directory.CreateDirectory(contentPath);
-            Output.Write("Content-archive extraction");
+            else
+            {
+                Output.Write($"Creating directory {contentPath}");
+                Directory.CreateDirectory(contentPath);
+            }
+
+            Output.Write("Content archive extraction");
             ZipExtensions.ExtractWithOverwrite(tempContentZip, contentPath);
+            ZipExtensions.ExtractWithOverwrite(tempTextureZip, contentPath);
         }
 
         /// <summary>

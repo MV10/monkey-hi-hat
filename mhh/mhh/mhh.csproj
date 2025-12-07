@@ -8,13 +8,13 @@
     <ApplicationIcon>mhh-icon.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <!-- NDI library handling -->
   <ItemGroup>
-    <!-- Show directory in Solution Explorer -->
+    <!-- Show directory in VS Solution Explorer
 	<Content Include="Libraries\**\*" /> 
+    -->
     <!-- Define for MSBUILD Target operation below -->
     <LibraryFiles Include="Libraries\**\*" />
   </ItemGroup>
@@ -23,6 +23,7 @@
   <Target Name="CopyLibrariesToOutput" AfterTargets="Build">
     <Copy SourceFiles="@(LibraryFiles)" DestinationFolder="$(OutputPath)" />
   </Target>
+    
   <ItemGroup>
     <None Remove="InternalShaders\badtexture.jpg" />
     <None Remove="InternalShaders\blank.conf" />
@@ -33,8 +34,12 @@
     <None Remove="InternalShaders\idle.vert" />
     <None Remove="InternalShaders\passthrough.frag" />
     <None Remove="InternalShaders\passthrough.vert" />
-  </ItemGroup>		
+  </ItemGroup>
 
+  <PropertyGroup>
+      <NoWarn>CS8632</NoWarn> <!-- nullable ref type annotation noise from Linux Mpris.DBus -->
+  </PropertyGroup>    
+    
   <ItemGroup>
     <Content Include="InternalShaders\badtexture.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -71,11 +76,15 @@
     </Content>
     <Content Include="mhh-icon.ico" />
     <Folder Include="Properties\PublishProfiles\" />
+    <None Remove="mhh-icon.png" />
+    <Content Include="mhh-icon.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineSwitchPipe" Version="2.0.0" />
-    <PackageReference Include="eyecandy" Version="4.3.1" />
+    <PackageReference Include="eyecandy" Version="4.3.3" />
 	<PackageReference Include="FFMediaToolkit" Version="4.8.0" />
 	<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
 	<PackageReference Include="NDILibDotNetCoreBase" Version="2024.7.22.1" />
@@ -89,6 +98,8 @@
     <PackageReference Include="StbImageResizeSharp" Version="0.97.1" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
     <PackageReference Include="StbImageWriteSharp" Version="1.16.7" />
+    <PackageReference Include="Tmds.DBus" Version="0.21.2" />
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.21.2" />
   </ItemGroup>
 
   <ItemGroup>

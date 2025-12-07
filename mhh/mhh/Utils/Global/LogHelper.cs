@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Core;
 using Serilog.Extensions.Logging;
+using System.Runtime.InteropServices;
 
 namespace mhh;
 
@@ -33,6 +34,10 @@ public static class LogHelper
     {
         // Prepare the log file
         var logPath = appConfig.ReadValue(ApplicationConfiguration.SectionOS, "logpath").DefaultString("./mhh.log");
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            PathHelper.ExpandLinuxHomeDirectory(ref logPath);
+        }
         logPath = Path.GetFullPath(logPath);
         if (!alreadyRunning && File.Exists(logPath)) File.Delete(logPath);
 

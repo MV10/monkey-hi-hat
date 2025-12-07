@@ -10,14 +10,19 @@ namespace mhhinstall
             Output.Write("Downloading application archive...");
             GetFile(Installer.programUrl, Installer.tempProgramZip);
 
-            Output.Write("Downloading FFMPEG suport...");
-            GetFile(Installer.ffmepgUrl, Installer.tempFFMPEGZip);
+            Output.Write("Downloading FFmpeg support archive...");
+            GetFile(Installer.FFmepgUrl, Installer.FFmpegZip);
+            
+            Output.Write("Downloading streaming support archives...");
+            GetFile(Installer.ndiUrl, Installer.tempNDIZip);
+            GetFile(Installer.spoutUrl, Installer.tempSpoutZip);
         }
 
         public static void GetContentArchive()
         {
-            Output.Write("Downloading visualization content archive...");
+            Output.Write("Downloading visualization content archives...");
             GetFile(Installer.contentUrl, Installer.tempContentZip);
+            GetFile(Installer.textureUrl, Installer.tempTextureZip);
         }
 
         public static void GetDotnetInstaller()

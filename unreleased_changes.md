@@ -7,9 +7,15 @@ If you see something that interests you, open an Issue to discuss the details.
 Don't assume anything here is working or will be available in some future release. Previously this was not pushed to the repo, but since I'd hate to lose it, I added it to source control. It describes things I've only done locally so far, or unreleased changes, ideas, plans, wishlist items, and so on.
 
 
-### Terminal Path
+### Terminal Paths
+
+Remember to set an env var to always use `mhh.debug.conf`:
+  sudo nano /etc/profile.d/monkeyhihat-dev.sh
+  export MONKEY_HI_HAT_CONFIG=/data/Source/monkey-hi-hat/mhh/mhh/ConfigFiles/mhh.debug.conf
+  (logout)
 
 C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
+/data/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net8.0
 
 
 ### Version and Changelog
@@ -20,23 +26,32 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### Work In Progress
 
-*
-
-
+* v5.2.0 fix starship texture masks, release
+ 
 
 ### MHH TODO
 
-* Re-add Linux support
-  * Basics (paths etc)
-  * OpenTK not Wayland-compatible? XWayland?
-  * Native Linux Spotify track info
+* Linux - figure out .deb packaging and hosting a package repo
+* Releases - csproj conditional copy based on OS build target
+* config - `DisableCrossfadeCache` option (vs cache size for other shader types)
+* Better on-screen instructions for test mode
+* Test mode - Failed crossfade compile crashes test mode; finds config but not cached
+* Re-think skip-counts for dev content; exclude paths? (count fails, non-sequential on Linux)
+* GLFW - add window icon (NativeWindowSettings.Icon = Image @ 256x256 RGBA)
+* Local - why does living room PC no longer see Spotify tracks?
+* Local - check living room PC's TCP relay service
+* Linux - change to event model for track changes?
+* Windows - https://github.com/DubyaDude/WindowsMediaController
+* Linux - detect when media player changes
+* Linux - terminal-hiding support (X11 only?)
+* Linux - TCP relay service?
 * OMT Streaming https://github.com/openmediatransport
 * On-screen warning when log file reaches a certain size (with persistence options)
 * Limit maximum log file size
 * Refuse to run a streaming-oriented FX if a streaming viz is running?
 * Global error logger via system.appdomain.unhandledexception event
-* eyecandy - use glDebugMessageControl to exclude certain message IDs
-* Installer support for content-only versioning / releases
+* eyecandy - add Eyecandy.ShaderCompiler error logging category
+* repo - rework TestContent layout
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued
 * Use Spout sender to debug intermediate buffers?
@@ -45,15 +60,16 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
 * monkey-see-monkey-do - relay delay time
-* monkey-see-monkey-do - utility command(s) (fixsound.ps1 for VBAudio bugs)
+* monkey-see-monkey-do - add utility command(s)
 * Logo overlay support (random and playlist)
+* Installer - configtest switch (creates sample conf)
 * Installer - Start menu link to edit .conf
 * Installer - Start menu link to view mhh.log and msmd.log
 * Installer - Start menu link to notes.txt as viz credits
 * Installer - add tcpargs utility
 * Installer - Use winget to retrieve .NET runtime
 * Installer - winget distro? https://github.com/Belphemur/SoundSwitch/issues/1220
-* Create config GUI (WinForms now available for modern .NET)
+* Create config GUI (WinForms now available for modern .NET; Qt or GTK for Linux?)
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
@@ -65,33 +81,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Add test content to intentionally generate errors
 * Use FontAtlasFilename? (update Wiki with info about generating new ones)
 * Video generation? Step-wise clocks and timers?
-
-* Soundcloud track overlay?
-    * https://help.soundcloud.com/hc/en-us/articles/115000182454-SoundCloud-for-Windows
-    * msmd to support sending Windows client commands?
-
-
-### Release Process
-
-* Verify `mhh\version.txt` matches release number
-* Verify `install\Installer.cs` has current release number (in all 3 places)
-* If ffmpeg or dotnet was updated (rare), modify those download URLs
-* Add any version-based config changes to `install\ConfigHelper.cs`
-* Build install.exe release build, rename `install-x-x-x.exe` (x-x-x is version)
-* Publish mhh release build
-* Under the runtimes directory, delete all except win-x64
-* Copy monkey-see-monkey-do release build to mhh publish directory (exclude dirs)
-* Archive publish directory into `mhh-app-x-x-x.zip` (x-x-x is version)
-* Archive Volt's Lab files into `mhh-content-x-x-x.zip`
-* If ffmpeg was updated, create a new `mhh-ffmpeg-x-x-x.zip` (use ffmpeg version)
-* No archive may exceed 100 MB due to GitHub limits (installer changes needed)
-* Rename .zip files to .bin extensions
-* Push .bin files to mv10.github.io repo in /assets/misc
-* Update readme etc, push changes
-* Create new release tag, upload install-x-x-x.exe
-* Update release history, wiki, etc.
-* Update pinned release tracker: https://github.com/MV10/monkey-hi-hat/issues/3
-* Merge dev branch into master (do not delete dev), pull new master locally
 
 
 ### MHH NON-STARTERS

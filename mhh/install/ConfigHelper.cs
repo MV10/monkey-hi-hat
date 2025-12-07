@@ -21,16 +21,16 @@ namespace mhhinstall
     {
         static readonly string confPathname = Path.Combine(Installer.programPath, "mhh.conf");
 
-        // outer key is section, value list is (name, content)
+        // [section]=(name, content)
         static Dictionary<string, List<(string, string)>> NewSections;
 
-        // outer key is section, inner key is match target, value is (name, content)
+        // [section]=[after_target]=(name, content)
         static Dictionary<string, Dictionary<string, (string, string)>> NewSettings;
 
-        // key is section, value is setting name
+        // [section]=setting_name
         static Dictionary<string, string> RemovedSettings;
-
-        // outer key is section, inner key is StartsWith match target, value is (name, content)
+        
+        // [section]=[StartsWith]=(name, content)
         static Dictionary<string, Dictionary<string, (string, string)>> LineReplacements;
 
         public static void NewInstall()
@@ -55,7 +55,7 @@ namespace mhhinstall
             AddReplacement("windows", "#PlaylistPath=", "Playlist Path", $"PlaylistPath={playlistPath}");
             AddReplacement("windows", "#TexturePath=", "Texture Path", $"TexturePath={texturePath}");
             AddReplacement("windows", "#CrossfadePath=", "Crossfade Path", $"CrossfadePath={crossfadePath}");
-            AddReplacement("windows", "#FFmpegPath=", "FFmpeg Path", $"FFmpegPath={Installer.ffmpegPath}");
+            AddReplacement("windows", "#FFmpegPath=", "FFmpeg Path", $"FFmpegPath={Installer.FFmpegPath}");
 
             ApplyChanges();
         }
@@ -125,8 +125,12 @@ namespace mhhinstall
                     From_500_to_510();
                     break;
 
-                //case "5.1.0":
-                //    From_510_to_XXX();
+                case "5.1.0":
+                    From_510_to_520();
+                    break;
+
+                //case "5.2.0":
+                //    From_520_to_XXX();
                 //    break;
 
                 default:
@@ -191,7 +195,7 @@ namespace mhhinstall
 
             AddSetting("windows", "FXPath", "FFmpegPath",
                 $"\n# SETTING ADDED FOR v4.3.0 UPDATE ON {DateTime.Now}" +
-                $"\n# location of the FFmpeg binaries; normally the ffmpeg subdirectory under the app install directory\nFFmpegPath={Installer.ffmpegPath}");
+                $"\n# location of the FFmpeg binaries; normally the ffmpeg subdirectory under the app install directory\nFFmpegPath={Installer.FFmpegPath}");
 
         
             From_430_to_431();
@@ -312,7 +316,116 @@ CrossfadePath={crossfadePath}");
 SpoutReceiveFrom=
 SpoutReceiveInvert=true");
 
-            //From_500_to_XXX();
+            From_510_to_520();
+        }
+
+        static void From_510_to_520()
+        {
+            Output.Write("-- v5.1.0 to v5.2.0 changes:");
+
+            // Try all three possible settings
+            AddReplacement("ndi", "NDIRecieveInvert=true", "NDIReceiveInvert typo", "NDIReceiveInvert=true");
+            AddReplacement("ndi", "NDIRecieveInvert=false", "NDIReceiveInvert typo", "NDIReceiveInvert=false");
+            AddReplacement("ndi", "NDIRecieveInvert=", "NDIReceiveInvert typo", "NDIReceiveInvert=");
+            
+            AddReplacement("windows", "# This is a separate section because", "obsolete Linux comments", "");
+            AddReplacement("windows", "# degree of Linux support.", "obsolete Linux comments", "");
+
+            // This doesn't work because AddSetting only evaluates key=value lines, it won't match on a comment line.
+            //AddSetting("windows", "# loopback driver", "note about SyntheticData", "# SyntheticData will generate data using a sine wave signal.");
+            
+            AddSetting("windows", "LoopbackApi", "OpenALContextDeviceName", @"
+# Leave this blank for WASAPI. For OpenALSoft, leave it blank to use the default
+# context device, or specify an exact device name.
+OpenALContextDeviceName=");
+            
+            AddSection("ndi", "linux", $@"
+# SECTION ADDED FOR v5.2.0 UPDATE ON {DateTime.Now}
+[linux]
+# standard Linux path syntax:
+#   separators: forward-slash
+#   delimiters: colon between search paths
+#   case-sensitive
+#   tilde represents the user's home directory
+
+# At a minimum, you MUST provide a VisualizerPath. Preferably, copy mhh.conf
+# to your top-level application directory and modify that, which means applying
+# an updated archive will not overwrite your personal config. However, you could
+# just modify this one, the program will find it in the ConfigFiles subdirectory
+# as a last resort. The sample pathspecs below specify four search locations on an
+# imaginary NAS share and a local work-in-progress dev directory structure.
+
+# If you use the installer script, it may have added these path settings to the
+# end of this file. By default, the installer puts content directories here:
+# ~/mhh-content
+
+# location of visualizer conf and shader vert/frag files
+#VisualizerPath=/mnt/nas3/monkey-hi-hat/shaders:/mnt/nas3/monkey-hi-hat/libraries:~/monkeydev/shaders:~/monkeydev/libraries
+
+# location of playlist conf files
+#PlaylistPath=/mnt/nas3/monkey-hi-hat/playlists:~/monkeydev/playlists
+
+# location of graphics files
+#TexturePath=/mnt/nas3/monkey-hi-hat/textures:~/monkeydev/textures
+
+# location of post-processing FX conf and shader vert/frag files
+#FXPath=/mnt/nas3/monkey-hi-hat/fx:/mnt/nas3/monkey-hi-hat/libraries:~/monkeydev/fx:~/monkeydev/libraries
+
+# location of crossfade shader frag files
+#CrossfadePath=/mnt/nas3/monkey-hi-hat/crossfades:/mnt/nas3/monkey-hi-hat/libraries:~/monkeydev/crossfades:~/monkeydev/libraries
+
+# location of the FFmpeg binaries; that shown below is typical after installing with package managers
+#FFmpegPath=/usr/lib/x86_64-linux-gnu
+
+# location to save screenshots; if not provided, your user account Desktop folder is used, if present
+#ScreenshotPath=~/Pictures
+
+# Do not alter the following comment; these are markers for install scripts.
+# INSTALL SCRIPT INSERTS PATH SETTINGS BELOW THIS LINE
+# END OF CONTENT ADDED BY INSTALL SCRIPT
+
+# the file is overwritten at program-start;
+# FULL path and filename, or leave blank to use mhh.log in the app directory
+LogPath=
+
+# OpenALSoft is the only audio-capture option for Linux.
+# SyntheticData will generate data using a sine wave signal.
+LoopbackApi=OpenALSoft
+
+# Leave this blank to use the default context device, or specify an exact device name
+OpenALContextDeviceName=
+
+# Leave this blank to use the default capture device, or specify an exact device name.
+CaptureDeviceName=
+
+# State of the console window at program start. Default is false.
+HideConsoleAtStartup=false
+
+# State of the console window when entering standby mode. Default is true.
+# If StartInStandby is true, this has precedence over HideConsoleWindow.
+HideConsoleInStandby=true
+
+# Uses the DBus MPRIS standard to display media details as a text popup when the track changes. 
+ShowMediaPopups=true
+
+# Leave this blank to automatically choose the first media-player app that is actually playing
+# music (which is the default setting). Note that it will not detect if the app stops and some
+# other app begins playing audio. You can often guess the DBus MPRIS app name (such as ""spotify""
+# or ""juke""), but if you play audio, then run ""mhh --devices"", it will list all of the currently
+# registered media-player apps. Some apps add things to their service name such as the Brave
+# browser, which uses names like ""brave.instance1234"". Use an asterisk suffix to find these,
+# such as ""brave*"". If more than one matches, the service with status ""Playing"" is chosen. If
+# no specific service is set, the first ""Playing"" service is used, and if none are active the
+# first ""Paused"" service is used. If all services are ""Stopped"" the first service is chosen.
+MediaServiceName=
+
+# This is false by default. Some video drivers have problems with Wayland and require X11. 
+# When true, the program will not test the XDG_SESSION_TYPE for the value ""X11"".
+SkipX11Check=false
+
+#########################################################################");
+            
+            //From_520_to_XXX();
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////

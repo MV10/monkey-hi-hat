@@ -5,14 +5,6 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mhh", "mhh\mhh.csproj", "{124A2E15-4D09-4029-A9DC-B87E23E7F99E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoFiles", "RepoFiles", "{B1FB730B-7B8A-449A-894C-91EEF3972121}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-		..\LICENSE = ..\LICENSE
-		..\README.md = ..\README.md
-		..\unreleased_changes.md = ..\unreleased_changes.md
-	EndProjectSection
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent", "TestContent", "{15B3A716-BDC6-4E8B-A455-F480A001FBBA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-FX", "TestContent-FX", "{02F54773-6317-47B8-BFBA-82A5C7F1C72E}"

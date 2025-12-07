@@ -1,6 +1,7 @@
 ﻿
 using eyecandy;
 using OpenTK.Windowing.Common;
+using System.Runtime.InteropServices;
 
 namespace mhh;
 
@@ -11,7 +12,7 @@ public class ApplicationConfiguration : IConfigSource
     // Some such as LogLevel are read before config is parsed into this class.
     //
 
-    public static readonly string SectionOS = "windows"; // Linux support removed as of version 4.3.1
+    public static readonly string SectionOS = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux";
     public static readonly string InternalShaderPath = "./InternalShaders/";
     public static readonly string PassthroughVertexPathname = Path.Combine(InternalShaderPath, "passthrough.vert");
     public static readonly string PassthroughFragmentPathname = Path.Combine(InternalShaderPath, "passthrough.frag");
@@ -50,14 +51,15 @@ public class ApplicationConfiguration : IConfigSource
 
     public readonly bool StartInStandby;
     public readonly bool CloseToStandby;
-    public readonly bool WindowsHideConsoleAtStartup;
-    public readonly bool WindowsHideConsoleInStandby;
+    public readonly bool HideConsoleAtStartup;
+    public readonly bool HideConsoleInStandby;
+    public readonly bool LinuxSkipX11Check = false;
     
     public readonly OpenGLErrorLogFlags OpenGLErrorLogging;
     public readonly bool OpenGLErrorBreakpoint;
     public readonly long OpenGLErrorThrottle;
 
-    public readonly string CaptureDriverName = string.Empty;
+    public readonly string OpenALContextDeviceName = string.Empty;
     public readonly string CaptureDeviceName = string.Empty;
     public readonly LoopbackApi LoopbackApi;
 
@@ -75,6 +77,7 @@ public class ApplicationConfiguration : IConfigSource
     public readonly SyntheticDataAlgorithm SyntheticAlgorithm = SyntheticDataAlgorithm.MetronomeBeat;
 
     public bool ShowPlaylistPopups; // not readonly, can be toggled at runtime
+
     public readonly int PopupVisibilitySeconds;
     public readonly int PopupFadeMilliseconds;
     public readonly bool OverlayPermanent;
@@ -88,7 +91,9 @@ public class ApplicationConfiguration : IConfigSource
     public readonly float PositionX;
     public readonly float PositionY;
 
-    public readonly bool ShowSpotifyTrackPopups;
+    public readonly bool WindowsSpotifyTrackPopups;
+    public readonly bool LinuxMediaPopups;
+    public readonly string LinuxMediaService = string.Empty;
 
     public readonly bool NDISender;
     public readonly string NDIDeviceName = string.Empty;
@@ -107,8 +112,9 @@ public class ApplicationConfiguration : IConfigSource
         StartFullScreen = ConfigSource.ReadValue("setup", "startfullscreen").ToBool(true);
         StartInStandby = ConfigSource.ReadValue("setup", "startinstandby").ToBool(false);
         CloseToStandby = ConfigSource.ReadValue("setup", "closetostandby").ToBool(false);
-        WindowsHideConsoleAtStartup = ConfigSource.ReadValue("windows", "hideconsoleatstartup").ToBool(false);
-        WindowsHideConsoleInStandby = ConfigSource.ReadValue("windows", "hideconsoleinstandby").ToBool(true);
+        HideConsoleAtStartup = ConfigSource.ReadValue(SectionOS, "HideConsoleAtStartup").ToBool(false);
+        HideConsoleInStandby = ConfigSource.ReadValue(SectionOS, "HideConsoleInStandby").ToBool(false);
+        LinuxSkipX11Check = ConfigSource.ReadValue("linux", "skipx11check").ToBool(false);
 
         OpenGLErrorLogging = ConfigSource.ReadValue("setup", "openglerrorlogging").ToEnum(OpenGLErrorLogFlags.Normal);
         OpenGLErrorBreakpoint = ConfigSource.ReadValue("setup", "openglerrorbreakpoint").ToBool(false);
@@ -155,8 +161,8 @@ public class ApplicationConfiguration : IConfigSource
         SyntheticDataMinimumLevel = ConfigSource.ReadValue("setup", "syntheticdataminimumlevel").ToFloat(0.1f);
         SyntheticAlgorithm = ConfigSource.ReadValue("setup", "syntheticalgorithm").ToEnum(SyntheticDataAlgorithm.MetronomeBeat);
 
-        LoopbackApi = ConfigSource.ReadValue("windows", "loopbackapi").ToEnum(LoopbackApi.WindowsInternal);
-        CaptureDriverName = ConfigSource.ReadValue(SectionOS, "capturedrivername");
+        LoopbackApi = ConfigSource.ReadValue(SectionOS, "loopbackapi").ToEnum(LoopbackApi.WindowsInternal);
+        OpenALContextDeviceName = ConfigSource.ReadValue(SectionOS, "OpenALContextDeviceName");
         CaptureDeviceName = ConfigSource.ReadValue(SectionOS, "capturedevicename");
 
         NDISender = ConfigSource.ReadValue("ndi", "ndisender").ToBool(false);
@@ -183,8 +189,25 @@ public class ApplicationConfiguration : IConfigSource
         PositionX = ConfigSource.ReadValue("text", "PositionX").ToFloat(-0.96f);
         PositionY = ConfigSource.ReadValue("text", "PositionY").ToFloat(0.52f);
 
-        ShowSpotifyTrackPopups = ConfigSource.ReadValue(SectionOS, "showspotifytrackpopups").ToBool(false);
+        WindowsSpotifyTrackPopups = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && 
+                                    ConfigSource.ReadValue("windows", "showspotifytrackpopups").ToBool(false);
 
+        LinuxMediaPopups = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) &&
+                           ConfigSource.ReadValue("linux", "showmediapopups").ToBool(false);
+
+        LinuxMediaService = ConfigSource.ReadValue("linux", "LinuxMediaService");
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+        {
+            PathHelper.ExpandLinuxHomeDirectory(ref VisualizerPath);
+            PathHelper.ExpandLinuxHomeDirectory(ref PlaylistPath);
+            PathHelper.ExpandLinuxHomeDirectory(ref TexturePath);
+            PathHelper.ExpandLinuxHomeDirectory(ref FXPath);
+            PathHelper.ExpandLinuxHomeDirectory(ref FFmpegPath);
+            PathHelper.ExpandLinuxHomeDirectory(ref ScreenshotPath);
+            PathHelper.ExpandLinuxHomeDirectory(ref CrossfadePath);
+        }
+        
         // validation
         // TODO validate [text] section settings
         if (RenderResolutionLimit < 256 && RenderResolutionLimit !=0) ConfError("RenderResolutionLimit must be 256 or greater (default is 0 to disable).");
@@ -195,7 +218,8 @@ public class ApplicationConfiguration : IConfigSource
         if (FrameRateLimit < 0 || FrameRateLimit > 9999) ConfError("FrameRateLimit must be 0 to 9999. Default is 60. Set to 0 for no limit (may break some shaders).");
         if (UnsecuredPort < 0 || UnsecuredPort > 65534) ConfError("UnsecuredPort must be 0 to 65534, recommended range is 49152 or higher, use 0 to disable.");
         if (DetectSilenceSeconds < 0) ConfError("DetectSilenceSeconds must be 0 or greater.");
-        if (DetectSilenceMaxRMS < 0) ConfError("DetectSilienceMaxRMS must be 0 or greater.");
+        if (DetectSilenceMaxRMS < 0) ConfError("DetectSilenceMaxRMS must be 0 or greater.");
+        if (SectionOS == "linux" && LoopbackApi == LoopbackApi.WindowsInternal) ConfError("LoopbackApi WindowsInternal is not valid for Linux.");
 
         if (string.IsNullOrWhiteSpace(VisualizerPath)) ConfError("VisualizerPath is required.");
         PathValidation(VisualizerPath);
@@ -214,7 +238,7 @@ public class ApplicationConfiguration : IConfigSource
         if (!string.IsNullOrWhiteSpace(NDIReceiveFrom) && !string.IsNullOrWhiteSpace(SpoutReceiveFrom)) ConfError("Only one streaming source can be specified (SpoutReceiveFrom or NDIReceiveFrom)");
 
         if (string.IsNullOrWhiteSpace(NDIDeviceName)) NDIDeviceName = "Monkey Hi Hat";
-        if (!string.IsNullOrWhiteSpace(NDIReceiveFrom) && (NDIReceiveFrom.IndexOf("(") == -1 || NDIReceiveFrom.IndexOf(")") == -1)) ConfError("NDIReceiveFrom must be in the format MACHINE_NAME (SENDER NAME)");
+        if (!string.IsNullOrWhiteSpace(NDIReceiveFrom) && (NDIReceiveFrom.IndexOf('(') == -1 || NDIReceiveFrom.IndexOf(')') == -1)) ConfError("NDIReceiveFrom must be in the format MACHINE_NAME (SENDER NAME)");
     }
 
     private void PathValidation(string pathspec)
