@@ -20,13 +20,13 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### Version and Changelog
 
-* 5.1.0 released 2025-10-29
+* 5.2.0 released 2025-12-07
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
 
 
 ### Work In Progress
 
-* v5.2.0 fix starship texture masks, release
+* TBD
  
 
 ### MHH TODO
