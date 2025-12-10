@@ -6,9 +6,11 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using Serilog.Extensions.Logging;
+using StbImageSharp;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
+using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 /*
@@ -513,6 +515,15 @@ public class Program
             WindowConfig.OpenTKNativeWindowSettings.AutoIconify = AppConfig.FullscreenMinimizeOnFocusChange;
             WindowConfig.OpenTKNativeWindowSettings.WindowBorder = (AppConfig.HideWindowBorder) ? WindowBorder.Hidden : WindowBorder.Resizable;
 
+            try
+            {
+                using var stream = File.OpenRead("mhh-icon.png");
+                var png = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+                var icon = new OpenTK.Windowing.Common.Input.Image(png.Width, png.Height, png.Data);
+                WindowConfig.OpenTKNativeWindowSettings.Icon = new WindowIcon(icon);
+            }
+            catch { }
+            
             // Starts hidden to avoid a white flicker before the first frame is rendered.
             // Window is made visible by OnRenderFrame.
             WindowConfig.OpenTKNativeWindowSettings.StartVisible = false;

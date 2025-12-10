@@ -29,12 +29,12 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Test Content - remove SLN folder, use directory via Rider "attached" section
 * Test Content - add `TestingExcludePaths` to `[linux]` and `[windows]` sections
 * Config - remove `TestingSkipVizCount` and `TestingSkipFXCount`
+* Added a window icon (rep the monkey!)
 
 
 ### Work In Progress
  
-* GLFW - add window icon (NativeWindowSettings.Icon = Image @ 256x256 RGBA)
- 
+* 
 
 ### MHH TODO
 
