@@ -5,71 +5,6 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mhh", "mhh\mhh.csproj", "{124A2E15-4D09-4029-A9DC-B87E23E7F99E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent", "TestContent", "{15B3A716-BDC6-4E8B-A455-F480A001FBBA}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-FX", "TestContent-FX", "{02F54773-6317-47B8-BFBA-82A5C7F1C72E}"
-	ProjectSection(SolutionItems) = preProject
-		..\testcontent\fx\active.conf = ..\testcontent\fx\active.conf
-		..\testcontent\fx\active.frag = ..\testcontent\fx\active.frag
-		..\testcontent\fx\doublebuffer.conf = ..\testcontent\fx\doublebuffer.conf
-		..\testcontent\fx\doublebuffer1.frag = ..\testcontent\fx\doublebuffer1.frag
-		..\testcontent\fx\doublebuffer2.frag = ..\testcontent\fx\doublebuffer2.frag
-		..\testcontent\fx\option_uniforms.conf = ..\testcontent\fx\option_uniforms.conf
-		..\testcontent\fx\option_uniforms1.frag = ..\testcontent\fx\option_uniforms1.frag
-		..\testcontent\fx\option_uniforms2.frag = ..\testcontent\fx\option_uniforms2.frag
-		..\testcontent\fx\texture.conf = ..\testcontent\fx\texture.conf
-		..\testcontent\fx\texture1.frag = ..\testcontent\fx\texture1.frag
-		..\testcontent\fx\texture2.frag = ..\testcontent\fx\texture2.frag
-		..\testcontent\fx\videofx.conf = ..\testcontent\fx\videofx.conf
-		..\testcontent\fx\videofx.frag = ..\testcontent\fx\videofx.frag
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Playlist", "TestContent-Playlist", "{76056212-75DC-4ACC-8E11-22E4EBFB74B4}"
-	ProjectSection(SolutionItems) = preProject
-		..\testcontent\playlist\test_playlist.conf = ..\testcontent\playlist\test_playlist.conf
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestContent-Visualizers", "TestContent-Visualizers", "{65165069-6A7C-410C-A703-87D43194725D}"
-	ProjectSection(SolutionItems) = preProject
-		..\testcontent\badcontent.conf = ..\testcontent\badcontent.conf
-		..\testcontent\crossfade_test.frag = ..\testcontent\crossfade_test.frag
-		..\testcontent\cubemap.conf = ..\testcontent\cubemap.conf
-		..\testcontent\cubemap.frag = ..\testcontent\cubemap.frag
-		..\testcontent\doublebuffer.conf = ..\testcontent\doublebuffer.conf
-		..\testcontent\doublebuffer0.frag = ..\testcontent\doublebuffer0.frag
-		..\testcontent\doublebuffer1.frag = ..\testcontent\doublebuffer1.frag
-		..\testcontent\mpvizconf.conf = ..\testcontent\mpvizconf.conf
-		..\testcontent\mpvizconf1.conf = ..\testcontent\mpvizconf1.conf
-		..\testcontent\mpvizconf2.conf = ..\testcontent\mpvizconf2.conf
-		..\testcontent\mpvizconf3.conf = ..\testcontent\mpvizconf3.conf
-		..\testcontent\mpvizconf4.conf = ..\testcontent\mpvizconf4.conf
-		..\testcontent\multipass.conf = ..\testcontent\multipass.conf
-		..\testcontent\multipass0.frag = ..\testcontent\multipass0.frag
-		..\testcontent\multipass1.frag = ..\testcontent\multipass1.frag
-		..\testcontent\multipass2.frag = ..\testcontent\multipass2.frag
-		..\testcontent\multipass3.frag = ..\testcontent\multipass3.frag
-		..\testcontent\multipass4.frag = ..\testcontent\multipass4.frag
-		..\testcontent\multipass_desaturate.frag = ..\testcontent\multipass_desaturate.frag
-		..\testcontent\playlistoptions.conf = ..\testcontent\playlistoptions.conf
-		..\testcontent\playlistoptions.frag = ..\testcontent\playlistoptions.frag
-		..\testcontent\resolutionlimit.conf = ..\testcontent\resolutionlimit.conf
-		..\testcontent\resolutionlimit.frag = ..\testcontent\resolutionlimit.frag
-		..\testcontent\staticimage.conf = ..\testcontent\staticimage.conf
-		..\testcontent\staticimage.frag = ..\testcontent\staticimage.frag
-		..\testcontent\streaming.conf = ..\testcontent\streaming.conf
-		..\testcontent\texture.conf = ..\testcontent\texture.conf
-		..\testcontent\texture.frag = ..\testcontent\texture.frag
-		..\testcontent\uniforms.conf = ..\testcontent\uniforms.conf
-		..\testcontent\uniforms.frag = ..\testcontent\uniforms.frag
-		..\testcontent\vertint.conf = ..\testcontent\vertint.conf
-		..\testcontent\vertint.vert = ..\testcontent\vertint.vert
-		..\testcontent\vertquad.conf = ..\testcontent\vertquad.conf
-		..\testcontent\vertquad.frag = ..\testcontent\vertquad.frag
-		..\testcontent\vert_library.glsl = ..\testcontent\vert_library.glsl
-		..\testcontent\video.conf = ..\testcontent\video.conf
-		..\testcontent\video.frag = ..\testcontent\video.frag
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "install", "install\install.csproj", "{53C2DBDC-AEE2-457C-8B4F-8E46BC1CA8DF}"
 EndProject
 Global
@@ -101,9 +36,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{02F54773-6317-47B8-BFBA-82A5C7F1C72E} = {15B3A716-BDC6-4E8B-A455-F480A001FBBA}
-		{76056212-75DC-4ACC-8E11-22E4EBFB74B4} = {15B3A716-BDC6-4E8B-A455-F480A001FBBA}
-		{65165069-6A7C-410C-A703-87D43194725D} = {15B3A716-BDC6-4E8B-A455-F480A001FBBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6356A5F2-6986-4465-8D68-137F6B135DFD}
