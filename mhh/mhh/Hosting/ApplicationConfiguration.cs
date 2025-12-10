@@ -27,6 +27,7 @@ public class ApplicationConfiguration : IConfigSource
     public readonly string CrossfadePath = string.Empty;
     public readonly string FFmpegPath = string.Empty;
     public readonly string ScreenshotPath = string.Empty;
+    public readonly string TestingExcludePaths = string.Empty;
 
     public readonly bool StartFullScreen;
     public readonly int StartX;
@@ -45,8 +46,6 @@ public class ApplicationConfiguration : IConfigSource
     public readonly int FrameRateLimit;
     public readonly VSyncMode VSync;
     public readonly int UnsecuredPort;
-    public readonly int TestingSkipVizCount;
-    public readonly int TestingSkipFXCount;
     public readonly VideoFlipMode VideoFlip;
 
     public readonly bool StartInStandby;
@@ -136,8 +135,6 @@ public class ApplicationConfiguration : IConfigSource
         FrameRateLimit = ConfigSource.ReadValue("setup", "FrameRateLimit").ToInt32(60);
         VSync = ConfigSource.ReadValue("setup", "vsync").ToEnum(VSyncMode.Off);
         UnsecuredPort = ConfigSource.ReadValue("setup", "unsecuredport").ToInt32(0);
-        TestingSkipVizCount = ConfigSource.ReadValue("setup", "testingskipvizcount").ToInt32(0);
-        TestingSkipFXCount = ConfigSource.ReadValue("setup", "testingskipfxcount").ToInt32(0);
         VideoFlip = ConfigSource.ReadValue("setup", "videoflip").ToEnum(VideoFlipMode.Internal);
 
         VisualizerPath = ConfigSource.ReadValue(SectionOS, "visualizerpath");
@@ -147,6 +144,7 @@ public class ApplicationConfiguration : IConfigSource
         FFmpegPath = ConfigSource.ReadValue(SectionOS, "ffmpegpath");
         ScreenshotPath = ConfigSource.ReadValue(SectionOS, "screenshotpath");
         CrossfadePath = ConfigSource.ReadValue(SectionOS, "CrossfadePath");
+        TestingExcludePaths = ConfigSource.ReadValue(SectionOS, "testingexcludepaths");
 
         DetectSilenceSeconds = ConfigSource.ReadValue("setup", "detectsilenceseconds").ToInt32(0);
         DetectSilenceMaxRMS = ConfigSource.ReadValue("setup", "detectsilencemaxrms").ToDouble(1.5d);
@@ -227,6 +225,7 @@ public class ApplicationConfiguration : IConfigSource
         PathValidation(TexturePath);
         PathValidation(FXPath);
         PathValidation(CrossfadePath);
+        PathValidation(TestingExcludePaths);
 
         if (string.IsNullOrWhiteSpace(ScreenshotPath)) ScreenshotPath = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
         if (PathHelper.GetIndividualPaths(ScreenshotPath).Length > 1) ConfError("Exactly one path is required for ScreenshotPath.");

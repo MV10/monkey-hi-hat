@@ -467,7 +467,7 @@ public class HostWindow : BaseWindow, IDisposable
     /// <summary>
     /// Handler for the --load command-line switch.
     /// </summary>
-    public string Command_Load(string visualizerConfPathname, string fxConfPathname = "", bool terminatesPlaylist = true)
+    public string Command_Load(string visualizerConfPathname, string fxConfPathname = "", bool terminatesPlaylist = true, bool forTestMode = false)
     {
         Logger?.LogTrace($"{nameof(Command_Load)} viz {visualizerConfPathname} fx {fxConfPathname}");
 
@@ -479,6 +479,8 @@ public class HostWindow : BaseWindow, IDisposable
             return $"ERR: {err}";
         }
 
+        if (!forTestMode) AbortTestMode();
+        
         if (terminatesPlaylist) Playlist.TerminatePlaylist();
 
         QueueVisualization(newViz);
@@ -508,6 +510,8 @@ public class HostWindow : BaseWindow, IDisposable
             Logger?.LogError(err);
             return $"ERR: {err}";
         }
+
+        AbortTestMode();
         QueueFX(fx);
         var msg = $"Requested FX {fx.ConfigSource.Pathname}";
         Logger?.LogInformation(msg);
@@ -521,6 +525,7 @@ public class HostWindow : BaseWindow, IDisposable
     {
         Logger?.LogTrace($"{nameof(Command_QueueCrossfade)} frag {fadeFragPathname}");
 
+        AbortTestMode();
         QueuedCrossfadePathname = fadeFragPathname;
         return $"Queued crossfader {fadeFragPathname}";
     }
@@ -532,6 +537,7 @@ public class HostWindow : BaseWindow, IDisposable
     {
         Logger?.LogTrace($"{nameof(Command_Playlist)} {playlistConfPathname}");
 
+        AbortTestMode();
         return Playlist.StartNewPlaylist(playlistConfPathname);
     }
 
@@ -562,6 +568,7 @@ public class HostWindow : BaseWindow, IDisposable
     {
         Logger?.LogTrace($"{nameof(Command_Quit)}");
 
+        AbortTestMode();
         CommandRequested = CommandRequest.Quit;
         return "ACK";
     }
@@ -620,6 +627,7 @@ playlist   : {Playlist.GetInfo()}";
     {
         Logger?.LogTrace($"{nameof(Command_Idle)}");
 
+        AbortTestMode();
         Playlist.TerminatePlaylist();
         QueueVisualization(Caching.IdleVisualizer);
         return "ACK";
@@ -790,12 +798,7 @@ LINE 15");
     {
         Logger?.LogTrace($"{nameof(Command_Test)} {mode} {filename}");
 
-        if (Tester is not null)
-        {
-            Tester.EndTest();
-            Tester.Dispose();
-            Tester = null;
-        }
+        AbortTestMode();
         if (mode == TestMode.None) return "ACK";
         var validation = TestModeManager.Validate(mode, filename);
         if (!string.IsNullOrEmpty(validation)) return validation;
@@ -830,6 +833,7 @@ LINE 15");
     {
         for(int i = 1; i < args.Length; i++) args[i] = args[i].Trim().ToLowerInvariant();
 
+        AbortTestMode();
         switch (args[1])
         {
             case "status":
@@ -1035,7 +1039,7 @@ LINE 15");
 
         if (!Caching.TextShader.IsValid)
         {
-            Logger?.LogCritical("Internal crossfade shader was not found or failed to compile.");
+            Logger?.LogCritical("Internal text shader was not found or failed to compile.");
             Console.WriteLine("\n\nFATAL ERROR: Internal text shader was not found or failed to compile.\n\n");
             Thread.Sleep(250);
             Environment.Exit(-1);
@@ -1053,7 +1057,14 @@ LINE 15");
                 foreach(var pathname in files)
                 {
                     var shader = new CachedShader(ApplicationConfiguration.PassthroughVertexPathname, pathname);
-                    if (shader.IsValid) Caching.CrossfadeShaders.Add(shader);
+                    if (shader.IsValid)
+                    {
+                        Caching.CrossfadeShaders.Add(shader);
+                    }
+                    else
+                    {
+                        Logger?.LogWarning($"Failed to compile crossfade shader {pathname}");
+                    }
                 }
             }
 
@@ -1080,6 +1091,12 @@ average fps: {AverageFramesPerSecond} (past {AverageFPSTimeframeSeconds} sec)
 target fps : {(UpdateFrequency == 0 ? "unlimited" : UpdateFrequency)}
 display res: {ClientSize.X} x {ClientSize.Y}";
 
+    private void AbortTestMode()
+    {
+        Tester?.Dispose();
+        Tester = null;
+    }
+
     public new void Dispose()
     {
         if (IsDisposed) return;
@@ -1091,10 +1108,10 @@ display res: {ClientSize.X} x {ClientSize.Y}";
         NDISender?.Dispose();
         StreamReceiver?.Dispose();
 
+        AbortTestMode();
+
         var success = Eyecandy?.EndAudioProcessing();
         Logger?.LogTrace($"Dispose Eyecandy.EndAudioProcessing success: {success}");
-
-        Tester?.Dispose();
 
         Eyecandy?.Dispose();
 
