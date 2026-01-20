@@ -1132,7 +1132,7 @@ display res: {ClientSize.X} x {ClientSize.Y}";
         Renderer?.Dispose();
 
         IsDisposed = true;
-        GC.SuppressFinalize(true);
+        GC.SuppressFinalize(this);
     }
     private bool IsDisposed = false;
 }

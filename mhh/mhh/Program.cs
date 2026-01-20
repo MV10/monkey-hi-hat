@@ -200,9 +200,7 @@ public class Program
             case "--fade":
                 if (OnStandby) return "ERR: Application is in standby";
                 if (args.Length != 2) return ShowHelp();
-                var fadePathname = (args[1].StartsWith("crossfade_", StringComparison.InvariantCultureIgnoreCase))
-                    ? GetFadePathname(args[1])
-                    : GetFadePathname($"crossfade_{args[1]}");
+                var fadePathname = GetFadePathname(args[1]);
                 if (fadePathname is null) return "ERR: Crossfade not found.";
                 return AppWindow.Command_QueueCrossfade(fadePathname);
 
@@ -582,7 +580,7 @@ public class Program
         => PathHelper.HasPathSeparators(fromArg) ? fromArg : PathHelper.FindConfigFile(AppConfig.FXPath, fromArg);
 
     private static string GetFadePathname(string fromArg)
-        => PathHelper.HasPathSeparators(fromArg) ? fromArg : PathHelper.FindFile(AppConfig.VisualizerPath, PathHelper.MakeFragFilename(fromArg));
+        => PathHelper.HasPathSeparators(fromArg) ? fromArg : PathHelper.FindFile(AppConfig.CrossfadePath, PathHelper.MakeFragFilename(fromArg));
 
     private static string GetShaderDetail(string pathname)
     {

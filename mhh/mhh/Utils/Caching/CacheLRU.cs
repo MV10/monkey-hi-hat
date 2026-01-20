@@ -180,7 +180,7 @@ public class CacheLRU<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>, I
         }
 
         IsDisposed = true;
-        GC.SuppressFinalize(true);
+        GC.SuppressFinalize(this);
     }
     private bool IsDisposed = false;
 }
