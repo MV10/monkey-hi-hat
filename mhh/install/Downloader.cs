@@ -40,8 +40,8 @@ namespace mhhinstall
         static void GetFile(string srcURL, string destPathname)
         {
             // https://superuser.com/a/755581/143047
-            // curl.exe --output index.html --url https://foobar.com
-            External.ExecuteCmd($"curl.exe --output {destPathname} --url {srcURL}");
+            // curl.exe --output "c:\Users\Foo Bar\index.html" --url "https://foobar.com"
+            External.ExecuteCmd($"curl.exe --output \"{destPathname}\" --url \"{srcURL}\"");
 
             // if file exists but is small, it's probably a 404 HTML page
             if (!File.Exists(destPathname) || new FileInfo(destPathname).Length < Installer.minDownloadSize)
