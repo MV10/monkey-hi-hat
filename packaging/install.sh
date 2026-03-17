@@ -22,12 +22,13 @@
 APPDIR="$HOME/monkeyhihat"
 CONTENTDIR="$HOME/mhh-content"
 SOURCE="https://www.monkeyhihat.com/installer_assets"
-TARGET="/tmp/mhhpkg"
+TARGET="/tmp/mhhinstall"
+LOGFILE="/tmp/mhh-install.log"
 APPARCHIVE="mhh-linux-$APPVERSION.zip"
 CONTENTARCHIVE="mhh-content-$CONTENTVERSION.zip"
 TEXTUREARCHIVE="mhh-texture-$TEXTUREVERSION.zip"
 NDIARCHIVE="ndi-6-2-1.zip"
-DOTNETVERSION="8"
+DOTNETVERSION="10"
 
 # for inserting content paths into mhh.conf
 CONFIGMARKER="# INSTALL SCRIPT INSERTS PATH SETTINGS BELOW THIS LINE"
@@ -39,6 +40,12 @@ FXPath=$CONTENTDIR/fx:$CONTENTDIR/libraries
 CrossfadePath=$CONTENTDIR/crossfades:$CONTENTDIR/libraries
 FFmpegPath=/usr/lib/x86_64-linux-gnu
 EOF
+
+# abort if any command fails
+set -euo pipefail
+
+# output everything to a log file
+exec > >(tee -a "$LOGFILE") 2>&1
 
 # abort if app / content directories exist
 if [ -d "$APPDIR" ] || [ -d "$CONTENTDIR" ]; then
@@ -86,30 +93,29 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
     exit 1
 fi
 
-# abort if any command fails
-set -e
-
 # all checks passed, begin installation
 echo ""
 echo "======================================================="
 echo "Installing Monkey Hi Hat v$APPVERSION" | sed 's/-/./g'
 echo "======================================================="
 
+echo "Logging to $LOGFILE"
+
 echo "Preparing target directory"
 rm -rf "$TARGET" || true
 mkdir "$TARGET"
 
 echo "Downloading app archive..."
-( cd $TARGET ; wget "$SOURCE/$APPARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$APPARCHIVE" )
 
 echo "Downloading streaming support..."
-( cd $TARGET ; wget "$SOURCE/$NDIARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$NDIARCHIVE" )
 
 echo "Downloading content archive..."
-( cd $TARGET ; wget "$SOURCE/$CONTENTARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$CONTENTARCHIVE" )
 
 echo "Downloading texture archive..."
-( cd $TARGET ; wget "$SOURCE/$TEXTUREARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$TEXTUREARCHIVE" )
 
 echo "Expanding archives..."
 mkdir "$APPDIR"
@@ -142,7 +148,7 @@ echo "Cleaning up temporary files..."
 rm -rf "$TARGET"
 
 echo "======================================================="
-echo "Installation completed. Read the wiki to get started:"
-echo "https://github.com/MV10/monkey-hi-hat/wiki"
+echo "Installation completed. Read the docs to get started:"
+echo "https://www.monkeyhihat.com/docs/index.php#/introduction"
 echo "======================================================="
 echo ""

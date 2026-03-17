@@ -8,38 +8,26 @@ namespace mhhinstall
 {
     public class Installer
     {
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Update these for each app release (content and/or texture version can lag app version)
+        // Prior to adding Linux support, these constants were defined here,
+        // but the cross-platform config updater needs to share that file for
+        // Windows updates. Some like dotnetVer aren't used by config update
+        // but they're kept in ReleaseConstants because those are the only
+        // values which typically need to be updated.
+        public static readonly Version appVersion = ReleaseConstants.appVersion;
+        public static readonly string programUrl = ReleaseConstants.programUrl;
+        public static readonly string contentUrl = ReleaseConstants.contentUrl;
+        public static readonly string textureUrl = ReleaseConstants.textureUrl;
+        public static readonly string FFmepgUrl = ReleaseConstants.FFmepgUrl;
+        public static readonly string ndiUrl = ReleaseConstants.ndiUrl;
+        public static readonly string spoutUrl = ReleaseConstants.spoutUrl;
+        public static readonly string dotnetVer = ReleaseConstants.dotnetVer;
+        public static readonly string dotnetUrl = ReleaseConstants.dotnetUrl;
+        public static readonly string programPath = ReleaseConstants.programPath;
+        public static readonly string contentPath = ReleaseConstants.contentPath;
+        public static readonly string FFmpegPath = ReleaseConstants.FFmpegPath;
+        public static readonly string temp = ReleaseConstants.temp;
+        public static readonly string log = ReleaseConstants.log;
 
-        public static readonly Version appVersion = new Version("5.2.0");
-        //                                                       ^ update version
-
-        public static readonly string programUrl = "https://www.monkeyhihat.com/installer_assets/mhh-win-5-2-0.zip";
-        //                                                                                               ^ update version
-
-        public static readonly string contentUrl = "https://www.monkeyhihat.com/installer_assets/mhh-content-5-2-0.zip";
-        //                                                                                                   ^ update version
-
-        public static readonly string textureUrl = "https://www.monkeyhihat.com/installer_assets/mhh-texture-5-2-0.zip";
-        //                                                                                                   ^ update version
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-        // Update this when FFmpeg is updated
-        public static readonly string FFmepgUrl = "https://www.monkeyhihat.com/installer_assets/ffmpeg-win-7-1-1.zip";
-
-        // Update this when NDI is updated
-        public static readonly string ndiUrl = "https://www.monkeyhihat.com/installer_assets/ndi-6-2-1.zip";
-        
-        // Update this when Spout is updated
-        public static readonly string spoutUrl = "https://www.monkeyhihat.com/installer_assets/spout-2-007-17.zip";
-        
-        // Update these for dotnet runtime bumps
-        public static readonly string dotnetVer = "8";
-        public static readonly string dotnetUrl = "https://builds.dotnet.microsoft.com/dotnet/Runtime/8.0.16/dotnet-runtime-8.0.16-win-x64.exe";
-
-        public static readonly string temp = Path.GetTempPath();
-        public static readonly string log = Path.Combine(temp, "install-monkey-hi-hat.log");
         public static readonly string tempUnzipDir = Path.Combine(temp, "mhh-unzip");
         public static readonly string tempDotnetExe = Path.Combine(temp, "mhh-installer-dotnet.exe");
         public static readonly string tempProgramZip = Path.Combine(temp, "mhh-program.zip");
@@ -53,13 +41,8 @@ namespace mhhinstall
         // As of 12-2025 mhh-content-5-2-0.zip is 396K (shader files, all text)
         public static readonly long minDownloadSize = 390 * 1024;
 
-        public static readonly string programPath = "C:\\Program Files\\mhh";
-        public static readonly string contentPath = "C:\\ProgramData\\mhh-content";
-        public static readonly string FFmpegPath = $"{programPath}\\ffmpeg";
-
-        public static readonly string wikiUrl = "https://github.com/MV10/monkey-hi-hat/wiki/";
-        public static readonly string postInstallUrl = "https://github.com/MV10/monkey-hi-hat/wiki/Post%E2%80%90Install%E2%80%90Instructions";
-        public static readonly string troubleshootingUrl = "https://github.com/MV10/monkey-hi-hat/wiki/Troubleshooting";
+        public static readonly string wikiUrl = "https://www.monkeyhihat.com/docs/index.php#/introduction";
+        public static readonly string troubleshootingUrl = "https://www.monkeyhihat.com/docs/index.php#/troubleshooting";
 
         public static readonly string shortcutStartMenuFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "Programs", "Monkey-Hi-Hat");
         public static readonly string shortcutStartMenuAppLink = Path.Combine(shortcutStartMenuFolder, "Monkey Hi Hat.lnk");
@@ -83,6 +66,8 @@ namespace mhhinstall
 
         static void Main(string[] args)
         {
+            Output.LogPathname = log;
+            
             try
             {
                 Init();
@@ -135,7 +120,7 @@ namespace mhhinstall
             catch(Exception ex)
             {
                 Output.Write($"\nException:\n{ex.GetType()}\n{ex.Message}");
-                Output.Write($"\nFor support links and/or manual setup, see the wiki Troubleshooting page:\n{troubleshootingUrl}");
+                Output.Write($"\nFor support links see the documentation Troubleshooting page:\n{troubleshootingUrl}");
             }
 
             PauseExit();

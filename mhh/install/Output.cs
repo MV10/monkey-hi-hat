@@ -5,6 +5,11 @@ namespace mhhinstall
 {
     public static class Output
     {
+        /// <summary>
+        /// Must be initialized before use (duh).
+        /// </summary>
+        public static string LogPathname = null;
+        
         public static void Write(string message)
         {
             Console.WriteLine(message);
@@ -18,7 +23,8 @@ namespace mhhinstall
 
         public static void LogOnly(string message)
         {
-            File.AppendAllText(Installer.log, $"{message}\n");
+            if (LogPathname is null) return;
+            File.AppendAllText(LogPathname, $"{message}\n");
         }
 
         public static string Prompt(string keys)

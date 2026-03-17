@@ -14,35 +14,36 @@ Remember to set an env var to always use `mhh.debug.conf`:
   export MONKEY_HI_HAT_CONFIG=/data/Source/monkey-hi-hat/mhh/mhh/ConfigFiles/mhh.debug.conf
   (logout)
 
-C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
-/data/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net8.0
+C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
+/data/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net10.0
 
 
-### Version and Changelog
+### Version and Changelog Notes
 
-* 5.2.0 released 2025-12-07
-* https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
+* 5.2.0 released 2025-12-07 (content 5.2.0, textures 5.2.0)
+* 5.3.0 released 2026-03-17 (content 5.2.0, textures 5.2.0)
 
 
 ### Work In Progress
 
-* TBD
- 
+* 
 
 ### MHH TODO
 
-* Linux - figure out .deb packaging and hosting a package repo
-* Releases - csproj conditional copy based on OS build target
-* config - `DisableCrossfadeCache` option (vs cache size for other shader types)
-* Better on-screen instructions for test mode
-* Test mode - Failed crossfade compile crashes test mode; finds config but not cached
-* Re-think skip-counts for dev content; exclude paths? (count fails, non-sequential on Linux)
-* GLFW - add window icon (NativeWindowSettings.Icon = Image @ 256x256 RGBA)
+* make a Proto video (1080x1920)
 * Local - why does living room PC no longer see Spotify tracks?
 * Local - check living room PC's TCP relay service
+* Allow `--load` and `--playlist` switches work at initial launch
+* viz byline support
+* website banner text
+* on-screen instructions in standby mode
+* at quit-to-standby show run duration and log size
+* Linux - figure out .deb packaging and hosting a package repo
+* Releases - comprehensive one-shot build script?
 * Linux - change to event model for track changes?
 * Windows - https://github.com/DubyaDude/WindowsMediaController
 * Linux - detect when media player changes
+* Paylist - auto-advance on track change (after WMC & DBus support)
 * Linux - terminal-hiding support (X11 only?)
 * Linux - TCP relay service?
 * OMT Streaming https://github.com/openmediatransport
@@ -51,9 +52,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Refuse to run a streaming-oriented FX if a streaming viz is running?
 * Global error logger via system.appdomain.unhandledexception event
 * eyecandy - add Eyecandy.ShaderCompiler error logging category
-* repo - rework TestContent layout
-* Test mode - show keys on screen
-* Test mode - abort when `--load` or similar commands are issued
 * Use Spout sender to debug intermediate buffers?
 * Document using VLC / NDI (or VLC / Spout?) to create an RTSP feed
 * Modernize with GL Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
@@ -62,6 +60,8 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * monkey-see-monkey-do - relay delay time
 * monkey-see-monkey-do - add utility command(s)
 * Logo overlay support (random and playlist)
+* Test mode - Failed crossfade compile crashes test mode; finds config but not cached
+* config - `DisableCrossfadeCache` option (vs cache size for other shader types)
 * Installer - configtest switch (creates sample conf)
 * Installer - Start menu link to edit .conf
 * Installer - Start menu link to view mhh.log and msmd.log
@@ -74,7 +74,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers
 * Hotkey to popup list of common hotkeys
-* Startup crashes if no audio device available? (ex. RDP disables audio); use synthetic audio?
 * Allow aliasing multipass uniform names for reusable utility frag shaders
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)

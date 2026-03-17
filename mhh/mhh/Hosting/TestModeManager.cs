@@ -17,7 +17,12 @@ public class TestModeManager : IDisposable
     /// <summary>
     /// The viz or FX conf filename, or a crossfade frag filename to test.
     /// </summary>
-    public string Filename;
+    public string TestFilename;
+
+    /// <summary>
+    /// The complete pathname of the test target.
+    /// </summary>
+    public string TestPathname;
 
     /// <summary>
     /// A list of visualizer or FX filenames to test against.
@@ -70,32 +75,37 @@ public class TestModeManager : IDisposable
     public TestModeManager(TestMode mode, string filename)
     {
         Mode = mode;
-        Filename = filename;
+        TestFilename = filename;
+        
         switch (mode)
         {
             case TestMode.Viz:
             {
-                TestContent = PathHelper.GetConfigFiles(Program.AppConfig.FXPath).Skip(Program.AppConfig.TestingSkipFXCount).ToList();
+                TestPathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, TestFilename);
+                var paths = FilteredPathList(Program.AppConfig.FXPath);
+                TestContent = PathHelper.GetConfigFiles(paths);
                 break;
             }
 
             case TestMode.FX:
             {
-                TestContent = PathHelper.GetConfigFiles(Program.AppConfig.VisualizerPath).Skip(Program.AppConfig.TestingSkipVizCount).ToList();
+                TestPathname = PathHelper.FindConfigFile(Program.AppConfig.FXPath, TestFilename);
+                var paths = FilteredPathList(Program.AppConfig.VisualizerPath);
+                TestContent = PathHelper.GetConfigFiles(paths);
                 break;
             }
 
             case TestMode.Fade:
             {
-                var fragPathname = PathHelper.FindFile(Program.AppConfig.CrossfadePath, PathHelper.MakeFragFilename(filename));
-                if (string.IsNullOrEmpty(fragPathname))
+                var TestPathname = PathHelper.FindFile(Program.AppConfig.CrossfadePath, PathHelper.MakeFragFilename(filename));
+                if (string.IsNullOrEmpty(TestPathname))
                 {
                     mode = TestMode.None;
                     break;
                 }
 
-                var key = CachedShader.KeyFrom(ApplicationConfiguration.PassthroughVertexPathname, fragPathname);
-                CrossfadeShader = Caching.CrossfadeShaders.FirstOrDefault(s => s.Key.Equals(key)) ?? new(ApplicationConfiguration.PassthroughVertexPathname, fragPathname); ;
+                var key = CachedShader.KeyFrom(ApplicationConfiguration.PassthroughVertexPathname, TestPathname);
+                CrossfadeShader = Caching.CrossfadeShaders.FirstOrDefault(s => s.Key.Equals(key)) ?? new(ApplicationConfiguration.PassthroughVertexPathname, TestPathname); ;
                 if (!CrossfadeShader.IsValid)
                 {
                     mode = TestMode.None;
@@ -104,7 +114,8 @@ public class TestModeManager : IDisposable
                     break;
                 }
 
-                TestContent = PathHelper.GetConfigFiles(Program.AppConfig.VisualizerPath).Skip(Program.AppConfig.TestingSkipVizCount).ToList();
+                var paths = FilteredPathList(Program.AppConfig.VisualizerPath);
+                TestContent = PathHelper.GetConfigFiles(paths);
                 break;
             }
         }
@@ -133,30 +144,33 @@ public class TestModeManager : IDisposable
             }
             case TestMode.Viz:
             {
-                message = $"Testing Viz: {Filename}\nShowing FX:  ";
+                message = $"Testing Viz: {TestFilename}\nShowing FX: ";
                 break;
             }
 
             case TestMode.FX:
             {
-                message = $"Testing FX:  {Filename}\nShowing Viz: ";
+                message = $"Testing FX: {TestFilename}\nShowing Viz: ";
                 break;
             }
 
             case TestMode.Fade:
             {
-                message = $"Testing crossfade: {Filename}\nShowing Viz: ";
+                message = $"Testing crossfade: {TestFilename}\nShowing Viz: ";
                 break;
             }
         }
         
         if(ContentIndex == -1)
         {
-            message += "(press +/- to begin testing)";
+            message += "\n(press +/- to begin testing)";
         }
         else
         {
-            message += $"{TestContent[ContentIndex]} ({ContentIndex + 1}/{TestContent.Count})";
+            message += $@"{TestContent[ContentIndex]} ({ContentIndex + 1}/{TestContent.Count})
++/- show next/prev combo
+ R  reload test shader
+ Q  quit testing";
         }
         return message;
     }
@@ -196,29 +210,41 @@ public class TestModeManager : IDisposable
     /// </summary>
     public void EndTest()
     {
-        Dispose();
+        // this calls HostWindow.AbortTestMode which calls Dispose
         Program.AppWindow.Command_Idle();
     }
 
+    private string FilteredPathList(string pathspec)
+    {
+        var exclusions = PathHelper.GetIndividualPaths(Program.AppConfig.TestingExcludePaths).ToList();
+        var targets = pathspec.Split(Path.PathSeparator, Const.SplitOptions)
+            .Where(p => !exclusions.Any(e => p.StartsWith(e)));
+        var result = string.Join(Path.PathSeparator, targets);
+        return result;
+    }
+    
     private void QueueTestContent()
     {
         switch (Mode)
         {
             case TestMode.Viz:
             {
-                Program.ProcessSwitches(["--load", Filename, TestContent[ContentIndex]]);
+                var contentPathname = PathHelper.FindConfigFile(Program.AppConfig.FXPath, TestContent[ContentIndex]);
+                Program.AppWindow.Command_Load(TestPathname, contentPathname, forTestMode: true);
                 break;
             }
 
             case TestMode.FX:
             {
-                Program.ProcessSwitches(["--load", TestContent[ContentIndex], Filename]);
+                var contentPathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, TestContent[ContentIndex]);
+                Program.AppWindow.Command_Load(contentPathname, TestPathname, forTestMode: true);
                 break;
             }
 
             case TestMode.Fade:
             {
-                Program.ProcessSwitches(["--load", TestContent[ContentIndex]]);
+                var contentPathname = PathHelper.FindConfigFile(Program.AppConfig.VisualizerPath, TestContent[ContentIndex]);
+                Program.AppWindow.Command_Load(contentPathname, forTestMode: true);
                 break;
             }
         }
@@ -231,7 +257,7 @@ public class TestModeManager : IDisposable
         Mode = TestMode.None;
         ContentIndex = -1;
         TestContent = null;
-        Filename = null;
+        TestFilename = null;
         if(CrossfadeShader is not CachedShader) CrossfadeShader?.Dispose();
         CrossfadeShader = null;
         RenderManager.TextManager.Clear();
