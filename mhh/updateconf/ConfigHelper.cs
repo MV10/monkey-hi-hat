@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 // Types borrowed from the Windows installer directory
 using mhhinstall;
@@ -24,6 +25,8 @@ namespace updateconf;
 
 public static class ConfigHelper
 {
+    static readonly string osSectionKey = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux";
+
     static readonly string confPathname = Path.Combine(Program.programPath, "mhh.conf");
 
     // [section]=(name, content)
@@ -90,8 +93,8 @@ public static class ConfigHelper
         Output.Write("-- Copying mhh.conf to mhh.conf.bak in the application directory.");
         File.Copy(confPathname, Path.Combine(Program.programPath, "mhh.conf.bak"), overwrite: true);
 
-        // Code below invokes the config update starting with the version
-        // already found on the machine. Each should "chain" to the next one.
+        // Code below invokes the config update starting with the version already present.
+        // Each should "chain" to the next update function. Add a commented-out placeholder at the end.
         switch(Program.versionFound.ToString(3))
         {
             case "3.1.0":
@@ -139,8 +142,12 @@ public static class ConfigHelper
             // new install. Version 5.3.0 is the first possible version that
             // can be updated on Linux.
             
-            //case "5.2.0":
-            //    From_520_to_XXX();
+            case "5.2.0":
+                From_520_to_530();
+                break;
+            
+            //case "5.3.0":
+            //    From_530_to_XXX();
             //    break;
 
             default:
@@ -435,9 +442,28 @@ SkipX11Check=false
 
 #########################################################################");
         
-        //From_520_to_XXX();
+        From_520_to_530();
     }
 
+    static void From_520_to_530()
+    {
+        Output.Write("-- v5.2.0 to v5.3.0 changes:");
+        
+        AddSetting("linux", "SkipX11Check", "Linux TestingExcludePaths", @"
+# Typically only needed for MHH developers; this lets --test mode disregard shaders
+# in the specified paths (ie. the ""testcontent"" directory in the source repository).
+# Any listed paths are treated as roots, all subdirectories are ignored as well.
+TestingExcludePaths=");
+        
+        AddSetting("windows", "SpoutReceiveInvert", "Windows TestingExcludePaths", @"
+# Typically only needed for MHH developers; this lets --test mode disregard shaders
+# in the specified paths (ie. the ""testcontent"" directory in the source repository).
+# Any listed paths are treated as roots, all subdirectories are ignored as well.
+TestingExcludePaths=");
+        
+        // From_530_to_XXX();
+    }
+    
     /////////////////////////////////////////////////////////////////////////////////////////////////////
     // These define the change operations that the update functions can register to apply.
     /////////////////////////////////////////////////////////////////////////////////////////////////////
