@@ -10,6 +10,7 @@ TARGET="/tmp/mhhpkg"
 PUBLISH="/data/Source/monkey-hi-hat/mhh/mhh/bin/Release/net10.0/win-x64"
 MSMD="/data/Source/monkey-see-monkey-do/msmd/msmd/bin/publish/win-x64"
 INSTALLER="/data/Source/monkey-hi-hat/mhh/install/bin/Release/install.exe"
+UPDATECONF="/data/Source/monkey-hi-hat/mhh/updateconf/bin/Release/net10.0/win-x64"
 CONTENT="/data/Source/volts-laboratory"
 
 if [ ! -d "$PUBLISH" ]; then
@@ -39,6 +40,15 @@ if [ ! -f "$INSTALLER" ]; then
   exit 1
 fi
 
+if [ ! -d "$UPDATECONF" ]; then
+  echo ""
+  echo "ERROR:"
+  echo "updateconf published release build directory not found."
+  echo "Expected: $UPDATECONF"
+  echo ""
+  exit 1
+fi
+
 echo ""
 echo "======================================================="
 echo "Packaging Monkey Hi Hat v$1 (Windows build)" | sed 's/-/./g'
@@ -54,8 +64,11 @@ rm "$PUBLISH"/CppSharp*.dll || true
 rm "$PUBLISH"/libCppSharp*.so || true
 rm "$PUBLISH"/README_LIBS.md || true
 
+echo "Merging config update utility into mhh publish directory"
+cp --update=older $UPDATECONF/* $PUBLISH/
+
 echo "Merging monkey-see-monkey-do published build into mhh publish directory"
-cp --update=none $MSMD/* $PUBLISH/
+cp --update=older $MSMD/* $PUBLISH/
 
 echo "Creating application download archive"
 echo "Source: $PUBLISH"

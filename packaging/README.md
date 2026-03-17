@@ -22,6 +22,12 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
 * TODO: Figure out Linux .deb packaging
 * TODO: Host a package source on monkeyhihat.com?
 
+### Publish Settings
+
+To view/edit publish settings: Run menu -> Edit configurations
+
+JetBrains Rider stores publishing profiles different from Visual Studio, which creates XML files under `Properties\PublishProfiles`. Locally they're buried in the `.idea` folder which isn't visible in the IDE. In the repo these are saved in the `.run` directory with the `mhh` project.
+
 ## Updating Third-Party Dependencies
 
 ### FFmpeg
@@ -64,15 +70,12 @@ The easiest way to run the scripts from within Rider is to open the "attached" l
 * Add any new-install config changes to `updateconf/ConfigHelper.NewWindowsInstall`
 * Add any version-based config changes to `updateconf/ConfigHelper.Update`
 * Build `install.exe` (Release build)
-
- 
-* Build `updateconf` ...
-
-
-
-* Publishing (Solution -> mhh -> right click -> Publish)
-  * Publish mhh Windows release build (`bin/Release/net8.0/win-x64`)
-  * Publish mhh Linux release build (`bin/Release/net8.0/linux-x64`)
+* Publish updateconf (Solution -> updateconf -> right click -> publish)
+  * updateconf-release-windows-x64 (`bin/Release/net10.0/win-x64`)
+  * updateconf-release-linux-x64 (`bin/Release/net10.0/linux-x64`)
+* Publish mhh (Solution -> mhh -> right click -> Publish)
+  * mhh-release-windows-x64 (`bin/Release/net10.0/win-x64`)
+  * mhh-release-linux-x64 (`bin/Release/net10.0/linux-x64`)
 
 ### Scripted Packaging
 

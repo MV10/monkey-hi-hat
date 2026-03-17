@@ -20,15 +20,16 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### Version and Changelog
 
-* 5.2.0 released 2025-12-07
+* 5.2.0 released 2025-12-07 (content 5.2.0, textures 5.2.0)
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
  
-* 5.3.0 WIP
+* 5.3.0 WIP (content 5.2.0, textures 5.2.0)
 * Update runtime version to .NET 10
+* MSMD service - updated to .NET 10
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued
-* Test Content - remove SLN folder, use directory via Rider "attached" section
-* Test Content - add `TestingExcludePaths` to `[linux]` and `[windows]` sections
+* Test content - remove SLN folder, use directory via Rider "attached" section
+* Test content - add `TestingExcludePaths` to `[linux]` and `[windows]` sections
 * Config - remove `TestingSkipVizCount` and `TestingSkipFXCount`
 * Added a window icon (rep the monkey!)
 * Linux - add update script and install/update terminal-output logging
@@ -37,10 +38,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 
 ### Work In Progress
 
-* Modify ConfigHelper for v5.3.0 config changes (win/linux)
-* Build and package everything
-* Test Windows fresh install and update
-* Test Linux fresh install and update
+* 
 
 ### MHH TODO
 
