@@ -89,7 +89,7 @@ namespace mhhinstall
             // update mhh.conf
             Output.Separator();
             Output.Write("Updating existing configuration file...");
-            var exe = $"{Installer.programPath}\\updateconf.exe {Installer.versionFound}";
+            var exe = $"\"{Installer.programPath}\\updateconf.exe\" {Installer.versionFound}";
             External.ExecuteCmd(exe);
 
             Output.Write("");

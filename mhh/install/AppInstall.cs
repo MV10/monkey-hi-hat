@@ -106,7 +106,7 @@ namespace mhhinstall
             // copy mhh.conf template and add path specs
             Output.Separator();
             Output.Write("Initializing configuration file...");
-            var exe = $"{Installer.programPath}\\updateconf.exe";
+            var exe = $"\"{Installer.programPath}\\updateconf.exe\"";
             External.ExecuteCmd(exe);
 
             // give write permissions on all app/content to the Users group

@@ -18,23 +18,11 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 /data/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net10.0
 
 
-### Version and Changelog
+### Version and Changelog Notes
 
 * 5.2.0 released 2025-12-07 (content 5.2.0, textures 5.2.0)
-* https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
- 
-* 5.3.0 WIP (content 5.2.0, textures 5.2.0)
-* Update runtime version to .NET 10
-* MSMD service - updated to .NET 10
-* Test mode - show keys on screen
-* Test mode - abort when `--load` or similar commands are issued
-* Test content - remove SLN folder, use directory via Rider "attached" section
-* Test content - add `TestingExcludePaths` to `[linux]` and `[windows]` sections
-* Config - remove `TestingSkipVizCount` and `TestingSkipFXCount`
-* Added a window icon (rep the monkey!)
-* Linux - add update script and install/update terminal-output logging
-* Installers - cross-platform `updateconf` project to update confing file
-* Solution - added `packaging` and `testcontent` as non-build content projects
+* 5.3.0 released 2026-03-17 (content 5.2.0, textures 5.2.0)
+
 
 ### Work In Progress
 

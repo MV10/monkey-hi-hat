@@ -18,10 +18,10 @@ namespace mhhinstall
         public static readonly string programUrl = "https://www.monkeyhihat.com/installer_assets/mhh-win-5-3-0.zip";
         //                                                                                               ^ update version
 
-        public static readonly string contentUrl = "https://www.monkeyhihat.com/installer_assets/mhh-content-5-3-0.zip";
+        public static readonly string contentUrl = "https://www.monkeyhihat.com/installer_assets/mhh-content-5-2-0.zip";
         //                                                                                                   ^ update version
 
-        public static readonly string textureUrl = "https://www.monkeyhihat.com/installer_assets/mhh-texture-5-3-0.zip";
+        public static readonly string textureUrl = "https://www.monkeyhihat.com/installer_assets/mhh-texture-5-2-0.zip";
         //                                                                                                   ^ update version
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
