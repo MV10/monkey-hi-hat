@@ -14,15 +14,25 @@ APPDIR="$HOME/monkeyhihat"
 CONTENTDIR="$HOME/mhh-content"
 SOURCE="https://www.monkeyhihat.com/installer_assets"
 TARGET="/tmp/mhhpkg"
+LOGFILE="/tmp/mhh-update.log"
 APPARCHIVE="mhh-linux-$APPVERSION.zip"
 CONTENTARCHIVE="mhh-content-$CONTENTVERSION.zip"
 TEXTUREARCHIVE="mhh-texture-$TEXTUREVERSION.zip"
 NDIARCHIVE="ndi-6-2-1.zip"
-DOTNETVERSION="8"
+DOTNETVERSION="10"
+
+# existing version found
+MAJOR=1 MINOR=0 BUILD=0
+
+# abort if any command fails
+set -euo pipefail
+
+# output everything to a log file
+exec > >(tee -a "$LOGFILE") 2>&1
 
 # abort if app / content directories do not exist
 if [ ! -d "$APPDIR" ] || [ ! -d "$CONTENTDIR" ]; then
-  echo "App and/or content directories not found. Use 'update.sh' instead."
+  echo "App and/or content directories not found. Use the installer script instead."
   echo "App: $APPDIR"
   echo "Content: $CONTENTDIR"
   exit 1
@@ -31,13 +41,13 @@ fi
 # abort if wget is not installed
 if [ ! -x /usr/bin/wget ]; then
     # additional check if wget is not installed at the usual place
-    command -v wget >/dev/null 2>&1 || { echo >&2 "Please install wget, then run install again."; exit 1; }
+    command -v wget >/dev/null 2>&1 || { echo >&2 "Please install wget, then run update again."; exit 1; }
 fi
 
 # abort if unzip is not installed
 if [ ! -x /usr/bin/unzip ]; then
     # additional check if wget is not installed at the usual place
-    command -v unzip >/dev/null 2>&1 || { echo >&2 "Please install unzip, then run install again."; exit 1; }
+    command -v unzip >/dev/null 2>&1 || { echo >&2 "Please install unzip, then run update again."; exit 1; }
 fi
 
 # abort if DOTNETVERSION (major version) is not installed
@@ -61,19 +71,27 @@ fi
 
 # abort if FFmpeg is not installed
 if ! command -v ffmpeg >/dev/null 2>&1; then
-    echo "Please install FFmpeg as follows, then run install again:" >&2
+    echo "Please install FFmpeg as follows, then run update again:" >&2
     echo "sudo apt-get update && sudo apt-get install -y ffmpeg"
     exit 1
 fi
 
-# abort if any command fails
-set -e
+# get existing version
+if [[ -f "$APPDIR/ConfigFiles/version.txt" ]]; then
+    if IFS=. read -r maj min bld _ < "$APPDIR/ConfigFiles/version.txt" 2>/dev/null; then
+        [[ $maj =~ ^[0-9]+$ ]] && MAJOR=$maj
+        [[ $min =~ ^[0-9]+$ ]] && MINOR=$min
+        [[ $bld =~ ^[0-9]+$ ]] && BUILD=$bld
+    fi
+fi
 
 # all checks passed, begin installation
 echo ""
 echo "======================================================="
-echo "Updating to Monkey Hi Hat v$APPVERSION" | sed 's/-/./g'
+echo "Updating to Monkey Hi Hat v$MAJOR.$MINOR.$BUILD to v$APPVERSION" | sed 's/-/./g'
 echo "======================================================="
+
+echo "Logging to $LOGFILE"
 
 echo "Preparing target directory"
 rm -rf "$TARGET" || true
@@ -102,9 +120,11 @@ mkdir "$CONTENTDIR"
 echo "Cleaning up temporary files..."
 rm -rf "$TARGET"
 
+echo "Updating the config file..."
+( cd $APPDIR ; ./"updateconf $MAJOR.$MINOR.$BUILD" )
+
 echo "======================================================="
-echo "Update completed. You must manually update the config"
-echo "file (mhh.conf). Review the changes for this release:"
-echo "https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog"
+echo "Update completed. Review the changes for this release:"
+echo "https://www.monkeyhihat.com/docs/index.php#/changelog"
 echo "======================================================="
 echo ""

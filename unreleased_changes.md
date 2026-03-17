@@ -24,22 +24,31 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * https://github.com/MV10/monkey-hi-hat/wiki/12.-Changelog
  
 * 5.3.0 WIP
+* Update runtime version to .NET 10
 * Test mode - show keys on screen
 * Test mode - abort when `--load` or similar commands are issued
 * Test Content - remove SLN folder, use directory via Rider "attached" section
 * Test Content - add `TestingExcludePaths` to `[linux]` and `[windows]` sections
 * Config - remove `TestingSkipVizCount` and `TestingSkipFXCount`
 * Added a window icon (rep the monkey!)
-
+* Linux - add update script and install/update terminal-output logging
+* Installers - cross-platform `updateconf` project to update confing file
 
 ### Work In Progress
- 
-* 
+
+* Modify ConfigHelper for v5.3.0 config changes (win/linux)
+* Build and package everything
+* Test Windows fresh install and update
+* Test Linux fresh install and update
 
 ### MHH TODO
 
-* Make a Proto video (1080x1920)
-* Write "update config" utility to run after install for both Linux and Windows?
+* make a Proto video (1080x1920)
+* Allow `--load` and `--playlist` switches work at initial launch
+* viz byline support
+* website banner text
+* on-screen instructions in standby mode
+* at quit-to-standby show run duration and log size
 * Linux - figure out .deb packaging and hosting a package repo
 * Releases - csproj conditional copy based on OS build target
 * Local - why does living room PC no longer see Spotify tracks?

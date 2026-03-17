@@ -7,7 +7,7 @@ if [[ -z "$INVOKED_BY_PACKAGE" ]]; then
 fi
 
 TARGET="/tmp/mhhpkg"
-PUBLISH="/data/Source/monkey-hi-hat/mhh/mhh/bin/Release/net8.0/win-x64"
+PUBLISH="/data/Source/monkey-hi-hat/mhh/mhh/bin/Release/net10.0/win-x64"
 MSMD="/data/Source/monkey-see-monkey-do/msmd/msmd/bin/publish/win-x64"
 INSTALLER="/data/Source/monkey-hi-hat/mhh/install/bin/Release/install.exe"
 CONTENT="/data/Source/volts-laboratory"

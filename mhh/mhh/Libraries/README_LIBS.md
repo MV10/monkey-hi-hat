@@ -1,20 +1,14 @@
 
-# Monkey Hi Hat Third-Party Libraries
+# Third-Party Libraries
 
 In addition to the usual NuGet software libraries, MHH relies upon non-NuGet third-party libraries.  All libraries distributed with or installed by the application are provided in accordance with the third-party owners' licensing terms.
 
-## Windows
+## NDI Streaming Support
 
-The FFmpeg libraries installed by the Windows application are unmodified official binaries.
+The NDI files are directly included in the repo and are in this Libraries directory for dev and test purposes. Because they are large and change infrequently, for installation purposes the app .bin archives (which are just a renamed .zip file) exclude them. They are available to the installers as a separate .bin download.
 
-Developers working on the source code should read the MHH wiki, but the short version is, put the FFmpeg DLLs somewhere in your path. Personally I maintain a specific directory (`C:\Source\_libraries_in_path`) for this purpose.
+## FFMpeg Video Support
 
-Because the NDI files are large and change infrequently, the Windows installer application .bin files (which is just a renamed .zip file) excludes them. They are available to the installer as a separate .bin download.
+The FFmpeg libraries installed by the Windows application are unmodified official binaries. Developers working on the source code should read the MHH docs, but the short version is, put the FFmpeg DLLs somewhere in your path. Personally I maintain a specific directory (`C:\Source\_libraries_in_path`) for this purpose.
 
-## Linux
-
-As I write this, I haven't yet tackled Linux installation, but I hope to provide a .deb package.
-
-The FFmpeg libraries needed by Linux should be installed from official package sources. If I provide a .deb file, it will simply declare a dependency on FFmpeg.
-
-There is no packaged download available for NDI files. Most likely they will be bundled with the .deb package.
+As I write this, I haven't yet tackled fully-automated Linux installation, but I hope to provide a .deb package. The FFmpeg libraries needed by Linux should be installed from official package sources. If I provide a .deb file, it will simply declare a dependency on FFmpeg.

@@ -15,7 +15,7 @@ As of the latest release, there are around _**4,000 combinations**_ of visualiza
 
 Playlists and many of the visualizations are customizable. The program and all content is 100% free. It's very stable and trouble-free, I have let it run 24 hours with no crashes or memory leaks.
 
-I encourage shader programmers to contribute new visualizations; see [Creating Visualizations](https://github.com/MV10/monkey-hi-hat/wiki/05.-Creating-Visualizations) in the wiki. If you're a .NET programmer and want to work on bugs or features, see [Contributor's Getting Started](https://github.com/MV10/monkey-hi-hat/wiki/13.-Contributor's-Getting-Started) in the wiki.
+I encourage shader programmers to contribute new visualizations; see [Creating Visualizations](https://www.monkeyhihat.com/docs/index.php#/creating-visualizations) in the docs. If you're a .NET programmer and want to work on bugs or features, see [Contributor's Getting Started](https://www.monkeyhihat.com/docs/index.php#/contributors-getting-started) in the docs.
 
 See thumbnails like the one below in the Volt's Laboratory [wiki](https://github.com/MV10/volts-laboratory/wiki):
 
@@ -24,7 +24,7 @@ See thumbnails like the one below in the Volt's Laboratory [wiki](https://github
 
 ## Requirements and Usage
 
-Download and run the installer from the [release](https://github.com/MV10/monkey-hi-hat/releases) page, then read the [documentation home page](https://github.com/MV10/monkey-hi-hat/wiki) for a quick step-by-step first-run walk-through. The docs range from basic usage to advanced customization.
+Download and run the installer from the [release](https://github.com/MV10/monkey-hi-hat/releases) page, then read the [documentation intro page](https://www.monkeyhihat.com/docs/index.php#/introduction) for a quick step-by-step first-run walk-through. The docs range from basic usage to advanced customization.
 
 > Please understand there is no "user interface" -- the program is designed to run full screen, and to be controlled from _another_ PC or Android device. Remote control is optimal but not mandatory, see the _Related Material_ section at the end of this page for details. The general idea is to get it running and let it do its thing.
 

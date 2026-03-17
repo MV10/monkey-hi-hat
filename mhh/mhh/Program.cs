@@ -714,7 +714,7 @@ All switches are passed to the already-running instance:
 
 --devices                   list audio device names, can be used when MHH is not running
 
---streaming                 streaming commands control Spout / NDI; refer to the wiki for details
+--streaming                 streaming commands control Spout / NDI; refer to the docs for details
 --streaming status
 --streaming send spout|ndi [""sender name""]
 --streaming receive spout ""source name""
