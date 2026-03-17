@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.Build.NoTargets/3.7.134">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+
+  <!-- Include every document in the folder (Markdown, docs, images, JSON, etc.) -->
+  <ItemGroup>
+    <None Include="**/*.*"
+          Exclude="bin/**;obj/**;*.csproj;*.user"
+          Visible="true" />
+    <!-- Or use <Content Include="**/*.*" ... /> if you want them copied on build -->
+  </ItemGroup>
+</Project>

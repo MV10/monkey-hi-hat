@@ -33,6 +33,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 * Added a window icon (rep the monkey!)
 * Linux - add update script and install/update terminal-output logging
 * Installers - cross-platform `updateconf` project to update confing file
+* Solution - added `packaging` and `testcontent` as non-build content projects
 
 ### Work In Progress
 
@@ -44,15 +45,15 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
 ### MHH TODO
 
 * make a Proto video (1080x1920)
+* Local - why does living room PC no longer see Spotify tracks?
+* Local - check living room PC's TCP relay service
 * Allow `--load` and `--playlist` switches work at initial launch
 * viz byline support
 * website banner text
 * on-screen instructions in standby mode
 * at quit-to-standby show run duration and log size
 * Linux - figure out .deb packaging and hosting a package repo
-* Releases - csproj conditional copy based on OS build target
-* Local - why does living room PC no longer see Spotify tracks?
-* Local - check living room PC's TCP relay service
+* Releases - comprehensive one-shot build script?
 * Linux - change to event model for track changes?
 * Windows - https://github.com/DubyaDude/WindowsMediaController
 * Linux - detect when media player changes
