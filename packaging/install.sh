@@ -22,7 +22,7 @@
 APPDIR="$HOME/monkeyhihat"
 CONTENTDIR="$HOME/mhh-content"
 SOURCE="https://www.monkeyhihat.com/installer_assets"
-TARGET="/tmp/mhhpkg"
+TARGET="/tmp/mhhinstall"
 LOGFILE="/tmp/mhh-install.log"
 APPARCHIVE="mhh-linux-$APPVERSION.zip"
 CONTENTARCHIVE="mhh-content-$CONTENTVERSION.zip"
@@ -106,16 +106,16 @@ rm -rf "$TARGET" || true
 mkdir "$TARGET"
 
 echo "Downloading app archive..."
-( cd $TARGET ; wget "$SOURCE/$APPARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$APPARCHIVE" )
 
 echo "Downloading streaming support..."
-( cd $TARGET ; wget "$SOURCE/$NDIARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$NDIARCHIVE" )
 
 echo "Downloading content archive..."
-( cd $TARGET ; wget "$SOURCE/$CONTENTARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$CONTENTARCHIVE" )
 
 echo "Downloading texture archive..."
-( cd $TARGET ; wget "$SOURCE/$TEXTUREARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$TEXTUREARCHIVE" )
 
 echo "Expanding archives..."
 mkdir "$APPDIR"

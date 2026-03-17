@@ -13,7 +13,7 @@
 APPDIR="$HOME/monkeyhihat"
 CONTENTDIR="$HOME/mhh-content"
 SOURCE="https://www.monkeyhihat.com/installer_assets"
-TARGET="/tmp/mhhpkg"
+TARGET="/tmp/mhhinstall"
 LOGFILE="/tmp/mhh-update.log"
 APPARCHIVE="mhh-linux-$APPVERSION.zip"
 CONTENTARCHIVE="mhh-content-$CONTENTVERSION.zip"
@@ -21,8 +21,10 @@ TEXTUREARCHIVE="mhh-texture-$TEXTUREVERSION.zip"
 NDIARCHIVE="ndi-6-2-1.zip"
 DOTNETVERSION="10"
 
-# existing version found
-MAJOR=1 MINOR=0 BUILD=0
+# init version number segments
+MAJOR=0
+MINOR=0
+BUILD=0
 
 # abort if any command fails
 set -euo pipefail
@@ -77,11 +79,20 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
 fi
 
 # get existing version
-if [[ -f "$APPDIR/ConfigFiles/version.txt" ]]; then
-    if IFS=. read -r maj min bld _ < "$APPDIR/ConfigFiles/version.txt" 2>/dev/null; then
-        [[ $maj =~ ^[0-9]+$ ]] && MAJOR=$maj
-        [[ $min =~ ^[0-9]+$ ]] && MINOR=$min
-        [[ $bld =~ ^[0-9]+$ ]] && BUILD=$bld
+version_file="$APPDIR/ConfigFiles/version.txt"
+if [[ -s "$version_file" && -r "$version_file" ]]; then
+
+    # read content using encoding that automatically removes Windows byte-order-mark (BOM)
+    # if present, then just in case, also remove ordinary whitespace
+    line=$(<"$version_file" tr -d '[:space:]')
+
+    # explicitly remove UTF-8 BOM in case the shell / tr did not handle it
+    line=${line#$'\xef\xbb\xbf'}
+
+    if [[ -n "$line" ]] && IFS=. read -r maj min bld _ <<< "$line"; then
+        [[ $maj =~ ^[0-9]+$ && -n "$maj" ]] && MAJOR="$maj"
+        [[ $min =~ ^[0-9]+$ && -n "$min" ]] && MINOR="$min"
+        [[ $bld =~ ^[0-9]+$ && -n "$bld" ]] && BUILD="$bld"
     fi
 fi
 
@@ -98,20 +109,18 @@ rm -rf "$TARGET" || true
 mkdir "$TARGET"
 
 echo "Downloading app archive..."
-( cd $TARGET ; wget "$SOURCE/$APPARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$APPARCHIVE" )
 
 echo "Downloading streaming support..."
-( cd $TARGET ; wget "$SOURCE/$NDIARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$NDIARCHIVE" )
 
 echo "Downloading content archive..."
-( cd $TARGET ; wget "$SOURCE/$CONTENTARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$CONTENTARCHIVE" )
 
 echo "Downloading texture archive..."
-( cd $TARGET ; wget "$SOURCE/$TEXTUREARCHIVE" )
+( cd $TARGET ; wget --no-verbose --show-progress --progress=bar:force:noscroll "$SOURCE/$TEXTUREARCHIVE" )
 
 echo "Expanding archives..."
-mkdir "$APPDIR"
-mkdir "$CONTENTDIR"
 ( cd $APPDIR ; unzip -oqq "$TARGET/$APPARCHIVE" )
 ( cd $APPDIR ; unzip -oqq "$TARGET/$NDIARCHIVE" )
 ( cd $CONTENTDIR ; unzip -oqq  "$TARGET/$CONTENTARCHIVE")
@@ -121,7 +130,7 @@ echo "Cleaning up temporary files..."
 rm -rf "$TARGET"
 
 echo "Updating the config file..."
-( cd $APPDIR ; ./"updateconf $MAJOR.$MINOR.$BUILD" )
+( cd $APPDIR ; ./updateconf "$MAJOR.$MINOR.$BUILD" )
 
 echo "======================================================="
 echo "Update completed. Review the changes for this release:"

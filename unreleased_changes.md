@@ -14,8 +14,8 @@ Remember to set an env var to always use `mhh.debug.conf`:
   export MONKEY_HI_HAT_CONFIG=/data/Source/monkey-hi-hat/mhh/mhh/ConfigFiles/mhh.debug.conf
   (logout)
 
-C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net8.0
-/data/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net8.0
+C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
+/data/Source/monkey-hi-hat/mhh/mhh/bin/x64/Debug/net10.0
 
 
 ### Version and Changelog
