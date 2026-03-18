@@ -23,10 +23,11 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * 5.2.0 released 2025-12-07 (content 5.2.0, textures 5.2.0)
 * 5.3.0 released 2026-03-17 (content 5.2.0, textures 5.2.0)
 
-
 ### Work In Progress
+* 5.4.0 WIP (content 5.4.0, textures 5.2.0)
 
-* 
+* Optional byline display for visuzalizers (config `ShowVizByline`, false by default)
+ 
 
 ### MHH TODO
 
@@ -34,8 +35,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Local - why does living room PC no longer see Spotify tracks?
 * Local - check living room PC's TCP relay service
 * Allow `--load` and `--playlist` switches work at initial launch
-* viz byline support
-* website banner text
+* banner text (business name, mhh website, etc) with configurable interval
 * on-screen instructions in standby mode
 * at quit-to-standby show run duration and log size
 * Linux - figure out .deb packaging and hosting a package repo

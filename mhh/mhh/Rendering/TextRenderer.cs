@@ -21,6 +21,7 @@ public class TextRenderer : IRenderer
     public string InvalidReason { get; set; } = string.Empty;
     public string Filename { get; } = string.Empty;
     public string Description { get; } = string.Empty;
+    public string Byline { get; } = string.Empty;
 
     public GLResourceGroup OutputBuffers { get => null; }
     public Vector2 Resolution { get => RenderingHelper.ClientSize; }

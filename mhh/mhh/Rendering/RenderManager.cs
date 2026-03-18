@@ -267,21 +267,29 @@ render res : {rez}";
         var primary = (ActiveRenderer is CrossfadeRenderer)
             ? (ActiveRenderer as CrossfadeRenderer).NewRenderer
             : (NewRenderer is null) ? ActiveRenderer : NewRenderer;
-
+        
         if (primary is FXRenderer)
         {
             var fx = primary as FXRenderer;
-            return
+            return 
 $@"{fx.PrimaryRenderer.Filename.Replace("_", " ")}
 {fx.PrimaryRenderer.Description}
 
 FX {fx.Filename.Replace("_", " ")}
 {fx.Description}";
         }
-
+       
         return
 $@"{primary.Filename.Replace("_", " ")}
-{primary.Description}";
+{primary.Description}{GetByline(primary)}";
+    }
+
+    private string GetByline(IRenderer renderer)
+    {
+        if (renderer is FXRenderer) return string.Empty;
+        return (Program.AppConfig.ShowVizBylines && renderer.Byline.Length > 0)
+            ? $"\n{renderer.Byline}"
+            : string.Empty;
     }
 
     private void CrossfadeCompleted()

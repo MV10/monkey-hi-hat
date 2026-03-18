@@ -13,6 +13,7 @@ public class CrossfadeRenderer : IRenderer
     public string InvalidReason { get; set; } = string.Empty;
     public string Filename { get; } = string.Empty;
     public string Description { get; } = string.Empty;
+    public string Byline { get; } = string.Empty;
 
     // During crossfade, the Crossfade class becomes the RenderManager.ActiveRenderer.
     // Upon completion, RenderManager retrieves NewRenderer and makes it ActiveRenderer.
