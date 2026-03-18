@@ -26,7 +26,8 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 ### Work In Progress
 * 5.4.0 WIP (content 5.4.0, textures 5.2.0)
 
-* Optional byline display for visuzalizers (config `ShowVizByline`, false by default)
+* Optional byline display for visuzalizers (config `ShowVizByline=true`)
+* Optional bottom-row banners (config `ShowTextBanners=true`, and `[text-banners]` section)
 * Command `--show grid` now reflects `TextBufferX` and `TextBufferY` dimensions
 * Fixed minor text rendering bug with newline in right-most cell
  

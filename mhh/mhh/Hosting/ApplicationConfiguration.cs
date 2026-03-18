@@ -76,7 +76,9 @@ public class ApplicationConfiguration : IConfigSource
     public readonly SyntheticDataAlgorithm SyntheticAlgorithm = SyntheticDataAlgorithm.MetronomeBeat;
 
     public bool ShowPlaylistPopups; // not readonly, can be toggled at runtime
-    public bool ShowVizBylines;
+    public readonly bool ShowVizBylines;
+    public readonly bool ShowTextBanners;
+    public string[] TextBanners; // not readonly, will be shuffled at runtime
 
     public readonly int PopupVisibilitySeconds;
     public readonly int PopupFadeMilliseconds;
@@ -175,7 +177,10 @@ public class ApplicationConfiguration : IConfigSource
         SpoutReceiveInvert = ConfigSource.ReadValue("windows", "SpoutReceiveInvert").ToBool(true);
 
         ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
-        ShowVizBylines = ConfigSource.ReadValue("text", "ShowVizBylines").ToBool(false);
+        ShowVizBylines = ConfigSource.ReadValue("text", "ShowVizBylines").ToBool(true);
+        ShowTextBanners = ConfigSource.ReadValue("text", "ShowTextBanners").ToBool(true);
+        TextBanners = ConfigSource.SequentialSection("text-banners").ToArray();
+        
         PopupVisibilitySeconds = ConfigSource.ReadValue("text", "PopupVisibilitySeconds").ToInt32(5);
         PopupFadeMilliseconds = ConfigSource.ReadValue("text", "PopupFadeMilliseconds").ToInt32(1000);
         OverlayPermanent = ConfigSource.ReadValue("text", "OverlayPermanent").ToBool(false);

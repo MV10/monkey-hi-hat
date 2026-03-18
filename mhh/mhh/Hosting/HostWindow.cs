@@ -420,8 +420,11 @@ public class HostWindow : BaseWindow, IDisposable
 
                 if (Program.AppConfig.ShowPlaylistPopups 
                     && Playlist?.ActivePlaylist is not null
-                    && QueuedFXConfig is null) 
-                    RenderManager.TextManager.SetPopupText(Renderer.GetPopupText());
+                    && QueuedFXConfig is null)
+                {
+                    RenderManager.TextManager.SetPopupText(Renderer.GetPopupPlaylistText());
+                    RenderManager.AddPopupTextBanner();
+                }
             }
 
             if (QueuedFXConfig is not null && Renderer.ApplyFX(QueuedFXConfig))
@@ -431,7 +434,10 @@ public class HostWindow : BaseWindow, IDisposable
 
                 if (Program.AppConfig.ShowPlaylistPopups
                     && Playlist?.ActivePlaylist is not null)
-                    RenderManager.TextManager.SetPopupText(Renderer.GetPopupText());
+                {
+                    RenderManager.TextManager.SetPopupText(Renderer.GetPopupPlaylistText());
+                    RenderManager.AddPopupTextBanner();
+                }
             }
 
             if (exit) return;
@@ -709,7 +715,7 @@ playlist   : {Playlist.GetInfo()}";
         switch (flag.ToLowerInvariant())
         {
             case "viz":
-                RenderManager.TextManager.SetOverlayText(Renderer.GetPopupText);
+                RenderManager.TextManager.SetOverlayText(Renderer.GetPopupPlaylistText);
                 break;
 
             case "stats":
@@ -729,11 +735,11 @@ playlist   : {Playlist.GetInfo()}";
                 return $"ACK (popups {(Program.AppConfig.ShowPlaylistPopups ? "will be shown" : "are disabled")})";
 
             case "what":
-                RenderManager.TextManager.SetPopupText(Renderer.GetPopupText());
+                RenderManager.TextManager.SetPopupText(Renderer.GetPopupPlaylistText());
                 break;
 
             case "debug":
-                RenderManager.TextManager.SetPopupText(Renderer.GetPopupText());
+                RenderManager.TextManager.SetPopupText(Renderer.GetPopupPlaylistText());
                 break;
 
             case "toggle":
