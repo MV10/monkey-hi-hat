@@ -24,22 +24,21 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * 5.3.0 released 2026-03-17 (content 5.2.0, textures 5.2.0)
 
 ### Work In Progress
-* 5.4.0 WIP (content 5.4.0, textures 5.2.0)
-
+* 5.4.0 (content 5.4.0, textures 5.2.0)
 * Accept `--load` and `--playlist` switches at initial launch
-* Optional byline display for visuzalizers (config `ShowVizByline=true`)
-* Optional bottom-row banners (config `ShowTextBanners=true`, and `[text-banners]` section)
+* Optional byline display for visuzalizers (config `ShowVizByline=false`)
+* Optional bottom-row banners (config `ShowTextBanners=false`, and `[text-banners]` section)
 * Command `--show grid` now reflects `TextBufferX` and `TextBufferY` dimensions
-* Fixed minor text rendering bug with newline in right-most cell
+* Fixed text double-blank-line bug with newline in right-most column
  
 
 ### MHH TODO
 
-* make a Proto video (1080x1920)
+* Make a Proto video (1080x1920)
 * Local - why does living room PC no longer see Spotify tracks?
 * Local - check living room PC's TCP relay service
-* on-screen instructions in standby mode
-* at quit-to-standby show run duration and log size
+* On-screen instructions in standby mode
+* At quit-to-standby show run duration and log size
 * Linux - figure out .deb packaging and hosting a package repo
 * Releases - comprehensive one-shot build script?
 * Linux - change to event model for track changes?
@@ -79,7 +78,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
 * Add test content to intentionally generate errors
-* Use FontAtlasFilename? (update Wiki with info about generating new ones)
+* Use FontAtlasFilename? (update docs with info about generating new ones)
 * Video generation? Step-wise clocks and timers?
 
 

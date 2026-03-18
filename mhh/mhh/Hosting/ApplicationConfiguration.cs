@@ -177,8 +177,8 @@ public class ApplicationConfiguration : IConfigSource
         SpoutReceiveInvert = ConfigSource.ReadValue("windows", "SpoutReceiveInvert").ToBool(true);
 
         ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
-        ShowVizBylines = ConfigSource.ReadValue("text", "ShowVizBylines").ToBool(true);
-        ShowTextBanners = ConfigSource.ReadValue("text", "ShowTextBanners").ToBool(true);
+        ShowVizBylines = ConfigSource.ReadValue("text", "ShowVizBylines").ToBool(false);
+        ShowTextBanners = ConfigSource.ReadValue("text", "ShowTextBanners").ToBool(false);
         TextBanners = ConfigSource.SequentialSection("text-banners").ToArray();
         
         PopupVisibilitySeconds = ConfigSource.ReadValue("text", "PopupVisibilitySeconds").ToInt32(5);
