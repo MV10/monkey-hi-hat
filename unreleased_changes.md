@@ -26,6 +26,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 ### Work In Progress
 * 5.4.0 WIP (content 5.4.0, textures 5.2.0)
 
+* Accept `--load` and `--playlist` switches at initial launch
 * Optional byline display for visuzalizers (config `ShowVizByline=true`)
 * Optional bottom-row banners (config `ShowTextBanners=true`, and `[text-banners]` section)
 * Command `--show grid` now reflects `TextBufferX` and `TextBufferY` dimensions
@@ -37,15 +38,13 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * make a Proto video (1080x1920)
 * Local - why does living room PC no longer see Spotify tracks?
 * Local - check living room PC's TCP relay service
-* Allow `--load` and `--playlist` switches work at initial launch
-* banner text (business name, mhh website, etc) with configurable interval
 * on-screen instructions in standby mode
 * at quit-to-standby show run duration and log size
 * Linux - figure out .deb packaging and hosting a package repo
 * Releases - comprehensive one-shot build script?
 * Linux - change to event model for track changes?
 * Windows - https://github.com/DubyaDude/WindowsMediaController
-* Linux - detect when media player changes
+* Linux - detect when media device changes
 * Paylist - auto-advance on track change (after WMC & DBus support)
 * Linux - terminal-hiding support (X11 only?)
 * Linux - TCP relay service?
@@ -58,11 +57,10 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Use Spout sender to debug intermediate buffers?
 * Document using VLC / NDI (or VLC / Spout?) to create an RTSP feed
 * Modernize with GL Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
-* Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
+* Docs - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
 * monkey-see-monkey-do - relay delay time
 * monkey-see-monkey-do - add utility command(s)
-* Logo overlay support (random and playlist)
 * Test mode - Failed crossfade compile crashes test mode; finds config but not cached
 * config - `DisableCrossfadeCache` option (vs cache size for other shader types)
 * Installer - configtest switch (creates sample conf)
