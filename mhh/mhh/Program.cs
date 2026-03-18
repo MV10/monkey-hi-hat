@@ -690,7 +690,7 @@ All switches are passed to the already-running instance:
 --show [toggle|clear]       Switches text overlays from 10 seconds to permanent, ""clear"" removes overlay
 --show [popups|what]        ""what"" shows viz and FX names and ""popups"" toggles playlist auto-popups
 --show track                On Windows, displays most recent Spotify track info (if available)
---show grid                 Displays a 100 x 15 character grid for adjusting text settings
+--show grid                 Displays a character grid for adjusting text settings in app config
 
 --info                      writes shader and execution details to the console
 --display                   lists monitor details and the window state and coordinates

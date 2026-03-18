@@ -717,22 +717,7 @@ playlist   : {Playlist.GetInfo()}";
                 break;
 
             case "grid":
-                RenderManager.TextManager.SetOverlayText(() =>
-@"LINE 01---20xxx5xxxx30xxx5xxxx40xxx5xxxx50xxx5xxxx60xxx5xxxx70xxx5xxxx80xxx5xxxx90xxx5xxxx
-LINE 02
-LINE 03
-LINE 04
-LINE 05
-LINE 06
-LINE 07
-LINE 08
-LINE 09
-LINE 10
-LINE 11
-LINE 12
-LINE 13
-LINE 14
-LINE 15");
+                RenderManager.TextManager.SetOverlayText(GenerateTextGrid, forcePermanence:true);
                 break;
 
             case "track":
@@ -1097,6 +1082,46 @@ display res: {ClientSize.X} x {ClientSize.Y}";
         Tester = null;
     }
 
+    private string GenerateTextGrid()
+    {
+        // Produces the text grid overlay for the "--show grid" command.
+        // Format is line numbers until TextGridY height and every 5th has X axis:
+        // LINE 01--10---x----20---x----30---x---- ...until TextGridX width
+        // LINE 02
+        // LINE 03
+        // LINE 04
+        // LINE 05--10---x----20---x----30---x---- ...until TextGridX width
+
+        if (Program.AppConfig.TextBufferX < 1 || Program.AppConfig.TextBufferY < 1) return string.Empty;
+
+        var result = new StringBuilder(Program.AppConfig.TextBufferX * Program.AppConfig.TextBufferY + Program.AppConfig.TextBufferY);
+
+        for (var y = 1; y <= Program.AppConfig.TextBufferY; y++)
+        {
+            var line = new StringBuilder(Program.AppConfig.TextBufferY + 10);
+            
+            var lineNum = y % 100; // 01–99 cycling
+            line.Append($"LINE {lineNum:00}");
+
+            // Add ruler/markers on line 1 and every 5th line thereafter
+            if ((y == 1 || y % 5 == 0) && Program.AppConfig.TextBufferX > 9)
+            {
+                line.Append("--"); // line is now 9 chars long
+
+                while (line.Length < Program.AppConfig.TextBufferX)
+                {
+                    var posNum = (line.Length + 1) % 100; // 10, 20, 30 cycling
+                    line.Append($"{posNum:00}---x----"); // add 10 more, trim later
+                }
+            }
+
+            // Keep this line up to the max line width
+            result.AppendLine(line.ToString(0, int.Min(line.Length, Program.AppConfig.TextBufferX)));
+        }
+
+        return result.ToString().TrimEnd('\r', '\n');
+    }
+    
     public new void Dispose()
     {
         if (IsDisposed) return;

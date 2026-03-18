@@ -196,14 +196,23 @@ public class TextManager : IDisposable
         int row = starting_row;
         int col = 0;
         int i = starting_row * Dimensions.X;
+        
+        // Since it auto-wraps to the next line when col == Dimensions.X, 
+        // avoid unintentional blank line edge-case if next character is
+        // a newline and previous character already forced a line wrap.
+        bool previousCharWrapped = false;
 
         foreach (char c in content)
         {
             if (c == NewLineChar)
             {
-                TextBuffer[i] = NewLineFlag;
-                row++;
-                col = 0;
+                if (!previousCharWrapped)
+                {
+                    TextBuffer[i] = NewLineFlag;
+                    row++;
+                    col = 0;
+                }
+                previousCharWrapped = false;
             }
             else
             {
@@ -213,6 +222,11 @@ public class TextManager : IDisposable
                 {
                     row++;
                     col = 0;
+                    previousCharWrapped = true;
+                }
+                else
+                {
+                    previousCharWrapped = false;
                 }
             }
             i = row * Dimensions.X + col;
