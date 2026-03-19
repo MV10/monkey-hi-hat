@@ -40,13 +40,14 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Fixed bug where numeric keypad right-arrow and down-arrow were being ignored
 * Allow escape key to terminate app in standby mode
 * Added "What Now?" on-screen instructions in standby mode
+* Move config template (`ConfigFiles/mhh.conf`) comments to website documentation section
+
 
 ### MHH TODO
 
 * Make a Proto video (1080x1920)
 * Local - why does living room PC no longer see Spotify tracks?
 * Local - check living room PC's TCP relay service
-* Move config file comments to website documentation section
 * Linux - figure out .deb packaging and hosting a package repo
 * Releases - comprehensive one-shot build script?
 * Linux - change to event model for track changes?
