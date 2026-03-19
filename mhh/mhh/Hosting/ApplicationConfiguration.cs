@@ -189,7 +189,7 @@ public class ApplicationConfiguration : IConfigSource
         OutlineWeight = ConfigSource.ReadValue("text", "OutlineWeight").ToFloat(0.55f);
         TextBufferX = ConfigSource.ReadValue("text", "TextBufferX").ToInt32(100);
         TextBufferY = ConfigSource.ReadValue("text", "TextBufferY").ToInt32(10);
-        FontAtlasFilename = ConfigSource.ReadValue("text", "FontAtlasFilename");
+        FontAtlasFilename = ConfigSource.ReadValue("text", "FontAtlasFilename").DefaultString("font.png");
         CharacterSize = ConfigSource.ReadValue("text", "CharacterSize").ToFloat(0.02f);
         PositionX = ConfigSource.ReadValue("text", "PositionX").ToFloat(-0.96f);
         PositionY = ConfigSource.ReadValue("text", "PositionY").ToFloat(0.52f);

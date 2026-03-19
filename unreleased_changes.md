@@ -30,6 +30,8 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Optional bottom-row banners (config `ShowTextBanners=false`, and `[text-banners]` section)
 * Command `--show grid` now reflects `TextBufferX` and `TextBufferY` dimensions
 * Fixed text double-blank-line bug with newline in right-most column
+* Honor custom font texture in `FontAtlasFilename` (update docs with info about generating new ones)
+* Sample custom font texture `Font Kode Mono 1024x1024.png`, use `OutlineWeight=0.62`
  
 
 ### MHH TODO
@@ -78,7 +80,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
 * Add test content to intentionally generate errors
-* Use FontAtlasFilename? (update docs with info about generating new ones)
 * Video generation? Step-wise clocks and timers?
 
 
