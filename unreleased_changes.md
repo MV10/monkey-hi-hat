@@ -28,11 +28,16 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Accept `--load` and `--playlist` switches at initial launch
 * Optional byline display for visuzalizers (config `ShowVizByline=false`)
 * Optional bottom-row banners (config `ShowTextBanners=false`, and `[text-banners]` section)
-* Command `--show grid` now reflects `TextBufferX` and `TextBufferY` dimensions
 * Fixed text double-blank-line bug with newline in right-most column
 * Honor custom font texture in `FontAtlasFilename` (update docs with info about generating new ones)
-* Sample custom font texture `Font Kode Mono 1024x1024.png`, use `OutlineWeight=0.62`
- 
+  * Sample custom font texture `Font Kode Mono 1024x1024.png`, use `OutlineWeight=0.62`
+  * The original Shadertoy font generator is [here](https://evanw.github.io/font-texture-generator/)
+  * Generate custom fonts [here](https://timmaffett.github.io/shadertoy_fontgen/generate_sdf.html)
+  * Typically you should stick to monospaced fonts
+  * Use a custom texture directory (remember updating MHH _replaces_ the `mhh-content` directories)
+* Command `--show grid` now reflects `TextBufferX` and `TextBufferY` dimensions
+* Implemented log limits: max ten 5MB files, retained 7 days, no longer wipes old logs at startup
+
 
 ### MHH TODO
 
@@ -40,7 +45,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Local - why does living room PC no longer see Spotify tracks?
 * Local - check living room PC's TCP relay service
 * On-screen instructions in standby mode
-* At quit-to-standby show run duration and log size
+* Move config file comments to website documentation section
 * Linux - figure out .deb packaging and hosting a package repo
 * Releases - comprehensive one-shot build script?
 * Linux - change to event model for track changes?
@@ -50,8 +55,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Linux - terminal-hiding support (X11 only?)
 * Linux - TCP relay service?
 * OMT Streaming https://github.com/openmediatransport
-* On-screen warning when log file reaches a certain size (with persistence options)
-* Limit maximum log file size
 * Refuse to run a streaming-oriented FX if a streaming viz is running?
 * Global error logger via system.appdomain.unhandledexception event
 * eyecandy - add Eyecandy.ShaderCompiler error logging category

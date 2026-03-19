@@ -39,7 +39,9 @@ public static class LogHelper
             PathHelper.ExpandLinuxHomeDirectory(ref logPath);
         }
         logPath = Path.GetFullPath(logPath);
-        if (!alreadyRunning && File.Exists(logPath)) File.Delete(logPath);
+        
+        // v5.4.0 let the file logger's settings handle cleanup / retention
+        //if (!alreadyRunning && File.Exists(logPath)) File.Delete(logPath);
 
         var cfg = new LoggerConfiguration();
 
@@ -49,7 +51,17 @@ public static class LogHelper
         cfg.MinimumLevel.ControlledBy(LevelSwitch);
 
         // Configure outputs
-        cfg.WriteTo.Async(a => a.File(logPath, shared: true, outputTemplate: OUTPUT_TEMPLATE));
+        cfg.WriteTo.Async(a => a.File(
+            path: logPath, 
+            shared: true, 
+            outputTemplate: OUTPUT_TEMPLATE,
+            fileSizeLimitBytes: 5 * 1024 * 1024,
+            rollingInterval: RollingInterval.Infinite,
+            rollOnFileSizeLimit: true,
+            retainedFileCountLimit: 10,
+            retainedFileTimeLimit: TimeSpan.FromDays(7)
+            ));
+        
         if (appConfig.ReadValue("setup", "logtoconsole").ToBool(false))
         {
             cfg.WriteTo.Console(outputTemplate: OUTPUT_TEMPLATE);
@@ -73,13 +85,6 @@ public static class LogHelper
             }
             return true;
         });
-        //foreach (var cat in allow)
-        //{
-        //    cfg.Filter.ByIncludingOnly(e => 
-        //        e.Properties.ContainsKey("SourceContext") 
-        //        && e.Properties["SourceContext"].ToString()
-        //            .StartsWith(cat, Const.CompareFlags));
-        //}
 
         // Get this party started
         LoggerFactory = new SerilogLoggerFactory(cfg.CreateLogger(), dispose: true);
