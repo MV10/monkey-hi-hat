@@ -339,14 +339,14 @@ public class HostWindow : BaseWindow, IDisposable
         }
 
         // Right-arrow for next in playlist
-        if (input.IsKeyReleased(Keys.Right))
+        if (input.IsKeyReleased(Keys.Right) || input.IsKeyReleased(Keys.KeyPad6))
         {
             Command_PlaylistNext(temporarilyIgnoreSilence: true);
             return;
         }
 
         // Down-arrow for next FX during playlist
-        if (input.IsKeyReleased(Keys.Down))
+        if (input.IsKeyReleased(Keys.Down) || input.IsKeyReleased(Keys.KeyPad2))
         {
             Command_PlaylistNextFX();
             return;

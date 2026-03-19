@@ -37,7 +37,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
   * Use a custom texture directory (remember updating MHH _replaces_ the `mhh-content` directories)
 * Command `--show grid` now reflects `TextBufferX` and `TextBufferY` dimensions
 * Implemented log limits: max ten 5MB files, retained 7 days, no longer wipes old logs at startup
-
+* Fixed bug where numeric keypad right-arrow and down-arrow were being ignored
 
 ### MHH TODO
 
