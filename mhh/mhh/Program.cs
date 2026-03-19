@@ -112,6 +112,10 @@ public class Program
                 {
                     if (OnStandby)
                     {
+                        if (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
+                        {
+                            AppRunning = false;
+                        }
                         Thread.Yield();
                     }
                     else

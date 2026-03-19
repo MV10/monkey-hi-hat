@@ -38,6 +38,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Command `--show grid` now reflects `TextBufferX` and `TextBufferY` dimensions
 * Implemented log limits: max ten 5MB files, retained 7 days, no longer wipes old logs at startup
 * Fixed bug where numeric keypad right-arrow and down-arrow were being ignored
+* Allow escape key to terminate app in standby mode
 
 ### MHH TODO
 
