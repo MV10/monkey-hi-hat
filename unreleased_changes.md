@@ -39,13 +39,13 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Implemented log limits: max ten 5MB files, retained 7 days, no longer wipes old logs at startup
 * Fixed bug where numeric keypad right-arrow and down-arrow were being ignored
 * Allow escape key to terminate app in standby mode
+* Added "What Now?" on-screen instructions in standby mode
 
 ### MHH TODO
 
 * Make a Proto video (1080x1920)
 * Local - why does living room PC no longer see Spotify tracks?
 * Local - check living room PC's TCP relay service
-* On-screen instructions in standby mode
 * Move config file comments to website documentation section
 * Linux - figure out .deb packaging and hosting a package repo
 * Releases - comprehensive one-shot build script?

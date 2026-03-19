@@ -557,11 +557,34 @@ public class Program
 
     private static void ShowAppInfo()
     {
+        var sampleCommands = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "  cd \\Program Files\\mhh\n  mhh --help\n  mhh --playlist variety"
+            : "  cd ~/monkeyhihat\n  ./mhh --help\n  ./mhh --playlist variety";
+        
         var tcp = (AppConfig.UnsecuredPort == 0) ? "disabled" : AppConfig.UnsecuredPort.ToString();
         Console.Clear();
         Console.WriteLine($"\nMonkey Hi Hat {VersionNumber}\n");
         Console.WriteLine($"Process ID {Environment.ProcessId}");
         Console.WriteLine($"Listening on TCP port {tcp}");
+        Console.WriteLine(@$"
+What Now?
+Monkey Hi Hat is running which means it's waiting for commands.
+There are several options to send commands to the program.
+
+Console or SSH
+Open a new console window or connect via SSH and run a command:
+
+{sampleCommands}
+
+Windows PC or Android phone
+Download and run the monkey-droid remote control app from the Release page.
+
+Documentation
+Find walk-throughs and troublshooting docs at https://www.monkeyhihat.com/
+
+Support / Questions
+Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
+");
     }
 
     private static void LogExceptionMessage(Exception ex)
