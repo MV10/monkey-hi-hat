@@ -46,7 +46,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 ### MHH TODO
 
 * Make a Proto video (1080x1920)
-* Local - why does living room PC no longer see Spotify tracks?
 * Local - check living room PC's TCP relay service
 * Linux - figure out .deb packaging and hosting a package repo
 * Releases - comprehensive one-shot build script?
@@ -63,7 +62,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Use Spout sender to debug intermediate buffers?
 * Document using VLC / NDI (or VLC / Spout?) to create an RTSP feed
 * Modernize with GL Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
-* Docs - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
 * monkey-see-monkey-do - relay delay time
 * monkey-see-monkey-do - add utility command(s)
