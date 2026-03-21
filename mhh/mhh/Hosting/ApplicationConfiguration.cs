@@ -179,7 +179,19 @@ public class ApplicationConfiguration : IConfigSource
         ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
         ShowVizBylines = ConfigSource.ReadValue("text", "ShowVizBylines").ToBool(false);
         ShowTextBanners = ConfigSource.ReadValue("text", "ShowTextBanners").ToBool(false);
-        TextBanners = ConfigSource.SequentialSection("text-banners").ToArray();
+
+        var banners = ConfigSource.SequentialSection("text-banners");
+        if (banners.Count > 0)
+        {
+            // SuppressInternalBanners is an undocumented setting
+            var suppress = ConfigSource.ReadValue("text","SuppressInternalBanners").ToBool(defaultValue: false);
+            if(!suppress)
+            {
+                banners.Add("Monkey Hi Hat: The Best Free Music Visualizer");
+                banners.Add("https://www.MonkeyHiHat.com/");
+            }
+        }
+        TextBanners = banners.ToArray();
         
         PopupVisibilitySeconds = ConfigSource.ReadValue("text", "PopupVisibilitySeconds").ToInt32(5);
         PopupFadeMilliseconds = ConfigSource.ReadValue("text", "PopupFadeMilliseconds").ToInt32(1000);

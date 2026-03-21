@@ -55,7 +55,7 @@ public static class Extensions
     /// Config sections with content not in the key=value format use a sequential integer as the key. This
     /// returns a List of string values ordered by that key.
     /// </summary>
-    public static IReadOnlyList<string> SequentialSection(this ConfigFile config, string section)
+    public static List<string> SequentialSection(this ConfigFile config, string section)
         => (config.Content.ContainsKey(section.ToLower()))
         ? config.Content[section.ToLower()].OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value).ToList()
         : new();
