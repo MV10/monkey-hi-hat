@@ -30,11 +30,13 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Optional bottom-row banners (config `ShowTextBanners=false`, and `[text-banners]` section)
 * Fixed text double-blank-line bug with newline in right-most column
 * Honor custom font texture in `FontAtlasFilename` (update docs with info about generating new ones)
-  * Sample custom font texture `Font Kode Mono 1024x1024.png`, use `OutlineWeight=0.62`
+  * Changed the built-in font to Nova Mono (Shadertoy font is in textures directory) 
+  * Sample custom font textures:
+    * `Font Kode Mono 1024x1024.png`, uses `OutlineWeight=0.62`
+    * `Font Nova Mono 1024x1024.png`, uses `OutlineWeight=0.62`
   * The original Shadertoy font generator is [here](https://evanw.github.io/font-texture-generator/)
-  * Generate custom fonts [here](https://timmaffett.github.io/shadertoy_fontgen/generate_sdf.html)
-  * Typically you should stick to monospaced fonts
-  * Use a custom texture directory (remember updating MHH _replaces_ the `mhh-content` directories)
+  * Generate custom fonts with the improved fork [here](https://timmaffett.github.io/shadertoy_fontgen/generate_sdf.html)
+  * Use a custom texture directory (remember: updating MHH _replaces_ the `mhh-content` directories)
 * Command `--show grid` now reflects `TextBufferX` and `TextBufferY` dimensions
 * Implemented log limits: max ten 5MB files, retained 7 days, no longer wipes old logs at startup
 * Fixed bug where numeric keypad right-arrow and down-arrow were being ignored
