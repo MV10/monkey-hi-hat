@@ -79,7 +79,9 @@ public class Program
     public static IOSInterop OSInterop;
     
     // these will be accepted when MHH is not running
-    private static string[] NonRunningCommands = { "--help", "--devices" };
+    private static readonly string[] ImmediateOutputSwitches = { "--help", "--devices" };
+    private static readonly string[] AutoStartSwitches = { "--load", "--playlist" };
+    private static string[] stagedAutoStartSwitches = new string[0];
 
     // cancel this to terminate the switch server's named pipe.
     private static CancellationTokenSource ctsSwitchPipe;
@@ -110,6 +112,10 @@ public class Program
                 {
                     if (OnStandby)
                     {
+                        if (Console.KeyAvailable && Console.ReadKey(true).Key == ConsoleKey.Escape)
+                        {
+                            AppRunning = false;
+                        }
                         Thread.Yield();
                     }
                     else
@@ -404,10 +410,17 @@ public class Program
             Console.WriteLine(ShowHelp());
             return false; // end program
         }
-        if (args.Length > 0 && Array.Exists(NonRunningCommands, cmd => cmd.Equals(args[0].ToLowerInvariant())))
+        if (args.Length > 0)
         {
-            ProcessNonRunningSwitches(args);
-            return false; // end program
+            // just save auto-start switches for later
+            if (Array.Exists(AutoStartSwitches, cmd => cmd.Equals(args[0].ToLowerInvariant()))) stagedAutoStartSwitches = args;
+
+            // immediately process these and exit
+            if (Array.Exists(ImmediateOutputSwitches, cmd => cmd.Equals(args[0].ToLowerInvariant())))
+            {
+                ProcessNonRunningSwitches(args);
+                return false; // end program
+            }
         }
 
         // Parse the application configuration file
@@ -424,9 +437,9 @@ public class Program
         }
 
         // Disallow other switches at startup of first instance
-        if (!alreadyRunning && args.Length > 0)
+        if (!alreadyRunning && stagedAutoStartSwitches.Length == 0 && args.Length > 0)
         {
-            Console.WriteLine($"\nOnly these switches are valid when the program is not already running:\n  {string.Join("\n  ", NonRunningCommands)}");
+            Console.WriteLine($"\nOnly these switches are valid when the program is not already running:\n  {string.Join("\n  ", ImmediateOutputSwitches)}\n  {string.Join("\n  ", AutoStartSwitches)}");
             return false; // end program
         }
 
@@ -528,6 +541,10 @@ public class Program
 
             // Spin up the window and get the show started
             AppWindow = new(WindowConfig, AudioConfig);
+            
+            // Prime the pump with any auto-start switches (return value ignored; worst case we just go to idle)
+            if (stagedAutoStartSwitches.Length > 0) ProcessSwitches(stagedAutoStartSwitches);
+            
             AppWindow.Focus();
             AppWindow.Run(); // blocks
         }
@@ -540,11 +557,34 @@ public class Program
 
     private static void ShowAppInfo()
     {
+        var sampleCommands = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? "  cd \\Program Files\\mhh\n  mhh --help\n  mhh --playlist variety"
+            : "  cd ~/monkeyhihat\n  ./mhh --help\n  ./mhh --playlist variety";
+        
         var tcp = (AppConfig.UnsecuredPort == 0) ? "disabled" : AppConfig.UnsecuredPort.ToString();
         Console.Clear();
         Console.WriteLine($"\nMonkey Hi Hat {VersionNumber}\n");
         Console.WriteLine($"Process ID {Environment.ProcessId}");
         Console.WriteLine($"Listening on TCP port {tcp}");
+        Console.WriteLine(@$"
+What Now?
+Monkey Hi Hat is running which means it's waiting for commands.
+There are several options to send commands to the program.
+
+Console or SSH
+Open a new console window or connect via SSH and run a command:
+
+{sampleCommands}
+
+Windows PC or Android phone
+Download and run the monkey-droid remote control app from the Release page.
+
+Documentation
+Find walk-throughs and troublshooting docs at https://www.monkeyhihat.com/
+
+Support / Questions
+Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
+");
     }
 
     private static void LogExceptionMessage(Exception ex)
@@ -660,8 +700,9 @@ public class Program
 
 mhh: Monkey Hi Hat
 
-There are no startup switches, and the application always loads with the default ""idle"" shader.
-All switches are passed to the already-running instance:
+By default, the application always loads with the default ""idle"" shader and all other switches are
+are passed to the already-running instance. Only ""--help"", ""--display"", ""--load"", or ""--playlist""
+switches can be used if an instance is not already running.
 
 --help                      shows help (surprise!)
 --quit                      ends the program
@@ -690,7 +731,7 @@ All switches are passed to the already-running instance:
 --show [toggle|clear]       Switches text overlays from 10 seconds to permanent, ""clear"" removes overlay
 --show [popups|what]        ""what"" shows viz and FX names and ""popups"" toggles playlist auto-popups
 --show track                On Windows, displays most recent Spotify track info (if available)
---show grid                 Displays a 100 x 15 character grid for adjusting text settings
+--show grid                 Displays a character grid for adjusting text settings in app config
 
 --info                      writes shader and execution details to the console
 --display                   lists monitor details and the window state and coordinates

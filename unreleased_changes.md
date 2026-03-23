@@ -22,47 +22,36 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 
 * 5.2.0 released 2025-12-07 (content 5.2.0, textures 5.2.0)
 * 5.3.0 released 2026-03-17 (content 5.2.0, textures 5.2.0)
-
+* 5.4.0 released 2026-03-23 (content 5.4.0, textures 5.4.0)
 
 ### Work In Progress
-
 * 
+
 
 ### MHH TODO
 
-* make a Proto video (1080x1920)
-* Local - why does living room PC no longer see Spotify tracks?
+* Make a Proto video (1080x1920)
 * Local - check living room PC's TCP relay service
-* Allow `--load` and `--playlist` switches work at initial launch
-* viz byline support
-* website banner text
-* on-screen instructions in standby mode
-* at quit-to-standby show run duration and log size
 * Linux - figure out .deb packaging and hosting a package repo
 * Releases - comprehensive one-shot build script?
 * Linux - change to event model for track changes?
 * Windows - https://github.com/DubyaDude/WindowsMediaController
-* Linux - detect when media player changes
+* Linux - detect when media device changes
 * Paylist - auto-advance on track change (after WMC & DBus support)
 * Linux - terminal-hiding support (X11 only?)
 * Linux - TCP relay service?
 * OMT Streaming https://github.com/openmediatransport
-* On-screen warning when log file reaches a certain size (with persistence options)
-* Limit maximum log file size
 * Refuse to run a streaming-oriented FX if a streaming viz is running?
 * Global error logger via system.appdomain.unhandledexception event
 * eyecandy - add Eyecandy.ShaderCompiler error logging category
 * Use Spout sender to debug intermediate buffers?
 * Document using VLC / NDI (or VLC / Spout?) to create an RTSP feed
 * Modernize with GL Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
-* Wiki - explain OpenGL full-screen behaviors (trying to use 2nd console etc)
 * Playlist - hotkey to extend auto-advance time for current viz
 * monkey-see-monkey-do - relay delay time
 * monkey-see-monkey-do - add utility command(s)
-* Logo overlay support (random and playlist)
 * Test mode - Failed crossfade compile crashes test mode; finds config but not cached
 * config - `DisableCrossfadeCache` option (vs cache size for other shader types)
-* Installer - configtest switch (creates sample conf)
 * Installer - Start menu link to edit .conf
 * Installer - Start menu link to view mhh.log and msmd.log
 * Installer - Start menu link to notes.txt as viz credits
@@ -78,7 +67,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Randomized crossfade duration with `CrossfadeRandomMax` (0 disables)
 * Frag Quad -> remove inputs per discord convo (see OneNote TODO)
 * Add test content to intentionally generate errors
-* Use FontAtlasFilename? (update Wiki with info about generating new ones)
 * Video generation? Step-wise clocks and timers?
 
 

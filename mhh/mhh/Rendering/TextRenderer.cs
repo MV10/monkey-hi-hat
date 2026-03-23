@@ -21,6 +21,7 @@ public class TextRenderer : IRenderer
     public string InvalidReason { get; set; } = string.Empty;
     public string Filename { get; } = string.Empty;
     public string Description { get; } = string.Empty;
+    public string Byline { get; } = string.Empty;
 
     public GLResourceGroup OutputBuffers { get => null; }
     public Vector2 Resolution { get => RenderingHelper.ClientSize; }
@@ -51,11 +52,15 @@ public class TextRenderer : IRenderer
 
         TextShader = Caching.TextShader;
 
+        // When FontAtlasFilename is not specified in config, it defaults to font.png which
+        // is stored in InternalShaderPath. Custom fonts should be stored in TexturePath.
+        var searchPaths = $"{ApplicationConfiguration.InternalShaderPath}{Path.PathSeparator}{Program.AppConfig.TexturePath}";
+        
         FontTexture = RenderManager.ResourceManager.CreateContentTextures(OwnerName, 1)[0];
-        FontTexture.Filename = "font.png";
+        FontTexture.Filename = Program.AppConfig.FontAtlasFilename;
         FontTexture.UniformName = "font";
         FontTexture.WrapMode = TextureWrapMode.ClampToEdge;
-        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, ApplicationConfiguration.InternalShaderPath);
+        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, searchPaths);
 
         VertQuad = new VertexQuad();
         VertQuad.Initialize(null, TextShader); // null is safe, fragquad has no viz/fx settings and text output doesn't support textures/videos

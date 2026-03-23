@@ -12,8 +12,8 @@ uniform sampler2D base_image;
 
 // Requires a font texture which matches the antialised X-channel dimensions, content,
 // and layout used by the Shadertoy font texture. See Volt's Laboratory for a copy.
-// Untested, but this might also work: https://evanw.github.io/font-texture-generator/
-// although it would lack the SDF data in the W-channel used to create an outline.
+// This is the original source: https://evanw.github.io/font-texture-generator/
+// This allows others: https://timmaffett.github.io/shadertoy_fontgen/generate_sdf.html
 uniform sampler2D font;
 
 // Characters in a flat row,col layout per text dimensions above. Values 32 (space)

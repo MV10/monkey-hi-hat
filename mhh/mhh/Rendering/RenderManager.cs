@@ -62,6 +62,10 @@ public class RenderManager : IDisposable
 
     private string CrossfadeFragPathname = string.Empty;
 
+    // Most recently shown Program.AppConfig.TextBanners[] item
+    private static int TextBannerIndex = -1;
+    private static Random rand = new();
+
     private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(RenderManager));
 
     public RenderManager()
@@ -70,6 +74,28 @@ public class RenderManager : IDisposable
 
         ResourceManager = new();
         TextManager = new();
+    }
+
+    /// <summary>
+    /// Adds a random banner to the bottom of the TextManager buffer if ShowTextBanners
+    /// is true and a list of banner strings was provided in the app config file.
+    /// </summary>
+    public static void AddPopupTextBanner()
+    {
+        if (!Program.AppConfig.ShowTextBanners || Program.AppConfig.TextBanners.Length == 0) return;
+        if (TextBannerIndex == -1 || TextBannerIndex == Program.AppConfig.TextBanners.Length - 1)
+        {
+            TextBannerIndex = -1;
+            rand.Shuffle(Program.AppConfig.TextBanners);
+        }
+
+        TextBannerIndex++;
+        var text = Program.AppConfig.TextBanners[TextBannerIndex];
+        if (Program.AppConfig.TextBufferX < text.Length) return;
+
+        var padding = Program.AppConfig.TextBufferX / 2 - text.Length / 2;
+        text = text.PadLeft(padding + text.Length);
+        TextManager.Write(text, clear: false, starting_row:Program.AppConfig.TextBufferY - 1);
     }
 
     /// <summary>
@@ -255,33 +281,41 @@ render res : {rez}";
         return float.Clamp(result, 0.0f, 1.0f);
     }
 
-    private (string viz, string rez) GetFXInfo(FXRenderer fx)
-    {
-        var viz = $"{fx.PrimaryRenderer.Filename.Replace("_", " ")} with FX {fx.Filename.Replace("_", " ")}";
-        var rez = $"{fx.PrimaryRenderer.Resolution.X} x {fx.PrimaryRenderer.Resolution.Y}";
-        return (viz, rez);
-    }
-
-    public string GetPopupText()
+    public string GetPopupPlaylistText()
     {
         var primary = (ActiveRenderer is CrossfadeRenderer)
             ? (ActiveRenderer as CrossfadeRenderer).NewRenderer
             : (NewRenderer is null) ? ActiveRenderer : NewRenderer;
-
+        
         if (primary is FXRenderer)
         {
             var fx = primary as FXRenderer;
-            return
-$@"{fx.PrimaryRenderer.Filename.Replace("_", " ")}
+            return 
+                $@"{fx.PrimaryRenderer.Filename.Replace("_", " ")}
 {fx.PrimaryRenderer.Description}
 
 FX {fx.Filename.Replace("_", " ")}
 {fx.Description}";
         }
-
+       
         return
-$@"{primary.Filename.Replace("_", " ")}
-{primary.Description}";
+            $@"{primary.Filename.Replace("_", " ")}
+{primary.Description}{GetPopupPlaylistByline(primary)}";
+    }
+
+    private string GetPopupPlaylistByline(IRenderer renderer)
+    {
+        if (renderer is FXRenderer) return string.Empty;
+        return (Program.AppConfig.ShowVizBylines && renderer.Byline.Length > 0)
+            ? $"\n{renderer.Byline}"
+            : string.Empty;
+    }
+
+    private (string viz, string rez) GetFXInfo(FXRenderer fx)
+    {
+        var viz = $"{fx.PrimaryRenderer.Filename.Replace("_", " ")} with FX {fx.Filename.Replace("_", " ")}";
+        var rez = $"{fx.PrimaryRenderer.Resolution.X} x {fx.PrimaryRenderer.Resolution.Y}";
+        return (viz, rez);
     }
 
     private void CrossfadeCompleted()

@@ -146,7 +146,11 @@ public static class ConfigHelper
                 From_520_to_530();
                 break;
             
-            //case "5.3.0":
+            case "5.3.0":
+                From_530_to_540();
+                break;
+            
+            //case "5.4.0":
             //    From_530_to_XXX();
             //    break;
 
@@ -461,7 +465,39 @@ TestingExcludePaths=");
 # Any listed paths are treated as roots, all subdirectories are ignored as well.
 TestingExcludePaths=");
         
-        // From_530_to_XXX();
+        From_530_to_540();
+    }
+
+    static void From_530_to_540()
+    {
+        Output.Write("-- v5.3.0 to v5.4.0 changes:");
+        
+        AddSetting("text", "ShowPlaylistPopups", "new text options", "ShowVizBylines=false\nShowTextBanners=false");
+        
+        AddSection("text", "text-banners", @"# Welcome to Bob's Bar and Grill!
+# Happy Birthday Mom!
+# Congratulations to Mr. & Mrs. Jones!
+# ACME Corp celebrating 25 years of Quality Widgets!
+<< tiny monkey paws playing tiny hi-hat cymbals >>
+<< monkey see, monkey do >>
+<< more fun than a barrel of monkeys >>
+""Just a monkey with a plan...""
+""Dance, monkey, dance!""
+""Could a million Shakespeares write like a monkey?""
+""Oh sure, it's FINE when a monkey does it.""
+
+
+#########################################################################");
+
+        AddReplacement("text", "OutlineWeight=0.55", "text outline weight", "OutlineWeight=0.62");
+        AddReplacement("text", "TextBufferX=100", "text buffer X", "TextBufferX=98");
+        AddReplacement("text", "TextBufferY=10", "text buffer Y", "TextBufferY=30");
+
+        AddReplacement("text", "#OutlineWeight=0.55", "text outline weight", "OutlineWeight=0.62");
+        AddReplacement("text", "#TextBufferX=100", "text buffer X", "TextBufferX=98");
+        AddReplacement("text", "#TextBufferY=10", "text buffer Y", "TextBufferY=30");
+        
+        // From_540_to_XXX();
     }
     
     /////////////////////////////////////////////////////////////////////////////////////////////////////

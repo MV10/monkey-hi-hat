@@ -14,6 +14,7 @@ public class FXRenderer : IRenderer
     public string InvalidReason { get; set; } = string.Empty;
     public string Filename { get; private set; }
     public string Description { get; private set; }
+    public string Byline { get; } = string.Empty;
 
     public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
     private GLResourceGroup FinalDrawbuffers;

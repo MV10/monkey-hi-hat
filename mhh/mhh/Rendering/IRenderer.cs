@@ -29,6 +29,12 @@ public interface IRenderer : IConfigSource, IDisposable
     public string Description { get; }
 
     /// <summary>
+    /// If available, the attribution byline of the visualizer shader. Used
+    /// for text popups when new content is being loaded from a playlist.
+    /// </summary>
+    public string Byline { get;  }
+
+    /// <summary>
     /// Called before frame buffers are bound; next call should be to RenderFrame. Generally
     /// this should be used to update textures (such as running videos).
     /// </summary>

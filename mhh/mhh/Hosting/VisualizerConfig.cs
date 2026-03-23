@@ -19,6 +19,7 @@ public class VisualizerConfig : IConfigSource
     public ConfigFile ConfigSource { get; private set; }
 
     public readonly string Description;
+    public readonly string Byline;
     public readonly string VertexShaderPathname;
     public readonly string FragmentShaderPathname;
 
@@ -47,6 +48,7 @@ public class VisualizerConfig : IConfigSource
         ConfigSource = new ConfigFile(pathname);
 
         Description = ConfigSource.ReadValue("shader", "description");
+        Byline = ConfigSource.ReadValue("shader", "byline");
 
         var configFileLocation = Path.GetDirectoryName(ConfigSource.Pathname);
 

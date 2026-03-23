@@ -12,6 +12,7 @@ public class SimpleRenderer : IRenderer
     public string InvalidReason { get; set; } = string.Empty;
     public string Filename { get; private set; }
     public string Description { get; private set; }
+    public string Byline { get;  private set; }
 
     public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
     private GLResourceGroup FinalDrawbuffers;
@@ -52,6 +53,8 @@ public class SimpleRenderer : IRenderer
         OutputResolution = new(RenderingHelper.ClientSize.X, RenderingHelper.ClientSize.Y);
 
         Description = visualizerConfig.Description;
+        Byline = visualizerConfig.Byline;
+        
         if (Config.RandomTimeOffset != 0) ClockOffset = RNG.Next(0, Math.Abs(Config.RandomTimeOffset) + 1) * Math.Sign(Config.RandomTimeOffset);
 
         Shader = RenderingHelper.GetVisualizerShader(this, visualizerConfig);
