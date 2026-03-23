@@ -66,10 +66,10 @@ JetBrains Rider stores publishing profiles different from Visual Studio, which c
 ### Preparation
 
 * Update `mhh/ConfigFiles/version.txt` to match release number
-* Verify `ReleaseConstants.cs` has current version numbers (4 places)
+* Verify `install/ReleaseConstants.cs` has current version numbers (4 places)
 * Add any new-install config changes to `updateconf/ConfigHelper.NewWindowsInstall`
 * Add any version-based config changes to `updateconf/ConfigHelper.Update`
-* Build `install.exe` (Release build)
+* Switch to Release and build `install.exe`
 * Publish updateconf (Solution -> updateconf -> right click -> publish)
   * updateconf-release-windows-x64 (`bin/Release/net10.0/win-x64`)
   * updateconf-release-linux-x64 (`bin/Release/net10.0/linux-x64`)
@@ -79,26 +79,29 @@ JetBrains Rider stores publishing profiles different from Visual Studio, which c
 
 ### Scripted Packaging
 
-Essentially run `package.sh` and the rest is automated.
+Essentially run `package.sh` and the rest is automated:
 
 * Open a terminal and `cd` to `/data/Source/monkey-hi-hat/packaging`
 * Execute `./package.sh a-a-a b-b-b c-c-c` (versions: a=app, b=content, c=textures)
-  * Note: For app-only changes, specify the most recent content versions, ignore the .zips 
-* This performs the following operations via `media.sh`:
+* Note: For app-only changes, specify the most recent content versions, ignore the .zips 
+* All content is stored in `/tmp/mhhpkg`
+
+What it does:
+ 
+* Operations via `media.sh`:
   * Deletes any old `/tmp/mhhpkg` directory and creates a new one
   * Archives Volt's Lab shaders into `mhh-content-b-b-b.zip`
   * Archives Volt's Lab textures into `mhh-texture-c-c-c.zip`
-* This performs the following operations via `windows.sh`:
+* Operations via `windows.sh`:
   * Renames `install.exe` to `install-a-a-a.exe`
   * Deletes separately-packaged content (NDI, Spout, etc.)
   * Merges monkey-see-monkey-do published build into mhh publish directory
   * Archives `bin/Release/net8.0/win-x64` directory into `mhh-win-a-a-a.zip`
-* This performs the following operations via `linux-zip.sh`:
+* Operations via `linux-zip.sh`:
   * Deletes separately-packaged content (NDI, Spout, etc.)
   * Renames `install.sh` to `install-a-a-a.sh` and injects media version variables
   * Renames `update.sh` to `update-a-a-a.sh` and injects media version variables
   * Archives `bin/Release/net8.0/linux-x64` directory into `mhh-linux-a-a-a.zip`
-* All content is stored in `/tmp/mhhpkg`
 
 ### Deployment / Cleanup
 

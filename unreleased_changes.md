@@ -22,27 +22,10 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 
 * 5.2.0 released 2025-12-07 (content 5.2.0, textures 5.2.0)
 * 5.3.0 released 2026-03-17 (content 5.2.0, textures 5.2.0)
+* 5.4.0 released 2026-03-23 (content 5.4.0, textures 5.4.0)
 
 ### Work In Progress
-* 5.4.0 (content 5.4.0, textures 5.2.0)
-* Accept `--load` and `--playlist` switches at initial launch
-* Optional byline display for visuzalizers (config `ShowVizByline=false`)
-* Optional bottom-row banners (config `ShowTextBanners=false`, and `[text-banners]` section)
-* Fixed text double-blank-line bug with newline in right-most column
-* Honor custom font texture in `FontAtlasFilename` (update docs with info about generating new ones)
-  * Changed the built-in font to Nova Mono (Shadertoy font is in textures directory) 
-  * Sample custom font textures:
-    * `Font Kode Mono 1024x1024.png`, uses `OutlineWeight=0.62`
-    * `Font Nova Mono 1024x1024.png`, uses `OutlineWeight=0.62`
-  * The original Shadertoy font generator is [here](https://evanw.github.io/font-texture-generator/)
-  * Generate custom fonts with the improved fork [here](https://timmaffett.github.io/shadertoy_fontgen/generate_sdf.html)
-  * Use a custom texture directory (remember: updating MHH _replaces_ the `mhh-content` directories)
-* Command `--show grid` now reflects `TextBufferX` and `TextBufferY` dimensions
-* Implemented log limits: max ten 5MB files, retained 7 days, no longer wipes old logs at startup
-* Fixed bug where numeric keypad right-arrow and down-arrow were being ignored
-* Allow escape key to terminate app in standby mode
-* Added "What Now?" on-screen instructions in standby mode
-* Move config template (`ConfigFiles/mhh.conf`) comments to website documentation section
+* 
 
 
 ### MHH TODO
@@ -69,7 +52,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * monkey-see-monkey-do - add utility command(s)
 * Test mode - Failed crossfade compile crashes test mode; finds config but not cached
 * config - `DisableCrossfadeCache` option (vs cache size for other shader types)
-* Installer - configtest switch (creates sample conf)
 * Installer - Start menu link to edit .conf
 * Installer - Start menu link to view mhh.log and msmd.log
 * Installer - Start menu link to notes.txt as viz credits
