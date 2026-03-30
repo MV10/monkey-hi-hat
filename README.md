@@ -4,13 +4,14 @@
 
 Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC's speaker outputs.
 
-> * 2026-MAR-23 [Install or Update to v5.4.0](https://github.com/MV10/monkey-hi-hat/releases)
+> * 2026-APR-01 [Install or Update to v5.4.1](https://github.com/MV10/monkey-hi-hat/releases)
 > * Subscribe to [Release Notifications](https://github.com/MV10/monkey-hi-hat/issues/3) to find out about updates!
 > * New: Custom font support
 > * New: DJ / VJ features (line-in / mic support, send / receive via Spout or NDI)
 > * New: Faster dedicated install archive download via [MonkeyHiHat.com](https://www.monkeyhihat.com)
 > * New: Customizable text banners and visualization by-lines
 > * More visualizers, effects, and crossfades!
+> * Updated Monkey Droid GUI control: Android, Windows, and now with Linux support.
 
 As of the latest release, there are around _**4,000 combinations**_ of visualizations and effects, plus 17 transition (crossfade) effects! Great for DJs, parties and other events!
 
@@ -61,12 +62,12 @@ https://github.com/MV10/monkey-hi-hat/assets/794270/9e33ab83-2b93-48f2-8833-6b1c
 In my living room setup where we watch this most often, the computer running Monkey Hi Hat is meant to be hidden from view like all the other AV equipment, so remote control was an essential feature. There are four options:
 
 * Recommended: install the convenient [Monkey Droid](https://github.com/MV10/monkey-droid) GUI
+ 
+  * Packaged with each Release
+ 
+  * Now supports Windows, Android, and Linux 
 
-    * [Windows](https://github.com/MV10/monkey-hi-hat/releases/download/3.1.0/monkeydroid_1.0.1.0_x86.msix) installer
-
-    * [Android](https://github.com/MV10/monkey-hi-hat/releases/download/3.1.0/com.mindmagma.monkeydroid.apk) APK package
-
-    * See the documentation _Quick Start_ for usage instructions
+  * See the documentation _Quick Start_ for usage instructions
 
 * Command-line control is via SSH terminal connections from another device. See the documentation _Quick Start_ for details about setting up and using SSH. My systems are configured for this, but frankly Monkey Droid is so much easier to use, I never actually connect via SSH any more.
 

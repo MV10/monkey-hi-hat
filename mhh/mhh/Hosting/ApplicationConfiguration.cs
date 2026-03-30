@@ -178,10 +178,10 @@ public class ApplicationConfiguration : IConfigSource
 
         ShowPlaylistPopups = ConfigSource.ReadValue("text", "ShowPlaylistPopups").ToBool(true);
         ShowVizBylines = ConfigSource.ReadValue("text", "ShowVizBylines").ToBool(false);
-        ShowTextBanners = ConfigSource.ReadValue("text", "ShowTextBanners").ToBool(false);
 
         var banners = ConfigSource.SequentialSection("text-banners");
-        if (banners.Count > 0)
+        ShowTextBanners = ConfigSource.ReadValue("text", "ShowTextBanners").ToBool(false) && banners.Count > 0;
+        if (ShowTextBanners)
         {
             // SuppressInternalBanners is an undocumented setting
             var suppress = ConfigSource.ReadValue("text","SuppressInternalBanners").ToBool(defaultValue: false);

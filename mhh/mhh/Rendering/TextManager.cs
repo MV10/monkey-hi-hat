@@ -48,6 +48,11 @@ public class TextManager : IDisposable
     private int PopupStage = 0;
     private DateTime PopupStageStart;
     private DateTime PopupStageEnd;
+    
+    // Most recently shown Program.AppConfig.TextBanners[] item
+    private static int TextBannerIndex = -1;
+    private static Random rand = new();
+
 
     private static readonly ILogger Logger = LogHelper.CreateLogger(nameof(TextManager));
 
@@ -88,11 +93,30 @@ public class TextManager : IDisposable
     /// overlay will be cleared. In permanent mode, the popup will be
     /// ignored. Fade in/out speed is based on PopupFadeMS.
     /// </summary>
-    public void SetPopupText(string content)
+    public void SetPopupText(string content, bool addBanner = false)
     {
         if (PermanentOverlays && HasContent && PopupStage == 0) return;
         Reset();
-        Write(content);
+
+        if (!string.IsNullOrWhiteSpace(content)) Write(content);
+
+        if (addBanner)
+        {
+            if (TextBannerIndex == -1 || TextBannerIndex == Program.AppConfig.TextBanners.Length - 1)
+            {
+                TextBannerIndex = -1;
+                rand.Shuffle(Program.AppConfig.TextBanners);
+            }
+
+            TextBannerIndex++;
+            var text = Program.AppConfig.TextBanners[TextBannerIndex];
+            if (Program.AppConfig.TextBufferX < text.Length) return;
+
+            var padding = Program.AppConfig.TextBufferX / 2 - text.Length / 2;
+            text = text.PadLeft(padding + text.Length);
+            Write(text, clear: false, starting_row:Program.AppConfig.TextBufferY - 1);
+        }
+        
         PopupStage = 1;
         PopupStageStart = DateTime.Now;
         PopupStageEnd = DateTime.Now.AddMilliseconds(Program.AppConfig.PopupFadeMilliseconds);

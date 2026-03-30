@@ -12,7 +12,7 @@ namespace mhhinstall
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Update these for each app release (content and/or texture version can lag app version)
 
-        public static readonly Version appVersion = new Version("5.4.0");
+        public static readonly Version appVersion = new Version("5.4.1");
         //                                                       ^ update version
 
         public static readonly string programUrl = "https://www.monkeyhihat.com/installer_assets/mhh-win-5-4-0.zip";
