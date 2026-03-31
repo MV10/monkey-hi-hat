@@ -76,6 +76,7 @@ JetBrains Rider stores publishing profiles different from Visual Studio, which c
 * Publish mhh (Solution -> mhh -> right click -> Publish)
   * mhh-release-windows-x64 (`bin/Release/net10.0/win-x64`)
   * mhh-release-linux-x64 (`bin/Release/net10.0/linux-x64`)
+* If monkey-droid has changed, cd to the publish directory and run all three scripts
 
 ### Scripted Packaging
 
@@ -102,6 +103,9 @@ What it does:
   * Renames `install.sh` to `install-a-a-a.sh` and injects media version variables
   * Renames `update.sh` to `update-a-a-a.sh` and injects media version variables
   * Archives `bin/Release/net8.0/linux-x64` directory into `mhh-linux-a-a-a.zip`
+* Copying monkey-droid builds:
+  * Assumes the monkey-droid publish scripts have been written
+  * Copies executables and APK from the various publish output targets
 
 ### Deployment / Cleanup
 
@@ -111,11 +115,13 @@ What it does:
 * Create new Release:
   * Copy / update previous release verbiage
   * Create new vx.x.x tag
+  * Add these to the release files list:
   * Upload `/tmp/mhhpkg/install-a-a-a.exe`
   * Upload `/tmp/mhhpkg/install-a-a-a.sh`
   * Upload `/tmp/mhhpkg/update-a-a-a.sh`
-  * Upload `/tmp/mhhpkg/com.mindmagma.monkeydroid.apk` (from `/data/Source/_mhh_release_files`)
-  * Upload `/tmp/mhhpkg/monkeydroid_1.0.1.0_x86.msix` (from `/data/Source/_mhh_release_files`)
+  * Upload `/tmp/mhhpkg/com.mindmagma.monkeydroid.apk`
+  * Upload `/tmp/mhhpkg/monkeydroid.exe`
+  * Upload `/tmp/mhhpkg/monkeydroid`
   * Publish release
 * Delete temp: `rm -rf /tmp/mhhpkg`
 * Update docs on monkeyhihat.com
