@@ -372,8 +372,11 @@ public class Program
                 if (OnStandby) return "ERR: Application is in standby";
                 return AppWindow?.Command_Streaming(args);
 
-            default:
+            case "--help":
                 return ShowHelp();
+            
+            default:
+                return $"ERR: Switch {args[0].ToLowerInvariant()} unknown, try --help";
         }
     }
 
