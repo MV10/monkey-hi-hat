@@ -37,6 +37,18 @@ export INVOKED_BY_PACKAGE=1
 ./windows.sh $1 $2 $3
 ./linux-zip.sh $1 $2 $3
 
+echo ""
+echo "======================================================="
+echo "Copying monkey-droid executables"
+echo "======================================================="
+
+TARGET="/tmp/mhhpkg"
+
+cp /data/Source/monkey-droid/monkeydroid.Desktop/bin/Release/net10.0/win-x64/publish/* $TARGET
+cp /data/Source/monkey-droid/monkeydroid.Desktop/bin/Release/net10.0/linux-x64/publish/* $TARGET
+cp /data/Source/monkey-droid/monkeydroid.Android/bin/Release/net10.0-android/publish/* $TARGET
+
+echo ""
 echo "======================================================="
 echo "All packaging completed."
 echo "======================================================="

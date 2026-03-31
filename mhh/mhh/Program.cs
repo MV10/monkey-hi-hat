@@ -325,7 +325,11 @@ public class Program
 
             case "--md.detail":
                 if (args.Length != 2) return "ERR: Visualizer name or pathname required.";
-                return GetShaderDetail(GetVisualizerPathname(args[1]));
+                return GetShaderDetail(GetVisualizerPathname(args[1]), "shader");
+
+            case "--md.detailfx":
+                if (args.Length != 2) return "ERR: FX name or pathname required.";
+                return GetShaderDetail(GetFxPathname(args[1]), "fx");
 
             case "--nocache":
                 if (OnStandby) return "ERR: Application is in standby";
@@ -368,8 +372,11 @@ public class Program
                 if (OnStandby) return "ERR: Application is in standby";
                 return AppWindow?.Command_Streaming(args);
 
-            default:
+            case "--help":
                 return ShowHelp();
+            
+            default:
+                return $"ERR: Switch {args[0].ToLowerInvariant()} unknown, try --help";
         }
     }
 
@@ -622,12 +629,13 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
     private static string GetFadePathname(string fromArg)
         => PathHelper.HasPathSeparators(fromArg) ? fromArg : PathHelper.FindFile(AppConfig.CrossfadePath, PathHelper.MakeFragFilename(fromArg));
 
-    private static string GetShaderDetail(string pathname)
+    // used for both visualizers and FX
+    private static string GetShaderDetail(string pathname, string descriptionSection)
     {
-        // returns 0/1 for uses music, followed by shader:description entry
+        // returns 0/1 for uses music, followed by shader:description entry (or fx:description)
         var cfg = new ConfigFile(pathname);
         var usesAudio = cfg.Content.ContainsKey("audiotextures") ? "1" : "0";
-        var description = cfg.Content.TryGetValue("shader", out var shaderInfo)
+        var description = cfg.Content.TryGetValue(descriptionSection, out var shaderInfo)
             ? shaderInfo.TryGetValue("description", out var desc)
                 ? desc
                 : "(No description)"

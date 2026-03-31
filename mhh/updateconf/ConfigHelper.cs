@@ -150,8 +150,12 @@ public static class ConfigHelper
                 From_530_to_540();
                 break;
             
-            //case "5.4.0":
-            //    From_530_to_XXX();
+            case "5.4.0":
+                From_540_to_541();
+                break;
+
+            //case "5.4.1":
+            //    From_541_to_550();
             //    break;
 
             default:
@@ -474,7 +478,8 @@ TestingExcludePaths=");
         
         AddSetting("text", "ShowPlaylistPopups", "new text options", "ShowVizBylines=false\nShowTextBanners=false");
         
-        AddSection("text", "text-banners", @"# Welcome to Bob's Bar and Grill!
+        AddSection("text", "text-banners", @"[text-banners]
+# Welcome to Bob's Bar and Grill!
 # Happy Birthday Mom!
 # Congratulations to Mr. & Mrs. Jones!
 # ACME Corp celebrating 25 years of Quality Widgets!
@@ -497,7 +502,13 @@ TestingExcludePaths=");
         AddReplacement("text", "#TextBufferX=100", "text buffer X", "TextBufferX=98");
         AddReplacement("text", "#TextBufferY=10", "text buffer Y", "TextBufferY=30");
         
-        // From_540_to_XXX();
+        From_540_to_541();
+    }
+
+    static void From_540_to_541()
+    {
+        // no config changes in 5.4.1
+        // From_541_to_550();
     }
     
     /////////////////////////////////////////////////////////////////////////////////////////////////////

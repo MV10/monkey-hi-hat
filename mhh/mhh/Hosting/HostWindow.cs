@@ -418,12 +418,10 @@ public class HostWindow : BaseWindow, IDisposable
                 QueuedCrossfadePathname = string.Empty;
                 exit = true;
 
-                if (Program.AppConfig.ShowPlaylistPopups 
-                    && Playlist?.ActivePlaylist is not null
-                    && QueuedFXConfig is null)
+                if (Playlist?.ActivePlaylist is not null && QueuedFXConfig is null)
                 {
-                    RenderManager.TextManager.SetPopupText(Renderer.GetPopupPlaylistText());
-                    RenderManager.AddPopupTextBanner();
+                    var popup = Program.AppConfig.ShowPlaylistPopups ? Renderer.GetPopupPlaylistText() : string.Empty; 
+                    RenderManager.TextManager.SetPopupText(popup, Program.AppConfig.ShowTextBanners);
                 }
             }
 
@@ -432,11 +430,10 @@ public class HostWindow : BaseWindow, IDisposable
                 QueuedFXConfig = null;
                 exit = true;
 
-                if (Program.AppConfig.ShowPlaylistPopups
-                    && Playlist?.ActivePlaylist is not null)
+                if (Playlist?.ActivePlaylist is not null)
                 {
-                    RenderManager.TextManager.SetPopupText(Renderer.GetPopupPlaylistText());
-                    RenderManager.AddPopupTextBanner();
+                    var popup = Program.AppConfig.ShowPlaylistPopups ? Renderer.GetPopupPlaylistText() : string.Empty; 
+                    RenderManager.TextManager.SetPopupText(popup, Program.AppConfig.ShowTextBanners);
                 }
             }
 

@@ -23,6 +23,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * 5.2.0 released 2025-12-07 (content 5.2.0, textures 5.2.0)
 * 5.3.0 released 2026-03-17 (content 5.2.0, textures 5.2.0)
 * 5.4.0 released 2026-03-23 (content 5.4.0, textures 5.4.0)
+* 5.4.1 released 2026-04-01 (content 5.4.0, textures 5.4.0)
 
 ### Work In Progress
 * 
@@ -31,13 +32,16 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 ### MHH TODO
 
 * Make a Proto video (1080x1920)
+* Monkey-Droid installers?
+* Offer to locally install Monkey-Droid alongside MHH?
+* HTTP retrieval of images / videos using Downloader library
 * Local - check living room PC's TCP relay service
 * Linux - figure out .deb packaging and hosting a package repo
 * Releases - comprehensive one-shot build script?
 * Linux - change to event model for track changes?
 * Windows - https://github.com/DubyaDude/WindowsMediaController
 * Linux - detect when media device changes
-* Paylist - auto-advance on track change (after WMC & DBus support)
+* Playlist - auto-advance on track change (after WMC & DBus support)
 * Linux - terminal-hiding support (X11 only?)
 * Linux - TCP relay service?
 * OMT Streaming https://github.com/openmediatransport
@@ -49,7 +53,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Modernize with GL Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
 * Playlist - hotkey to extend auto-advance time for current viz
 * monkey-see-monkey-do - relay delay time
-* monkey-see-monkey-do - add utility command(s)
 * Test mode - Failed crossfade compile crashes test mode; finds config but not cached
 * config - `DisableCrossfadeCache` option (vs cache size for other shader types)
 * Installer - Start menu link to edit .conf
@@ -73,7 +76,6 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 ### MHH NON-STARTERS
 
 * Video decoding on background thread: too much locking and context-switching overhead
-* Image and video retrieval over HTTP: minimal benefit and caching is too much bookkeeping
 * Rendering text once: due to fade re-renders it isn't really worth the effort
 
 
@@ -84,18 +86,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 
 ### MONKEY-DROID TODO
 
-* FUCKING REWRITE (planned for .NET 10 ... maybe MAUI doesn't suck 3 major releases later)
-* Truncates "E" on "ERR" responses; displays ERR as viz description? (maybe that's ok?)
-* Crashes if playlist tab selected with no server selected
-* Newly-added server isn't showing up (Android only?)
-* Add playlist `--next fx` button
-* Add FX tab
-* Fix Util "CLS" label on Android/narrow UI
-* Prompt for framerate lock on `--fps` button?
-* Add new command buttons:
-    * `--fullscreen`
-    * `--standby`
-    * `--console`
+* v2.0 wooo! finally!
 
 
 ### Posting Demo Videos
