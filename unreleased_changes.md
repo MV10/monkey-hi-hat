@@ -32,6 +32,8 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 ### MHH TODO
 
 * Make a Proto video (1080x1920)
+* Monkey-Droid installers?
+* Offer to locally install Monkey-Droid alongside MHH?
 * HTTP retrieval of images / videos using Downloader library
 * Local - check living room PC's TCP relay service
 * Linux - figure out .deb packaging and hosting a package repo
