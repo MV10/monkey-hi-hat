@@ -26,24 +26,23 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * 5.4.1 released 2026-04-01 (content 5.4.0, textures 5.4.0)
 
 ### Work In Progress
-* 
+* 5.5.0 WIP
+* Move testcontent/* to volts-laboratory/mhhdev/*
+* HTTP retrieval of images / videos using Downloader library
 
 
 ### MHH TODO
 
 * Make a Proto video (1080x1920)
+* Linux - test and deploy MSMD (systemd and sysvinit)
 * Monkey-Droid installers?
 * Offer to locally install Monkey-Droid alongside MHH?
-* HTTP retrieval of images / videos using Downloader library
-* Local - check living room PC's TCP relay service
 * Linux - figure out .deb packaging and hosting a package repo
-* Releases - comprehensive one-shot build script?
 * Linux - change to event model for track changes?
 * Windows - https://github.com/DubyaDude/WindowsMediaController
 * Linux - detect when media device changes
 * Playlist - auto-advance on track change (after WMC & DBus support)
 * Linux - terminal-hiding support (X11 only?)
-* Linux - TCP relay service?
 * OMT Streaming https://github.com/openmediatransport
 * Refuse to run a streaming-oriented FX if a streaming viz is running?
 * Global error logger via system.appdomain.unhandledexception event
@@ -61,7 +60,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Installer - add tcpargs utility
 * Installer - Use winget to retrieve .NET runtime
 * Installer - winget distro? https://github.com/Belphemur/SoundSwitch/issues/1220
-* Create config GUI (WinForms now available for modern .NET; Qt or GTK for Linux?)
+* Create config GUI
 * Playlist - add `[collections]` section (playlist of other playlists)
 * Add * support to [FX-Blacklist] section (and update wiki section 6)
 * Add alternate [FX-Whitelist] section for large-blacklist visualizers

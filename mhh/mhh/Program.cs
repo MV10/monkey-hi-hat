@@ -578,16 +578,16 @@ What Now?
 Monkey Hi Hat is running which means it's waiting for commands.
 There are several options to send commands to the program.
 
-Console or SSH
-Open a new console window or connect via SSH and run a command:
+PC (Windows/Linux) or Android device
+Download and run the Monkey Droid remote control GUI from the Release page.
+
+Command Line
+Open a new terminal / console window, or connect via SSH, and send commands:
 
 {sampleCommands}
 
-Windows PC or Android phone
-Download and run the monkey-droid remote control app from the Release page.
-
 Documentation
-Find walk-throughs and troublshooting docs at https://www.monkeyhihat.com/
+Find walk-throughs and troubleshooting docs at https://www.monkeyhihat.com/
 
 Support / Questions
 Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
