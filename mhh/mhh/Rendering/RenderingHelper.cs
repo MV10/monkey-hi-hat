@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using StbImageSharp;
+using StbImageResizeSharp;
 using System.Runtime.CompilerServices;
 
 namespace mhh;
@@ -200,7 +201,7 @@ public static class RenderingHelper
                         index = randSyncIndex;
                     }
                 }
-                res.Filename = tex.Value[index];
+                res.Filename = tex.Value[index]; // this may also be !http://... or http://... (or https)
 
                 res.Loaded = LoadImageFile(res);
 
@@ -216,7 +217,7 @@ public static class RenderingHelper
                 Logger?.LogTrace($"...cubemap: resource index {resourceIndex}");
                 var res = resources[resourceIndex++];
                 res.UniformName = tex.Key;
-                res.Filename = tex.Value[rand.Next(tex.Value.Count)];
+                res.Filename = tex.Value[rand.Next(tex.Value.Count)]; // this may also be !http://... or http://... (or https)
                 res.TextureTarget = TextureTarget.TextureCubeMap;
                 res.Loaded = LoadImageFile(res);
 
@@ -259,10 +260,13 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Prepares a texture resource with the file identified in GLImageTexture.
+    /// Prepares a texture resource with the file identified in GLImageTexture (which may include setting
+    /// a placeholder during HTTP download, and/or using the cached version while downloading a newer one)
     /// </summary>
     public static bool LoadImageFile(GLImageTexture tex, string pathspec = "")
     {
+        if (PathHelper.IsHttpTextureFilename(tex.Filename)) return LoadHttpImage(tex);
+        
         Logger?.LogDebug($"{nameof(LoadImageFile)} loading {tex.Filename}");
 
         var success = true;
@@ -432,6 +436,59 @@ public static class RenderingHelper
     public static string MakeOwnerName(string usage, [CallerFilePath] string owner = "")
         => $"{Path.GetFileNameWithoutExtension(owner)} {usage} {DateTime.Now:yyyy-MM-dd HH:mm:ss.ffff}";
 
+    /// <summary>
+    /// Populates a 2D texture or cubemap from an STB ImageResult object. Typically called after downloading.
+    /// Note these ImageResults are assumed to be "unflipped" (origin at top left, not OpenGL's bottom left).
+    /// </summary>
+    public static void LoadFromImageResult(GLImageTexture tex, ImageResult image)
+    {
+        if (tex.TextureTarget == TextureTarget.Texture2D) Load2DBuffer(tex, image);
+        if (tex.TextureTarget == TextureTarget.TextureCubeMap) LoadCubemapBuffer(tex, image);
+    }
+    
+    // always returns true (successful) because placeholder texture is always available
+    private static bool LoadHttpImage(GLImageTexture tex)
+    {
+        Logger?.LogDebug($"{nameof(LoadHttpImage)} loading {tex.Filename}");
+
+        var image = Caching.HttpTexturePlaceholder;
+        
+        var alwaysDownload = tex.Filename.StartsWith('!');
+        var sourceUrl = alwaysDownload
+            ? tex.Filename.Substring(1)
+            : tex.Filename;
+
+        // load the cached version if available
+        var pathname = Program.AppWindow.HttpCaching?.GetPathname(sourceUrl);
+        if (!string.IsNullOrEmpty(pathname))
+        {
+            Logger?.LogDebug($"{nameof(LoadHttpImage)} found cached texture");
+            try
+            {
+                using var stream = File.OpenRead(pathname);
+                StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
+                image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+            }
+            catch (Exception ex)
+            {
+                Logger?.LogError($"{nameof(LoadHttpImage)}: Error loading cached image for {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
+                image = Caching.HttpTexturePlaceholder;
+            }        
+        }
+        
+        if (tex.TextureTarget == TextureTarget.Texture2D) Load2DBuffer(tex, image);
+        if (tex.TextureTarget == TextureTarget.TextureCubeMap) LoadCubemapBuffer(tex, image);
+
+        // request a download if not cached or always-download flag is set
+        if (alwaysDownload || string.IsNullOrEmpty(pathname))
+        {
+            Logger?.LogDebug($"{nameof(LoadHttpImage)} requesting download");
+            HttpDownloadManager.Download(sourceUrl, tex);
+        }
+        
+        return true;
+    }
+    
     private static void Load2DBuffer(GLImageTexture tex, ImageResult image)
     {
         GL.ActiveTexture(tex.TextureUnit);
@@ -649,7 +706,7 @@ public static class RenderingHelper
                     if (int.TryParse(sizeSetting, out int size))
                     {
                         tex.ResizeMode = StreamingResizeContentMode.Scaled;
-                        tex.ResizeMaxDimension = size;
+                        tex.StreamingMaxDimension = size;
                     }
                     else
                     {

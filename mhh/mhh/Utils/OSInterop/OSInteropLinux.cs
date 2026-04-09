@@ -48,9 +48,14 @@ public class OSInteropLinux : IOSInteropFactory<OSInteropLinux>, IOSInterop
 
         return Instance;
     }
-    
+
     private OSInteropLinux()
-    {}
+    {
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("HOME")))
+        {
+            throw new InvalidDataException("The HOME environment variable is not configured.");
+        }
+    }
     
     // TODO implement Linux terminal visibility control
     /// <inheritdocs/>

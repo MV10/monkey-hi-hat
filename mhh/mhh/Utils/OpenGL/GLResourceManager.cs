@@ -315,6 +315,8 @@ public class GLResourceManager : IDisposable
         Logger?.LogTrace($"....Units: {string.Join(",", IDs)}");
 #endif
         AvailableTextureUnits.AddRange(IDs.ToList());
+        
+        foreach (var t in list) t.TextureHandle = -1; 
     }
 
     public void Dispose()

@@ -26,17 +26,65 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * 5.4.1 released 2026-04-01 (content 5.4.0, textures 5.4.0)
 
 ### Work In Progress
-* 5.5.0 WIP
-* Move testcontent/* to volts-laboratory/mhhdev/*
-* HTTP retrieval of images / videos using Downloader library
 
+* 5.5.0 WIP
+* HTTP retrieval and caching of textures (still-image only)
+  * HTTP in-memory download works even if caching is disabled
+  * Cache is only pruned by timestamp once during startup
+  * Cache pruning by size or file count happens after each download
+  * Cached images are stored as PNG (preserves alpha channel)
+  * For viz/FX `[textures]` and `[cubemaps]` sections:
+    * Use a URL instead of a filename: `uniform:http://...`
+    * Use `!http` to force a download: `uniform:!http://...`
+    * Forced downloads are still cached but are re-downloaded every time
+    * If an old version is in the cache, it will be used while retrieving a new one
+    * No support for `[videos]` (unlikely to be small enough for viz/FX usage)
+  * New cache control commands:
+    * `--cache purge` removes all cached content
+    * `--cache info` shows cache statistics (counts, size)
+    * `--cache add [url]` retrieves and caches a texture
+    * `--cache find [url]` shows details if URL is already cached
+    * `--cache list` shows all cached files and details
+    * `--cache load` pre-fills the cache for all viz/FX
+  * New `mhh.conf` section `[httpcache]` settings (all optional):
+    * `CacheEnabled` (default is true)
+    * `WindowsPath` (default is blank which maps to `[user]\AppData\temp\monkeyhihat`)
+    * `LinuxPath` (default is blank which maps to `~/.cache/monkeyhihat`)
+    * `MaxFileCount` (0 disables, minimum 50, default is 500)
+    * `MaxTotalMB` (0 disables, minimum 50, default is 500)
+    * `MaxAgeDays` (0 disables, minimum 1, default is 90)
+    * `PollingMS` download-completion polling rate (milliseconds, default is 250)
+    * `MaxDimension` resize large images (0 disables, default is 1920)
+    * `PlaceholderTexture` filename (default blank which uses internal `badtexture.jpg`)
+    * Note that `PlaceholderTexture` is for all HTTP downloads even if caching is disabled
+  * Sample sources for testing:
+    * South Korean street: https://www.opentopia.com/webcam/18247
+    * Chicago skyline: https://www.opentopia.com/webcam/17508
+    * Jakarta traffic: https://www.opentopia.com/webcam/18479
+    * Illinois Dog Day Care: https://www.opentopia.com/webcam/19030
+    * Michigan Dog Day Care: https://www.opentopia.com/webcam/18178
+    * NASA solar: https://sdowww.lmsal.com/sdomedia/SunInTime/mostrecent/l_211_193_171.jpg
+    * NASA solar: https://sdowww.lmsal.com/sdomedia/SunInTime/mostrecent/l0171.jpg
+    * NASA solar: https://sdowww.lmsal.com/sdomedia/SunInTime/mostrecent/l0304.jpg
+    * NASA solar: https://soho.nascom.nasa.gov/data/realtime/eit_171/1024/latest.jpg
+    * Very large / slow panoramics: https://www.eso.org/public/outreach/webcams/
+* Moved MHH testcontent/* to volts-laboratory/mhhdev/*
+* Updated and fixed some typos on standby screen
+* Tests for valid `HOME` environment variable on Linux at startup
+* Changed `GLImageTexture.ResizeMaxDimension` to `GLImageTexture.StreamingMaxDimension`
+
+* Refactor "ResourceGroup" refs to "Framebuffer" (classes, methods, comments, vars)
+* Monkey-Droid v2.2.0
+    * Update to Avalonia 12.0 to comply with mandatory Android 16K page sizes
+    * Correctly recognize/support `--cls` in Console view history
+    * Show inferred `--` switch prefix in Console view history
 
 ### MHH TODO
-
+ 
 * Make a Proto video (1080x1920)
 * Linux - test and deploy MSMD (systemd and sysvinit)
-* Monkey-Droid installers?
-* Offer to locally install Monkey-Droid alongside MHH?
+* Monkey-Droid - installers?
+* Monkey-Droid - offer to locally install alongside MHH?
 * Linux - figure out .deb packaging and hosting a package repo
 * Linux - change to event model for track changes?
 * Windows - https://github.com/DubyaDude/WindowsMediaController

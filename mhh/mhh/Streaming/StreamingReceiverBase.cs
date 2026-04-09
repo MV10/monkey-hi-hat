@@ -109,13 +109,13 @@ public abstract class StreamingReceiverBase : IDisposable
             case StreamingResizeContentMode.Scaled:
                 if (SenderWidth > SenderHeight)
                 {
-                    LocalWidth = Texture.ResizeMaxDimension;
-                    LocalHeight = (int)((double)SenderHeight * ((double)Texture.ResizeMaxDimension / (double)SenderWidth));
+                    LocalWidth = Texture.StreamingMaxDimension;
+                    LocalHeight = (int)((double)SenderHeight * ((double)Texture.StreamingMaxDimension / (double)SenderWidth));
                 }
                 else
                 {
-                    LocalHeight = Texture.ResizeMaxDimension;
-                    LocalWidth = (int)((double)SenderWidth * ((double)Texture.ResizeMaxDimension / (double)SenderHeight));
+                    LocalHeight = Texture.StreamingMaxDimension;
+                    LocalWidth = (int)((double)SenderWidth * ((double)Texture.StreamingMaxDimension / (double)SenderHeight));
                 }
                 break;
         }
