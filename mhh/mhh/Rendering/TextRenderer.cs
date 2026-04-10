@@ -60,7 +60,7 @@ public class TextRenderer : IRenderer
         FontTexture.Filename = Program.AppConfig.FontAtlasFilename;
         FontTexture.UniformName = "font";
         FontTexture.WrapMode = TextureWrapMode.ClampToEdge;
-        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, searchPaths);
+        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, string.Empty, searchPaths);
 
         VertQuad = new VertexQuad();
         VertQuad.Initialize(null, TextShader); // null is safe, fragquad has no viz/fx settings and text output doesn't support textures/videos

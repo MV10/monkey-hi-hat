@@ -121,8 +121,8 @@ public static class HttpDownloadManager
         var dl = await BackgroundDownload(sourceUrl, cacheManager);
         if (dl.Image is null) return "ERR: Download failed";
 
-        cacheManager.SaveImage(dl);
-        return $"Downloaded {dl.Image.Width}x{dl.Image.Height} image";
+        var item = cacheManager.SaveImage(dl);
+        return $"Cached {dl.Image.Width}x{dl.Image.Height} image ({item.Bytes:N0} bytes, {(item.Bytes / 1024 / 1024):N0} MB)";
     }
 
     /// <summary>

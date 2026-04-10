@@ -13,7 +13,15 @@ namespace mhh;
 
 public static class RenderingHelper
 {
-    // created by LogHelper after initialization
+    // used as a black bad image / http placeholder
+    private static readonly ImageResult BlackPixel = new()
+    {
+        Data = new byte[4],
+        Width = 1,
+        Height = 1
+    };
+    
+    // created by LogHelper after initialization (hence internal instead of private)
     internal static ILogger Logger;
 
     /// <summary>
@@ -132,11 +140,15 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Maps visualizer config [textures], [cubemaps], [videos] and [streaming] data
+    /// Maps visualizer or FX config [textures], [cubemaps], [videos] and [streaming] data
     /// to GLImageTexture resource assignments, and loads the indicated files (except streaming)
     /// </summary>
     public static IReadOnlyList<GLImageTexture> GetTextures(string ownerName, ConfigFile configSource)
     {
+        var fileType = configSource.Content.ContainsKey("fx")
+            ? "fx"
+            : "shader";
+        
         var hasStreamingTexture = configSource.Content.ContainsKey("streaming");
 
         if (!configSource.Content.ContainsKey("textures") 
@@ -153,11 +165,19 @@ public static class RenderingHelper
         // have multiple filenames listed will be assigned the same randomly-chosen index
         // as long as randSyncCount matches the number of filenames, which is derived from
         // the first randomized uniform found. Does not apply to other section types.
-        bool randomTextureSync = 
-            configSource.ReadValue("shader", "randomtexturesync").ToBool(false) 
-            || configSource.ReadValue("fx", "randomtexturesync").ToBool(false);
+        bool randomTextureSync = configSource.ReadValue(fileType, "randomtexturesync").ToBool(false);
         int randSyncCount = -1;
         int randSyncIndex = -1;
+
+        // textures and cubemaps may specify an alternate bad-image placeholder, the result is an
+        // empty string, a full pathname, or an asterisk which indicates BlackPixel is used; if none
+        // is specified the internal BadTexture.jpg is used; currently this is only applied to HTTP
+        // textures where the missing texture will eventually become available after downloading
+        var placeholder = configSource.ReadValue(fileType, "placeholder").DefaultString(string.Empty);
+        if (!string.IsNullOrEmpty(placeholder) && !placeholder.Equals("*"))
+        {
+            placeholder = PathHelper.FindFile(Program.AppConfig.TexturePath, placeholder).DefaultString(string.Empty);
+        }
 
         // key is uniform name, List is filenames (>1 means choose one at random)
         var imageDefs = LoadTextureDefinitions(configSource, "textures");
@@ -203,7 +223,7 @@ public static class RenderingHelper
                 }
                 res.Filename = tex.Value[index]; // this may also be !http://... or http://... (or https)
 
-                res.Loaded = LoadImageFile(res);
+                res.Loaded = LoadImageFile(res, placeholder);
 
                 Logger?.LogTrace($"...uniform:{res.UniformName}, unit:{res.TextureUnit}, handle:{res.TextureHandle} loaded:{res.Loaded}");
             }
@@ -219,7 +239,7 @@ public static class RenderingHelper
                 res.UniformName = tex.Key;
                 res.Filename = tex.Value[rand.Next(tex.Value.Count)]; // this may also be !http://... or http://... (or https)
                 res.TextureTarget = TextureTarget.TextureCubeMap;
-                res.Loaded = LoadImageFile(res);
+                res.Loaded = LoadImageFile(res, placeholder);
 
                 Logger?.LogTrace($"...uniform:{res.UniformName}, unit:{res.TextureUnit}, handle:{res.TextureHandle} loaded:{res.Loaded}");
             }
@@ -260,15 +280,15 @@ public static class RenderingHelper
     }
 
     /// <summary>
-    /// Prepares a texture resource with the file identified in GLImageTexture (which may include setting
-    /// a placeholder during HTTP download, and/or using the cached version while downloading a newer one)
+    /// Prepares a texture resource with the file identified in GLImageTexture (placeholder is currently
+    /// only applied to HTTP-sourced images)
     /// </summary>
-    public static bool LoadImageFile(GLImageTexture tex, string pathspec = "")
+    public static bool LoadImageFile(GLImageTexture tex, string placeholder, string pathspec = "")
     {
-        if (PathHelper.IsHttpTextureFilename(tex.Filename)) return LoadHttpImage(tex);
+        if (PathHelper.IsHttpTextureFilename(tex.Filename)) return LoadHttpImage(tex, placeholder);
         
         Logger?.LogDebug($"{nameof(LoadImageFile)} loading {tex.Filename}");
-
+        
         var success = true;
         var image = Caching.BadTexturePlaceholder;
 
@@ -447,11 +467,11 @@ public static class RenderingHelper
     }
     
     // always returns true (successful) because placeholder texture is always available
-    private static bool LoadHttpImage(GLImageTexture tex)
+    private static bool LoadHttpImage(GLImageTexture tex, string placeholder)
     {
         Logger?.LogDebug($"{nameof(LoadHttpImage)} loading {tex.Filename}");
 
-        var image = Caching.HttpTexturePlaceholder;
+        ImageResult image = null;
         
         var alwaysDownload = tex.Filename.StartsWith('!');
         var sourceUrl = alwaysDownload
@@ -472,8 +492,35 @@ public static class RenderingHelper
             catch (Exception ex)
             {
                 Logger?.LogError($"{nameof(LoadHttpImage)}: Error loading cached image for {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
-                image = Caching.HttpTexturePlaceholder;
             }        
+        }
+
+        // placeholder logic (no cached image, or cache retrieval failed)
+        if (image is null)
+        {
+            // blank = use the main config placeholder or built-in BadTexture
+            // * = use BlackPixel
+            // other = standard texture filename
+            image = string.IsNullOrEmpty(placeholder)
+                ? Caching.HttpTexturePlaceholder
+                : placeholder.Equals("*") 
+                    ? BlackPixel 
+                    : null;
+
+            if (image is null)
+            {
+                try
+                {
+                    using var stream = File.OpenRead(placeholder);
+                    StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
+                    image = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+                }
+                catch (Exception ex)
+                {
+                    Logger?.LogError($"{nameof(LoadHttpImage)}: Error loading placeholder for {tex.Filename}\n{ex.Message}\n{ex.InnerException?.Message}");
+                    image = Caching.HttpTexturePlaceholder;
+                }        
+            }
         }
         
         if (tex.TextureTarget == TextureTarget.Texture2D) Load2DBuffer(tex, image);

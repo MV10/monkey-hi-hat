@@ -745,7 +745,7 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
             case "info":
                 var sizeMB = Caching.HttpCacheIndex.Sum(i => i.Bytes) / 1024 / 1024;
                 Console.WriteLine($"Cache location: {AppConfig.HttpCachePath}");
-                Console.WriteLine($"Cache contains {Caching.HttpCacheIndex.Count} files occupying approx {sizeMB} MB");
+                Console.WriteLine($"Cache contains {Caching.HttpCacheIndex.Count} files occupying approx {sizeMB:N0} MB");
                 break;
             
             case "add":
@@ -787,7 +787,7 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
                 }
                 else
                 {
-                    Console.WriteLine($"Cached file is {foundItem.Bytes} bytes");
+                    Console.WriteLine($"Cached file is {foundItem.Bytes:N0} bytes, {(foundItem.Bytes / 1024 / 1024):N0} MB");
                 }
                 break;
 
@@ -800,7 +800,7 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
 
                 foreach (var listedItem in Caching.HttpCacheIndex)
                 {
-                    Console.WriteLine($"{listedItem.SourceUrl}\n   timestamp {listedItem.Timestamp}, stored {listedItem.Bytes} bytes\n");
+                    Console.WriteLine($"{listedItem.SourceUrl}\n   timestamp {listedItem.Timestamp}, stored {listedItem.Bytes:N0} bytes, {(listedItem.Bytes / 1024 / 1024):N0} MB\n");
                 }
                 break;
             
@@ -841,7 +841,7 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
             }
             else
             {
-                Console.WriteLine($"  Cached {addedItem.Bytes} bytes");
+                Console.WriteLine($"  Cached {addedItem.Bytes:N0} bytes, {(addedItem.Bytes / 1024 / 1024):N0} MB");
             }
         }
         

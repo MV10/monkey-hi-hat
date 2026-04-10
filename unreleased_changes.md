@@ -72,7 +72,8 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Updated and fixed some typos on standby screen
 * Tests for valid `HOME` environment variable on Linux at startup
 * Changed `GLImageTexture.ResizeMaxDimension` to `GLImageTexture.StreamingMaxDimension`
-
+* Optional custom viz/fx `Placeholder` texture, or `*` for a solid black placeholder
+ 
 * Refactor "ResourceGroup" refs to "Framebuffer" (classes, methods, comments, vars)
 * Monkey-Droid v2.2.0
     * Update to Avalonia 12.0 to comply with mandatory Android 16K page sizes

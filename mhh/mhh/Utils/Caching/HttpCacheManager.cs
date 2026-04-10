@@ -131,7 +131,7 @@ public class HttpCacheManager
     /// prunes by metrics. This generates the local filename for new items, and updates the stored file size and timestamp.
     /// The caller must dispose of the input stream.
     /// </summary>
-    public void SaveImage(Download dl)
+    public HttpCacheItem SaveImage(Download dl)
     {
         var item = GetItem(dl.SourceUrl);
         var exists = item != null;
@@ -152,6 +152,8 @@ public class HttpCacheManager
         if (!PruneByMetrics()) SaveIndex();
         
         Logger?.LogInformation($"Cache storing {item.Bytes} bytes as {item.LocalName} from {item.SourceUrl}");
+
+        return item;
     }
 
     /// <summary>
