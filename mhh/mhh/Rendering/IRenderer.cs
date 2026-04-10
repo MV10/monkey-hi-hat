@@ -56,7 +56,7 @@ public interface IRenderer : IConfigSource, IDisposable
     /// null indicates output is rendered to the built-in OpenGL backbuffer rather than
     /// an internally-managed framebuffer texture.
     /// </summary>
-    public GLResourceGroup OutputBuffers { get; }
+    public GLFBOTexture OutputBuffers { get; }
 
     /// <summary>
     /// Width and height of the rendered frame data.

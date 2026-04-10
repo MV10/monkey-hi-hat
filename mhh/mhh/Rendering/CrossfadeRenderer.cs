@@ -22,7 +22,7 @@ public class CrossfadeRenderer : IRenderer
     public IRenderer NewRenderer;
 
     // IRenderer requirements which are not applicable to this renderer.
-    public GLResourceGroup OutputBuffers { get => null; }
+    public GLFBOTexture OutputBuffers { get => null; }
     public Vector2 Resolution { get => RenderingHelper.ClientSize; }
     public bool OutputIntercepted { set { } }
     public ConfigFile ConfigSource { get => null; }
@@ -32,8 +32,8 @@ public class CrossfadeRenderer : IRenderer
     // swap buffers if they run stand-alone).
     private string OldOwnerName = RenderingHelper.MakeOwnerName("OldRenderer");
     private string NewOwnerName = RenderingHelper.MakeOwnerName("NewRenderer");
-    private GLResourceGroup OldResourceGroup = null;
-    private GLResourceGroup NewResourceGroup = null;
+    private GLFBOTexture OldResourceGroup = null;
+    private GLFBOTexture NewResourceGroup = null;
 
     private IVertexSource VertQuad;
     private Shader CrossfadeShader;
@@ -231,10 +231,10 @@ public class CrossfadeRenderer : IRenderer
         RenderManager.ResourceManager.DestroyAllResources(NewOwnerName);
 
         Logger?.LogTrace($"{nameof(CreateResourceGroups)} creating updated old renderer local framebuffers");
-        if (OldRenderer.OutputBuffers is null) OldResourceGroup = RenderManager.ResourceManager.CreateResourceGroups(OldOwnerName, 1, OldRenderer.Resolution)[0];
+        if (OldRenderer.OutputBuffers is null) OldResourceGroup = RenderManager.ResourceManager.CreateFBOTextures(OldOwnerName, 1, OldRenderer.Resolution)[0];
 
         Logger?.LogTrace($"{nameof(CreateResourceGroups)} creating updated new renderer local framebuffers");
-        if (NewRenderer.OutputBuffers is null) NewResourceGroup = RenderManager.ResourceManager.CreateResourceGroups(NewOwnerName, 1, NewRenderer.Resolution)[0];
+        if (NewRenderer.OutputBuffers is null) NewResourceGroup = RenderManager.ResourceManager.CreateFBOTextures(NewOwnerName, 1, NewRenderer.Resolution)[0];
     }
 
     public void Dispose()

@@ -11,12 +11,12 @@ public class GLImageTexture
     public string OwnerName;
 
     /// <summary>
-    /// The resource owner should set this.
+    /// The ImageTexture owner should set this.
     /// </summary>
     public string Filename;
 
     /// <summary>
-    /// The resource owner should set this.
+    /// The ImageTexture owner should set this.
     /// </summary>
     public string UniformName;
 

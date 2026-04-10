@@ -3,7 +3,7 @@ using OpenTK.Graphics.OpenGL;
 
 namespace mhh;
 
-public class GLResourceGroup
+public class GLFBOTexture
 {
     /// <summary>
     /// Identifies the object which requested the allocation.
@@ -15,16 +15,15 @@ public class GLResourceGroup
     /// buffer handle to bind for drawing, and/or texture handle to set
     /// as a shader input uniform. These correspond to the buffer numbers
     /// specified in the visualizer configuration [multipass] section,
-    /// for example. For backbuffer resource collections, these must be
-    /// remapped by the resource owner to match the correct frontbuffer
-    /// index.
+    /// for example. For backbuffer FBOTextures, these must be remapped
+    /// by the FBOTexture owner to match the correct frontbuffer index.
     /// </summary>
     public int DrawPassIndex;
 
     /// <summary>
-    /// Initially set by AllocateResources in MultipassSectionParser. Note
-    /// this can change when the owner (FXRenderer or MultipassRenderer)
-    /// is swapping draw-buffers and back-buffers.
+    /// Initially set by AllocateFBOTextures in MultipassSectionParser. Note
+    /// this can change when the owner (FXRenderer or MultipassRenderer) is
+    /// swapping draw-buffers and back-buffers.
     /// </summary>
     public string UniformName;
 

@@ -16,8 +16,8 @@ public class FXRenderer : IRenderer
     public string Description { get; private set; }
     public string Byline { get; } = string.Empty;
 
-    public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
-    private GLResourceGroup FinalDrawbuffers;
+    public GLFBOTexture OutputBuffers { get => FinalDrawbuffers; }
+    private GLFBOTexture FinalDrawbuffers;
     
     public Vector2 Resolution { get => OutputResolution; }
     private Vector2 OutputResolution;
@@ -32,8 +32,8 @@ public class FXRenderer : IRenderer
 
     private string DrawbufferOwnerName = RenderingHelper.MakeOwnerName("Drawbuffers");
     private string BackbufferOwnerName = RenderingHelper.MakeOwnerName("Backbuffers");
-    private IReadOnlyList<GLResourceGroup> DrawbufferResources;
-    private IReadOnlyList<GLResourceGroup> BackbufferResources;
+    private IReadOnlyList<GLFBOTexture> DrawbufferResources;
+    private IReadOnlyList<GLFBOTexture> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
     private IReadOnlyList<GLImageTexture> Textures;
     private VideoMediaProcessor VideoProcessor;
@@ -41,7 +41,7 @@ public class FXRenderer : IRenderer
     private Dictionary<string, float> PrimaryFXUniforms;
 
     private string FXCrossfadeOwnerName = RenderingHelper.MakeOwnerName("Crossfading");
-    private GLResourceGroup FXCrossfadeResources;
+    private GLFBOTexture FXCrossfadeResources;
     private Shader FXCrossfadeShader;
     private IVertexSource FXCrossfadeVerts;
     private float FXCrossfadeDurationMS;
@@ -104,7 +104,7 @@ public class FXRenderer : IRenderer
                 FXCrossfadeShader = Caching.InternalCrossfadeShader;
                 FXCrossfadeVerts = new VertexQuad();
                 FXCrossfadeVerts.Initialize(null, FXCrossfadeShader); // null is safe, fragquad has no viz/fx settings and crossfade doesn't support textures/videos
-                FXCrossfadeResources = RenderManager.ResourceManager.CreateResourceGroups(FXCrossfadeOwnerName, 1, OutputResolution)[0];
+                FXCrossfadeResources = RenderManager.ResourceManager.CreateFBOTextures(FXCrossfadeOwnerName, 1, OutputResolution)[0];
                 FXCrossfadeDurationMS = Program.AppConfig.CrossfadeSeconds * 1000f;
             }
 

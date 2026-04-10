@@ -19,13 +19,13 @@ public class MultipassDrawCall
     /// The active OpenGL resources to use for drawing. If Backbuffers is populated, these
     /// will be swapped at the end of each frame.
     /// </summary>
-    public GLResourceGroup Drawbuffers;
+    public GLFBOTexture Drawbuffers;
 
     /// <summary>
     /// The OpenGL resources drawn into on the previous frame. If this is populated, it
     /// will be swapped with Drawbuffers at the end of each frame.
     /// </summary>
-    public GLResourceGroup Backbuffers;
+    public GLFBOTexture Backbuffers;
 
     /// <summary>
     /// Input-texture indexes rendered during earlier passes in the current frame. These

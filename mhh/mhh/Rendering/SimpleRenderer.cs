@@ -14,8 +14,8 @@ public class SimpleRenderer : IRenderer
     public string Description { get; private set; }
     public string Byline { get;  private set; }
 
-    public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
-    private GLResourceGroup FinalDrawbuffers;
+    public GLFBOTexture OutputBuffers { get => FinalDrawbuffers; }
+    private GLFBOTexture FinalDrawbuffers;
     private IReadOnlyList<GLImageTexture> Textures;
 
     private VideoMediaProcessor VideoProcessor;
@@ -143,7 +143,7 @@ public class SimpleRenderer : IRenderer
             if(isViewportResolution)
             {
                 FinalDrawbuffers = null;
-                RenderManager.ResourceManager.DestroyAllResources(OwnerName, keepContentTextures:true);
+                RenderManager.ResourceManager.DestroyAllResources(OwnerName, keepImageTextures:true);
             }
             else
             {
@@ -154,7 +154,7 @@ public class SimpleRenderer : IRenderer
         {
             if (!isViewportResolution)
             {
-                FinalDrawbuffers = RenderManager.ResourceManager.CreateResourceGroups(OwnerName, 1, OutputResolution)[0];
+                FinalDrawbuffers = RenderManager.ResourceManager.CreateFBOTextures(OwnerName, 1, OutputResolution)[0];
             }
         }
 

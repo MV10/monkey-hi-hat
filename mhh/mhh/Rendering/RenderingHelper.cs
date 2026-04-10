@@ -186,7 +186,7 @@ public static class RenderingHelper
 
         var totalRequired = (imageDefs?.Count ?? 0) + (cubeDefs?.Count ?? 0) + (videoDefs?.Count ?? 0) + (hasStreamingTexture ? 1 : 0);
         if (totalRequired == 0) return null;
-        var resources = RenderManager.ResourceManager.CreateContentTextures(ownerName, totalRequired);
+        var resources = RenderManager.ResourceManager.CreateImageTextures(ownerName, totalRequired);
 
         int resourceIndex = 0;
 

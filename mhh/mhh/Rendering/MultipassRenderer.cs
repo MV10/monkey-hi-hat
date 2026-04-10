@@ -23,8 +23,8 @@ public class MultipassRenderer : IRenderer
     public string Description { get; private set; }
     public string Byline { get;  private set; }
 
-    public GLResourceGroup OutputBuffers { get => FinalDrawbuffers; }
-    private GLResourceGroup FinalDrawbuffers;
+    public GLFBOTexture OutputBuffers { get => FinalDrawbuffers; }
+    private GLFBOTexture FinalDrawbuffers;
 
     public Vector2 Resolution { get => OutputResolution;  }
     private Vector2 OutputResolution;
@@ -37,8 +37,8 @@ public class MultipassRenderer : IRenderer
 
     private string DrawbufferOwnerName = RenderingHelper.MakeOwnerName("Drawbuffers");
     private string BackbufferOwnerName = RenderingHelper.MakeOwnerName("Backbuffers");
-    private IReadOnlyList<GLResourceGroup> DrawbufferResources;
-    private IReadOnlyList<GLResourceGroup> BackbufferResources;
+    private IReadOnlyList<GLFBOTexture> DrawbufferResources;
+    private IReadOnlyList<GLFBOTexture> BackbufferResources;
     private List<MultipassDrawCall> ShaderPasses;
     private IReadOnlyList<GLImageTexture> Textures;
     private VideoMediaProcessor VideoProcessor;
