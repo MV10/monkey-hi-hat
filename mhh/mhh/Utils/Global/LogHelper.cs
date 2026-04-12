@@ -4,6 +4,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Extensions.Logging;
 using System.Runtime.InteropServices;
+using Serilog.Events;
 
 namespace mhh;
 
@@ -20,13 +21,15 @@ public static class LogHelper
 
     // Prefix for all ILoggers created within this app.
     private const string LOGGER_CATEGORY = "MHH";
+    
+    private const string STARTUP_CATEGORY = "AppStartupMessage";
 
     // Serilog by default will suppress log categories
     // https://github.com/serilog/serilog/wiki/Formatting-Output
     private const string OUTPUT_TEMPLATE = "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}";
 
     private static ILoggerFactory LoggerFactory;
-
+    
     /// <summary>
     /// Reads logger settings and prepares the public fields for use.
     /// </summary>
@@ -45,10 +48,13 @@ public static class LogHelper
 
         var cfg = new LoggerConfiguration();
 
-        // Set minimum log level
+        // Set minimum log level (applies to log file only; console is hard-coded to Warning)
         var logLevel = appConfig.ReadValue("setup", "loglevel").ToEnum(LogLevel.Warning);
         LevelSwitch = new(LevelConvert.ToSerilogLevel(logLevel));
         cfg.MinimumLevel.ControlledBy(LevelSwitch);
+
+        // Allow dummy AppStartupMessage to always emit Info entries
+        cfg.MinimumLevel.Override(STARTUP_CATEGORY, LogEventLevel.Information);
 
         // Configure outputs
         cfg.WriteTo.Async(a => a.File(
@@ -64,7 +70,10 @@ public static class LogHelper
         
         if (appConfig.ReadValue("setup", "logtoconsole").ToBool(false))
         {
-            cfg.WriteTo.Console(outputTemplate: OUTPUT_TEMPLATE);
+            cfg.WriteTo.Console(
+                outputTemplate: OUTPUT_TEMPLATE,
+                restrictedToMinimumLevel: LogEventLevel.Warning
+                );
         }
 
         // Log category suppression
@@ -76,18 +85,30 @@ public static class LogHelper
         var allow = (appConfig.ReadValue("setup", "logcategories").DefaultString("MHH,Eyecandy,CommandLineSwitchPipe")).Split(',', Const.SplitOptions);
         cfg.Filter.ByExcluding(e =>
         {
-            if (!e.Properties.ContainsKey("SourceContext")) return true;
-            // Substring(1) because it is prefixed with a slash, for some reason...
-            var src = e.Properties["SourceContext"].ToString().Substring(1);
+            // Disregard events without SourceContext
+            if (!e.Properties.TryGetValue("SourceContext", out var sourceContextProperty)) return true;
+            
+            // Remove leading slashes and surrounding quotes that Serilog sometimes adds in ToString()
+            var src = sourceContextProperty.ToString().TrimStart('/', '\\').Trim('"', '\'');
+        
+            // Always permit the startup marker, regardless of the allow list
+            if (string.Equals(src, STARTUP_CATEGORY, Const.CompareFlags)) return false;
+        
             foreach (var cat in allow)
             {
                 if (src.StartsWith(cat, Const.CompareFlags)) return false;
             }
+            
             return true;
         });
-
+        
         // Get this party started
         LoggerFactory = new SerilogLoggerFactory(cfg.CreateLogger(), dispose: true);
+
+        // Clearly indicate start of a new session in the log file
+        var startupLogger = LoggerFactory.CreateLogger(STARTUP_CATEGORY);
+        startupLogger.LogInformation("".PadLeft(60, '-'));
+        startupLogger.LogInformation($"v{Program.VersionNumber}, config {Program.ConfigFilePathname}");
 
         // Provide the factory to libaries
         CommandLineSwitchPipe.CommandLineSwitchServer.Options.LoggerFactory = LoggerFactory;

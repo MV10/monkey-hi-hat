@@ -52,7 +52,15 @@ public class Program
             ? "monkey-hi-hat-config"
             : "MONKEY_HI_HAT_CONFIG";
 
-    private static string VersionNumber;
+    /// <summary>
+    /// Version parsed from version.txt in the ConfigFiles directory
+    /// </summary>
+    public static string VersionNumber;
+
+    /// <summary>
+    /// Location of the config file being used
+    /// </summary>
+    public static string ConfigFilePathname;
     
     /// <summary>
     /// Content parsed from the mhh.conf configuration file and the
@@ -98,7 +106,7 @@ public class Program
             ? OSInteropWindows.Create()
             : await OSInteropLinux.CreateAsync();
         
-        VersionNumber = await File.ReadAllTextAsync(Path.Combine(".", "ConfigFiles", "version.txt"));
+        VersionNumber = (await File.ReadAllTextAsync(Path.Combine(".", "ConfigFiles", "version.txt"))).Trim('\n');
         
         try
         {
@@ -689,31 +697,31 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
         // 2. App directory (preferred location)
         // 3. ConfigFiles subdirectory (might be an invalid default config; ie. invalid pathspecs)
 
-        var pathname = Environment.GetEnvironmentVariable(ConfigLocationEnvironmentVariable);
-        if(!string.IsNullOrEmpty(pathname))
+        ConfigFilePathname = Environment.GetEnvironmentVariable(ConfigLocationEnvironmentVariable);
+        if(!string.IsNullOrEmpty(ConfigFilePathname))
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) PathHelper.ExpandLinuxHomeDirectory(ref pathname);
-            pathname = Path.GetFullPath(pathname);
-            if (!File.Exists(pathname) && Directory.Exists(pathname)) pathname = Path.Combine(pathname, filename);
-            if (File.Exists(pathname))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) PathHelper.ExpandLinuxHomeDirectory(ref ConfigFilePathname);
+            ConfigFilePathname = Path.GetFullPath(ConfigFilePathname);
+            if (!File.Exists(ConfigFilePathname) && Directory.Exists(ConfigFilePathname)) ConfigFilePathname = Path.Combine(ConfigFilePathname, filename);
+            if (File.Exists(ConfigFilePathname))
             {
-                Console.WriteLine($"Loading configuration via \"{ConfigLocationEnvironmentVariable}\" environment variable:\n  {pathname}");
-                return new(pathname);
+                Console.WriteLine($"Loading configuration via \"{ConfigLocationEnvironmentVariable}\" environment variable:\n  {ConfigFilePathname}");
+                return new(ConfigFilePathname);
             }
         }
         
-        pathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}", filename));
-        if(File.Exists(pathname))
+        ConfigFilePathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}", filename));
+        if(File.Exists(ConfigFilePathname))
         {
-            Console.WriteLine($"Loading configuration from application directory:\n  {pathname}\n");
-            return new(pathname);
+            Console.WriteLine($"Loading configuration from application directory:\n  {ConfigFilePathname}\n");
+            return new(ConfigFilePathname);
         }
 
-        pathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}ConfigFiles", filename));
-        if (File.Exists(pathname))
+        ConfigFilePathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}ConfigFiles", filename));
+        if (File.Exists(ConfigFilePathname))
         {
-            Console.WriteLine($"WARNING:\nLoading DEFAULT CONFIGURATION from ConfigFiles sub-directory:\n  {pathname}\n");
-            return new(pathname);
+            Console.WriteLine($"WARNING:\nLoading DEFAULT CONFIGURATION from ConfigFiles sub-directory:\n  {ConfigFilePathname}\n");
+            return new(ConfigFilePathname);
         }
 
         return null;

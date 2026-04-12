@@ -78,12 +78,12 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Optional custom viz/fx `Placeholder` texture, or `*` for a solid black placeholder
 * Refactored references to `ResourceGroup` or non-general `resource` to `FBOTexture`
 * Refactored various unclear `texture` terminology to `ImageTexture`
+* Insert clear startup info message into existing log file (ignores log level restrictions)
+* If console logging is enabled, it is always limited to Warning or higher severity
 * New content:
   * Added 10 high-def cubemaps by [Humus](https://www.humus.name/index.php?page=Textures)
   * Updated the _shard_ visualizer to use the new cubemaps instead of Shadertoy
   * Added resize capability to my [cubemap6to1](https://github.com/MV10/cubemap6to1) utility
-
-* Insert clear startup info message into existing log file (ignores log level restrictions)
  
 * Monkey-Droid v2.2.0
     * Update to Avalonia 12.0 to comply with mandatory Android 16K page sizes
