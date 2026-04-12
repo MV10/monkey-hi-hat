@@ -85,7 +85,7 @@ public class HttpCacheManager
     {
         if (Caching.HttpCacheIndex.Count == 0 || (Program.AppConfig.HttpCacheMaxFileCount == 0 && Program.AppConfig.HttpCacheMaxTotalMB == 0)) return false;
         var initial = Caching.HttpCacheIndex.Count;
-        var list = Caching.HttpCacheIndex.OrderByDescending(i => i.Timestamp).ToList();
+        var list = Caching.HttpCacheIndex.OrderBy(i => i.Timestamp).ToList();
         var totalBytes = list.Sum(i => i.Bytes);
         var maxCount = Program.AppConfig.HttpCacheMaxFileCount > 0 ? Program.AppConfig.HttpCacheMaxFileCount : int.MaxValue;
         var maxBytes = Program.AppConfig.HttpCacheMaxTotalMB > 0 ? Program.AppConfig.HttpCacheMaxTotalMB * 1024 * 1024 : int.MaxValue;

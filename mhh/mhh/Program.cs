@@ -746,6 +746,9 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
                 var sizeMB = Caching.HttpCacheIndex.Sum(i => i.Bytes) / 1024 / 1024;
                 Console.WriteLine($"Cache location: {AppConfig.HttpCachePath}");
                 Console.WriteLine($"Cache contains {Caching.HttpCacheIndex.Count} files occupying approx {sizeMB:N0} MB");
+                Console.WriteLine($"Maximum file count is {(AppConfig.HttpCacheMaxFileCount > 0 ? AppConfig.HttpCacheMaxFileCount : "unlimited")}");
+                Console.WriteLine($"Maximum total size is {(AppConfig.HttpCacheMaxTotalMB > 0 ? AppConfig.HttpCacheMaxTotalMB : "unlimited")} MB");
+                Console.WriteLine($"Maximum retrieval age is {(AppConfig.HttpCacheMaxAgeDays > 0 ? AppConfig.HttpCacheMaxAgeDays : "unlimited")} days");
                 break;
             
             case "add":
@@ -798,13 +801,14 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
                     break;
                 }
 
-                foreach (var listedItem in Caching.HttpCacheIndex)
+                var content = Caching.HttpCacheIndex.OrderBy(i => i.Timestamp).ToList();
+                foreach (var listedItem in content)
                 {
                     Console.WriteLine($"{listedItem.SourceUrl}\n   timestamp {listedItem.Timestamp}, stored {listedItem.Bytes:N0} bytes, {(listedItem.Bytes / 1024 / 1024):N0} MB\n");
                 }
                 break;
             
-            case "load":
+            case "prefetch":
                 var pathnames = PathHelper.GetConfigFiles(AppConfig.VisualizerPath, true);
                 pathnames.AddRange(PathHelper.GetConfigFiles(AppConfig.FXPath, true));
                 if (pathnames.Count == 0)
@@ -813,6 +817,7 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
                     break;
                 }
                 Console.WriteLine($"Parsing {pathnames.Count} viz/fx configs");
+                if(AppConfig.HttpCacheMaxFileCount > 0 && pathnames.Count > AppConfig.HttpCacheMaxFileCount) Console.WriteLine($"(Total exceeds cache file count setting of {AppConfig.HttpCacheMaxFileCount})");
                 var urls = new List<string>();
                 foreach (var pathname in pathnames) urls.AddRange(CollectUrls(pathname));
                 Console.WriteLine($"Found {urls.Count} HTTP texture references");
@@ -833,6 +838,9 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
         
         async Task DownloadToCache(string url)
         {
+            long size = 0;
+            long max = AppConfig.HttpCacheMaxTotalMB * 1024 * 1024;
+            if (max == 0) size = -1;
             await HttpDownloadManager.InteractiveDownloadAsync(url, cacheManager);
             var addedItem = cacheManager.GetItem(url);
             if (addedItem == null)
@@ -842,6 +850,15 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
             else
             {
                 Console.WriteLine($"  Cached {addedItem.Bytes:N0} bytes, {(addedItem.Bytes / 1024 / 1024):N0} MB");
+                if (size > -1)
+                {
+                    size += addedItem.Bytes;
+                    if (size > max)
+                    {
+                        Console.WriteLine($"(Total has exceeded cache size setting of {AppConfig.HttpCacheMaxTotalMB:N0} MB)");
+                        size = -1;
+                    }
+                }
             }
         }
         
@@ -980,6 +997,6 @@ The following switches are only accepted when the program is not already running
 --cache add [url]           retrieves and caches a texture
 --cache find [url]          shows details if URL is already cached
 --cache list                shows all cached files and details
---cache load                pre-fills the cache for all viz/FX
+--cache prefetch            pre-fetches the cache for all viz/FX (subject to count/size limits)
 ";
 }

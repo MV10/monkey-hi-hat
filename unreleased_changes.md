@@ -45,19 +45,22 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
     * `--cache add [url]` retrieves and caches a texture
     * `--cache find [url]` shows details if URL is already cached
     * `--cache list` shows all cached files and details
-    * `--cache load` pre-fills the cache for all viz/FX
+    * `--cache prefetch` downloads all viz/fx HTTP refs (subject to cache limits)
   * New `mhh.conf` section `[httpcache]` settings (all optional):
     * `CacheEnabled` (default is true)
     * `WindowsPath` (default is blank which maps to `[user]\AppData\temp\monkeyhihat`)
     * `LinuxPath` (default is blank which maps to `~/.cache/monkeyhihat`)
-    * `MaxFileCount` (0 disables, minimum 50, default is 500)
-    * `MaxTotalMB` (0 disables, minimum 50, default is 500)
-    * `MaxAgeDays` (0 disables, minimum 1, default is 90)
-    * `PollingMS` download-completion polling rate (milliseconds, default is 250)
+    * `MaxFileCount` (0 disables, default is 500)
+    * `MaxTotalMB` (0 disables, default is 500)
+    * `MaxAgeDays` (0 disables, default is 90)
+    * `PollingMS` download-completion polling rate (milliseconds, minimum 100, default 250)
     * `MaxDimension` resize large images (0 disables, default is 1920)
     * `PlaceholderTexture` filename (default blank which uses internal `badtexture.jpg`)
     * Note that `PlaceholderTexture` is for all HTTP downloads even if caching is disabled
-  * Sample sources for testing:
+  * Content used by test visualizer / FX shaders:
+    * Visualizer _http_ has randomized downloads fron OpenTopia and forced downloading
+    * Visualizer _http-resize_ uses the panoramic and demos a placeholder texture
+    * FX _solarize_ uses randomized NASA downloads (poorly) and demos a placeholder
     * South Korean street: https://www.opentopia.com/webcam/18247
     * Chicago skyline: https://www.opentopia.com/webcam/17508
     * Jakarta traffic: https://www.opentopia.com/webcam/18479
@@ -75,8 +78,12 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Optional custom viz/fx `Placeholder` texture, or `*` for a solid black placeholder
 * Refactored references to `ResourceGroup` or non-general `resource` to `FBOTexture`
 * Refactored various unclear `texture` terminology to `ImageTexture`
+* New content:
+  * Added 10 high-def cubemaps by [Humus](https://www.humus.name/index.php?page=Textures)
+  * Updated the _shard_ visualizer to use the new cubemaps instead of Shadertoy
+  * Added resize capability to my [cubemap6to1](https://github.com/MV10/cubemap6to1) utility
 
-* Test cache age / size / count limits
+* Insert clear startup info message into existing log file (ignores log level restrictions)
  
 * Monkey-Droid v2.2.0
     * Update to Avalonia 12.0 to comply with mandatory Android 16K page sizes
@@ -87,6 +94,12 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
  
 * Make a Proto video (1080x1920)
 * Linux - test and deploy MSMD (systemd and sysvinit)
+* New cubemap content:
+  * https://sketchfab.com/tags/cubemap 
+  * Consider HDRI conversions from PolyHaven:
+  * https://polyhaven.com/hdris/indoor
+  * https://github.com/insopitus/equirect2cubemap
+  * https://github.com/dariomanesku/cmft
 * Monkey-Droid - installers?
 * Monkey-Droid - offer to locally install alongside MHH?
 * Linux - figure out .deb packaging and hosting a package repo

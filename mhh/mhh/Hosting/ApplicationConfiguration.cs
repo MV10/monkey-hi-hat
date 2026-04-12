@@ -280,10 +280,11 @@ public class ApplicationConfiguration : IConfigSource
 
         if (HttpCacheEnabled)
         {
-            if(!Path.IsPathFullyQualified(HttpCachePath)) ConfError($"[httpcache] path is not valid: {HttpCachePath}");
-            if(HttpCacheMaxFileCount != 0 && HttpCacheMaxFileCount < 50) ConfError("[httpcache] MaxFileCount must be 50 or greater (0 to disable).");
-            if(HttpCacheMaxTotalMB != 0 && HttpCacheMaxTotalMB < 50) ConfError("[httpcache] MaxTotalMB must be 50 or greater (0 to disable).");
-            if(HttpCacheMaxAgeDays < 0) ConfError("[httpcache] MaxAgeDays must be 1 or greater (0 to disable).");
+            if(!Path.IsPathFullyQualified(HttpCachePath)) ConfError($"[httpcache] Path not fully qualified: {HttpCachePath}");
+            if(HttpCacheMaxFileCount < 0) ConfError("[httpcache] Invalid MaxFileCount.");
+            if(HttpCacheMaxTotalMB < 0) ConfError("[httpcache] Invalid MaxTotalMB.");
+            if(HttpCacheMaxAgeDays < 0) ConfError("[httpcache] Invalid MaxAgeDays.");
+            if(HttpCachePollingMS < 100) ConfError("[httpcache] Invalid PollingMS, must be 100 or greater.");
             if(!string.IsNullOrEmpty(HttpPlaceholderTexture) && string.IsNullOrEmpty(PathHelper.FindFile(TexturePath, HttpPlaceholderTexture))) ConfError($"[httpcache] PlaceholderTexture not found: {HttpPlaceholderTexture}");
         }
 
