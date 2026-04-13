@@ -27,10 +27,10 @@ internal static class PathHelper
         return FindFile(pathspec, filename);
     }
 
-    public static IReadOnlyList<string> GetConfigFiles(string pathspec)
-        => GetWildcardFiles(pathspec, "*.conf");
+    public static List<string> GetConfigFiles(string pathspec, bool returnFullPathname = false)
+        => GetWildcardFiles(pathspec, "*.conf", returnFullPathname);
 
-    public static IReadOnlyList<string> GetWildcardFiles(string pathspec, string filespec, bool returnFullPathname = false)
+    public static List<string> GetWildcardFiles(string pathspec, string filespec, bool returnFullPathname = false)
     {
         List<string> list = new();
         var paths = pathspec.Split(Path.PathSeparator, Const.SplitOptions);
@@ -59,5 +59,11 @@ internal static class PathHelper
 
     public static string ExpandLinuxHomeDirectory(ref string pathspec)
         => pathspec.Replace("~", LinuxHomeDirectory);
+    
+    public static bool IsHttpTextureFilename(string filename)
+        => filename.StartsWith("http://") 
+           || filename.StartsWith("https://")
+           || filename.StartsWith("!http://")
+           || filename.StartsWith("!https://");
 }
 

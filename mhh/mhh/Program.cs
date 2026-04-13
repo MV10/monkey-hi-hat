@@ -52,7 +52,15 @@ public class Program
             ? "monkey-hi-hat-config"
             : "MONKEY_HI_HAT_CONFIG";
 
-    private static string VersionNumber;
+    /// <summary>
+    /// Version parsed from version.txt in the ConfigFiles directory
+    /// </summary>
+    public static string VersionNumber;
+
+    /// <summary>
+    /// Location of the config file being used
+    /// </summary>
+    public static string ConfigFilePathname;
     
     /// <summary>
     /// Content parsed from the mhh.conf configuration file and the
@@ -79,7 +87,7 @@ public class Program
     public static IOSInterop OSInterop;
     
     // these will be accepted when MHH is not running
-    private static readonly string[] ImmediateOutputSwitches = { "--help", "--devices" };
+    private static readonly string[] ImmediateOutputSwitches = { "--help", "--longhelp", "--devices", "--cache" };
     private static readonly string[] AutoStartSwitches = { "--load", "--playlist" };
     private static string[] stagedAutoStartSwitches = new string[0];
 
@@ -98,7 +106,7 @@ public class Program
             ? OSInteropWindows.Create()
             : await OSInteropLinux.CreateAsync();
         
-        VersionNumber = await File.ReadAllTextAsync(Path.Combine(".", "ConfigFiles", "version.txt"));
+        VersionNumber = (await File.ReadAllTextAsync(Path.Combine(".", "ConfigFiles", "version.txt"))).Trim('\n');
         
         try
         {
@@ -156,7 +164,7 @@ public class Program
         await Task.Delay(250);
     }
 
-    public static void ProcessNonRunningSwitches(string[] args)
+    public static async Task ProcessNonRunningSwitches(string[] args)
     {
         Logger?.LogInformation($"Processing switches: {string.Join(" ", args)}");
         switch (args[0].ToLowerInvariant())
@@ -164,7 +172,20 @@ public class Program
             case "--devices":
                 OSInterop.ListAudioDevices();
                 break;
-
+            
+            case "--cache":
+                if (args.Length == 1 || args.Length > 3)
+                {
+                    Console.WriteLine(ShowLongHelp());
+                    break;
+                }
+                await ProcessCacheSwitches(args);
+                break;
+            
+            case "--longhelp":
+                Console.WriteLine(ShowLongHelp());
+                break;
+            
             default:
                 Console.WriteLine(ShowHelp());
                 break;
@@ -375,6 +396,9 @@ public class Program
             case "--help":
                 return ShowHelp();
             
+            case "--longhelp":
+                return ShowLongHelp();
+            
             default:
                 return $"ERR: Switch {args[0].ToLowerInvariant()} unknown, try --help";
         }
@@ -411,27 +435,28 @@ public class Program
         Logger = LogHelper.CreateLogger(nameof(Program));
         OSInterop.CreateLogger();
 
-        // Process non-running commands
+        // Show help if running but no switches provided
         if(args.Length == 0 && alreadyRunning)
         {
             Console.WriteLine(ShowHelp());
             return false; // end program
         }
-        if (args.Length > 0)
-        {
-            // just save auto-start switches for later
-            if (Array.Exists(AutoStartSwitches, cmd => cmd.Equals(args[0].ToLowerInvariant()))) stagedAutoStartSwitches = args;
-
-            // immediately process these and exit
-            if (Array.Exists(ImmediateOutputSwitches, cmd => cmd.Equals(args[0].ToLowerInvariant())))
-            {
-                ProcessNonRunningSwitches(args);
-                return false; // end program
-            }
-        }
 
         // Parse the application configuration file
         AppConfig = new ApplicationConfiguration(appConfigFile);
+
+        if (args.Length > 0)
+        {
+            // Save auto-start switches for later
+            if (Array.Exists(AutoStartSwitches, cmd => cmd.Equals(args[0].ToLowerInvariant()))) stagedAutoStartSwitches = args;
+
+            // Immediately process these and exit
+            if (Array.Exists(ImmediateOutputSwitches, cmd => cmd.Equals(args[0].ToLowerInvariant())))
+            {
+                await ProcessNonRunningSwitches(args);
+                return false; // end program
+            }
+        }
 
         // Currently GLFW is only compatible with X11.
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !AppConfig.LinuxSkipX11Check)
@@ -578,16 +603,16 @@ What Now?
 Monkey Hi Hat is running which means it's waiting for commands.
 There are several options to send commands to the program.
 
-Console or SSH
-Open a new console window or connect via SSH and run a command:
+PC (Windows/Linux) or Android device
+Download and run the Monkey Droid remote control GUI from the Release page.
+
+Command Line
+Open a new terminal / console window, or connect via SSH, and send commands:
 
 {sampleCommands}
 
-Windows PC or Android phone
-Download and run the monkey-droid remote control app from the Release page.
-
 Documentation
-Find walk-throughs and troublshooting docs at https://www.monkeyhihat.com/
+Find walk-throughs and troubleshooting docs at https://www.monkeyhihat.com/
 
 Support / Questions
 Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
@@ -672,34 +697,203 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
         // 2. App directory (preferred location)
         // 3. ConfigFiles subdirectory (might be an invalid default config; ie. invalid pathspecs)
 
-        var pathname = Environment.GetEnvironmentVariable(ConfigLocationEnvironmentVariable);
-        if(!string.IsNullOrEmpty(pathname))
+        ConfigFilePathname = Environment.GetEnvironmentVariable(ConfigLocationEnvironmentVariable);
+        if(!string.IsNullOrEmpty(ConfigFilePathname))
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) PathHelper.ExpandLinuxHomeDirectory(ref pathname);
-            pathname = Path.GetFullPath(pathname);
-            if (!File.Exists(pathname) && Directory.Exists(pathname)) pathname = Path.Combine(pathname, filename);
-            if (File.Exists(pathname))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) PathHelper.ExpandLinuxHomeDirectory(ref ConfigFilePathname);
+            ConfigFilePathname = Path.GetFullPath(ConfigFilePathname);
+            if (!File.Exists(ConfigFilePathname) && Directory.Exists(ConfigFilePathname)) ConfigFilePathname = Path.Combine(ConfigFilePathname, filename);
+            if (File.Exists(ConfigFilePathname))
             {
-                Console.WriteLine($"Loading configuration via \"{ConfigLocationEnvironmentVariable}\" environment variable:\n  {pathname}");
-                return new(pathname);
+                Console.WriteLine($"Loading configuration via \"{ConfigLocationEnvironmentVariable}\" environment variable:\n  {ConfigFilePathname}");
+                return new(ConfigFilePathname);
             }
         }
         
-        pathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}", filename));
-        if(File.Exists(pathname))
+        ConfigFilePathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}", filename));
+        if(File.Exists(ConfigFilePathname))
         {
-            Console.WriteLine($"Loading configuration from application directory:\n  {pathname}\n");
-            return new(pathname);
+            Console.WriteLine($"Loading configuration from application directory:\n  {ConfigFilePathname}\n");
+            return new(ConfigFilePathname);
         }
 
-        pathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}ConfigFiles", filename));
-        if (File.Exists(pathname))
+        ConfigFilePathname = Path.GetFullPath(Path.Combine($".{Path.DirectorySeparatorChar}ConfigFiles", filename));
+        if (File.Exists(ConfigFilePathname))
         {
-            Console.WriteLine($"WARNING:\nLoading DEFAULT CONFIGURATION from ConfigFiles sub-directory:\n  {pathname}\n");
-            return new(pathname);
+            Console.WriteLine($"WARNING:\nLoading DEFAULT CONFIGURATION from ConfigFiles sub-directory:\n  {ConfigFilePathname}\n");
+            return new(ConfigFilePathname);
         }
 
         return null;
+    }
+
+    private static async Task ProcessCacheSwitches(string[] args)
+    {
+        HttpCacheManager.ValidateHttpCaching();
+        if (!AppConfig.HttpCacheEnabled)
+        {
+            Console.WriteLine("ERR: Caching is disabled or cache init failed");
+            return;
+        }
+        var cacheManager = new HttpCacheManager();
+
+        switch (args[1].ToLowerInvariant())
+        {
+            case "purge":
+                if (Caching.HttpCacheIndex.Count == 0)
+                {
+                    Console.WriteLine("ERR: Cache is empty");
+                    break;
+                }
+                Console.WriteLine($"Purging {Caching.HttpCacheIndex.Count} files");
+                while(Caching.HttpCacheIndex.Count > 0) cacheManager.RemoveItem(Caching.HttpCacheIndex[0]);
+                cacheManager.SaveIndex();
+                break;
+            
+            case "info":
+                var sizeMB = Caching.HttpCacheIndex.Sum(i => i.Bytes) / 1024 / 1024;
+                Console.WriteLine($"Cache location: {AppConfig.HttpCachePath}");
+                Console.WriteLine($"Cache contains {Caching.HttpCacheIndex.Count} files occupying approx {sizeMB:N0} MB");
+                Console.WriteLine($"Maximum file count is {(AppConfig.HttpCacheMaxFileCount > 0 ? AppConfig.HttpCacheMaxFileCount : "unlimited")}");
+                Console.WriteLine($"Maximum total size is {(AppConfig.HttpCacheMaxTotalMB > 0 ? AppConfig.HttpCacheMaxTotalMB : "unlimited")} MB");
+                Console.WriteLine($"Maximum retrieval age is {(AppConfig.HttpCacheMaxAgeDays > 0 ? AppConfig.HttpCacheMaxAgeDays : "unlimited")} days");
+                break;
+            
+            case "add":
+                if (args.Length != 3)
+                {
+                    Console.WriteLine(ShowLongHelp());
+                    break;
+                }
+
+                var addUrl = HttpDownloadManager.NormalizeUrl(args[2]);
+                if (string.IsNullOrEmpty(addUrl))
+                {
+                    Console.WriteLine("ERR: Failed to parse URL");
+                    break;
+                }
+                
+                Console.WriteLine("Downloading...");
+                await DownloadToCache(addUrl);
+                break;
+            
+            case "find":
+                if (args.Length != 3)
+                {
+                    Console.WriteLine(ShowLongHelp());
+                    break;
+                }
+
+                var findUrl = HttpDownloadManager.NormalizeUrl(args[2]);
+                if (string.IsNullOrEmpty(findUrl))
+                {
+                    Console.WriteLine("ERR: Failed to parse URL");
+                    break;
+                }
+                
+                var foundItem = cacheManager.GetItem(findUrl);
+                if (foundItem == null)
+                {
+                    Console.WriteLine("ERR: File is not cached");
+                }
+                else
+                {
+                    Console.WriteLine($"Cached file is {foundItem.Bytes:N0} bytes, {(foundItem.Bytes / 1024 / 1024):N0} MB");
+                }
+                break;
+
+            case "list":
+                if (Caching.HttpCacheIndex.Count == 0)
+                {
+                    Console.WriteLine("ERR: Cache is empty");
+                    break;
+                }
+
+                var content = Caching.HttpCacheIndex.OrderBy(i => i.Timestamp).ToList();
+                foreach (var listedItem in content)
+                {
+                    Console.WriteLine($"{listedItem.SourceUrl}\n   timestamp {listedItem.Timestamp}, stored {listedItem.Bytes:N0} bytes, {(listedItem.Bytes / 1024 / 1024):N0} MB\n");
+                }
+                break;
+            
+            case "prefetch":
+                var pathnames = PathHelper.GetConfigFiles(AppConfig.VisualizerPath, true);
+                pathnames.AddRange(PathHelper.GetConfigFiles(AppConfig.FXPath, true));
+                if (pathnames.Count == 0)
+                {
+                    Console.WriteLine("ERR: No viz/fx configs found");
+                    break;
+                }
+                Console.WriteLine($"Parsing {pathnames.Count} viz/fx configs");
+                if(AppConfig.HttpCacheMaxFileCount > 0 && pathnames.Count > AppConfig.HttpCacheMaxFileCount) Console.WriteLine($"(Total exceeds cache file count setting of {AppConfig.HttpCacheMaxFileCount})");
+                var urls = new List<string>();
+                foreach (var pathname in pathnames) urls.AddRange(CollectUrls(pathname));
+                Console.WriteLine($"Found {urls.Count} HTTP texture references");
+                if (urls.Count == 0) break;
+                foreach (var url in urls)
+                {
+                    Console.WriteLine($"Downloading {url}");
+                    await DownloadToCache(url);
+                }
+                break;
+            
+            default:
+                Console.WriteLine(ShowLongHelp());
+                break;
+        }
+
+        HttpDownloadManager.Abort();
+        
+        async Task DownloadToCache(string url)
+        {
+            long size = 0;
+            long max = AppConfig.HttpCacheMaxTotalMB * 1024 * 1024;
+            if (max == 0) size = -1;
+            await HttpDownloadManager.InteractiveDownloadAsync(url, cacheManager);
+            var addedItem = cacheManager.GetItem(url);
+            if (addedItem == null)
+            {
+                Console.WriteLine("  ERR: File was not added to cache");
+            }
+            else
+            {
+                Console.WriteLine($"  Cached {addedItem.Bytes:N0} bytes, {(addedItem.Bytes / 1024 / 1024):N0} MB");
+                if (size > -1)
+                {
+                    size += addedItem.Bytes;
+                    if (size > max)
+                    {
+                        Console.WriteLine($"(Total has exceeded cache size setting of {AppConfig.HttpCacheMaxTotalMB:N0} MB)");
+                        size = -1;
+                    }
+                }
+            }
+        }
+        
+        List<string> CollectUrls(string pathname)
+        {
+            var urls = new List<string>();
+            var conf = new ConfigFile(pathname);
+            ParseSection("textures");
+            ParseSection("cubemaps");
+
+            void ParseSection(string section)
+            {
+                if (conf.Content.TryGetValue(section, out var items))
+                {
+                    foreach (var item in items)
+                    {
+                        var parts = item.Value.Split(':', 2, Const.SplitOptions);
+                        if (parts.Length == 2 && PathHelper.IsHttpTextureFilename(parts[1]))
+                        {
+                            urls.Add(parts[1].StartsWith('!') ? parts[1].Substring(1) : parts[1]);
+                        }
+                    }
+                }
+            }
+        
+            return urls;
+        }
     }
 
     private static string ShowHelp()
@@ -709,10 +903,44 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
 mhh: Monkey Hi Hat
 
 By default, the application always loads with the default ""idle"" shader and all other switches are
-are passed to the already-running instance. Only ""--help"", ""--display"", ""--load"", or ""--playlist""
-switches can be used if an instance is not already running.
+are passed to the already-running instance. Only ""--help"", ""--display"", ""--load"", ""--playlist"", or
+""--cache"" switches can be used if an instance is not already running.
 
---help                      shows help (surprise!)
+--help                      shows the most commonly-used switches (this help)
+--longhelp                  shows all available switches
+--standby                   toggles between standby mode and active mode
+--quit                      ends the program
+
+--list [viz|playlists|fx]   shows config files (*.conf) from all defined paths for the requested file type
+
+--idle                      loads the default startup shader
+--reload                    unloads and reloads the current shader (unavailable after an FX shader loads)
+--load [file]               loads [file].conf from VisualizationPath defined in mhh.conf
+--load [viz] [fx]           loads a visualization and immediately applies FX; must use search paths
+--fx [file]                 loads [file].conf from FXPath defined in mhh.conf
+--fade [file]               queues a specific crossfade shader for the next visualizer change
+
+--playlist [file]           loads [file].conf from PlaylistPath defined in mhh.conf
+--next                      when a playlist is active, advances to the next viz (using the Order setting)
+--next fx                   when a playlist is active, applies a post-processing FX (if one isn't running)
+
+--jpg [wait]                JPG screenshot (saves to desktop); ""wait"" watches for spacebar
+--png [wait]                PNG screenshot (saves to desktop); ""wait"" watches for spacebar
+";
+    
+    private static string ShowLongHelp()
+        =>
+@$"
+
+mhh: Monkey Hi Hat
+
+By default, the application always loads with the default ""idle"" shader and all other switches are
+are passed to the already-running instance. Only ""--help"", ""--display"", ""--load"", ""--playlist"", or
+""--cache"" switches can be used if an instance is not already running.
+
+--help                      shows the most commonly-used switches
+--longhelp                  shows all available switches (this help)
+--standby                   toggles between standby mode and active mode
 --quit                      ends the program
 
 --list [viz|playlists|fx]   shows config files (*.conf) from all defined paths for the requested file type
@@ -761,13 +989,22 @@ switches can be used if an instance is not already running.
 --console                   toggles the console window visibility
 --cls                       clears the console window of the running instance (useful during debug)
 
---devices                   list audio device names, can be used when MHH is not running
-
 --streaming                 streaming commands control Spout / NDI; refer to the docs for details
 --streaming status
 --streaming send spout|ndi [""sender name""]
 --streaming receive spout ""source name""
 --streaming receive ndi ""machine (source name)"" [""group1,group2,...groupN""]
 --streaming stop send|receive
+
+The following switches are only accepted when the program is not already running:
+
+--devices                   list audio device names
+
+--cache purge               removes all cached content
+--cache info                shows cache statistics (counts, size)
+--cache add [url]           retrieves and caches a texture
+--cache find [url]          shows details if URL is already cached
+--cache list                shows all cached files and details
+--cache prefetch            pre-fetches the cache for all viz/FX (subject to count/size limits)
 ";
 }

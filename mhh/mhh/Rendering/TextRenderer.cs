@@ -23,15 +23,15 @@ public class TextRenderer : IRenderer
     public string Description { get; } = string.Empty;
     public string Byline { get; } = string.Empty;
 
-    public GLResourceGroup OutputBuffers { get => null; }
+    public GLFBOTexture OutputBuffers { get => null; }
     public Vector2 Resolution { get => RenderingHelper.ClientSize; }
     public bool OutputIntercepted { set { } }
     public ConfigFile ConfigSource { get => null; }
 
     private string OwnerName = RenderingHelper.MakeOwnerName("TextRenderer");
     private GLImageTexture FontTexture;
-    private GLResourceGroup BaseImage = null;
-    private GLResourceGroup TextData = null;
+    private GLFBOTexture BaseImage = null;
+    private GLFBOTexture TextData = null;
 
     private DateTime LastUpdateCopied;
     private IVertexSource VertQuad;
@@ -56,11 +56,11 @@ public class TextRenderer : IRenderer
         // is stored in InternalShaderPath. Custom fonts should be stored in TexturePath.
         var searchPaths = $"{ApplicationConfiguration.InternalShaderPath}{Path.PathSeparator}{Program.AppConfig.TexturePath}";
         
-        FontTexture = RenderManager.ResourceManager.CreateContentTextures(OwnerName, 1)[0];
+        FontTexture = RenderManager.ResourceManager.CreateImageTextures(OwnerName, 1)[0];
         FontTexture.Filename = Program.AppConfig.FontAtlasFilename;
         FontTexture.UniformName = "font";
         FontTexture.WrapMode = TextureWrapMode.ClampToEdge;
-        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, searchPaths);
+        FontTexture.Loaded = RenderingHelper.LoadImageFile(FontTexture, string.Empty, searchPaths);
 
         VertQuad = new VertexQuad();
         VertQuad.Initialize(null, TextShader); // null is safe, fragquad has no viz/fx settings and text output doesn't support textures/videos
@@ -112,7 +112,7 @@ public class TextRenderer : IRenderer
     {
         if(BaseImage is null)
         {
-            var rg = RenderManager.ResourceManager.CreateResourceGroups(OwnerName, 2, Resolution);
+            var rg = RenderManager.ResourceManager.CreateFBOTextures(OwnerName, 2, Resolution);
             BaseImage = rg[0];
             TextData = rg[1];
         }

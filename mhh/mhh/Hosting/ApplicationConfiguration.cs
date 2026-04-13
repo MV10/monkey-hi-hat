@@ -75,6 +75,15 @@ public class ApplicationConfiguration : IConfigSource
     public readonly float SyntheticDataMinimumLevel = 0.1f;
     public readonly SyntheticDataAlgorithm SyntheticAlgorithm = SyntheticDataAlgorithm.MetronomeBeat;
 
+    public bool HttpCacheEnabled = true; // not readonly, can be disabled in response to errors
+    public readonly string HttpCachePath = string.Empty;
+    public readonly int HttpCacheMaxFileCount = 500;
+    public readonly int HttpCacheMaxTotalMB = 500;
+    public readonly int HttpCacheMaxAgeDays = 90;
+    public readonly int HttpCachePollingMS = 250;
+    public readonly int HttpCacheMaxDimension = 1920;
+    public readonly string HttpPlaceholderTexture = string.Empty; // applies even if caching is disabled
+        
     public bool ShowPlaylistPopups; // not readonly, can be toggled at runtime
     public readonly bool ShowVizBylines;
     public readonly bool ShowTextBanners;
@@ -162,6 +171,22 @@ public class ApplicationConfiguration : IConfigSource
         SyntheticDataMinimumLevel = ConfigSource.ReadValue("setup", "syntheticdataminimumlevel").ToFloat(0.1f);
         SyntheticAlgorithm = ConfigSource.ReadValue("setup", "syntheticalgorithm").ToEnum(SyntheticDataAlgorithm.MetronomeBeat);
 
+        var defaultCachePath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? Path.Combine(Path.GetTempPath(), "monkeyhihat")
+            : Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".cache/monkeyhihat");
+
+        var cacheSetting = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windowspath" : "linuxpath";
+        
+        HttpCacheEnabled = ConfigSource.ReadValue("httpcache", "cacheenabled").ToBool(true);
+        HttpCachePath = ConfigSource.ReadValue("httpcache", cacheSetting).DefaultString(defaultCachePath);
+        HttpCacheMaxFileCount = ConfigSource.ReadValue("httpcache", "maxfilecount").ToInt32(500);
+        HttpCacheMaxTotalMB = ConfigSource.ReadValue("httpcache", "maxtotalmb").ToInt32(500);
+        HttpCacheMaxAgeDays = ConfigSource.ReadValue("httpcache", "maxagedays").ToInt32(90);
+        HttpCachePollingMS = ConfigSource.ReadValue("httpcache", "pollingms").ToInt32(250);
+        HttpCacheMaxDimension = ConfigSource.ReadValue("httpcache", "maxdimension").ToInt32(1920);
+        // if blank, use Caching.BadTexturePlaceholder, which is an Stb ImageResult object
+        HttpPlaceholderTexture = ConfigSource.ReadValue("httpcache", "placeholdertexture").DefaultString("");
+        
         LoopbackApi = ConfigSource.ReadValue(SectionOS, "loopbackapi").ToEnum(LoopbackApi.WindowsInternal);
         OpenALContextDeviceName = ConfigSource.ReadValue(SectionOS, "OpenALContextDeviceName");
         CaptureDeviceName = ConfigSource.ReadValue(SectionOS, "capturedevicename");
@@ -252,6 +277,16 @@ public class ApplicationConfiguration : IConfigSource
 
         if (PathHelper.GetIndividualPaths(FFmpegPath).Length > 1) ConfError("Exactly one path is required for FFmpegPath.");
         PathValidation(FFmpegPath);
+
+        if (HttpCacheEnabled)
+        {
+            if(!Path.IsPathFullyQualified(HttpCachePath)) ConfError($"[httpcache] Path not fully qualified: {HttpCachePath}");
+            if(HttpCacheMaxFileCount < 0) ConfError("[httpcache] Invalid MaxFileCount.");
+            if(HttpCacheMaxTotalMB < 0) ConfError("[httpcache] Invalid MaxTotalMB.");
+            if(HttpCacheMaxAgeDays < 0) ConfError("[httpcache] Invalid MaxAgeDays.");
+            if(HttpCachePollingMS < 100) ConfError("[httpcache] Invalid PollingMS, must be 100 or greater.");
+            if(!string.IsNullOrEmpty(HttpPlaceholderTexture) && string.IsNullOrEmpty(PathHelper.FindFile(TexturePath, HttpPlaceholderTexture))) ConfError($"[httpcache] PlaceholderTexture not found: {HttpPlaceholderTexture}");
+        }
 
         if (!string.IsNullOrWhiteSpace(NDIReceiveFrom) && !string.IsNullOrWhiteSpace(SpoutReceiveFrom)) ConfError("Only one streaming source can be specified (SpoutReceiveFrom or NDIReceiveFrom)");
 

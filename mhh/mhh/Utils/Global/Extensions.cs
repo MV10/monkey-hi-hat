@@ -110,7 +110,7 @@ public static class Extensions
     //-----------------------------------------------------------------------------------------------
 
     /// <summary>
-    /// Finds a concrete Type by name from an IReadOnlyList<Type> collection
+    /// Finds a concrete Type by name from an IReadOnlyList collection
     /// </summary>
     public static Type FindType(this IReadOnlyList<Type> list, string typeName)
         => list.FirstOrDefault(t => t.Name.ToLowerInvariant().Equals(typeName.ToLowerInvariant()));

@@ -40,6 +40,11 @@ public class HostWindow : BaseWindow, IDisposable
     public StreamingReceiverBase StreamReceiver;
 
     /// <summary>
+    /// Handles downloads and local storage.
+    /// </summary>
+    public HttpCacheManager HttpCaching;
+
+    /// <summary>
     /// Audio and texture processing by the eyecandy library.
     /// </summary>
     public AudioTextureEngine Eyecandy;
@@ -104,6 +109,8 @@ public class HostWindow : BaseWindow, IDisposable
 
     private const int MediaCheckMillisec = 500;
     private DateTime NextMediaCheck = DateTime.MaxValue;
+    
+    private DateTime NextDownloadCheck = DateTime.MaxValue;
 
     private SpoutSender SpoutSender;
     private const string SpoutSenderName = "Monkey Hi Hat";
@@ -133,7 +140,7 @@ public class HostWindow : BaseWindow, IDisposable
         RenderingHelper.ClientSize = ClientSize;
         UniformRandomSeed = (float)RNG.NextDouble();
 
-        InitializeCache();
+        InitializeCaches();
 
         Playlist = new();
         Renderer = new();
@@ -448,7 +455,13 @@ public class HostWindow : BaseWindow, IDisposable
             return;
         }
 
-        if(DateTime.Now >= NextMediaCheck)
+        if (DateTime.Now >= NextDownloadCheck)
+        {
+            HttpDownloadManager.GetTextures();
+            NextDownloadCheck = DateTime.Now.AddMilliseconds(Program.AppConfig.HttpCachePollingMS);
+        }
+        
+        if (DateTime.Now >= NextMediaCheck)
         {
             if (Program.AppConfig.WindowsSpotifyTrackPopups || Program.AppConfig.LinuxMediaPopups) Program.OSInterop.UpdateMediaTrackInfo();
             NextMediaCheck = DateTime.Now.AddMilliseconds(MediaCheckMillisec);
@@ -1000,7 +1013,7 @@ playlist   : {Playlist.GetInfo()}";
         }
     }
 
-    private void InitializeCache()
+    private void InitializeCaches()
     {
         Caching.VisualizerShaders = new(Program.AppConfig.ShaderCacheSize);
         Caching.FXShaders = new(Program.AppConfig.FXCacheSize);
@@ -1063,14 +1076,32 @@ playlist   : {Playlist.GetInfo()}";
             }
         }
 
-        using var stream = File.OpenRead(Path.Combine(ApplicationConfiguration.InternalShaderPath, "badtexture.jpg"));
+        using var badtexStream = File.OpenRead(Path.Combine(ApplicationConfiguration.InternalShaderPath, "badtexture.jpg"));
         StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
-        Caching.BadTexturePlaceholder = ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
+        Caching.BadTexturePlaceholder = ImageResult.FromStream(badtexStream, ColorComponents.RedGreenBlueAlpha);
+
+        if (string.IsNullOrEmpty(Program.AppConfig.HttpPlaceholderTexture))
+        {
+            Caching.HttpTexturePlaceholder = Caching.BadTexturePlaceholder;
+        }
+        else
+        {
+            using var httptexStream = File.OpenRead(PathHelper.FindFile(Program.AppConfig.TexturePath, Program.AppConfig.HttpPlaceholderTexture));
+            StbImage.stbi_set_flip_vertically_on_load(1); // OpenGL origin is bottom left instead of top left
+            Caching.HttpTexturePlaceholder = ImageResult.FromStream(httptexStream, ColorComponents.RedGreenBlueAlpha);
+        }
 
         // see MaxAvailableTextureUnit property comments for an explanation
         GL.GetInteger(GetPName.MaxCombinedTextureImageUnits, out var maxTU);
         Caching.MaxAvailableTextureUnit = maxTU - 1 - Caching.KnownAudioTextures.Count;
         Logger?.LogInformation($"This GPU supports a combined maximum of {maxTU} TextureUnits.");
+
+        HttpCacheManager.ValidateHttpCaching(); // this turns off the enabled flag if directory init fails
+        if (Program.AppConfig.HttpCacheEnabled)
+        {
+            HttpCaching = new();
+            NextDownloadCheck = DateTime.Now.AddMilliseconds(Program.AppConfig.HttpCachePollingMS);
+        }
     }
 
     private string GetStatistics() =>
@@ -1132,6 +1163,8 @@ display res: {ClientSize.X} x {ClientSize.Y}";
 
         base.Dispose();
 
+        HttpDownloadManager.Abort();
+        
         SpoutSender?.Dispose();
         NDISender?.Dispose();
         StreamReceiver?.Dispose();

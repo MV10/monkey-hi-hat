@@ -75,7 +75,7 @@ public class VisualizerConfig : IConfigSource
         RenderResolutionLimit = ConfigSource.ReadValue("shader", "renderresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
         FXResolutionLimit = ConfigSource.ReadValue("shader", "fxresolutionlimit").ToInt32(Program.AppConfig.RenderResolutionLimit);
         RandomTimeOffset = ConfigSource.ReadValue("shader", "randomtimeoffset").ToInt32(0);
-
+        
         VertexSourceTypeName = ConfigSource.ReadValue("shader", "vertexsourcetypename");
 
         if(ConfigSource.Content.ContainsKey("audiotextures"))

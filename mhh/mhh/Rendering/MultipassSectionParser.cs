@@ -12,8 +12,8 @@ namespace mhh;
 public class MultipassSectionParser
 {
     // The renderer will read these, then destroy the parser object
-    public IReadOnlyList<GLResourceGroup> DrawbufferResources;
-    public IReadOnlyList<GLResourceGroup> BackbufferResources;
+    public IReadOnlyList<GLFBOTexture> DrawbufferResources;
+    public IReadOnlyList<GLFBOTexture> BackbufferResources;
     public List<MultipassDrawCall> ShaderPasses;
 
     // References to the object requesting parsing
@@ -53,7 +53,7 @@ public class MultipassSectionParser
             RendererVizConfig = (OwningRenderer as MultipassRenderer).Config;
             MultipassRendererParse();
             if (!OwningRenderer.IsValid) return;
-            AllocateResources();
+            AllocateFBOTextures();
         }
 
         if (OwningRenderer is FXRenderer)
@@ -61,7 +61,7 @@ public class MultipassSectionParser
             RendererFXConfig = (OwningRenderer as FXRenderer).Config;
             FXRendererParse();
             if (!OwningRenderer.IsValid) return;
-            AllocateResources();
+            AllocateFBOTextures();
         }
     }
 
@@ -341,7 +341,7 @@ public class MultipassSectionParser
         (ShaderPass.VertexSource as VertexIntegerArray).Initialize(intCount, drawMode, ShaderPass.Shader);
     }
 
-    private void AllocateResources()
+    private void AllocateFBOTextures()
     {
         err = $"Error in {OwningRenderer.Filename} [multipass] section: ";
 
@@ -349,7 +349,7 @@ public class MultipassSectionParser
         if (MaxBackbuffer > MaxDrawbuffer) throw new ArgumentException($"{err} Backbuffer {MaxBackbuffer.ToAlpha()} referenced but draw buffer {MaxBackbuffer} wasn't used");
 
         // allocate drawbuffer resources (front buffers when double-buffering)
-        DrawbufferResources = RenderManager.ResourceManager.CreateResourceGroups(DrawbufferOwnerName, MaxDrawbuffer + 1, OwningRenderer.Resolution);
+        DrawbufferResources = RenderManager.ResourceManager.CreateFBOTextures(DrawbufferOwnerName, MaxDrawbuffer + 1, OwningRenderer.Resolution);
         foreach (var resource in DrawbufferResources)
         {
             resource.UniformName = $"input{resource.DrawPassIndex}";
@@ -358,7 +358,7 @@ public class MultipassSectionParser
         // allocate backbuffer resources
         if (BackbufferKeys.Length > 0)
         {
-            BackbufferResources = RenderManager.ResourceManager.CreateResourceGroups(BackbufferOwnerName, BackbufferKeys.Length, OwningRenderer.Resolution);
+            BackbufferResources = RenderManager.ResourceManager.CreateFBOTextures(BackbufferOwnerName, BackbufferKeys.Length, OwningRenderer.Resolution);
 
             // The DrawbufferIndex in the resource list is generated sequentially. This reassigns
             // them based on the order of first backbuffer usage in the multipass config section.

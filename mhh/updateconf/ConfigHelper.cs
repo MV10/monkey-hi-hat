@@ -154,8 +154,12 @@ public static class ConfigHelper
                 From_540_to_541();
                 break;
 
-            //case "5.4.1":
-            //    From_541_to_550();
+            case "5.4.1":
+                From_541_to_550();
+                break;
+
+            //case "5.5.0":
+            //    From_550_to_560();
             //    break;
 
             default:
@@ -508,7 +512,27 @@ TestingExcludePaths=");
     static void From_540_to_541()
     {
         // no config changes in 5.4.1
-        // From_541_to_550();
+        From_541_to_550();
+    }
+
+    static void From_541_to_550()
+    {
+        Output.Write("-- v5.4.1 to v5.5.0 changes:");
+        
+        AddSection("setup", "httpcache", @"[httpcache]
+CacheEnabled=true
+WindowsPath=
+LinuxPath=
+MaxFileCount=500
+MaxTotalMB=500
+MaxAgeDays=90
+PollingMS=250
+MaxDimension=1920
+PlaceholderTexture=
+
+#########################################################################");
+        
+        // From_550_to_560();
     }
     
     /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -532,6 +556,10 @@ TestingExcludePaths=");
         if (!RemovedSettings.ContainsKey(sec)) RemovedSettings.Add(sec, setting);
     }
 
+    /// <summary>
+    /// The new content should start with the [section] entry and
+    /// end with the **** separator that precedes the following section.
+    /// </summary>
     static void AddSection(string afterSection, string newSectionName, string newContent)
     {
         if (NewSections is null) ResetContentCaches();

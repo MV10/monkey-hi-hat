@@ -11,12 +11,12 @@ public class GLImageTexture
     public string OwnerName;
 
     /// <summary>
-    /// The resource owner should set this.
+    /// The ImageTexture owner should set this.
     /// </summary>
     public string Filename;
 
     /// <summary>
-    /// The resource owner should set this.
+    /// The ImageTexture owner should set this.
     /// </summary>
     public string UniformName;
 
@@ -62,7 +62,7 @@ public class GLImageTexture
     /// <summary>
     /// When streaming resize mode is Scaled, this specifies the largest dimension.
     /// </summary>
-    public int ResizeMaxDimension;
+    public int StreamingMaxDimension;
 
     /// <summary>
     /// If the texture is a video, this object stores the FFMediaToolkit references needed for playback.
