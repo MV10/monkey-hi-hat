@@ -4,8 +4,10 @@
 
 Monkey Hi Hat displays colorful, interesting graphics, many of which are audio-reactive -- they move and change in time with whatever music is being played through your PC's speaker outputs.
 
-> * 2026-APR-01 [Install or Update to v5.4.1](https://github.com/MV10/monkey-hi-hat/releases)
+> * 2026-APR-13 [Install or Update to v5.5.0](https://github.com/MV10/monkey-hi-hat/releases)
 > * Subscribe to [Release Notifications](https://github.com/MV10/monkey-hi-hat/issues/3) to find out about updates!
+> * New: HTTP download and caching for textures and cubemaps
+> * New: High-definition cubemaps
 > * New: Custom font support
 > * New: DJ / VJ features (line-in / mic support, send / receive via Spout or NDI)
 > * New: Faster dedicated install archive download via [MonkeyHiHat.com](https://www.monkeyhihat.com)

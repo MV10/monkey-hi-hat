@@ -108,6 +108,7 @@ public static class LogHelper
         // Clearly indicate start of a new session in the log file
         var startupLogger = LoggerFactory.CreateLogger(STARTUP_CATEGORY);
         startupLogger.LogInformation("".PadLeft(60, '-'));
+        startupLogger.LogInformation($"{DateTime.Now:U}");
         startupLogger.LogInformation($"v{Program.VersionNumber}, config {Program.ConfigFilePathname}");
 
         // Provide the factory to libaries
