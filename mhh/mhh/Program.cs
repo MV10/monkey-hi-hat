@@ -903,8 +903,8 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
 mhh: Monkey Hi Hat
 
 By default, the application always loads with the default ""idle"" shader and all other switches are
-are passed to the already-running instance. Only ""--help"", ""--display"", ""--load"", or ""--playlist""
-switches can be used if an instance is not already running.
+are passed to the already-running instance. Only ""--help"", ""--display"", ""--load"", ""--playlist"", or
+""--cache"" switches can be used if an instance is not already running.
 
 --help                      shows the most commonly-used switches (this help)
 --longhelp                  shows all available switches
@@ -935,8 +935,8 @@ switches can be used if an instance is not already running.
 mhh: Monkey Hi Hat
 
 By default, the application always loads with the default ""idle"" shader and all other switches are
-are passed to the already-running instance. Only ""--help"", ""--display"", ""--load"", or ""--playlist""
-switches can be used if an instance is not already running.
+are passed to the already-running instance. Only ""--help"", ""--display"", ""--load"", ""--playlist"", or
+""--cache"" switches can be used if an instance is not already running.
 
 --help                      shows the most commonly-used switches
 --longhelp                  shows all available switches (this help)

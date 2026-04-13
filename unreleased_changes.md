@@ -80,11 +80,11 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Refactored various unclear `texture` terminology to `ImageTexture`
 * Insert clear startup info message into existing log file (ignores log level restrictions)
 * If console logging is enabled, it is always limited to Warning or higher severity
+* Updated many package dependencies
 * New content:
   * Added 10 high-def cubemaps by [Humus](https://www.humus.name/index.php?page=Textures)
   * Updated the _shard_ visualizer to use the new cubemaps instead of Shadertoy
   * Added resize capability to my [cubemap6to1](https://github.com/MV10/cubemap6to1) utility
- 
 * Monkey-Droid v2.2.0
     * Update to Avalonia 12.0 to comply with mandatory Android 16K page sizes
     * Correctly recognize/support `--cls` in Console view history
@@ -93,6 +93,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 ### MHH TODO
  
 * Make a Proto video (1080x1920)
+* Linux - Review breaking changes in https://github.com/tmds/Tmds.DBus/releases/tag/rel%2F0.90.0
 * Linux - test and deploy MSMD (systemd and sysvinit)
 * New cubemap content:
   * https://sketchfab.com/tags/cubemap 
