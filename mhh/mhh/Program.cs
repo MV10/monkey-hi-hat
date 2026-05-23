@@ -584,7 +584,7 @@ public class Program
                     failed = false;
                     break;
                 }
-                catch (GLFWException gex)
+                catch (GLFWException)
                 {
                     failed = true;
                     Thread.Sleep(500);

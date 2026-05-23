@@ -23,11 +23,11 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * 5.4.1 released 2026-04-01 (content 5.4.0, textures 5.4.0)
 * 5.5.0 released 2026-04-13 (content 5.5.0, textures 5.5.0)
 * 5.6.0 in-progress
-* GLFW - Work around startup bug https://claude.ai/share/a3ca3859-59c8-49f2-977b-303d9f3bfd91
+* Work around Windows GLFW bug https://claude.ai/share/a3ca3859-59c8-49f2-977b-303d9f3bfd91
+* Update to Tmds.DBus 0.93.0
 
 ### New version TODO
 
-* Linux - Review breaking changes in https://github.com/tmds/Tmds.DBus/releases/tag/rel%2F0.90.0
 * eyecandy - optionally generate `glGetShaderInfoLog` and `glGetProgramInfoLog` shader compile/link outputs
 * eyecandy - add Eyecandy.ShaderCompiler error logging category
 * Add sleep-state prevention and config settings

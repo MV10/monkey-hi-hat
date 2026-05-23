@@ -873,9 +873,9 @@ partial class MediaPlayer2 : MprisObject
 }
 partial class MprisService
 {
-    public Tmds.DBus.Protocol.Connection Connection { get; }
+    public Tmds.DBus.Protocol.DBusConnection Connection { get; }
     public string Destination { get; }
-    public MprisService(Tmds.DBus.Protocol.Connection connection, string destination)
+    public MprisService(Tmds.DBus.Protocol.DBusConnection connection, string destination)
         => (Connection, Destination) = (connection, destination);
     public MprisPlayer CreatePlayer(ObjectPath path) => new MprisPlayer(this, path);
     public Playlists CreatePlaylists(ObjectPath path) => new Playlists(this, path);
@@ -886,7 +886,7 @@ class MprisObject
 {
     public MprisService Service { get; }
     public ObjectPath Path { get; }
-    protected Tmds.DBus.Protocol.Connection Connection => Service.Connection;
+    protected Tmds.DBus.Protocol.DBusConnection Connection => Service.Connection;
     protected MprisObject(MprisService service, ObjectPath path)
         => (Service, Path) = (service, path);
     protected MessageBuffer CreateGetPropertyMessage(string @interface, string property)
@@ -926,8 +926,12 @@ class MprisObject
             Arg0 = @interface
         };
         return this.Connection.AddMatchAsync(rule, reader,
-                                                (Exception? ex, PropertyChanges<TProperties> changes, object? rs, object? hs) => ((Action<Exception?, PropertyChanges<TProperties>>)hs!).Invoke(ex, changes),
-                                                this, handler, emitOnCapturedContext, flags);
+            (Notification<PropertyChanges<TProperties>> n) =>
+            {
+                if (n.HasValue) handler(null, n.Value);
+                else if (n.IsCompletion) handler(n.Exception, default!);
+            },
+            emitOnCapturedContext, flags, this);
     }
     public ValueTask<IDisposable> WatchSignalAsync<TArg>(string sender, string @interface, ObjectPath path, string signal, MessageValueReader<TArg> reader, Action<Exception?, TArg> handler, bool emitOnCapturedContext, ObserverFlags flags)
     {
@@ -940,8 +944,12 @@ class MprisObject
             Interface = @interface
         };
         return this.Connection.AddMatchAsync(rule, reader,
-                                                (Exception? ex, TArg arg, object? rs, object? hs) => ((Action<Exception?, TArg>)hs!).Invoke(ex, arg),
-                                                this, handler, emitOnCapturedContext, flags);
+            (Notification<TArg> n) =>
+            {
+                if (n.HasValue) handler(null, n.Value);
+                else if (n.IsCompletion) handler(n.Exception, default!);
+            },
+            emitOnCapturedContext, flags, this);
     }
     public ValueTask<IDisposable> WatchSignalAsync(string sender, string @interface, ObjectPath path, string signal, Action<Exception?> handler, bool emitOnCapturedContext, ObserverFlags flags)
     {
@@ -953,8 +961,13 @@ class MprisObject
             Member = signal,
             Interface = @interface
         };
-        return this.Connection.AddMatchAsync<object>(rule, (Message message, object? state) => null!,
-                                                        (Exception? ex, object v, object? rs, object? hs) => ((Action<Exception?>)hs!).Invoke(ex), this, handler, emitOnCapturedContext, flags);
+        return this.Connection.AddMatchAsync(rule,
+            (Notification n) =>
+            {
+                if (n.IsCompletion) handler(n.Exception);
+                else handler(null);
+            },
+            emitOnCapturedContext, flags);
     }
     protected static long ReadMessage_x(Message message, MprisObject _)
     {

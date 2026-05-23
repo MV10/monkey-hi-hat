@@ -12,9 +12,10 @@ public abstract class StreamingReceiverBase : IDisposable
     /// Set by the Renderer when a streaming viz/FX is loaded.
     /// Reset to null when a viz/FX is disposed.
     /// </summary>
+
     public GLImageTexture Texture
     {
-        get => field;
+        get;
         set
         {
             SenderWidth = 0;
@@ -22,19 +23,6 @@ public abstract class StreamingReceiverBase : IDisposable
             field = value;
         }
     }
-    private GLImageTexture field;
-
-    // TODO Use this syntax after migrating to .NET 10
-    // public GLImageTexture Texture
-    // {
-    //     get;
-    //     set
-    //     {
-    //         SenderWidth = 0;
-    //         SenderHeight = 0;
-    //         field = value;
-    //     }
-    // }
 
     /// <summary>
     /// Controls whether the incoming texture is vertically flipped.

@@ -14,7 +14,7 @@ public class OSInteropLinux : IOSInteropFactory<OSInteropLinux>, IOSInterop
 
     private static ILogger Logger;
 
-    private static Connection DBusConnection;
+    private static DBusConnection DBusConnection;
     private static MediaPlayer SelectedMediaPlayer;
     private static string SelectedMediaPlayerUri;
     private string MediaTrackMessage = Const.MediaTrackUnavailable;
@@ -160,10 +160,10 @@ public class OSInteropLinux : IOSInteropFactory<OSInteropLinux>, IOSInterop
         DBusConnection?.Dispose();
         try
         {
-            DBusConnection = new Connection(Address.Session!);
+            DBusConnection = new DBusConnection(DBusAddress.Session!);
             await DBusConnection.ConnectAsync();
         }
-        catch(Exception ex)
+        catch(Exception)
         {
             DBusConnection?.Dispose();
             DBusConnection = null;
