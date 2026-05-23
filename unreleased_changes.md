@@ -22,27 +22,33 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 
 * 5.4.1 released 2026-04-01 (content 5.4.0, textures 5.4.0)
 * 5.5.0 released 2026-04-13 (content 5.5.0, textures 5.5.0)
-* 5.6.0 in-progress
-* Work around Windows GLFW bug https://claude.ai/share/a3ca3859-59c8-49f2-977b-303d9f3bfd91
+ 
+* 5.6.0 in-progress (content 5.5.0, textures 5.5.0)
 * Update to Tmds.DBus 0.93.0
+* Addded `timedelta` uniform (float; elapsed time since start of previous frame in seconds)
+* Window-creation retries to avoid GLFW bug https://github.com/glfw/glfw/pull/2767
 
 ### New version TODO
 
-* eyecandy - optionally generate `glGetShaderInfoLog` and `glGetProgramInfoLog` shader compile/link outputs
-* eyecandy - add Eyecandy.ShaderCompiler error logging category
 * Add sleep-state prevention and config settings
-* Add `time_delta` uniform
-* Move file handling (app config and viz/fx config) to a separate library for sharing with SSM IDE.
-* Add `--ide` switch to support integration with the SSM shader IDE
-* IDE-related features like overriding uniforms and reporting data about textures, etc.
 * Windows - https://github.com/DubyaDude/WindowsMediaController
 * Linux - change to event model for track changes?
 * Linux - detect when media device changes
 * Playlist - auto-advance on track change (after WMC & DBus support)
+* eyecandy - optionally generate `glGetShaderInfoLog` and `glGetProgramInfoLog` shader compile/link outputs
+* eyecandy - add Eyecandy.ShaderCompiler error logging category
 
 
 ### MHH TODO
+
+* IDE - move file handling (app config and viz/fx config) to a separate library for sharing with SSM
+* IDE - add `--ide` switch to support integration with SSM
+* IDE - related features (step mode, overriding uniforms, reporting texture data, etc)
+
 * Make a Proto video (1080x1920)
+* Docs - add playlist questions to FAQ
+* Docs - add layout details about cubemaps
+* Add realtime clock at top right (off, always on, track change, viz change)
 * Linux - test and deploy MSMD (systemd and sysvinit)
 * New cubemap content:
   * https://sketchfab.com/tags/cubemap 
@@ -85,7 +91,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 ### MHH NON-STARTERS
 
 * Video decoding on background thread: too much locking and context-switching overhead
-* Rendering text once: due to fade re-renders it isn't really worth the effort
+* Single-pass text rendering: due to fade in/out, it isn't really worth the effort
 
 
 ### EYECANDY TODO (MAJOR)

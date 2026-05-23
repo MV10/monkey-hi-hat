@@ -392,6 +392,7 @@ public static class RenderingHelper
         shader.SetUniform("clocktime", Program.AppWindow.UniformClockTime);
         shader.SetUniform("fxactive", Program.AppWindow.UniformFXActive);
         shader.SetUniform("silent", Program.AppWindow.UniformSilenceDetected);
+        shader.SetUniform("timedelta", Program.AppWindow.UniformTimeDelta);
 
         foreach (var list in uniforms)
         {

@@ -81,6 +81,11 @@ public class HostWindow : BaseWindow, IDisposable
     /// </summary>
     public float UniformSilenceDetected;
 
+    /// <summary>
+    /// Seconds elapsed since the beginning of the previous frame.
+    /// </summary>
+    public float UniformTimeDelta;
+
     //private MethodInfo EyecandyEnableMethod;
     //private MethodInfo EyecandyDisableMethod;
     // Example of how to invoke generic method
@@ -106,6 +111,8 @@ public class HostWindow : BaseWindow, IDisposable
     private string QueuedCrossfadePathname = string.Empty;
 
     private Random RNG = new();
+
+    private DateTime previousFrameTime = DateTime.MaxValue;
 
     private const int MediaCheckMillisec = 500;
     private DateTime NextMediaCheck = DateTime.MaxValue;
@@ -202,6 +209,11 @@ public class HostWindow : BaseWindow, IDisposable
     protected override void OnRenderFrame(FrameEventArgs e)
     {
         if (Renderer.ActiveRenderer is null) return;
+
+        var delta = DateTime.Now.Subtract(previousFrameTime).TotalSeconds;
+        UniformTimeDelta = (float)Math.Min(0f, delta);
+        previousFrameTime = DateTime.Now;
+        
         base.OnRenderFrame(e);
 
         Eyecandy.UpdateTextures();
