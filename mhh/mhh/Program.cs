@@ -572,8 +572,30 @@ public class Program
             WindowConfig.OpenTKNativeWindowSettings.StartVisible = false;
 
             // Spin up the window and get the show started
-            AppWindow = new(WindowConfig, AudioConfig);
-            
+            // 500ms retry loop is to work around GLFW Windows bug:
+            // https://github.com/glfw/glfw/pull/2767
+            // https://claude.ai/share/a3ca3859-59c8-49f2-977b-303d9f3bfd91
+            bool failed = false;
+            for(int retry = 0; retry < 3; retry++)
+            {
+                try
+                {
+                    AppWindow = new(WindowConfig, AudioConfig);
+                    failed = false;
+                    break;
+                }
+                catch (GLFWException gex)
+                {
+                    failed = true;
+                    Thread.Sleep(500);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+            if(failed) throw new GLFWException("Win32: Failed to query display settings");
+
             // Prime the pump with any auto-start switches (return value ignored; worst case we just go to idle)
             if (stagedAutoStartSwitches.Length > 0) ProcessSwitches(stagedAutoStartSwitches);
             

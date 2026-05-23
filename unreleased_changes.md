@@ -20,80 +20,29 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 
 ### Version and Changelog Notes
 
-* 5.2.0 released 2025-12-07 (content 5.2.0, textures 5.2.0)
-* 5.3.0 released 2026-03-17 (content 5.2.0, textures 5.2.0)
-* 5.4.0 released 2026-03-23 (content 5.4.0, textures 5.4.0)
 * 5.4.1 released 2026-04-01 (content 5.4.0, textures 5.4.0)
+* 5.5.0 released 2026-04-13 (content 5.5.0, textures 5.5.0)
+* 5.6.0 in-progress
+* GLFW - Work around startup bug https://claude.ai/share/a3ca3859-59c8-49f2-977b-303d9f3bfd91
 
-### Work In Progress
+### New version TODO
 
-* 5.5.0 WIP
-* HTTP retrieval and caching of textures (still-image only)
-  * HTTP in-memory download works even if caching is disabled
-  * Cache is only pruned by timestamp once during startup
-  * Cache pruning by size or file count happens after each download
-  * Cached images are stored as PNG (preserves alpha channel)
-  * For viz/FX `[textures]` and `[cubemaps]` sections:
-    * Use a URL instead of a filename: `uniform:http://...`
-    * Use `!http` to force a download: `uniform:!http://...`
-    * Forced downloads are still cached but are re-downloaded every time
-    * If an old version is in the cache, it will be used while retrieving a new one
-    * No support for `[videos]` (unlikely to be small enough for viz/FX usage)
-  * New cache control commands:
-    * `--cache purge` removes all cached content
-    * `--cache info` shows cache statistics (counts, size)
-    * `--cache add [url]` retrieves and caches a texture
-    * `--cache find [url]` shows details if URL is already cached
-    * `--cache list` shows all cached files and details
-    * `--cache prefetch` downloads all viz/fx HTTP refs (subject to cache limits)
-  * New `mhh.conf` section `[httpcache]` settings (all optional):
-    * `CacheEnabled` (default is true)
-    * `WindowsPath` (default is blank which maps to `[user]\AppData\temp\monkeyhihat`)
-    * `LinuxPath` (default is blank which maps to `~/.cache/monkeyhihat`)
-    * `MaxFileCount` (0 disables, default is 500)
-    * `MaxTotalMB` (0 disables, default is 500)
-    * `MaxAgeDays` (0 disables, default is 90)
-    * `PollingMS` download-completion polling rate (milliseconds, minimum 100, default 250)
-    * `MaxDimension` resize large images (0 disables, default is 1920)
-    * `PlaceholderTexture` filename (default blank which uses internal `badtexture.jpg`)
-    * Note that `PlaceholderTexture` is for all HTTP downloads even if caching is disabled
-  * Content used by test visualizer / FX shaders:
-    * Visualizer _http_ has randomized downloads fron OpenTopia and forced downloading
-    * Visualizer _http-resize_ uses the panoramic and demos a placeholder texture
-    * FX _solarize_ uses randomized NASA downloads (poorly) and demos a placeholder
-    * South Korean street: https://www.opentopia.com/webcam/18247
-    * Chicago skyline: https://www.opentopia.com/webcam/17508
-    * Jakarta traffic: https://www.opentopia.com/webcam/18479
-    * Illinois Dog Day Care: https://www.opentopia.com/webcam/19030
-    * Michigan Dog Day Care: https://www.opentopia.com/webcam/18178
-    * NASA solar: https://sdowww.lmsal.com/sdomedia/SunInTime/mostrecent/l_211_193_171.jpg
-    * NASA solar: https://sdowww.lmsal.com/sdomedia/SunInTime/mostrecent/l0171.jpg
-    * NASA solar: https://sdowww.lmsal.com/sdomedia/SunInTime/mostrecent/l0304.jpg
-    * NASA solar: https://soho.nascom.nasa.gov/data/realtime/eit_171/1024/latest.jpg
-    * Very large / slow panoramics: https://www.eso.org/public/outreach/webcams/
-* Moved MHH testcontent/* to volts-laboratory/mhhdev/*
-* Updated and fixed some typos on standby screen
-* Tests for valid `HOME` environment variable on Linux at startup
-* Changed `GLImageTexture.ResizeMaxDimension` to `GLImageTexture.StreamingMaxDimension`
-* Optional custom viz/fx `Placeholder` texture, or `*` for a solid black placeholder
-* Refactored references to `ResourceGroup` or non-general `resource` to `FBOTexture`
-* Refactored various unclear `texture` terminology to `ImageTexture`
-* Insert clear startup info message into existing log file (ignores log level restrictions)
-* If console logging is enabled, it is always limited to Warning or higher severity
-* Updated many package dependencies
-* New content:
-  * Added 10 high-def cubemaps by [Humus](https://www.humus.name/index.php?page=Textures)
-  * Updated the _shard_ visualizer to use the new cubemaps instead of Shadertoy
-  * Added resize capability to my [cubemap6to1](https://github.com/MV10/cubemap6to1) utility
-* Monkey-Droid v2.2.0
-    * Update to Avalonia 12.0 to comply with mandatory Android 16K page sizes
-    * Correctly recognize/support `--cls` in Console view history
-    * Show inferred `--` switch prefix in Console view history
+* Linux - Review breaking changes in https://github.com/tmds/Tmds.DBus/releases/tag/rel%2F0.90.0
+* eyecandy - optionally generate `glGetShaderInfoLog` and `glGetProgramInfoLog` shader compile/link outputs
+* eyecandy - add Eyecandy.ShaderCompiler error logging category
+* Add sleep-state prevention and config settings
+* Add `time_delta` uniform
+* Move file handling (app config and viz/fx config) to a separate library for sharing with SSM IDE.
+* Add `--ide` switch to support integration with the SSM shader IDE
+* IDE-related features like overriding uniforms and reporting data about textures, etc.
+* Windows - https://github.com/DubyaDude/WindowsMediaController
+* Linux - change to event model for track changes?
+* Linux - detect when media device changes
+* Playlist - auto-advance on track change (after WMC & DBus support)
+
 
 ### MHH TODO
- 
 * Make a Proto video (1080x1920)
-* Linux - Review breaking changes in https://github.com/tmds/Tmds.DBus/releases/tag/rel%2F0.90.0
 * Linux - test and deploy MSMD (systemd and sysvinit)
 * New cubemap content:
   * https://sketchfab.com/tags/cubemap 
@@ -101,18 +50,13 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
   * https://polyhaven.com/hdris/indoor
   * https://github.com/insopitus/equirect2cubemap
   * https://github.com/dariomanesku/cmft
-* Monkey-Droid - installers?
 * Monkey-Droid - offer to locally install alongside MHH?
+* Gemini equirectangular image generation (via mhh website) for randomized cubemaps
 * Linux - figure out .deb packaging and hosting a package repo
-* Linux - change to event model for track changes?
-* Windows - https://github.com/DubyaDude/WindowsMediaController
-* Linux - detect when media device changes
-* Playlist - auto-advance on track change (after WMC & DBus support)
 * Linux - terminal-hiding support (X11 only?)
 * OMT Streaming https://github.com/openmediatransport
 * Refuse to run a streaming-oriented FX if a streaming viz is running?
 * Global error logger via system.appdomain.unhandledexception event
-* eyecandy - add Eyecandy.ShaderCompiler error logging category
 * Use Spout sender to debug intermediate buffers?
 * Document using VLC / NDI (or VLC / Spout?) to create an RTSP feed
 * Modernize with GL Direct State Access (https://juandiegomontoya.github.io/modern_opengl.html)
