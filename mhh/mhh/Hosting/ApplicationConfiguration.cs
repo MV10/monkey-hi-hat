@@ -46,6 +46,7 @@ public class ApplicationConfiguration : IConfigSource
     public readonly int FrameRateLimit;
     public readonly VSyncMode VSync;
     public readonly int UnsecuredPort;
+    public readonly int UnsecuredRelayPort;
     public readonly VideoFlipMode VideoFlip;
 
     public readonly bool StartInStandby;
@@ -148,6 +149,8 @@ public class ApplicationConfiguration : IConfigSource
         VSync = ConfigSource.ReadValue("setup", "vsync").ToEnum(VSyncMode.Off);
         UnsecuredPort = ConfigSource.ReadValue("setup", "unsecuredport").ToInt32(0);
         VideoFlip = ConfigSource.ReadValue("setup", "videoflip").ToEnum(VideoFlipMode.Internal);
+
+        UnsecuredRelayPort = ConfigSource.ReadValue("msmd", "unsecuredrelayport").ToInt32(0);
 
         VisualizerPath = ConfigSource.ReadValue(SectionOS, "visualizerpath");
         PlaylistPath = ConfigSource.ReadValue(SectionOS, "playlistpath");

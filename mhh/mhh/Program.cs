@@ -97,6 +97,8 @@ public class Program
     internal static bool AppRunning = true; // the window can change this
     private static bool OnStandby = false;
 
+    private static bool MSMDRunning = false;
+
     // only valid after InitializeAndWait
     private static ILogger Logger;
 
@@ -498,6 +500,12 @@ public class Program
         // Start listening for commands
         ctsSwitchPipe = new();
         _ = Task.Run(() => CommandLineSwitchServer.StartServer(ProcessSwitches, ctsSwitchPipe.Token, AppConfig.UnsecuredPort));
+        
+        // Check if MSMD is available
+        if(AppConfig.UnsecuredPort > 0)
+        {
+            MSMDRunning = await CommandLineSwitchServer.TryConnect(server: "localhost", port: AppConfig.UnsecuredRelayPort).ConfigureAwait(false);
+        }
 
         // Prepare video-related settings
         if (!string.IsNullOrWhiteSpace(AppConfig.FFmpegPath))
@@ -614,18 +622,27 @@ public class Program
         var sampleCommands = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? "  cd \\Program Files\\mhh\n  mhh --help\n  mhh --playlist variety"
             : "  cd ~/monkeyhihat\n  ./mhh --help\n  ./mhh --playlist variety";
+
+        var msmd = "TCP relay port " +
+            (AppConfig.UnsecuredRelayPort == 0
+                ? "is disabled."
+                : $"{AppConfig.UnsecuredRelayPort} is " + (MSMDRunning
+                    ? "active"
+                    : "inactive"));
         
         var tcp = (AppConfig.UnsecuredPort == 0) ? "disabled" : AppConfig.UnsecuredPort.ToString();
+
         Console.Clear();
         Console.WriteLine($"\nMonkey Hi Hat {VersionNumber}\n");
         Console.WriteLine($"Process ID {Environment.ProcessId}");
         Console.WriteLine($"Listening on TCP port {tcp}");
+        Console.WriteLine(msmd);
         Console.WriteLine(@$"
 What Now?
-Monkey Hi Hat is running which means it's waiting for commands.
+Monkey Hi Hat is running, which means it's waiting for commands.
 There are several options to send commands to the program.
 
-PC (Windows/Linux) or Android device
+Windows, Linux or Android device
 Download and run the Monkey Droid remote control GUI from the Release page.
 
 Command Line

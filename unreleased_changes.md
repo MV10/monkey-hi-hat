@@ -30,6 +30,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * Update to CommandLineSwitchPipe 2.2.0
 * Addded `timedelta` uniform (float; elapsed time since start of previous frame in seconds)
 * Window-creation retries to avoid GLFW bug https://github.com/glfw/glfw/pull/2767
+* Checks MSMD port for startup console help info
 
 ### New version TODO
 
