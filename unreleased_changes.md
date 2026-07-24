@@ -25,18 +25,24 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
  
 * 5.6.0 in-progress (content 5.5.0, textures 5.5.0)
 * Update to Tmds.DBus 0.93.0
+* Update to eyecandy x.x.x
+* Update to Monkey-Droid x.x.x
+* Update to CommandLineSwitchPipe 2.2.0
 * Addded `timedelta` uniform (float; elapsed time since start of previous frame in seconds)
 * Window-creation retries to avoid GLFW bug https://github.com/glfw/glfw/pull/2767
 
 ### New version TODO
 
-* Add sleep-state prevention and config settings
-* Windows - https://github.com/DubyaDude/WindowsMediaController
-* Linux - change to event model for track changes?
+* Windows - change Spotify support to general Windows Media Controller https://github.com/DubyaDude/WindowsMediaController
+* Linux - change to event model for track changes
 * Linux - detect when media device changes
 * Playlist - auto-advance on track change (after WMC & DBus support)
+* Add sleep-state prevention and config settings
 * eyecandy - optionally generate `glGetShaderInfoLog` and `glGetProgramInfoLog` shader compile/link outputs
 * eyecandy - add Eyecandy.ShaderCompiler error logging category
+* Monkey-Droid - option to output detailed error logging to console
+* Monkey-Droid - change console to monospaced font
+* Monkey-Droid - update to CommandLineSwitchPipe 2.2.0
 
 
 ### MHH TODO
@@ -45,6 +51,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * IDE - add `--ide` switch to support integration with SSM
 * IDE - related features (step mode, overriding uniforms, reporting texture data, etc)
 
+* Plugin DLL support: `IUniformSource`, `IRenderer`, `IVertexSource`
 * Make a Proto video (1080x1920)
 * Docs - add playlist questions to FAQ
 * Docs - add layout details about cubemaps
@@ -58,6 +65,10 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
   * https://github.com/dariomanesku/cmft
 * Monkey-Droid - offer to locally install alongside MHH?
 * Gemini equirectangular image generation (via mhh website) for randomized cubemaps
+  * online converter https://jaxry.github.io/panorama-to-cubemap/
+  * source https://github.com/jaxry/panorama-to-cubemap
+  * pano viewer https://renderstuff.com/tools/360-panorama-web-viewer/
+  > Draw a 360-degree equirectangular projection of a random setting, location, environment, or scenario, rendered in a photorealistic style. The scene should "tell a story" with compelling thematic elements, but avoid people and animals. The left and right edges must wrap seamlessly to form a continuous panoramic environment. Avoid mirrored composition to achieve artificial symmetry in favor of fine-tuning the edges of the images to produce a seamless wrap-around. Use the highest possible resolution while maintaining the required 2:1 aspect ratio.
 * Linux - figure out .deb packaging and hosting a package repo
 * Linux - terminal-hiding support (X11 only?)
 * OMT Streaming https://github.com/openmediatransport
