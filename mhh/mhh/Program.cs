@@ -623,12 +623,12 @@ public class Program
             ? "  cd \\Program Files\\mhh\n  mhh --help\n  mhh --playlist variety"
             : "  cd ~/monkeyhihat\n  ./mhh --help\n  ./mhh --playlist variety";
 
-        var msmd = "TCP relay port " +
+        var msmd = "Remote-start TCP relay port " +
             (AppConfig.UnsecuredRelayPort == 0
                 ? "is disabled."
                 : $"{AppConfig.UnsecuredRelayPort} is " + (MSMDRunning
-                    ? "active"
-                    : "inactive"));
+                    ? ""
+                    : "not ") + "listening");
         
         var tcp = (AppConfig.UnsecuredPort == 0) ? "disabled" : AppConfig.UnsecuredPort.ToString();
 
