@@ -24,26 +24,32 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * 5.5.0 released 2026-04-13 (content 5.5.0, textures 5.5.0)
  
 * 5.6.0 in-progress (content 5.5.0, textures 5.5.0)
-* Update to Tmds.DBus 0.93.0
-* Update to eyecandy x.x.x
-* Update to Monkey-Droid x.x.x
-* Update to CommandLineSwitchPipe 2.2.0
+* Added custom-operation configs (Windows/Linux sections: `CustomDescription`, `CustomCommand`)
+* Added custom-operation `--md.custom.get` and `--md.custom.run` commands for Monkey Droid
 * Addded `timedelta` uniform (float; elapsed time since start of previous frame in seconds)
 * Window-creation retries to avoid GLFW bug https://github.com/glfw/glfw/pull/2767
-* Checks MSMD port for startup console help info
+* Startup check of MSMD relay port; status added to console output in standby
+* Updated to CommandLineSwitchPipe 2.2.0
 
 ### New version TODO
 
+* Update to Tmds.DBus 0.93.0
+* Update to NAudio 3.x.x?
+* Update to eyecandy x.x.x (see below)
+* Update to Monkey-Droid x.x.x (see below)
+* Monkey-Droid - change console to monospaced font
+* Monkey-Droid - use a longer TCP timeout for congested networks
+* Monkey-Droid - update to CommandLineSwitchPipe 2.2.0
+* Monkey-Droid - option to output detailed error logging to console
+* Monkey-Droid - fetch custom-operation button label
+* Monkey-Droid - send custom-operation command
+* eyecandy - optionally generate `glGetShaderInfoLog` and `glGetProgramInfoLog` shader compile/link outputs
+* eyecandy - add Eyecandy.ShaderCompiler error logging category
 * Windows - change Spotify support to general Windows Media Controller https://github.com/DubyaDude/WindowsMediaController
 * Linux - change to event model for track changes
 * Linux - detect when media device changes
 * Playlist - auto-advance on track change (after WMC & DBus support)
 * Add sleep-state prevention and config settings
-* eyecandy - optionally generate `glGetShaderInfoLog` and `glGetProgramInfoLog` shader compile/link outputs
-* eyecandy - add Eyecandy.ShaderCompiler error logging category
-* Monkey-Droid - option to output detailed error logging to console
-* Monkey-Droid - change console to monospaced font
-* Monkey-Droid - update to CommandLineSwitchPipe 2.2.0
 
 
 ### MHH TODO
@@ -53,6 +59,7 @@ C:\Source\monkey-hi-hat\mhh\mhh\bin\x64\Debug\net10.0
 * IDE - related features (step mode, overriding uniforms, reporting texture data, etc)
 
 * Plugin DLL support: `IUniformSource`, `IRenderer`, `IVertexSource`
+* Check for updates? Periodically when idle? Auto-update?
 * Make a Proto video (1080x1920)
 * Docs - add playlist questions to FAQ
 * Docs - add layout details about cubemaps

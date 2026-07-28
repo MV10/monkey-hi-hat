@@ -54,6 +54,8 @@ public class ApplicationConfiguration : IConfigSource
     public readonly bool HideConsoleAtStartup;
     public readonly bool HideConsoleInStandby;
     public readonly bool LinuxSkipX11Check = false;
+    public readonly string CustomDescription = string.Empty;
+    public readonly string CustomCommand = string.Empty;
     
     public readonly OpenGLErrorLogFlags OpenGLErrorLogging;
     public readonly bool OpenGLErrorBreakpoint;
@@ -127,6 +129,8 @@ public class ApplicationConfiguration : IConfigSource
         HideConsoleAtStartup = ConfigSource.ReadValue(SectionOS, "HideConsoleAtStartup").ToBool(false);
         HideConsoleInStandby = ConfigSource.ReadValue(SectionOS, "HideConsoleInStandby").ToBool(false);
         LinuxSkipX11Check = ConfigSource.ReadValue("linux", "skipx11check").ToBool(false);
+        CustomDescription = ConfigSource.ReadValue(SectionOS, "CustomDescription");
+        CustomCommand = ConfigSource.ReadValue(SectionOS, "CustomCommand");
 
         OpenGLErrorLogging = ConfigSource.ReadValue("setup", "openglerrorlogging").ToEnum(OpenGLErrorLogFlags.Normal);
         OpenGLErrorBreakpoint = ConfigSource.ReadValue("setup", "openglerrorbreakpoint").ToBool(false);

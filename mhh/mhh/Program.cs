@@ -394,6 +394,15 @@ public class Program
             case "--streaming":
                 if (OnStandby) return "ERR: Application is in standby";
                 return AppWindow?.Command_Streaming(args);
+            
+            case "--md.custom.get":
+                return AppConfig.CustomDescription;
+            
+            case "--md.custom.run":
+                if (!OnStandby) return "ERR: Application is running";
+                if (string.IsNullOrWhiteSpace(AppConfig.CustomCommand)) return "ERR: No CustomCommand defined";
+                FireAndForgetCustomCommand();
+                return "ACK";
 
             case "--help":
                 return ShowHelp();
@@ -935,6 +944,34 @@ Please open an Issue at https://github.com/MV10/monkey-hi-hat and ask!
         }
     }
 
+    private static void FireAndForgetCustomCommand()
+    {
+        _ = Task.Run(async () =>
+        {
+            // allow ProcessSwitches to reply with "ACK"
+            await Task.Delay(500);
+
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = OperatingSystem.IsWindows() ? "cmd.exe" : "/bin/sh",
+                    Arguments = OperatingSystem.IsWindows()
+                        ? $"/c {AppConfig.CustomCommand}"
+                        : $"-c \"{AppConfig.CustomCommand}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(psi);
+            }
+            catch (Exception ex)
+            {
+                Logger?.LogError($"Custom Command failed: {ex.Message}");
+            }
+        });
+    }
+    
     private static string ShowHelp()
         =>
 @$"
